@@ -476,3 +476,38 @@ body {
 .cv-card-lg {
   contain-intrinsic-size: auto 200px; /* Cards grandes (com preview) */
 }
+
+/* === Dark mode contrast fixes (cowork session) === */
+.dark select,
+.dark select option {
+  background-color: rgb(30 41 59); /* slate-800 */
+  color: rgb(248 250 252); /* slate-50 */
+}
+.dark option {
+  background-color: rgb(30 41 59) !important;
+  color: rgb(248 250 252) !important;
+}
+.dark option:checked,
+.dark option:hover,
+.dark option:focus {
+  background-color: rgb(51 65 85) !important; /* slate-700 */
+  color: rgb(255 255 255) !important;
+}
+/* Datalist & autocomplete dark fix */
+.dark input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+/* Browser native dropdowns inside Radix/Headless popovers */
+.dark [role="listbox"],
+.dark [role="menu"],
+.dark [role="combobox"][aria-expanded="true"] {
+  background-color: rgb(30 41 59);
+  color: rgb(248 250 252);
+}
+/* Ensure placeholder visibility in dark mode */
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: rgb(148 163 184); /* slate-400 */
+  opacity: 1;
+}
+/* === End cowork dark mode fixes === */
