@@ -140,7 +140,7 @@ const DealCardComponent: React.FC<DealCardProps> = ({
     // Main content
     parts.push(deal.title);
     if (deal.companyName) parts.push(deal.companyName);
-    parts.push(`$${deal.value.toLocaleString()}`);
+    parts.push(`${deal.value.toLocaleString('pt-PT')} €`);
 
     // Additional context
     const priority = getPriorityLabel(deal.priority);
