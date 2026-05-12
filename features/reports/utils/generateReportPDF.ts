@@ -59,8 +59,8 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
 
     // Helpers
     const formatCurrency = (value: number) => {
-        if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
+        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M €`;
+        if (value >= 1000) return `${(value / 1000).toFixed(0)}k €`;
         return `$${value.toLocaleString('en-US')}`;
     };
 
