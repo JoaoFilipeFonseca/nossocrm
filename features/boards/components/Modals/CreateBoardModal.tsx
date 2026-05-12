@@ -498,9 +498,9 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
                   onChange={(e) => setLinkedLifecycleStage(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:[color-scheme:dark]"
                 >
-                  <option value="">Nenhum (board genérico)</option>
+                  <option value="" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">Nenhum (board genérico)</option>
                   {lifecycleStages.map(stage => (
-                    <option key={stage.id} value={stage.id}>{stage.name}</option>
+                    <option key={stage.id} value={stage.id} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">{stage.name}</option>
                   ))}
                 </select>
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
