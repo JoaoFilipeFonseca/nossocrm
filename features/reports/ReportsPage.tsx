@@ -93,9 +93,9 @@ const ReportsPage: React.FC = () => {
   const formatGoalValue = useCallback((value: number) => {
     switch (goalType) {
       case 'currency':
-        if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-        return `$${value.toLocaleString()}`;
+        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M €`;
+        if (value >= 1000) return `${(value / 1000).toFixed(0)}k €`;
+        return `${value.toLocaleString('pt-PT')} €`;
       case 'number':
         return value.toFixed(0);
       case 'percentage':
@@ -133,9 +133,9 @@ const ReportsPage: React.FC = () => {
 
   // Formatador de moeda
   const formatCurrency = useCallback((value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-    return `$${value.toLocaleString()}`;
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M €`;
+    if (value >= 1000) return `${(value / 1000).toFixed(0)}k €`;
+    return `${value.toLocaleString('pt-PT')} €`;
   }, []);
 
   const generatedBy = useMemo(() => {
