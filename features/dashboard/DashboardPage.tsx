@@ -156,7 +156,7 @@ const DashboardPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
           <StatCard
             title="Pipeline Total"
-            value={`$${pipelineValue.toLocaleString()}`}
+            value={`${pipelineValue.toLocaleString('pt-PT')} €`}
             subtext={pipelineChangeInfo.text}
             subtextPositive={pipelineChangeInfo.isPositive}
             icon={DollarSign}
@@ -186,7 +186,7 @@ const DashboardPage: React.FC = () => {
           />
           <StatCard
             title="Receita (Ganha)"
-            value={`$${wonRevenue.toLocaleString()}`}
+            value={`${wonRevenue.toLocaleString('pt-PT')} €`}
             subtext={revenueChangeInfo.text}
             subtextPositive={revenueChangeInfo.isPositive}
             icon={TrendingUp}
