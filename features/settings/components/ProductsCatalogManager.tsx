@@ -5,9 +5,9 @@ import type { Product } from '@/types';
 
 function formatBRL(v: number) {
   try {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+    return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(v);
   } catch {
-    return `R$ ${v.toFixed(2)}`;
+    return `€ ${v.toFixed(2)}`;
   }
 }
 
