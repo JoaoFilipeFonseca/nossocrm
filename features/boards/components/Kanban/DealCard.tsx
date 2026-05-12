@@ -259,7 +259,7 @@ const DealCardComponent: React.FC<DealCardProps> = ({
             )
           )}
           <span className="text-sm font-bold text-slate-700 dark:text-slate-200 font-mono">
-            ${deal.value.toLocaleString()}
+            {deal.value.toLocaleString('pt-PT')} €
           </span>
         </div>
 
