@@ -322,7 +322,7 @@ function formatCurrencyBRL(value: number): string {
   try {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'BRL',
+      currency: 'EUR',
       maximumFractionDigits: 2,
     }).format(value);
   } catch {
