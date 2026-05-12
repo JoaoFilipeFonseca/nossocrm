@@ -49,7 +49,7 @@ const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-BR');
 const PT_BR_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
 const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
-  currency: 'BRL',
+  currency: 'EUR',
   maximumFractionDigits: 2,
 });
 
