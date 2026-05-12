@@ -269,7 +269,7 @@ const DashboardPage: React.FC = () => {
               Sem mudança de estágio há +10 dias.
             </p>
             <p className="text-xs text-slate-400 mt-1">
-              ${stagnantDealsValue.toLocaleString()} em risco
+              {stagnantDealsValue.toLocaleString('pt-PT')} € em risco
             </p>
           </div>
 
@@ -279,7 +279,7 @@ const DashboardPage: React.FC = () => {
             </h3>
             <div className="flex items-end gap-2">
               <span className="text-2xl font-bold text-slate-900 dark:text-white">
-                ${(avgLTV / 1000).toFixed(1)}k
+                {(avgLTV / 1000).toFixed(1)}k €
               </span>
               <span className="text-xs text-green-500 font-bold mb-1">Médio</span>
             </div>
