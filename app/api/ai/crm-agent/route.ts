@@ -210,7 +210,7 @@ export async function POST(req: Request) {
                         id: a.id,
                         title: a.title,
                         type: a.type,
-                        time: new Date(a.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                        time: new Date(a.date).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
                         completed: a.completed,
                         deal: (a as any).deals?.title,
                     })),
@@ -388,7 +388,7 @@ export async function POST(req: Request) {
 
                 return {
                     success: true,
-                    message: `Atividade "${title}" criada para ${new Date(date).toLocaleDateString('pt-BR')}`,
+                    message: `Atividade "${title}" criada para ${new Date(date).toLocaleDateString('pt-PT')}`,
                     activity: { id: data.id, title, type, date },
                 };
             },
@@ -495,7 +495,7 @@ export async function POST(req: Request) {
 
                 return {
                     success: true,
-                    message: `Valor do deal "${deal.title}" atualizado de R$${(deal.value || 0).toLocaleString('pt-BR')} para R$${newValue.toLocaleString('pt-BR')}`,
+                    message: `Valor do deal "${deal.title}" atualizado de €${(deal.value || 0).toLocaleString('pt-PT')} para €${newValue.toLocaleString('pt-PT')}`,
                 };
             },
         }),
@@ -564,7 +564,7 @@ export async function POST(req: Request) {
 
                 return {
                     success: true,
-                    message: `Deal "${title}" criado com valor de R$${value.toLocaleString('pt-BR')}`,
+                    message: `Deal "${title}" criado com valor de €${value.toLocaleString('pt-PT')}`,
                     deal: { id: data.id, title, value, stageId: resolvedStageId },
                 };
             },
@@ -649,7 +649,7 @@ REGRAS:
 2. Seja conciso e direto nas respostas
 3. Quando criar algo, confirme o que foi criado
 4. Quando analisar, forneça insights acionáveis
-5. Use valores em Reais (R$) formatados
+5. Use valores em Reais (€) formatados
 6. Datas em formato brasileiro (dd/mm/aaaa)
 
 Você é proativo — se perceber oportunidades ou riscos, mencione-os.`,
