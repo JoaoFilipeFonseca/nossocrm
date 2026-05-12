@@ -16,7 +16,7 @@ import { useDealsByBoard } from '@/lib/query/hooks/useDealsQuery';
 import { useUIState } from '@/store/uiState';
 
 // Performance: reuse formatter instances.
-const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
 
 interface BoardStrategyHeaderProps {
   board: Board;
@@ -240,7 +240,7 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
                             })
                           }
                         >
-                          <option value="currency">R$ (Valor)</option>
+                          <option value="currency">€ (Valor)</option>
                           <option value="number"># (Qtd)</option>
                           <option value="percentage">% (Taxa)</option>
                         </select>
