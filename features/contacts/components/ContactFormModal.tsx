@@ -5,6 +5,7 @@ import { DebugFillButton } from '@/components/debug/DebugFillButton';
 import { fakeContact } from '@/lib/debug';
 import { FocusTrap, useFocusReturn } from '@/lib/a11y';
 
+import ContactFilesPanel from './ContactFilesPanel';
 interface ContactFormData {
   name: string;
   email: string;
@@ -199,7 +200,13 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
           >
             {isSubmitting ? 'Criando...' : (editingContact ? 'Salvar Alterações' : 'Criar Contato')}
           </button>
-        </form>
+        
+            {editingContact?.id && (
+                <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/10">
+                    <ContactFilesPanel contactId={editingContact.id} />
+                </div>
+            )}
+            </form>
         </div>
       </div>
     </FocusTrap>
