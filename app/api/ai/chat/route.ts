@@ -65,7 +65,21 @@ function asOptionalCockpitSnapshot(v: unknown): unknown | undefined {
  * @param {Request} req - Objeto da requisição.
  * @returns {Promise<Response>} Retorna um valor do tipo `Promise<Response>`.
  */
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response> {
+    try {
+        return await POST_INNER(req);
+    } catch (e: any) {
+        console.error('[/api/ai/chat] TOP-LEVEL ERROR:', e?.stack || e?.message || e);
+        return new Response(JSON.stringify({
+            error: true,
+            message: e?.message || String(e),
+            stack: (e?.stack || '').split('\n').slice(0,8).join(' | '),
+            name: e?.name || 'unknown'
+        }), {status: 500, headers: {'Content-Type': 'application/json'}});
+    }
+}
+
+async function POST_INNER(req: Request): Promise<Response> {
     // Mitigação CSRF: endpoint autenticado por cookies.
     if (!isAllowedOrigin(req)) {
         return new Response('Forbidden', { status: 403 });
