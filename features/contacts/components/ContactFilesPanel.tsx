@@ -13,7 +13,7 @@ import {
 
 interface ContactFilesPanelProps {
     contactId: string;
-    organizationId: string;
+    organizationId?: string;
 }
 
 const FILE_ICON_MAP: Record<string, typeof FileText> = {
@@ -35,7 +35,18 @@ function formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-export default function ContactFilesPanel({ contactId, organizationId }: ContactFilesPanelProps) {
+export default function ContactFilesPanel({ contactId, organizationId: orgIdProp }: ContactFilesPanelProps) {
+    const [organizationId, setOrganizationId] = useState<string>(orgIdProp || '');
+    useEffect(() => {
+        if (organizationId) return;
+        (async () => {
+            const { supabase } = await import('@/lib/supabase/client');
+            const { data: userData } = await supabase.auth.getUser();
+            if (!userData?.user) return;
+            const { data } = await supabase.from('profiles').select('organization_id').eq('id', userData.user.id).single();
+            if (data?.organization_id) setOrganizationId(data.organization_id);
+        })();
+    }, [organizationId]);
     const [files, setFiles] = useState<ContactFile[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
