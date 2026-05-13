@@ -1631,6 +1631,181 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 return { success: true, message: `Reordenei ${orderedStageIds.length} estágio(s).` };
             },
         }),
+            // ============= FASE 4 — TOOLS DE 2º CÉREBRO (visão agregada) =============
+        listBoards: tool({
+            description: 'Lista todos os pipelines/boards da organização com contagem de deals e valor total. Use quando o utilizador perguntar "quantos pipelines tenho" ou "que boards existem".',
+            inputSchema: z.object({}),
+            execute: async () => {
+                const { data: boards, error } = await supabase
+                    .from('boards')
+                    .select('id, name, key, is_default, position')
+                    .eq('organization_id', organizationId)
+                    .order('position', { ascending: true });
+                if (error) return { ok: false as const, error: error.message };
+                const result: Array<{id: string; name: string; isDefault: boolean; dealCount: number; totalValueEur: number}> = [];
+                for (const b of (boards || [])) {
+                    const { count: dealCount } = await supabase
+                        .from('deals')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('board_id', b.id);
+                    const { data: deals } = await supabase
+                        .from('deals')
+                        .select('value')
+                        .eq('board_id', b.id);
+                    const totalValue = (deals || []).reduce((s: number, x: any) => s + Number(x.value || 0), 0);
+                    result.push({ id: b.id, name: b.name, isDefault: !!b.is_default, dealCount: dealCount || 0, totalValueEur: totalValue });
+                }
+                return { ok: true as const, boards: result, totalBoards: result.length };
+            }
+        }),
+
+        getOrgOverview: tool({
+            description: 'Visão geral agregada da organização inteira: total de deals, valor de pipeline, contactos, atividades pendentes, deals parados >10 dias. Use para perguntas tipo "como está o meu negócio" ou "estado geral".',
+            inputSchema: z.object({}),
+            execute: async () => {
+                const [{ count: dealCount }, { count: contactCount }, { count: activityCount }] = await Promise.all([
+                    supabase.from('deals').select('*', { count: 'exact', head: true }).eq('organization_id', organizationId),
+                    supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('organization_id', organizationId),
+                    supabase.from('activities').select('*', { count: 'exact', head: true }).eq('organization_id', organizationId).eq('completed', false)
+                ]);
+                const { data: deals } = await supabase.from('deals').select('value, status').eq('organization_id', organizationId);
+                const totalValue = (deals || []).reduce((s: number, d: any) => s + Number(d.value || 0), 0);
+                const wonValue = (deals || []).filter((d: any) => d.status === 'won').reduce((s: number, d: any) => s + Number(d.value || 0), 0);
+                const tenDaysAgo = new Date(Date.now() - 10 * 86400000).toISOString();
+                const { count: stuckCount } = await supabase
+                    .from('deals')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('organization_id', organizationId)
+                    .eq('status', 'open')
+                    .lt('last_stage_change_date', tenDaysAgo);
+                return {
+                    ok: true as const,
+                    deals: { total: dealCount || 0, totalValueEur: totalValue, wonValueEur: wonValue, stuckCount: stuckCount || 0 },
+                    contacts: contactCount || 0,
+                    pendingActivities: activityCount || 0
+                };
+            }
+        }),
+
+        getDailyBriefing: tool({
+            description: 'Briefing executivo do dia: visitas/atividades hoje, deals quentes, leads novos das últimas 24h, deals parados. Use para "o que tenho para fazer hoje", "briefing", "como está o meu dia".',
+            inputSchema: z.object({}),
+            execute: async () => {
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(today.getTime() + 86400000);
+                const yesterday = new Date(today.getTime() - 86400000);
+
+                const { data: todayActivities } = await supabase
+                    .from('activities')
+                    .select('id, title, type, scheduled_at, deal_id, contact_id')
+                    .eq('organization_id', organizationId)
+                    .eq('completed', false)
+                    .gte('scheduled_at', today.toISOString())
+                    .lt('scheduled_at', tomorrow.toISOString())
+                    .order('scheduled_at');
+
+                const { data: newContacts } = await supabase
+                    .from('contacts')
+                    .select('id, name, source')
+                    .eq('organization_id', organizationId)
+                    .gte('created_at', yesterday.toISOString())
+                    .limit(10);
+
+                const tenDaysAgo = new Date(Date.now() - 10 * 86400000).toISOString();
+                const { data: stuckDeals } = await supabase
+                    .from('deals')
+                    .select('id, title, value, last_stage_change_date')
+                    .eq('organization_id', organizationId)
+                    .eq('status', 'open')
+                    .lt('last_stage_change_date', tenDaysAgo)
+                    .limit(10);
+
+                return {
+                    ok: true as const,
+                    todayActivitiesCount: (todayActivities || []).length,
+                    todayActivities: todayActivities || [],
+                    newContactsLast24hCount: (newContacts || []).length,
+                    newContacts: newContacts || [],
+                    stuckDealsCount: (stuckDeals || []).length,
+                    stuckDeals: stuckDeals || []
+                };
+            }
+        }),
+
+        getContactFullContext: tool({
+            description: 'Devolve TUDO sobre um contacto: dados pessoais, tags, custom fields, deals associados, últimas atividades, ficheiros anexados. Use quando o utilizador disser nome ou telefone de cliente.',
+            inputSchema: z.object({
+                contactId: z.string().describe('UUID do contacto').optional(),
+                nameOrPhone: z.string().describe('Nome parcial, telemóvel ou email para busca fuzzy').optional()
+            }),
+            execute: async ({ contactId, nameOrPhone }) => {
+                let resolvedId = contactId;
+                if (!resolvedId && nameOrPhone) {
+                    const q = sanitizePostgrestValue(nameOrPhone.trim());
+                    const { data: matches } = await supabase
+                        .from('contacts')
+                        .select('id, name')
+                        .eq('organization_id', organizationId)
+                        .or(`name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`)
+                        .limit(5);
+                    if (!matches || matches.length === 0) return { ok: false as const, error: 'Nenhum contacto encontrado' };
+                    if (matches.length > 1) return { ok: false as const, error: `Múltiplos contactos. Especifica: ${matches.map((m: any) => m.name).join(', ')}` };
+                    resolvedId = matches[0].id;
+                }
+                if (!resolvedId) return { ok: false as const, error: 'Indica contactId ou nameOrPhone' };
+
+                const [contactRes, dealsRes, activitiesRes, filesRes] = await Promise.all([
+                    supabase.from('contacts').select('*').eq('id', resolvedId).single(),
+                    supabase.from('deals').select('id, title, value, status, board_id, stage_id, last_stage_change_date').eq('contact_id', resolvedId),
+                    supabase.from('activities').select('id, title, type, scheduled_at, completed').eq('contact_id', resolvedId).order('scheduled_at', { ascending: false }).limit(10),
+                    supabase.from('contact_files').select('file_name, category, created_at').eq('contact_id', resolvedId)
+                ]);
+
+                if (!contactRes.data) return { ok: false as const, error: 'Contacto não encontrado' };
+                return {
+                    ok: true as const,
+                    contact: contactRes.data,
+                    deals: dealsRes.data || [],
+                    recentActivities: activitiesRes.data || [],
+                    files: filesRes.data || []
+                };
+            }
+        }),
+
+        suggestNextActionForDeal: tool({
+            description: 'Para um deal específico devolve contexto rico (dias parado, última actividade, contacto) para o agente sugerir próxima acção concreta. NÃO chama externamente — só fornece os dados que o LLM precisa para raciocinar.',
+            inputSchema: z.object({
+                dealId: z.string().describe('UUID do deal')
+            }),
+            execute: async ({ dealId }) => {
+                const { data: deal, error } = await supabase
+                    .from('deals')
+                    .select('*, contact:contacts(name, phone, email), stage:board_stages(label, name), board:boards(name)')
+                    .eq('id', dealId)
+                    .single();
+                if (error || !deal) return { ok: false as const, error: error?.message || 'Deal não encontrado' };
+
+                const { data: lastActivity } = await supabase
+                    .from('activities')
+                    .select('type, title, completed, scheduled_at')
+                    .eq('deal_id', dealId)
+                    .order('scheduled_at', { ascending: false })
+                    .limit(1);
+
+                const daysSinceStageChange = deal.last_stage_change_date
+                    ? Math.floor((Date.now() - new Date(deal.last_stage_change_date).getTime()) / 86400000)
+                    : null;
+
+                return {
+                    ok: true as const,
+                    deal: { title: deal.title, value: deal.value, stage: (deal as any).stage?.label, board: (deal as any).board?.name },
+                    contact: (deal as any).contact,
+                    daysSinceStageChange,
+                    lastActivity: (lastActivity && lastActivity[0]) || null
+                };
+            }
+        }),
+
     } as Record<string, any>;
 
     // Debug/diagnóstico (scripts): registra chamadas de tools, independentemente do formato do stream.
