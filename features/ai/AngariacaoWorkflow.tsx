@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { Loader2, Copy, ChevronRight, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 type Step = 'dados' | 'icp' | 'swot' | 'descricao' | 'pitch';
 
@@ -31,6 +33,74 @@ const STEP_LABELS: Record<Step, string> = {
 const ZONAS_PORTO = ['Porto', 'Matosinhos', 'V.N. Gaia', 'Maia', 'Gondomar', 'Vila do Conde', 'Póvoa de Varzim', 'Valongo', 'Santo Tirso', 'Trofa', 'Espinho', 'V.N. Famalicão', 'Outro'];
 const TIPOLOGIAS = ['T0', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6+', 'Moradia', 'Terreno', 'Comercial'];
 const ESTADOS = ['Novo', 'Usado-Bom', 'Usado-Reabilitar', 'Em Construção', 'Em Projeto'];
+
+
+function parseSwotSections(text: string): {forcas: string; fraquezas: string; oportunidades: string; ameacas: string; recomendacoes: string} {
+    const sections = {forcas: '', fraquezas: '', oportunidades: '', ameacas: '', recomendacoes: ''};
+    const patterns = [
+        {key: 'forcas' as const, re: /(?:##\s*)?(?:✅\s*)?(?:FORÇAS|Forças|STRENGTHS)[\s\S]*?(?=(?:##\s*)?(?:❌|FRAQUEZAS|Fraquezas|WEAKNESSES))/i},
+        {key: 'fraquezas' as const, re: /(?:##\s*)?(?:❌\s*)?(?:FRAQUEZAS|Fraquezas|WEAKNESSES)[\s\S]*?(?=(?:##\s*)?(?:🚀|OPORTUNIDADES|Oportunidades|OPPORTUNITIES))/i},
+        {key: 'oportunidades' as const, re: /(?:##\s*)?(?:🚀\s*)?(?:OPORTUNIDADES|Oportunidades|OPPORTUNITIES)[\s\S]*?(?=(?:##\s*)?(?:⚠️|AMEAÇAS|Ameaças|THREATS))/i},
+        {key: 'ameacas' as const, re: /(?:##\s*)?(?:⚠️\s*)?(?:AMEAÇAS|Ameaças|THREATS)[\s\S]*?(?=(?:##\s*)?(?:🎯|RECOMENDAÇÕES|Recomendações|$))/i},
+        {key: 'recomendacoes' as const, re: /(?:##\s*)?(?:🎯\s*)?(?:RECOMENDAÇÕES[\s\S]+?ESTRATÉGICAS|Recomendações)[\s\S]*$/i},
+    ];
+    for (const {key, re} of patterns) {
+        const m = text.match(re);
+        if (m) sections[key] = m[0].replace(/^(?:##\s*)?[✅❌🚀⚠️🎯]\s*(?:FORÇAS|FRAQUEZAS|OPORTUNIDADES|AMEAÇAS|RECOMENDAÇÕES[^\n]*)\s*\n?/i, '').trim();
+    }
+    return sections;
+}
+
+function SwotQuadrant({ data }: { data: string }) {
+    const s = parseSwotSections(data);
+    const hasStructure = s.forcas || s.fraquezas || s.oportunidades || s.ameacas;
+    if (!hasStructure) {
+        return <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{data}</ReactMarkdown>;
+    }
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <QuadrantBox title="✅ Forças" body={s.forcas} colorClass="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800" />
+                <QuadrantBox title="❌ Fraquezas" body={s.fraquezas} colorClass="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800" />
+                <QuadrantBox title="🚀 Oportunidades" body={s.oportunidades} colorClass="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800" />
+                <QuadrantBox title="⚠️ Ameaças" body={s.ameacas} colorClass="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800" />
+            </div>
+            {s.recomendacoes && (
+                <div className="p-4 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20">
+                    <h3 className="text-sm font-bold text-purple-900 dark:text-purple-200 mb-2">🎯 Recomendações Estratégicas</h3>
+                    <div className="text-sm text-slate-800 dark:text-slate-200">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{s.recomendacoes}</ReactMarkdown>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function QuadrantBox({ title, body, colorClass }: { title: string; body: string; colorClass: string }) {
+    return (
+        <div className={`p-4 rounded-xl border ${colorClass}`}>
+            <h3 className="text-sm font-bold mb-2 text-slate-900 dark:text-white">{title}</h3>
+            <div className="text-sm text-slate-700 dark:text-slate-200">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{body || '_(sem conteúdo)_'}</ReactMarkdown>
+            </div>
+        </div>
+    );
+}
+
+const mdComponents = {
+    h1: ({children}: any) => <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-2">{children}</h2>,
+    h2: ({children}: any) => <h3 className="text-base font-bold text-slate-900 dark:text-white mt-4 mb-2">{children}</h3>,
+    h3: ({children}: any) => <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-3 mb-1">{children}</h4>,
+    p: ({children}: any) => <p className="mb-2 leading-relaxed">{children}</p>,
+    strong: ({children}: any) => <strong className="font-bold text-slate-900 dark:text-white">{children}</strong>,
+    em: ({children}: any) => <em className="italic">{children}</em>,
+    ul: ({children}: any) => <ul className="list-disc list-inside space-y-1 my-2 pl-2">{children}</ul>,
+    ol: ({children}: any) => <ol className="list-decimal list-inside space-y-1 my-2 pl-2">{children}</ol>,
+    li: ({children}: any) => <li className="leading-relaxed">{children}</li>,
+    code: ({children}: any) => <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono">{children}</code>,
+    blockquote: ({children}: any) => <blockquote className="border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic my-2">{children}</blockquote>,
+};
 
 export default function AngariacaoWorkflow() {
     const [currentStep, setCurrentStep] = useState<Step>('dados');
@@ -226,7 +296,13 @@ export default function AngariacaoWorkflow() {
                             <Loader2 className="w-5 h-5 animate-spin mr-2" /> A gerar com IA... pode demorar 10-30s
                         </div>
                     ) : outputs[currentStep] ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">{outputs[currentStep]}</div>
+                        <div className="text-sm text-slate-800 dark:text-slate-200">
+                            {currentStep === 'swot' ? (
+                                <SwotQuadrant data={outputs[currentStep]} />
+                            ) : (
+                                <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{outputs[currentStep]}</ReactMarkdown>
+                            )}
+                        </div>
                     ) : (
                         <div className="text-center py-8 text-sm text-slate-500">
                             <button type="button" onClick={() => generate(currentStep)} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium">
