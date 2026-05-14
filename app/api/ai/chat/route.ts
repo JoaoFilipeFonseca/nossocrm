@@ -147,7 +147,7 @@ async function POST_INNER(req: Request): Promise<Response> {
     // 3. Get AI settings (org-wide: organization_settings é a fonte de verdade)
     const { data: orgSettings } = await supabase
         .from('organization_settings')
-        .select('ai_enabled, ai_provider, ai_model, ai_google_key')
+        .select('ai_enabled, ai_provider, ai_model, ai_google_key, ai_anthropic_key')
         .eq('organization_id', organizationId)
         .maybeSingle();
 
@@ -167,9 +167,28 @@ async function POST_INNER(req: Request): Promise<Response> {
         );
     }
 
-    const provider: AIProvider = 'google';
-    const modelId: string | null = orgSettings?.ai_model ?? null;
-    const apiKey: string | null = orgSettings?.ai_google_key ?? null;
+    // CLAUDE PREFIX DETECTION: if user starts message with "claude" (no slash), use Claude
+    let forceClaude = false;
+    try {
+        const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user');
+        const lastText = lastUserMsg?.parts?.find?.((p: any) => p.type === 'text')?.text || '';
+        const trimmed = lastText.trim();
+        if (/^claude\b/i.test(trimmed)) {
+            forceClaude = true;
+            // Strip "claude" prefix from the user message text in-place
+            const stripped = trimmed.replace(/^claude\b[\s,:]*/i, '').trim() || 'olá';
+            const textPart = lastUserMsg.parts.find((p: any) => p.type === 'text');
+            if (textPart) textPart.text = stripped;
+        }
+    } catch {}
+
+    const provider: AIProvider = forceClaude ? 'anthropic' : 'google';
+    const modelId: string | null = forceClaude
+        ? 'claude-sonnet-4-5'
+        : (orgSettings?.ai_model ?? null);
+    const apiKey: string | null = forceClaude
+        ? (orgSettings?.ai_anthropic_key ?? null)
+        : (orgSettings?.ai_google_key ?? null);
 
     if (!apiKey) {
         return new Response(
