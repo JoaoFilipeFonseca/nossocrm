@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
         const contactGhlId = opp.contactId || (opp.contact && opp.contact.id);
         if (!contactGhlId) continue;
 
-        let contactUuid = contactCache.get(contactGhlId);
+        let contactUuid: string | undefined = contactCache.get(contactGhlId);
         if (!contactUuid) {
           // Fetch full contact details
           const cR = await fetch('https://services.leadconnectorhq.com/contacts/' + contactGhlId, { headers: { Authorization: 'Bearer ' + ghlToken, Version: '2021-07-28', Accept: 'application/json' }});
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
           is_lost: opp.status === 'lost' || opp.status === 'abandoned',
           board_id: targetBoard,
           stage_id: stageId,
-          contact_id: contactUuid,
+          contact_id: contactUuid as string,
           tags: opp.tags || [],
           custom_fields: { ghl_opp_id: opp.id, ghl_pipeline: pip.name, ghl_stage: ghlStageName, ghl_assigned_to: opp.assignedTo || null, ghl_source: opp.source || null },
           created_at: opp.createdAt || opp.dateAdded || new Date().toISOString(),
