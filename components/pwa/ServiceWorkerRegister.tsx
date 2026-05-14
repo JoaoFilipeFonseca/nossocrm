@@ -2,47 +2,67 @@
 
 import { useEffect } from 'react';
 
+/**
+ * Service Worker registration with AGGRESSIVE auto-update.
+ * - Registers SW on load
+ * - Checks for updates every 60 seconds
+ * - When new SW takes control, reload the page automatically
+ * - When tab becomes visible after being hidden, check for updates
+ */
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!('serviceWorker' in navigator)) return;
+    if (process.env.NODE_ENV !== 'production') return;
 
-    const register = async () => {
-      try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
-        // #region agent log
-        if (process.env.NODE_ENV !== 'production') {
-        }
-        // #endregion
+    let registration: ServiceWorkerRegistration | null = null;
+    let updateInterval: any = null;
+    let reloading = false;
 
-        // Monitor service worker updates
-        registration.addEventListener('updatefound', () => {
-          // #region agent log
-          if (process.env.NODE_ENV !== 'production') {
-          }
-          // #endregion
-        });
-
-        // Check for existing service worker
-        if (registration.active) {
-          // #region agent log
-          if (process.env.NODE_ENV !== 'production') {
-          }
-          // #endregion
-        }
-      } catch (err) {
-        // #region agent log
-        if (process.env.NODE_ENV !== 'production') {
-          const errMsg = (err instanceof Error ? err.message : String(err || '')).slice(0, 120);
-        }
-        // #endregion
-        // noop (PWA is best-effort)
-      }
+    // Auto-reload when new SW takes control
+    const onControllerChange = () => {
+      if (reloading) return;
+      reloading = true;
+      window.location.reload();
     };
 
-    register();
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
+    navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).then(reg => {
+      registration = reg;
+      // Check immediately
+      reg.update().catch(() => {});
+      // Periodic check every 60s
+      updateInterval = setInterval(() => {
+        if (registration) registration.update().catch(() => {});
+      }, 60000);
+      // On new SW waiting, skip waiting + take over
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version available — activate it immediately
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+    }).catch(() => {});
+
+    // Check for updates when tab becomes visible
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible' && registration) {
+        registration.update().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (updateInterval) clearInterval(updateInterval);
+    };
   }, []);
 
   return null;
 }
-
