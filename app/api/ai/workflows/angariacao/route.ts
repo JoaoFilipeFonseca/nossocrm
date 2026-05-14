@@ -1,7 +1,5 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { generateText } from 'ai';
 import { createClient } from '@/lib/supabase/server';
-import { AI_DEFAULT_MODELS } from '@/lib/ai/defaults';
+import { routedGenerate, fetchAIKeysForUser, type AIFeature } from '@/lib/ai/router';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -20,6 +18,13 @@ interface AngariacaoInput {
     exclusividade?: 'sim' | 'aberta' | 'fsbo';
     notasExtra?: string;
 }
+
+const STEP_TO_FEATURE: Record<string, AIFeature> = {
+    icp: 'workflow_icp',
+    swot: 'workflow_swot',
+    descricao: 'workflow_desc',
+    pitch: 'workflow_pitch',
+};
 
 const PROMPTS: Record<string, (data: AngariacaoInput) => string> = {
     icp: (d) => `És um consultor imobiliário sénior em Portugal. Gera o **Perfil de Comprador Ideal (ICP)** para este imóvel.
@@ -78,16 +83,16 @@ DADOS:
 
 ESTRUTURA OBRIGATÓRIA (markdown):
 
-## ✅ FORÇAS (Strengths)
+## ✅ FORÇAS
 3-5 pontos. Coisas que diferenciam positivamente o imóvel.
 
-## ❌ FRAQUEZAS (Weaknesses)
+## ❌ FRAQUEZAS
 3-5 pontos. Aspetos a esconder/melhorar/preparar resposta.
 
-## 🚀 OPORTUNIDADES (Opportunities)
+## 🚀 OPORTUNIDADES
 3-4 pontos. Mercado, tendências, alavancas externas.
 
-## ⚠️ AMEAÇAS (Threats)
+## ⚠️ AMEAÇAS
 3-4 pontos. Riscos externos (mercado, concorrência, regulamentação).
 
 ## 🎯 RECOMENDAÇÕES ESTRATÉGICAS
@@ -159,58 +164,43 @@ Frase exacta para pedir CMI exclusivo. Tom firme mas amigável.
 PT-PT. Pratico, accionável. Máx 700 palavras.`,
 };
 
-async function generateForStep(step: string, input: AngariacaoInput, apiKey: string, model: string): Promise<string> {
-    const promptFn = PROMPTS[step];
-    if (!promptFn) throw new Error(`Step desconhecido: ${step}`);
-    
-    const google = createGoogleGenerativeAI({ apiKey });
-    const { text } = await generateText({
-        model: google(model),
-        prompt: promptFn(input),
-        temperature: 0.7,
-    });
-    return text;
-}
-
 export async function POST(req: Request): Promise<Response> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return Response.json({ error: 'Não autenticado' }, { status: 401 });
-        
+
         const body = await req.json();
         const { step, input } = body as { step: string; input: AngariacaoInput };
         if (!step || !input?.zona || !input?.tipologia) {
             return Response.json({ error: 'Faltam dados obrigatórios (step, zona, tipologia)' }, { status: 400 });
         }
-        
-        // Get user's Google API key from user_settings (or organization_settings as fallback)
-        const { data: userSettings } = await supabase
-            .from('user_settings')
-            .select('ai_api_key, ai_model')
-            .eq('user_id', user.id)
-            .single();
-        
-        let apiKey = userSettings?.ai_api_key as string | undefined;
-        let model = (userSettings?.ai_model as string | undefined) || AI_DEFAULT_MODELS.google;
-        
-        if (!apiKey) {
-            const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
-            if (profile?.organization_id) {
-                const { data: orgSettings } = await supabase
-                    .from('organization_settings')
-                    .select('ai_google_key, ai_model')
-                    .eq('organization_id', profile.organization_id)
-                    .single();
-                apiKey = orgSettings?.ai_google_key as string | undefined;
-                model = (orgSettings?.ai_model as string | undefined) || model;
-            }
+
+        const promptFn = PROMPTS[step];
+        const feature = STEP_TO_FEATURE[step];
+        if (!promptFn || !feature) {
+            return Response.json({ error: `Step desconhecido: ${step}` }, { status: 400 });
         }
-        
-        if (!apiKey) return Response.json({ error: 'Chave API Gemini não configurada' }, { status: 400 });
-        
-        const output = await generateForStep(step, input, apiKey, model);
-        return Response.json({ ok: true, step, output });
+
+        const keys = await fetchAIKeysForUser(supabase, user.id);
+        if (!keys.google && !keys.anthropic) {
+            return Response.json({ error: 'Nenhuma chave de API configurada (Gemini ou Anthropic)' }, { status: 400 });
+        }
+
+        const result = await routedGenerate({
+            feature,
+            prompt: promptFn(input),
+            keys,
+            temperature: 0.7,
+        });
+
+        return Response.json({
+            ok: true,
+            step,
+            output: result.text,
+            modelUsed: result.modelUsed,
+            fallbackUsed: result.fallbackUsed,
+        });
     } catch (e: any) {
         console.error('[/api/ai/workflows/angariacao] ERROR:', e?.stack || e);
         return Response.json({ error: e?.message || 'Erro interno' }, { status: 500 });
