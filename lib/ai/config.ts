@@ -9,9 +9,10 @@
  */
 
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createAnthropic } from '@ai-sdk/anthropic';
 import { AI_DEFAULT_MODELS, AI_DEFAULT_PROVIDER } from './defaults';
 
-export type AIProvider = 'google';
+export type AIProvider = 'google' | 'anthropic';
 
 const ALLOWED_GOOGLE_MODELS = new Set([
   'gemini-2.0-flash',
@@ -47,6 +48,9 @@ const ALLOWED_GOOGLE_MODELS = new Set([
  * ```
  */
 export const getModel = (provider: AIProvider, apiKey: string, modelId: string) => {
+    if (provider === 'anthropic') {
+        return createAnthropic({ apiKey })(modelId);
+    }
     if (!apiKey) {
         throw new Error('API Key is missing');
     }
