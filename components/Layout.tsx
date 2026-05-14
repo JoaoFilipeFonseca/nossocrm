@@ -1,15 +1,15 @@
 /**
- * @fileoverview Layout Principal da Aplicação
+ * @fileoverview Layout Principal da AplicaÃ§Ã£o
  *
- * Componente de layout que fornece estrutura base para todas as páginas,
- * incluindo sidebar de navegação, header e área de conteúdo.
+ * Componente de layout que fornece estrutura base para todas as pÃ¡ginas,
+ * incluindo sidebar de navegaÃ§Ã£o, header e Ã¡rea de conteÃºdo.
  *
  * @module components/Layout
  *
  * Recursos de Acessibilidade:
- * - Skip link para navegação por teclado
- * - Navegação com aria-current para página ativa
- * - Ícones decorativos com aria-hidden
+ * - Skip link para navegaÃ§Ã£o por teclado
+ * - NavegaÃ§Ã£o com aria-current para pÃ¡gina ativa
+ * - Ãcones decorativos com aria-hidden
  * - Suporte a prefetch em hover/focus
  *
  * @example
@@ -66,19 +66,19 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 /**
  * Props do componente Layout
  * @interface LayoutProps
- * @property {React.ReactNode} children - Conteúdo da página
+ * @property {React.ReactNode} children - ConteÃºdo da pÃ¡gina
  */
 const PAGE_TITLES: Record<string, string> = {
   '/inbox': 'Inbox',
   '/messaging': 'Mensagens',
-  '/dashboard': 'Visão Geral',
+  '/dashboard': 'VisÃ£o Geral',
   '/boards': 'Boards',
   '/pipeline': 'Boards',
   '/contacts': 'Contatos',
   '/activities': 'Atividades',
-  '/decisions': 'Decisões',
-  '/reports': 'Relatórios',
-  '/settings': 'Configurações',
+  '/decisions': 'DecisÃµes',
+  '/reports': 'RelatÃ³rios',
+  '/settings': 'ConfiguraÃ§Ãµes',
   '/profile': 'Perfil',
   '/ai': 'Assistente IA',
 };
@@ -86,7 +86,7 @@ const PAGE_TITLES: Record<string, string> = {
 const getPageTitle = (pathname: string): string => {
   // Exact match first
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
-  // Prefix match (e.g., /settings/ai → Configurações)
+  // Prefix match (e.g., /settings/ai â ConfiguraÃ§Ãµes)
   const prefix = Object.keys(PAGE_TITLES).find(key => pathname.startsWith(key + '/'));
   return prefix ? PAGE_TITLES[prefix] : '';
 };
@@ -96,15 +96,15 @@ interface LayoutProps {
 }
 
 /**
- * Item de navegação da sidebar
+ * Item de navegaÃ§Ã£o da sidebar
  *
- * @param props - Props do item de navegação
+ * @param props - Props do item de navegaÃ§Ã£o
  * @param props.to - Rota de destino
- * @param props.icon - Componente de ícone Lucide
+ * @param props.icon - Componente de Ã­cone Lucide
  * @param props.label - Label exibido
  * @param props.prefetch - Nome da rota para prefetch
- * @param props.clickedPath - Path que foi clicado (para manter highlight durante transição)
- * @param props.onItemClick - Callback quando o item é clicado
+ * @param props.clickedPath - Path que foi clicado (para manter highlight durante transiÃ§Ã£o)
+ * @param props.onItemClick - Callback quando o item Ã© clicado
  * @param props.badge - Badge count to display
  */
 const NavItem = ({
@@ -160,10 +160,10 @@ const NavItem = ({
 
 
 /**
- * Layout principal da aplicação
+ * Layout principal da aplicaÃ§Ã£o
  *
- * Fornece estrutura com sidebar fixa, header responsivo e área de conteúdo.
- * Inclui navegação, controles de tema e acesso ao assistente de IA.
+ * Fornece estrutura com sidebar fixa, header responsivo e Ã¡rea de conteÃºdo.
+ * Inclui navegaÃ§Ã£o, controles de tema e acesso ao assistente de IA.
  *
  * @param {LayoutProps} props - Props do componente
  * @returns {JSX.Element} Estrutura de layout completa
@@ -192,7 +192,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, []);
 
   // If the user signed out (or session expired), leave protected shell ASAP.
-  // This prevents rendering fallbacks like "Usuário" while unauthenticated.
+  // This prevents rendering fallbacks like "UsuÃ¡rio" while unauthenticated.
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace('/login');
@@ -278,8 +278,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <div className={`h-16 flex items-center border-b border-[var(--color-border-subtle)] transition-all duration-300 px-5 ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between'}`}>
           <div className={`flex items-center transition-all duration-300 ${sidebarCollapsed ? 'gap-0 justify-center' : 'gap-3'}`}>
-            <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary-500/20 shrink-0" aria-hidden="true">
-              N
+            <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-lg shadow-primary-500/20 shrink-0" aria-hidden="true">
+              CRM
             </div>
             <span className={`text-xl font-bold font-display tracking-tight text-slate-900 dark:text-white whitespace-nowrap overflow-hidden transition-all duration-300 ${sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
               Foco Imo
@@ -298,17 +298,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           )}
         </div>
 
-        <nav className={`flex-1 p-4 space-y-2 flex flex-col ${sidebarCollapsed ? 'items-center px-2' : ''}`} aria-label="Navegação do sistema">
+        <nav className={`flex-1 p-4 space-y-2 flex flex-col ${sidebarCollapsed ? 'items-center px-2' : ''}`} aria-label="NavegaÃ§Ã£o do sistema">
           {[
             { to: '/inbox', icon: Inbox, label: 'Inbox', prefetch: 'inbox' as const, badge: undefined },
             { to: '/messaging', icon: MessageSquare, label: 'Mensagens', prefetch: undefined, badge: unreadMessagesCount },
-            { to: '/dashboard', icon: LayoutDashboard, label: 'Visão Geral', prefetch: 'dashboard' as const, badge: undefined },
-            { to: '/ai/workflows/angariacao', icon: Sparkles, label: 'Angariação IA', prefetch: undefined, badge: undefined },
+            { to: '/dashboard', icon: LayoutDashboard, label: 'VisÃ£o Geral', prefetch: 'dashboard' as const, badge: undefined },
+            { to: '/ai/workflows/angariacao', icon: Sparkles, label: 'AngariaÃ§Ã£o IA', prefetch: undefined, badge: undefined },
             { to: '/boards', icon: KanbanSquare, label: 'Boards', prefetch: 'boards' as const, badge: undefined },
             { to: '/contacts', icon: Users, label: 'Contatos', prefetch: 'contacts' as const, badge: undefined },
             { to: '/activities', icon: CheckSquare, label: 'Atividades', prefetch: 'activities' as const, badge: undefined },
-            { to: '/reports', icon: BarChart3, label: 'Relatórios', prefetch: 'reports' as const, badge: undefined },
-            { to: '/settings', icon: Settings, label: 'Configurações', prefetch: 'settings' as const, badge: undefined },
+            { to: '/reports', icon: BarChart3, label: 'RelatÃ³rios', prefetch: 'reports' as const, badge: undefined },
+            { to: '/settings', icon: Settings, label: 'ConfiguraÃ§Ãµes', prefetch: 'settings' as const, badge: undefined },
           ].map((item) => {
             if (sidebarCollapsed) {
               return (
@@ -404,7 +404,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <>
                   <div className="flex-1 min-w-0 text-left">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                      {profile?.nickname || profile?.first_name || profile?.email?.split('@')[0] || 'Usuário'}
+                      {profile?.nickname || profile?.first_name || profile?.email?.split('@')[0] || 'UsuÃ¡rio'}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                       {profile?.email || ''}
@@ -462,7 +462,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {!sidebarCollapsed && (
                             <div className="px-4 py-2 text-[10px] text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-white/10">
                                 <div className="font-mono">v{(process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'dev').substring(0, 7)}</div>
-                                <div>Foco Imo · Atualizado {new Date(process.env.NEXT_PUBLIC_DEPLOY_TIME || Date.now()).toLocaleDateString('pt-PT')}</div>
+                                <div>Foco Imo Â· Atualizado {new Date(process.env.NEXT_PUBLIC_DEPLOY_TIME || Date.now()).toLocaleDateString('pt-PT')}</div>
                             </div>
                         )}
                         </aside>
