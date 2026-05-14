@@ -77,20 +77,20 @@ export function InboxBrutoClient() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="flex items-start justify-between mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
-            <Inbox size={26} className="text-blue-600" /> Matches
+          <h1 className="text-xl sm:text-2xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
+            <Inbox size={26} className="text-blue-600" /> Inbox Bruto
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Cola texto solto e a IA cruza com o teu pipeline para te mostrar matches.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Cola texto solto. A IA extrai imóveis, procuras e oportunidades.</p>
         </div>
         <div className="text-xs text-slate-500 dark:text-slate-400">
           {Object.values(summary).reduce((a, b) => a + b, 0)} processados
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Angariações', value: summary.angariacao || 0 },
           { label: 'Procuras', value: summary.procura || 0 },
