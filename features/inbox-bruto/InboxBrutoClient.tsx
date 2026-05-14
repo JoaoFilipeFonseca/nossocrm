@@ -81,9 +81,9 @@ export function InboxBrutoClient() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
-            <Inbox size={26} className="text-blue-600" /> Inbox Bruto
+            <Inbox size={26} className="text-blue-600" /> Matches
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Cola texto solto. A IA extrai imóveis, procuras e oportunidades.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Cola texto solto e a IA cruza com o teu pipeline para te mostrar matches.</p>
         </div>
         <div className="text-xs text-slate-500 dark:text-slate-400">
           {Object.values(summary).reduce((a, b) => a + b, 0)} processados
