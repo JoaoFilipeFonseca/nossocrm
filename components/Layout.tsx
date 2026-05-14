@@ -459,7 +459,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
           </div>
         </div>
-      </aside>
+      {!sidebarCollapsed && (
+                            <div className="px-4 py-2 text-[10px] text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-white/10">
+                                <div className="font-mono">v{(process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'dev').substring(0, 7)}</div>
+                                <div>Foco Imo · Atualizado {new Date(process.env.NEXT_PUBLIC_DEPLOY_TIME || Date.now()).toLocaleDateString('pt-PT')}</div>
+                            </div>
+                        )}
+                        </aside>
       ) : null}
 
       {/* Main Content Wrapper */}
