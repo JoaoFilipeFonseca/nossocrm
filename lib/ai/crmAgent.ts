@@ -302,7 +302,6 @@ export async function createCRMAgent(
     context: CRMCallOptions,
     userId: string,
     apiKey: string,
-    provider: 'google' | 'anthropic' = 'google',
     modelId: string = AI_DEFAULT_MODELS.google,
     provider: AIProvider = AI_DEFAULT_PROVIDER
 ) {
