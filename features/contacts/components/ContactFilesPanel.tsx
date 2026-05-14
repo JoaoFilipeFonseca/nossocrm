@@ -97,21 +97,15 @@ export default function ContactFilesPanel({ contactId, organizationId: orgIdProp
             setError(e?.message || 'Erro ao gerar link de download');
         }
     };
-
-    const [deleteTarget, setDeleteTarget] = useState<ContactFile | null>(null);
-    const handleDelete = (file: ContactFile) => setDeleteTarget(file);
-    const performDelete = async () => {
-        if (!deleteTarget) return;
+    const handleDelete = async (file: ContactFile) => {
+        if (!confirm(`Apagar ${file.file_name}? Esta acção não pode ser desfeita.`)) return;
         try {
-            await deleteContactFile(deleteTarget.id, deleteTarget.file_path);
+            await deleteContactFile(file.id, file.file_path);
             await loadFiles();
-            setDeleteTarget(null);
         } catch (e: any) {
             setError(e?.message || 'Erro ao apagar ficheiro');
-            throw e;
         }
     };
-
     const filteredFiles = filterCategory === 'all'
         ? files
         : files.filter(f => f.category === filterCategory);
@@ -232,17 +226,6 @@ export default function ContactFilesPanel({ contactId, organizationId: orgIdProp
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </li>
-                        
-                        {deleteTarget && (
-                            <DeleteConfirmModal
-                                isOpen={true}
-                                onClose={() => setDeleteTarget(null)}
-                                onConfirm={performDelete}
-                                itemName={deleteTarget.file_name}
-                                itemType="ficheiro"
-                                consequence="O ficheiro será apagado permanentemente do contacto."
-                            />
-                        )}
                         );
                     })}
                 </ul>
