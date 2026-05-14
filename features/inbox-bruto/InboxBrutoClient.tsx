@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Inbox, Sparkles, Home, Search, Lightbulb, TrendingUp, Handshake, Target, Bolt, Clipboard, Wand, Loader2 } from 'lucide-react';
+import { Inbox, Sparkles, Home, Search, Lightbulb, TrendingUp, Handshake, Target, Clipboard, Loader2, Wand2 } from 'lucide-react';
 
 type RawIntel = {
   id: string;
@@ -35,7 +35,7 @@ const OWNERSHIP_META: Record<string, { label: string; bg: string; fg: string }> 
   externa: { label: 'Externa', bg: '#FAECE7', fg: '#712B13' }
 };
 
-const FILTERS: Array<{ id: string; label: string }> = [
+const FILTERS = [
   { id: 'all', label: 'Todos' },
   { id: 'angariacao', label: 'Angariações' },
   { id: 'procura', label: 'Procuras' },
@@ -67,22 +67,11 @@ export function InboxBrutoClient() {
     setProcessing(true);
     setFeedback(null);
     try {
-      const r = await fetch('/api/inbox-raw/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
-      });
+      const r = await fetch('/api/inbox-raw/process', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
       const j = await r.json();
-      if (!r.ok) {
-        setFeedback('Erro: ' + (j.error || 'desconhecido'));
-      } else {
-        setFeedback(\`${j.created} novos registos criados\`);
-        setText('');
-        await load();
-      }
-    } catch (e: any) {
-      setFeedback('Erro: ' + String(e.message || e));
-    }
+      if (!r.ok) setFeedback('Erro: ' + (j.error || 'desconhecido'));
+      else { setFeedback(j.created + ' novos registos criados'); setText(''); await load(); }
+    } catch (e: any) { setFeedback('Erro: ' + String(e.message || e)); }
     setProcessing(false);
     setTimeout(() => setFeedback(null), 4000);
   }
@@ -119,45 +108,32 @@ export function InboxBrutoClient() {
         <label className="text-xs text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
           <Clipboard size={14} /> Cola texto (WhatsApp, Idealista, notas, qualquer texto)
         </label>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          className="w-full min-h-[110px] font-mono text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 resize-y text-slate-900 dark:text-white"
-          placeholder="Sandra · T2 Boavista 320k, varanda, garagem... Mariana 911234567"
-        />
+        <textarea value={text} onChange={(e) => setText(e.target.value)} className="w-full min-h-[110px] font-mono text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 resize-y text-slate-900 dark:text-white" placeholder="Sandra · T2 Boavista 320k, varanda, garagem... Mariana 911234567" />
         <div className="flex justify-between items-center mt-3">
           <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
             <Sparkles size={13} /> Gemini 2.5 Flash · ~€0.0003 por mensagem
           </span>
-          <button
-            onClick={process}
-            disabled={processing || !text.trim()}
-            className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg flex items-center gap-2"
-          >
-            {processing ? <><Loader2 size={14} className="animate-spin" /> A processar...</> : <><Wand size={14} /> Processar</>}
+          <button onClick={process} disabled={processing || !text.trim()} className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg flex items-center gap-2">
+            {processing ? (<><Loader2 size={14} className="animate-spin" /> A processar...</>) : (<><Wand2 size={14} /> Processar</>)}
           </button>
         </div>
         {feedback && <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">{feedback}</div>}
       </div>
 
-      <div className="flex gap-2 items-center mb-3">
+      <div className="flex gap-2 items-center mb-3 flex-wrap">
         <span className="text-sm text-slate-500 dark:text-slate-400">Filtrar:</span>
-        {FILTERS.map(f => (
-          <button
-            key={f.id}
-            onClick={() => setFilter(f.id)}
-            className={\`px-3 py-1 text-xs rounded-full border transition ${filter === f.id ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700' : 'bg-transparent text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}\`}
-          >
-            {f.label}
-          </button>
-        ))}
+        {FILTERS.map(f => {
+          const active = filter === f.id;
+          const cls = active
+            ? 'px-3 py-1 text-xs rounded-full border bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+            : 'px-3 py-1 text-xs rounded-full border bg-transparent text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800';
+          return <button key={f.id} onClick={() => setFilter(f.id)} className={cls}>{f.label}</button>;
+        })}
       </div>
 
       <div className="flex flex-col gap-3">
         {items.length === 0 && (
-          <div className="text-center py-10 text-sm text-slate-500 dark:text-slate-400">
-            Sem registos. Cola texto acima e carrega Processar.
-          </div>
+          <div className="text-center py-10 text-sm text-slate-500 dark:text-slate-400">Sem registos. Cola texto acima e carrega Processar.</div>
         )}
         {items.map(r => {
           const im = INTENT_META[r.intent] || INTENT_META.irrelevante;
@@ -169,29 +145,17 @@ export function InboxBrutoClient() {
                 <span className="text-[11px] px-2 py-1 rounded-full font-medium inline-flex items-center gap-1" style={{ background: im.bg, color: im.fg }}>
                   <IconI size={12} /> {im.label}
                 </span>
-                <span className="text-[11px] px-2 py-1 rounded-full font-medium" style={{ background: om.bg, color: om.fg }}>
-                  {om.label}
-                </span>
-                {r.requires_review && (
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-300 font-medium">
-                    Precisa revisão
-                  </span>
-                )}
-                {r.confidence_overall != null && (
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-auto">{r.confidence_overall}%</span>
-                )}
+                <span className="text-[11px] px-2 py-1 rounded-full font-medium" style={{ background: om.bg, color: om.fg }}>{om.label}</span>
+                {r.requires_review && <span className="text-[11px] px-2 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-300 font-medium">Precisa revisão</span>}
+                {r.confidence_overall != null && <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-auto">{r.confidence_overall}%</span>}
               </div>
-              <div className="text-sm font-medium text-slate-900 dark:text-white mb-1">
-                {titleFor(r)}
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">
-                {r.notes || subtitleFor(r)}
-              </div>
+              <div className="text-sm font-medium text-slate-900 dark:text-white mb-1">{titleFor(r)}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{r.notes || subtitleFor(r)}</div>
               {r.contact && (
-                <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex gap-3">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex gap-3 flex-wrap">
                   {r.contact.nome && <span>{r.contact.nome} {r.contact.apelido || ''}</span>}
-                  {r.contact.telefone && <span>·  {r.contact.telefone}</span>}
-                  {r.contact.agencia && <span>·  {r.contact.agencia}</span>}
+                  {r.contact.telefone && <span>· {r.contact.telefone}</span>}
+                  {r.contact.agencia && <span>· {r.contact.agencia}</span>}
                 </div>
               )}
             </div>
@@ -205,26 +169,20 @@ export function InboxBrutoClient() {
 function titleFor(r: RawIntel): string {
   if (r.intent === 'angariacao' && r.property) {
     const p = r.property;
-    const parts = [p.tipologia, p.freguesia || p.zona, p.preco_eur ? new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(p.preco_eur) : null].filter(Boolean);
+    const parts: any[] = [p.tipologia, p.freguesia || p.zona, p.preco_eur ? new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(p.preco_eur) : null].filter(Boolean);
     return parts.join(' · ') || 'Imóvel';
   }
   if (r.intent === 'procura' && r.contact) {
-    return 'Cliente ' + (r.contact.nome || 'sem nome') + (r.property?.tipologia ? ' · ' + r.property.tipologia : '') + (r.property?.zona ? ' ' + r.property.zona : '');
+    return 'Cliente ' + (r.contact.nome || 'sem nome') + (r.property && r.property.tipologia ? ' · ' + r.property.tipologia : '') + (r.property && r.property.zona ? ' ' + r.property.zona : '');
   }
-  if (r.intent === 'fsbo_tip') {
-    return 'FSBO: ' + (r.property?.tipologia || '') + ' ' + (r.property?.zona || r.property?.freguesia || '');
-  }
-  if (r.intent === 'parceiro') {
-    return (r.contact?.nome || 'Parceiro') + (r.partner?.role ? ' · ' + r.partner.role : '');
-  }
-  if (r.intent === 'evento_mercado') {
-    return r.market_event?.descricao || 'Evento de mercado';
-  }
+  if (r.intent === 'fsbo_tip') return 'FSBO: ' + ((r.property && r.property.tipologia) || '') + ' ' + ((r.property && (r.property.zona || r.property.freguesia)) || '');
+  if (r.intent === 'parceiro') return ((r.contact && r.contact.nome) || 'Parceiro') + (r.partner && r.partner.role ? ' · ' + r.partner.role : '');
+  if (r.intent === 'evento_mercado') return (r.market_event && r.market_event.descricao) || 'Evento de mercado';
   return r.notes || 'Registo';
 }
 
 function subtitleFor(r: RawIntel): string {
-  if (r.market_event?.impacto) return r.market_event.impacto;
-  if (r.property?.caracteristicas?.length) return r.property.caracteristicas.join(' · ');
+  if (r.market_event && r.market_event.impacto) return r.market_event.impacto;
+  if (r.property && Array.isArray(r.property.caracteristicas) && r.property.caracteristicas.length) return r.property.caracteristicas.join(' · ');
   return '';
 }
