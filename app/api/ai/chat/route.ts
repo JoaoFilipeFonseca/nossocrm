@@ -179,8 +179,8 @@ async function POST_INNER(req: Request): Promise<Response> {
             forceClaude = true;
             // Strip "claude" prefix from the user message text in-place
             const stripped = trimmed.replace(/^claude\b[\s,:]*/i, '').trim() || 'olá';
-            const textPart = lastUserMsg.parts.find((p: any) => p.type === 'text');
-            if (textPart) textPart.text = stripped;
+            const textPart2: any = (lastUserMsg.parts as any[]).find((p: any) => p?.type === 'text');
+            if (textPart2) textPart2.text = stripped;
         }
     } catch {}
 
