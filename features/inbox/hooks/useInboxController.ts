@@ -262,7 +262,7 @@ export const useInboxController = () => {
           id,
           type: 'STALLED',
           title: `Negócio Parado (${daysSinceUpdate}d)`,
-          description: `${deal.title} - R$ ${deal.value.toLocaleString('pt-BR')} • ${deal.probability}% probabilidade`,
+          description: `${deal.title} - ${deal.value.toLocaleString('pt-PT')} € • ${deal.probability}% probabilidade`,
           priority: score > 30 ? 'high' : score > 15 ? 'medium' : 'low',
           data: { deal },
           createdAt: nowIso,
@@ -283,7 +283,7 @@ export const useInboxController = () => {
           id,
           type: 'UPSELL',
           title: `Oportunidade de Upsell`,
-          description: `${deal.companyName} fechou há ${daysSinceClose} dias • R$ ${deal.value.toLocaleString('pt-BR')}`,
+          description: `${deal.companyName} fechou há ${daysSinceClose} dias • ${deal.value.toLocaleString('pt-PT')} €`,
           priority: score > 25 ? 'high' : score > 10 ? 'medium' : 'low',
           data: { deal },
           createdAt: nowIso,
@@ -412,7 +412,7 @@ export const useInboxController = () => {
         { id, updates: { date: newDate.toISOString() } },
         {
           onSuccess: () => {
-            showToast(`Adiado para ${newDate.toLocaleDateString('pt-BR')}`, 'success');
+            showToast(`Adiado para ${newDate.toLocaleDateString('pt-PT')}`, 'success');
           },
         }
       );

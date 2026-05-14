@@ -253,10 +253,10 @@ function formatContextForPrompt(context: DealContext): string {
   lines.push('## Informações do Deal');
   lines.push(`Título: ${context.deal.title}`);
   if (context.deal.value) {
-    lines.push(`Valor: R$ ${context.deal.value.toLocaleString('pt-BR')}`);
+    lines.push(`Valor: ${context.deal.value.toLocaleString('pt-PT')} €`);
   }
   lines.push(`Estágio: ${context.stage.name}`);
-  lines.push(`Criado em: ${new Date(context.deal.createdAt).toLocaleDateString('pt-BR')}`);
+  lines.push(`Criado em: ${new Date(context.deal.createdAt).toLocaleDateString('pt-PT')}`);
   lines.push('');
 
   // Contact info
@@ -303,7 +303,7 @@ function formatContextForPrompt(context: DealContext): string {
   } else {
     context.messages.forEach((msg) => {
       const role = msg.direction === 'inbound' ? 'LEAD' : msg.isAI ? 'AI' : 'VENDEDOR';
-      const time = new Date(msg.timestamp).toLocaleString('pt-BR', {
+      const time = new Date(msg.timestamp).toLocaleString('pt-PT', {
         day: '2-digit',
         month: '2-digit',
         hour: '2-digit',

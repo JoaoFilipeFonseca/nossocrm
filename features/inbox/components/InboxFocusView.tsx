@@ -36,7 +36,7 @@ import { useAuth } from '@/context/AuthContext';
 import { InboxZeroState } from './InboxZeroState';
 
 // Performance: reuse Intl formatter instances (avoid per-render allocations).
-const PT_BR_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const PT_BR_TIME_FORMATTER = new Intl.DateTimeFormat('pt-PT', { hour: '2-digit', minute: '2-digit' });
 
 function normalizeTitleKey(value: string) {
   // UX: normalize titles for robust matching (trim/collapse whitespace/remove quotes).
@@ -431,7 +431,7 @@ export const InboxFocusView: React.FC<InboxFocusViewProps> = ({
       {/* Valor (se houver) */}
       {value && (
         <div className="text-lg font-bold text-green-600 dark:text-green-400 mb-6">
-          R$ {value.toLocaleString('pt-BR')}
+          {value.toLocaleString('pt-PT')} €
         </div>
       )}
 

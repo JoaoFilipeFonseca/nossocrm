@@ -380,7 +380,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                             </div>
                             
                             <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-1">Valor Estimado (R$)</label>
+                                <label className="block text-xs font-medium text-slate-500 mb-1">Valor Estimado (€)</label>
                                 <input
                                     type="number"
                                     className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"

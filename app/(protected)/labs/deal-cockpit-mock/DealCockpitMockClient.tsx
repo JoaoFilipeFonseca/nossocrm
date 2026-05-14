@@ -111,8 +111,8 @@ const initialTimeline: TimelineItem[] = [
 ];
 
 function formatAt(date = new Date()): string {
-  const d = date.toLocaleDateString('pt-BR');
-  const t = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const d = date.toLocaleDateString('pt-PT');
+  const t = date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
   return `${d} · ${t}`;
 }
 
@@ -122,13 +122,13 @@ function uid(prefix = 'id'): string {
 
 function formatCurrencyBRL(value: number): string {
   try {
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat('pt-PT', {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 2,
     }).format(value);
   } catch {
-    return `R$ ${value.toFixed(2)}`;
+    return `${value.toFixed(2)} €`;
   }
 }
 

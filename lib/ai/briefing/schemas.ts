@@ -20,7 +20,7 @@ import { z } from 'zod';
  */
 const BudgetStatusSchema = z.object({
   status: z.enum(['unknown', 'mentioned', 'confirmed', 'negotiating']),
-  value: z.string().nullable().describe('Valor do orçamento se mencionado (ex: "R$ 50.000")'),
+  value: z.string().nullable().describe('Valor do orçamento se mencionado (ex: "€ 50.000")'),
   notes: z.string().describe('Contexto sobre discussões de orçamento em português'),
 });
 

@@ -313,20 +313,20 @@ function uid(prefix = 'id'): string {
 
 function formatAtISO(iso: string): string {
   const d = new Date(iso);
-  const dd = d.toLocaleDateString('pt-BR');
-  const tt = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const dd = d.toLocaleDateString('pt-PT');
+  const tt = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
   return `${dd} · ${tt}`;
 }
 
 function formatCurrencyBRL(value: number): string {
   try {
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat('pt-PT', {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 2,
     }).format(value);
   } catch {
-    return `R$ ${value.toFixed(2)}`;
+    return `${value.toFixed(2)} €`;
   }
 }
 
@@ -432,8 +432,8 @@ function normalizeReason(raw?: string) {
 }
 
 function formatSlot(d: Date) {
-  const day = d.toLocaleDateString('pt-BR', { weekday: 'short' });
-  const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const day = d.toLocaleDateString('pt-PT', { weekday: 'short' });
+  const time = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
   return `${day} ${time}`;
 }
 

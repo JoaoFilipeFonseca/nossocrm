@@ -273,7 +273,7 @@ export function formatContextForPrompt(context: LeadContext): string {
   if (context.deal) {
     lines.push('## Deal Atual');
     lines.push(`Título: ${context.deal.title}`);
-    if (context.deal.value) lines.push(`Valor: R$ ${context.deal.value.toLocaleString('pt-BR')}`);
+    if (context.deal.value) lines.push(`Valor: ${context.deal.value.toLocaleString('pt-PT')} €`);
     lines.push(`Estágio: ${context.deal.stage_name}`);
     if (context.deal.notes) lines.push(`Notas: ${context.deal.notes}`);
     lines.push('');
@@ -293,14 +293,14 @@ export function formatContextForPrompt(context: LeadContext): string {
   lines.push('## Estatísticas');
   lines.push(`Total de mensagens: ${context.stats.total_messages}`);
   lines.push(`Mensagens do AI: ${context.stats.ai_messages_count}`);
-  lines.push(`Conversa iniciada: ${new Date(context.stats.conversation_started_at).toLocaleDateString('pt-BR')}`);
+  lines.push(`Conversa iniciada: ${new Date(context.stats.conversation_started_at).toLocaleDateString('pt-PT')}`);
   lines.push('');
 
   // Histórico
   lines.push('## Histórico da Conversa');
   context.messages.forEach((msg) => {
     const roleLabel = msg.role === 'lead' ? 'Lead' : msg.role === 'agent' ? 'AI' : 'Vendedor';
-    const time = new Date(msg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const time = new Date(msg.timestamp).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
     lines.push(`[${time}] ${roleLabel}: ${msg.content}`);
   });
 

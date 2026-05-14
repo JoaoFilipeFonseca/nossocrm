@@ -64,7 +64,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
       `Você é um coach de vendas analisando um deal de CRM. Seja DIRETO e ACIONÁVEL.\n` +
       `DEAL:\n` +
       `- Título: {{dealTitle}}\n` +
-      `- Valor: R$ {{dealValue}}\n` +
+      `- Valor: {{dealValue} €}\n` +
       `- Estágio: {{stageLabel}}\n` +
       `- Probabilidade: {{probability}}%\n` +
       `RETORNE:\n` +

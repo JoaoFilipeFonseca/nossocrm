@@ -32,7 +32,7 @@ function formatCockpitSnapshotForPrompt(snapshot: any): string[] {
         const probability = typeof deal.probability === 'number' ? deal.probability : undefined;
         const priority = clampText(deal.priority, 30);
         const status = clampText(deal.status, 80);
-        lines.push(`🧾 Deal (cockpit): ${title ?? '(sem título)'}${value != null ? ` — R$ ${value.toLocaleString('pt-BR')}` : ''}`);
+        lines.push(`🧾 Deal (cockpit): ${title ?? '(sem título)'}${value != null ? ` — ${value.toLocaleString('pt-PT')} €` : ''}`);
         if (probability != null) lines.push(`   - Probabilidade: ${probability}%`);
         if (priority) lines.push(`   - Prioridade: ${formatPriorityPtBr(priority)}`);
         if (status) lines.push(`   - Status/Stage ID: ${status}`);
@@ -148,7 +148,7 @@ function buildContextPrompt(options: CRMCallOptions): string {
     if (options.dealCount !== undefined) {
         parts.push(`📊 Métricas:`);
         parts.push(`   - Deals: ${options.dealCount}`);
-        if (options.pipelineValue) parts.push(`   - Pipeline: R$ ${options.pipelineValue.toLocaleString('pt-BR')}`);
+        if (options.pipelineValue) parts.push(`   - Pipeline: ${options.pipelineValue.toLocaleString('pt-PT')} €`);
         if (options.stagnantDeals) parts.push(`   - Parados: ${options.stagnantDeals}`);
         if (options.overdueDeals) parts.push(`   - Atrasados: ${options.overdueDeals}`);
     }

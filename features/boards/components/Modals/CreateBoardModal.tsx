@@ -523,7 +523,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
                     .filter(p => p.active !== false)
                     .map(p => (
                       <option key={p.id} value={p.id}>
-                        {p.name} — R$ {Number(p.price ?? 0).toLocaleString('pt-BR')}
+                        {p.name} — {Number(p.price ?? 0).toLocaleString('pt-PT')} €
                       </option>
                     ))}
                 </select>

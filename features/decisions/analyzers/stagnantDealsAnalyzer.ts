@@ -74,7 +74,7 @@ function generateReasoning(
   }
 
   if (deal.value > 50000) {
-    parts.push(`Com valor de R$ ${deal.value.toLocaleString('pt-BR')}, este deal merece atenção prioritária.`);
+    parts.push(`Com valor de ${deal.value.toLocaleString('pt-PT')} €, este deal merece atenção prioritária.`);
   }
 
   return parts.join(' ');
@@ -228,7 +228,7 @@ export function analyzeStagnantDeals(
         priority,
         category: 'follow_up',
         title: `Deal "${deal.title}" parado há ${daysSinceActivity} dias`,
-        description: `${deal.companyName || 'Empresa não informada'} • R$ ${deal.value.toLocaleString('pt-BR')} • Estágio: ${deal.stageLabel}`,
+        description: `${deal.companyName || 'Empresa não informada'} • ${deal.value.toLocaleString('pt-PT')} € • Estágio: ${deal.stageLabel}`,
         reasoning: generateReasoning(deal, daysSinceActivity, lastActivity),
         dealId: deal.id,
         contactId: deal.contactId,

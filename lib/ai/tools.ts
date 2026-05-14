@@ -202,8 +202,8 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     wonDeals: wonDeals.length,
                     lostDeals: lostDeals.length,
                     winRate: `${winRate}%`,
-                    pipelineValue: `R$ ${totalValue.toLocaleString('pt-BR')}`,
-                    wonValue: `R$ ${wonValue.toLocaleString('pt-BR')}`,
+                    pipelineValue: `${totalValue.toLocaleString('pt-PT')} €`,
+                    wonValue: `${wonValue.toLocaleString('pt-PT')} €`,
                     stageBreakdown: Object.fromEntries(stageMap)
                 };
             },
@@ -244,8 +244,8 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     wonDeals: won.length,
                     lostDeals: lost.length,
                     winRate: `${winRate}%`,
-                    pipelineValue: `R$ ${open.reduce((s, d) => s + (d.value || 0), 0).toLocaleString('pt-BR')}`,
-                    closedValue: `R$ ${won.reduce((s, d) => s + (d.value || 0), 0).toLocaleString('pt-BR')}`
+                    pipelineValue: `${open.reduce((s, d) => s + (d.value || 0), 0).toLocaleString('pt-PT')} €`,
+                    closedValue: `${won.reduce((s, d) => s + (d.value || 0), 0).toLocaleString('pt-PT')} €`
                 };
             },
         }),
@@ -333,7 +333,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     deals: deals?.map((d: any) => ({
                         id: d.id,
                         title: d.title,
-                        value: `R$ ${(d.value || 0).toLocaleString('pt-BR')}`,
+                        value: `${(d.value || 0).toLocaleString('pt-PT')} €`,
                         stage: d.stage?.name || d.stage?.label || 'N/A',
                         contact: d.contact?.name || 'N/A',
                         status: d.is_won ? '✅ Ganho' : d.is_lost ? '❌ Perdido' : '🔄 Aberto'
@@ -499,11 +499,11 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
 
                 return {
                     count: finalDeals.length || 0,
-                    totalValue: `R$ ${totalValue.toLocaleString('pt-BR')}`,
+                    totalValue: `${totalValue.toLocaleString('pt-PT')} €`,
                     deals: finalDeals.map((d: any) => ({
                         id: d.id,
                         title: d.title,
-                        value: `R$ ${(d.value || 0).toLocaleString('pt-BR')}`,
+                        value: `${(d.value || 0).toLocaleString('pt-PT')} €`,
                         contact: d.contact?.name || 'N/A'
                     })) || []
                 };
@@ -552,7 +552,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                             id: d.id,
                             title: d.title,
                             diasParado: days,
-                            value: `R$ ${(d.value || 0).toLocaleString('pt-BR')}`,
+                            value: `${(d.value || 0).toLocaleString('pt-PT')} €`,
                             contact: d.contact?.name || 'N/A'
                         };
                     }) || []
@@ -603,7 +603,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     deals: deals?.map((d: any) => ({
                         id: d.id,
                         title: d.title,
-                        value: `R$ ${(d.value || 0).toLocaleString('pt-BR')}`,
+                        value: `${(d.value || 0).toLocaleString('pt-PT')} €`,
                         contact: d.contact?.name || 'N/A',
                         overdueCount: overdueActivities.filter(a => a.deal_id === d.id).length
                     })) || []
@@ -645,7 +645,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 return {
                     id: deal.id,
                     title: deal.title,
-                    value: `R$ ${(deal.value || 0).toLocaleString('pt-BR')}`,
+                    value: `${(deal.value || 0).toLocaleString('pt-PT')} €`,
                     status: deal.is_won ? '✅ Ganho' : deal.is_lost ? '❌ Perdido' : '🔄 Aberto',
                     stage: (deal.stage as any)?.name || (deal.stage as any)?.label || 'N/A',
                     priority: deal.priority || 'medium',
@@ -804,7 +804,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     deal: {
                         id: deal.id,
                         title: deal.title,
-                        value: `R$ ${(deal.value || 0).toLocaleString('pt-BR')}`
+                        value: `${(deal.value || 0).toLocaleString('pt-PT')} €`
                     },
                     message: `Deal "${title}" criado com sucesso!`
                 };
@@ -957,7 +957,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 return {
                     success: true,
                     message: `🎉 Parabéns! Deal "${deal.title}" marcado como GANHO!`,
-                    value: `R$ ${(deal.value || 0).toLocaleString('pt-BR')}`
+                    value: `${(deal.value || 0).toLocaleString('pt-PT')} €`
                 };
             },
         }),

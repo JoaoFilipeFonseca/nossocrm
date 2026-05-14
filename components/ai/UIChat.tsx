@@ -457,8 +457,8 @@ export function UIChat({
         const d = isoLike instanceof Date ? isoLike : new Date(isoLike);
         if (Number.isNaN(d.getTime())) return String(isoLike);
 
-        const ddmm = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(d);
-        const hhmm = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(d);
+        const ddmm = new Intl.DateTimeFormat('pt-PT', { day: '2-digit', month: '2-digit' }).format(d);
+        const hhmm = new Intl.DateTimeFormat('pt-PT', { hour: '2-digit', minute: '2-digit' }).format(d);
         return `${ddmm} às ${hhmm}`;
     };
 
@@ -507,7 +507,7 @@ export function UIChat({
             case 'markDealAsWon': {
                 const title = input?.dealTitle || dealTitleFromId(input?.dealId);
                 if (title) lines.push(`Deal: ${title}`);
-                if (input?.wonValue !== undefined) lines.push(`Valor final: R$ ${Number(input.wonValue).toLocaleString('pt-BR')}`);
+                if (input?.wonValue !== undefined) lines.push(`Valor final: ${Number(input.wonValue).toLocaleString('pt-PT')} €`);
                 break;
             }
             case 'moveDeal': {

@@ -7,7 +7,7 @@ import { Activity, DealView } from '@/types';
 import { Decision, AnalyzerResult, AnalyzerConfig, SuggestedAction } from '../types';
 
 // Performance: reuse date formatter to avoid repeated `toLocaleDateString` allocations.
-const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-BR');
+const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
 
 export const overdueActivitiesConfig: AnalyzerConfig = {
   id: 'overdue_activities',
@@ -32,7 +32,7 @@ function generateReasoning(activity: Activity, daysOverdue: number, deal?: DealV
   parts.push(`${typeLabel} "${activity.title}" está ${daysOverdue} ${daysOverdue === 1 ? 'dia' : 'dias'} atrasada.`);
   
   if (deal) {
-    parts.push(`Esta atividade está vinculada ao deal "${deal.title}" (R$ ${deal.value.toLocaleString('pt-BR')}).`);
+    parts.push(`Esta atividade está vinculada ao deal "${deal.title}" (${deal.value.toLocaleString('pt-PT')} €).`);
     
     if (deal.probability >= 60) {
       parts.push('O deal está em estágio avançado, então este atraso pode impactar o fechamento.');

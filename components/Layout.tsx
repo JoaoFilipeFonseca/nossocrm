@@ -544,6 +544,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
 
       {/* Mobile app shell */}
+      <div className="fixed top-2 right-2 z-50 md:hidden text-[10px] font-mono text-slate-500 bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded-md backdrop-blur-sm border border-slate-200 dark:border-slate-700">v{(process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'dev').substring(0, 7)}</div>
       <BottomNav onOpenMore={() => setIsMoreOpen(true)} />
       <MoreMenuSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} />
     </div>

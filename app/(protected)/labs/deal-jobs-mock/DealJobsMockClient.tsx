@@ -46,13 +46,13 @@ const mock = {
 
 function formatCurrencyBRL(value: number): string {
   try {
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat('pt-PT', {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 2,
     }).format(value);
   } catch {
-    return `R$ ${value.toFixed(2)}`;
+    return `${value.toFixed(2)} €`;
   }
 }
 
