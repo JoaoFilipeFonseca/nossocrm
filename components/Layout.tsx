@@ -281,9 +281,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-xs tracking-tight shadow-lg shadow-primary-500/20 shrink-0" aria-hidden="true">
               CRM
             </div>
-            <span className={`text-xl font-bold font-display tracking-tight text-slate-900 dark:text-white whitespace-nowrap overflow-hidden transition-all duration-300 ${sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-              Foco Imo
-            </span>
+            <div className={`flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+              <span className="text-xl font-bold font-display tracking-tight text-slate-900 dark:text-white whitespace-nowrap overflow-hidden">Foco Imo</span>
+              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 whitespace-nowrap leading-tight">v{(process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'dev').substring(0, 7)}</span>
+            </div>
           </div>
 
           {/* Header Toggle Button - Only visible when expanded */}
@@ -303,7 +304,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             { to: '/inbox', icon: Inbox, label: 'Inbox', prefetch: 'inbox' as const, badge: undefined },
             { to: '/messaging', icon: MessageSquare, label: 'Mensagens', prefetch: undefined, badge: unreadMessagesCount },
             { to: '/dashboard', icon: LayoutDashboard, label: 'Visão Geral', prefetch: 'dashboard' as const, badge: undefined },
-            { to: '/matches', icon: Inbox, label: 'Matches', prefetch: undefined, badge: undefined },
+            { to: '/inbox-bruto', icon: Inbox, label: 'Inbox Bruto', prefetch: undefined, badge: undefined },
       { to: '/ai/workflows/angariacao', icon: Sparkles, label: 'Angariação IA', prefetch: undefined, badge: undefined },
             { to: '/boards', icon: KanbanSquare, label: 'Boards', prefetch: 'boards' as const, badge: undefined },
             { to: '/contacts', icon: Users, label: 'Contactos', prefetch: 'contacts' as const, badge: undefined },
@@ -460,12 +461,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
           </div>
         </div>
-      {!sidebarCollapsed && (
-                            <div className="px-4 py-2 text-[10px] text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-white/10">
-                                <div className="font-mono">v{(process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'dev').substring(0, 7)}</div>
-                                <div>Foco Imo · Atualizado {new Date(process.env.NEXT_PUBLIC_DEPLOY_TIME || Date.now()).toLocaleDateString('pt-PT')}</div>
-                            </div>
-                        )}
+      
                         </aside>
       ) : null}
 
@@ -537,9 +533,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <aside
           aria-label="Assistente de IA"
           aria-hidden={!isGlobalAIOpen}
-          className={`border-l border-[var(--color-border)] bg-surface transition-all duration-300 ease-in-out overflow-hidden flex flex-col ${isGlobalAIOpen ? 'w-96 opacity-100' : 'w-0 opacity-0'}`}
+          className={`bg-surface transition-all duration-300 ease-in-out overflow-hidden flex flex-col ${isGlobalAIOpen ? 'fixed inset-0 z-50 w-full opacity-100 md:relative md:inset-auto md:z-auto md:w-96 md:border-l md:border-[var(--color-border)]' : 'w-0 opacity-0'}`}
         >
-          <div className="w-96 h-full">
+          <div className="w-full md:w-96 h-full">
             {isGlobalAIOpen && (
               <UIChat />
             )}
