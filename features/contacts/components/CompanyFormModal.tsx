@@ -25,7 +25,7 @@ interface CompanyFormModalProps {
   onClose,
   onSubmit,
   editingCompany,
-} - ParÃ¢metro `{
+} - Parâmetro `{
   isOpen,
   onClose,
   onSubmit,
@@ -103,7 +103,7 @@ export const CompanyFormModal: React.FC<CompanyFormModalProps> = ({
         />
 
         <SubmitButton isLoading={isSubmitting}>
-          {editingCompany ? 'Salvar AlteraÃ§Ãµes' : 'Criar Empresa'}
+          {editingCompany ? 'Salvar Alterações' : 'Criar Empresa'}
         </SubmitButton>
       </ModalForm>
     </Modal>

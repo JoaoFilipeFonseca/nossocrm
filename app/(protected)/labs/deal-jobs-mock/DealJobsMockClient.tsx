@@ -15,7 +15,7 @@ const mock = {
   deal: {
     title: 'Proposta PROP-2',
     company: 'Empresa',
-    stageLabel: 'NegociaÃ§Ã£o',
+    stageLabel: 'Negociação',
     valueBRL: 10128.1,
   },
   contact: {
@@ -26,21 +26,21 @@ const mock = {
   },
   nextAction: {
     title: 'Agradecer cliente e agendar onboarding',
-    why: 'O deal acabou de entrar em âGanhoâ. Consolidar relacionamento e garantir kickoff ainda hoje aumenta retenÃ§Ã£o.',
+    why: 'O deal acabou de entrar em “Ganho”. Consolidar relacionamento e garantir kickoff ainda hoje aumenta retenção.',
     cta: 'Executar agora',
   },
   copilot: {
-    title: 'PrÃ³xima melhor aÃ§Ã£o',
-    suggestion: 'Envie uma mensagem curta de agradecimento e jÃ¡ ofereÃ§a 2 horÃ¡rios para kickoff.',
+    title: 'Próxima melhor ação',
+    suggestion: 'Envie uma mensagem curta de agradecimento e já ofereça 2 horários para kickoff.',
     action: 'Gerar mensagem',
   },
   timeline: [
-    { id: 't1', kind: 'human', label: 'LigaÃ§Ã£o: ApresentaÃ§Ã£o', meta: 'PrÃ³ximo passo para Proposta PROP-2', at: '20/12/2025 Â· 16:59' },
-    { id: 't2', kind: 'human', label: 'Moveu para âPROPOSTAâ', meta: 'AtualizaÃ§Ã£o manual', at: '20/12/2025 Â· 12:21' },
-    { id: 't3', kind: 'system', label: 'Contato promovido para CUSTOMER', meta: 'AutomÃ¡tico via LinkedStage', at: '21/12/2025 Â· 19:56' },
-    { id: 't4', kind: 'system', label: 'Moveu para âGANHOâ', meta: 'AutomÃ¡tico via regra', at: '21/12/2025 Â· 19:56' },
-    { id: 't5', kind: 'system', label: 'Contato promovido para OTHER', meta: 'AutomÃ¡tico via LinkedStage', at: '21/12/2025 Â· 19:56' },
-    { id: 't6', kind: 'system', label: 'Moveu para âPERDIDOâ', meta: 'AutomÃ¡tico via regra', at: '21/12/2025 Â· 19:56' },
+    { id: 't1', kind: 'human', label: 'Ligação: Apresentação', meta: 'Próximo passo para Proposta PROP-2', at: '20/12/2025 · 16:59' },
+    { id: 't2', kind: 'human', label: 'Moveu para “PROPOSTA”', meta: 'Atualização manual', at: '20/12/2025 · 12:21' },
+    { id: 't3', kind: 'system', label: 'Contato promovido para CUSTOMER', meta: 'Automático via LinkedStage', at: '21/12/2025 · 19:56' },
+    { id: 't4', kind: 'system', label: 'Moveu para “GANHO”', meta: 'Automático via regra', at: '21/12/2025 · 19:56' },
+    { id: 't5', kind: 'system', label: 'Contato promovido para OTHER', meta: 'Automático via LinkedStage', at: '21/12/2025 · 19:56' },
+    { id: 't6', kind: 'system', label: 'Moveu para “PERDIDO”', meta: 'Automático via regra', at: '21/12/2025 · 19:56' },
   ] as TimelineItem[],
 };
 
@@ -111,12 +111,12 @@ export default function DealJobsMockClient() {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="truncate text-lg font-semibold text-slate-100">
                 {mock.deal.title}
-                <span className="text-slate-400"> Â· {mock.deal.company}</span>
+                <span className="text-slate-400"> · {mock.deal.company}</span>
               </h1>
               <Badge tone="warning">{mock.deal.stageLabel}</Badge>
             </div>
             <div className="mt-1 text-xs text-slate-500">
-              VersÃ£o mock (Jobs-style) Â· rota dev-only
+              Versão mock (Jobs-style) · rota dev-only
             </div>
           </div>
 
@@ -135,7 +135,7 @@ export default function DealJobsMockClient() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <Target className="h-4 w-4" />
-                    PrÃ³xima aÃ§Ã£o
+                    Próxima ação
                   </div>
                   <h2 className="mt-2 text-base font-semibold text-slate-100">
                     {mock.nextAction.title}
@@ -147,7 +147,7 @@ export default function DealJobsMockClient() {
                       <Phone className="h-3.5 w-3.5" />
                       {mock.contact.phoneE164}
                     </span>
-                    <span className="text-slate-600">Â·</span>
+                    <span className="text-slate-600">·</span>
                     <span className="truncate">{mock.contact.email}</span>
                   </div>
                 </div>
@@ -166,7 +166,7 @@ export default function DealJobsMockClient() {
                   </button>
 
                   <div className="mt-2 text-right text-[11px] text-slate-500">
-                    1 CTA primÃ¡rio. O resto Ã© suporte.
+                    1 CTA primário. O resto é suporte.
                   </div>
                 </div>
               </div>
@@ -178,7 +178,7 @@ export default function DealJobsMockClient() {
                 <div>
                   <h3 className="text-sm font-semibold text-slate-100">Linha do tempo</h3>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    Eventos relevantes primeiro; automaÃ§Ãµes ficam colapsadas.
+                    Eventos relevantes primeiro; automações ficam colapsadas.
                   </p>
                 </div>
 
@@ -188,7 +188,7 @@ export default function DealJobsMockClient() {
                   onClick={() => setShowSystemEvents((v) => !v)}
                 >
                   {showSystemEvents ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  {showSystemEvents ? 'Ocultar automaÃ§Ãµes' : `Mostrar automaÃ§Ãµes (${systemItems.length})`}
+                  {showSystemEvents ? 'Ocultar automações' : `Mostrar automações (${systemItems.length})`}
                 </button>
               </div>
 
@@ -199,7 +199,7 @@ export default function DealJobsMockClient() {
 
                 {!showSystemEvents ? (
                   <div className="mt-2 rounded-xl border border-white/10 bg-white/2 p-3 text-xs text-slate-400">
-                    {systemItems.length} eventos automÃ¡ticos ocultos.
+                    {systemItems.length} eventos automáticos ocultos.
                   </div>
                 ) : (
                   <div className="mt-2">
@@ -221,7 +221,7 @@ export default function DealJobsMockClient() {
                 </div>
                 <div>
                   <div className="text-sm font-semibold">Foco Imo Copilot</div>
-                  <div className="text-xs text-slate-500">1 sugestÃ£o por vez</div>
+                  <div className="text-xs text-slate-500">1 sugestão por vez</div>
                 </div>
               </div>
               <Badge tone="success">Pronto</Badge>
@@ -248,10 +248,10 @@ export default function DealJobsMockClient() {
                   type="button"
                   className="rounded-xl border border-white/10 bg-white/3 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-white/5"
                   onClick={() => {
-                    alert('Mock: ver mais opÃ§Ãµes');
+                    alert('Mock: ver mais opções');
                   }}
                 >
-                  Ver mais opÃ§Ãµes
+                  Ver mais opções
                 </button>
               </div>
             </div>
@@ -275,7 +275,7 @@ export default function DealJobsMockClient() {
                 </button>
               </div>
               <p className="mt-2 text-[11px] text-slate-500">
-                Sem menu de features aqui â sÃ³ conversa + uma recomendaÃ§Ã£o ativa.
+                Sem menu de features aqui — só conversa + uma recomendação ativa.
               </p>
             </div>
           </aside>

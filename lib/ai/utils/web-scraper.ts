@@ -1,20 +1,20 @@
 /**
- * web-scraper.ts â Extrai conteÃºdo de qualquer URL como Markdown limpo.
+ * web-scraper.ts — Extrai conteúdo de qualquer URL como Markdown limpo.
  *
  * Usa r.jina.ai como mecanismo principal:
- * - Roda headless browser no lado deles â funciona com SPAs (React, Next.js, Vue)
- * - Aplica Mozilla Readability â extrai conteÃºdo principal
+ * - Roda headless browser no lado deles → funciona com SPAs (React, Next.js, Vue)
+ * - Aplica Mozilla Readability → extrai conteúdo principal
  * - Retorna Markdown limpo, pronto para LLM
- * - Zero config, sem API key, gratuito (atÃ© ~50 req/min)
+ * - Zero config, sem API key, gratuito (até ~50 req/min)
  *
- * Fallback: extraÃ§Ã£o bÃ¡sica via regex para sites que bloqueiam Jina.
+ * Fallback: extração básica via regex para sites que bloqueiam Jina.
  */
 
 const JINA_BASE_URL = 'https://r.jina.ai/';
 const FETCH_TIMEOUT_MS = 15_000;
 const DEFAULT_MAX_CHARS = 4_000;
 
-// ââ SSRF protection ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SSRF protection ────────────────────────────────────────────────────────
 
 const PRIVATE_IP_RE =
   /^(127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|169\.254\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|0\.0\.0\.|::1$|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:|fe80:)/i;
@@ -37,7 +37,7 @@ function validateScrapableUrl(raw: string): URL | null {
   return parsed;
 }
 
-// ââ Fallback: strip HTML bÃ¡sico ââââââââââââââââââââââââââââââââââââââââââââ
+// ── Fallback: strip HTML básico ────────────────────────────────────────────
 
 const NOISE_BLOCK_RE =
   /<(script|style|nav|header|footer|aside|iframe|noscript|svg|button|form)[^>]*>[\s\S]*?<\/\1>/gi;
@@ -45,7 +45,7 @@ const HTML_TAG_RE = /<[^>]+>/g;
 const ENTITIES: Record<string, string> = {
   '&amp;': '&', '&lt;': '<', '&gt;': '>',
   '&quot;': '"', '&#39;': "'", '&nbsp;': ' ',
-  '&mdash;': 'â', '&ndash;': 'â', '&hellip;': 'â¦',
+  '&mdash;': '—', '&ndash;': '–', '&hellip;': '…',
 };
 
 function decodeEntities(text: string) {
@@ -74,7 +74,7 @@ async function fallbackScrape(url: string, maxChars: number) {
   return { text, title };
 }
 
-// ââ Principal: Jina Reader âââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Principal: Jina Reader ─────────────────────────────────────────────────
 
 export interface ScrapeResult {
   markdown: string;
@@ -91,7 +91,7 @@ export async function scrapeUrl(
   url: string,
   maxChars = DEFAULT_MAX_CHARS
 ): Promise<ScrapeResult | null> {
-  // Validate URL before any network call â reject private IPs, localhost, non-https
+  // Validate URL before any network call — reject private IPs, localhost, non-https
   const validated = validateScrapableUrl(url);
   if (!validated) {
     console.warn('[WebScraper] URL rejected (unsafe or non-https):', url);
@@ -99,7 +99,7 @@ export async function scrapeUrl(
   }
   const safeUrl = validated.href;
 
-  // ââ Tentativa 1: Jina Reader ââ
+  // ── Tentativa 1: Jina Reader ──
   try {
     const jinaUrl = `${JINA_BASE_URL}${safeUrl}`;
     const res = await fetch(jinaUrl, {
@@ -112,30 +112,30 @@ export async function scrapeUrl(
 
     if (res.ok) {
       const raw = await res.text();
-      // Jina inclui metadados no topo â extrair tÃ­tulo e URL
+      // Jina inclui metadados no topo — extrair título e URL
       const titleMatch = raw.match(/^Title:\s*(.+)$/m);
       const title = titleMatch?.[1]?.trim() ?? '';
 
       // Truncar preservando boundary de palavra
       const markdown = raw.length > maxChars
-        ? raw.slice(0, maxChars).replace(/\s+\S*$/, '') + 'â¦'
+        ? raw.slice(0, maxChars).replace(/\s+\S*$/, '') + '…'
         : raw;
 
-      console.log('[WebScraper] Jina OK â %s, title: "%s", %d chars', safeUrl, title, markdown.length);
+      console.log('[WebScraper] Jina OK — %s, title: "%s", %d chars', safeUrl, title, markdown.length);
       return { markdown, title, url: safeUrl, source: 'jina' };
     }
 
     console.warn('[WebScraper] Jina returned %d for %s', res.status, safeUrl);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.warn('[WebScraper] Jina failed for %s: %s â trying fallback', safeUrl, msg);
+    console.warn('[WebScraper] Jina failed for %s: %s — trying fallback', safeUrl, msg);
   }
 
-  // ââ Tentativa 2: Fallback bÃ¡sico (safeUrl already validated â no SSRF risk) ââ
+  // ── Tentativa 2: Fallback básico (safeUrl already validated — no SSRF risk) ──
   try {
     const result = await fallbackScrape(safeUrl, maxChars);
     if (result) {
-      console.log('[WebScraper] Fallback OK â %s, %d chars', safeUrl, result.text.length);
+      console.log('[WebScraper] Fallback OK — %s, %d chars', safeUrl, result.text.length);
       return { markdown: result.text, title: result.title, url: safeUrl, source: 'fallback' };
     }
   } catch (err) {

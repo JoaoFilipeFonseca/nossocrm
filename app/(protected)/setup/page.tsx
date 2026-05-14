@@ -23,15 +23,15 @@ export default function SetupPage() {
   const router = useRouter()
   const { checkInitialization } = useAuth()
 
-  // Se a instÃ¢ncia jÃ¡ estiver inicializada, nÃ£o faz sentido exibir o wizard de setup.
-  // Mantemos a rota pÃºblica, mas redirecionamos o usuÃ¡rio para login (ou dashboard se jÃ¡ estiver logado).
+  // Se a instância já estiver inicializada, não faz sentido exibir o wizard de setup.
+  // Mantemos a rota pública, mas redirecionamos o usuário para login (ou dashboard se já estiver logado).
   React.useEffect(() => {
     let cancelled = false
 
     const run = async () => {
       try {
         if (!supabase) {
-          // Sem Supabase configurado localmente: nÃ£o dÃ¡ pra checar init. Apenas mostra a UI.
+          // Sem Supabase configurado localmente: não dá pra checar init. Apenas mostra a UI.
           return
         }
 
@@ -53,7 +53,7 @@ export default function SetupPage() {
         }
       } catch (e) {
         console.error('Setup init check error:', e)
-        // Em caso de erro, nÃ£o bloqueia o setup.
+        // Em caso de erro, não bloqueia o setup.
       } finally {
         if (!cancelled) setCheckingInit(false)
       }
@@ -80,12 +80,12 @@ export default function SetupPage() {
     if (checkingInit) return
 
     if (!isPasswordValid) {
-      setError('A senha nÃ£o atende aos requisitos mÃ­nimos')
+      setError('A senha não atende aos requisitos mínimos')
       return
     }
 
     if (!passwordsMatch) {
-      setError('As senhas nÃ£o coincidem')
+      setError('As senhas não coincidem')
       return
     }
 
@@ -139,7 +139,7 @@ export default function SetupPage() {
           {checkingInit ? (
             <div className="flex items-center justify-center py-10 text-slate-600 dark:text-slate-300">
               <Loader2 className="animate-spin h-5 w-5 mr-2" />
-              Verificando configuraÃ§Ã£oâ¦
+              Verificando configuração…
             </div>
           ) : (
           <form className="space-y-6" onSubmit={handleSubmit}>
@@ -205,7 +205,7 @@ export default function SetupPage() {
                   aria-required="true"
                   aria-describedby="password-requirements"
                   className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all sm:text-sm"
-                  placeholder="â¢â¢â¢â¢â¢â¢â¢â¢"
+                  placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
@@ -216,16 +216,16 @@ export default function SetupPage() {
                   <p className="text-xs text-slate-500 dark:text-slate-400">Requisitos:</p>
                   <div className="grid grid-cols-2 gap-1 text-xs">
                     <span className={passwordRequirements.minLength ? 'text-green-500' : 'text-slate-400'}>
-                      {passwordRequirements.minLength ? 'â' : 'â'} MÃ­nimo 6 caracteres
+                      {passwordRequirements.minLength ? '✓' : '○'} Mínimo 6 caracteres
                     </span>
                     <span className={passwordRequirements.hasLowercase ? 'text-green-500' : 'text-slate-400'}>
-                      {passwordRequirements.hasLowercase ? 'â' : 'â'} Letra minÃºscula
+                      {passwordRequirements.hasLowercase ? '✓' : '○'} Letra minúscula
                     </span>
                     <span className={passwordRequirements.hasUppercase ? 'text-green-500' : 'text-slate-400'}>
-                      {passwordRequirements.hasUppercase ? 'â' : 'â'} Letra maiÃºscula
+                      {passwordRequirements.hasUppercase ? '✓' : '○'} Letra maiúscula
                     </span>
                     <span className={passwordRequirements.hasDigit ? 'text-green-500' : 'text-slate-400'}>
-                      {passwordRequirements.hasDigit ? 'â' : 'â'} NÃºmero
+                      {passwordRequirements.hasDigit ? '✓' : '○'} Número
                     </span>
                   </div>
                 </div>
@@ -255,16 +255,16 @@ export default function SetupPage() {
                         : 'border-red-500 focus:border-red-500'
                       : 'border-slate-300 dark:border-slate-700 focus:border-primary-500'
                   }`}
-                  placeholder="â¢â¢â¢â¢â¢â¢â¢â¢"
+                  placeholder="••••••••"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                 />
               </div>
 
               {confirmPassword.length > 0 && !passwordsMatch && (
-                <p className="mt-1 text-xs text-red-500">As senhas nÃ£o coincidem</p>
+                <p className="mt-1 text-xs text-red-500">As senhas não coincidem</p>
               )}
-              {passwordsMatch && <p className="mt-1 text-xs text-green-500">â Senhas coincidem</p>}
+              {passwordsMatch && <p className="mt-1 text-xs text-green-500">✓ Senhas coincidem</p>}
             </div>
 
             {error && (
@@ -286,7 +286,7 @@ export default function SetupPage() {
                 <Loader2 className="animate-spin h-5 w-5" />
               ) : (
                 <>
-                  ComeÃ§ar Agora
+                  Começar Agora
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
