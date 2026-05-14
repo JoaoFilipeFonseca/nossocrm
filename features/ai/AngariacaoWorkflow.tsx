@@ -86,8 +86,8 @@ function SwotQuadrant({ data }: { data: string }) {
                 <QuadrantBox title="⚠️ Ameaças" body={s.ameacas} colorClass="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800" />
             </div>
             {s.recomendacoes && (
-                <div className="p-4 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20">
-                    <h3 className="text-sm font-bold text-purple-900 dark:text-purple-200 mb-2">🎯 Recomendações Estratégicas</h3>
+                <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+                    <h3 className="text-sm font-bold text-blue-900 dark:text-blue-200 mb-2">🎯 Recomendações Estratégicas</h3>
                     <div className="text-sm text-slate-800 dark:text-slate-200">
                         <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{s.recomendacoes}</ReactMarkdown>
                     </div>
@@ -195,7 +195,7 @@ export default function AngariacaoWorkflow() {
     return (
         <div className="max-w-5xl mx-auto p-6 space-y-6">
             <div className="flex items-center gap-3">
-                <Sparkles className="w-7 h-7 text-purple-500" />
+                <Sparkles className="w-7 h-7 text-blue-500" />
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Preparar Angariação</h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">Workflow guiado em 5 passos com IA</p>
@@ -214,7 +214,7 @@ export default function AngariacaoWorkflow() {
                             disabled={disabled}
                             onClick={() => goToStep(s)}
                             className={`flex-1 min-w-fit px-3 py-2 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
-                                active ? 'bg-purple-600 text-white shadow-sm' :
+                                active ? 'bg-blue-600 text-white shadow-sm' :
                                 done ? 'text-emerald-600 dark:text-emerald-400 hover:bg-white dark:hover:bg-white/10' :
                                 disabled ? 'text-slate-400 cursor-not-allowed' :
                                 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10'
@@ -287,7 +287,7 @@ export default function AngariacaoWorkflow() {
                         </Field>
                     </div>
                     <div className="flex justify-end pt-2">
-                        <button type="button" disabled={!canAdvanceFromDados} onClick={() => goToStep('icp')} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-purple-600 hover:bg-purple-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-medium">
+                        <button type="button" disabled={!canAdvanceFromDados} onClick={() => goToStep('icp')} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-medium">
                             Avançar para ICP <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
@@ -325,14 +325,14 @@ export default function AngariacaoWorkflow() {
                         </div>
                     ) : (
                         <div className="text-center py-8 text-sm text-slate-500">
-                            <button type="button" onClick={() => generate(currentStep)} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium">
+                            <button type="button" onClick={() => generate(currentStep)} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">
                                 <Sparkles className="w-4 h-4" /> Gerar {STEP_LABELS[currentStep].split('·')[1]?.trim() || ''}
                             </button>
                         </div>
                     )}
                     {outputs[currentStep] && currentIdx < STEP_ORDER.length - 1 && (
                         <div className="flex justify-end pt-4 mt-4 border-t border-slate-200 dark:border-white/10">
-                            <button type="button" onClick={() => goToStep(STEP_ORDER[currentIdx + 1])} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium">
+                            <button type="button" onClick={() => goToStep(STEP_ORDER[currentIdx + 1])} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">
                                 Próximo passo <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>
