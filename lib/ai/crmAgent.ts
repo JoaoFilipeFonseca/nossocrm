@@ -1,5 +1,6 @@
 import { ToolLoopAgent, stepCountIs } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createAnthropic } from '@ai-sdk/anthropic';
 import { CRMCallOptionsSchema, type CRMCallOptions } from '@/types/ai';
 import { createCRMTools } from './tools';
 import { formatPriorityPtBr } from '@/lib/utils/priority';
@@ -301,6 +302,7 @@ export async function createCRMAgent(
     context: CRMCallOptions,
     userId: string,
     apiKey: string,
+    provider: 'google' | 'anthropic' = 'google',
     modelId: string = AI_DEFAULT_MODELS.google,
     provider: AIProvider = AI_DEFAULT_PROVIDER
 ) {
@@ -313,8 +315,9 @@ export async function createCRMAgent(
         provider,
     });
 
-    const google = createGoogleGenerativeAI({ apiKey });
-    const model = google(modelId);
+    const model = provider === 'anthropic'
+        ? createAnthropic({ apiKey })(modelId)
+        : createGoogleGenerativeAI({ apiKey })(modelId);
 
     // Create tools with context injected
     const tools = createCRMTools(context, userId);
