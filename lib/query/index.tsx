@@ -1,25 +1,25 @@
 /**
- * @fileoverview Configuração do TanStack Query para o NossoCRM.
+ * @fileoverview ConfiguraÃ§Ã£o do TanStack Query para o Foco Imo.
  * 
- * Este módulo centraliza toda a configuração de gerenciamento de estado do servidor:
+ * Este mÃ³dulo centraliza toda a configuraÃ§Ã£o de gerenciamento de estado do servidor:
  * - Cliente e provider do TanStack Query
  * - Query keys centralizadas para todas as entidades
  * - Tratamento de erros padronizado
- * - Hooks customizados para operações comuns
+ * - Hooks customizados para operaÃ§Ãµes comuns
  * 
  * ## Funcionalidades
  * 
  * - Cache inteligente com stale time de 5 minutos
- * - Garbage collection após 30 minutos
- * - Retry automático com backoff exponencial
- * - Refetch automático em foco/reconexão
- * - Updates otimistas para UX instantânea
+ * - Garbage collection apÃ³s 30 minutos
+ * - Retry automÃ¡tico com backoff exponencial
+ * - Refetch automÃ¡tico em foco/reconexÃ£o
+ * - Updates otimistas para UX instantÃ¢nea
  * 
  * @module lib/query
  * 
  * @example
  * ```tsx
- * // Usando o provider na raiz da aplicação
+ * // Usando o provider na raiz da aplicaÃ§Ã£o
  * <QueryProvider>
  *   <App />
  * </QueryProvider>
@@ -50,7 +50,7 @@ import { ERROR_CODES, getErrorMessage } from '@/lib/validations/errorCodes';
  * @interface APIError
  */
 interface APIError {
-  /** Código do erro. */
+  /** CÃ³digo do erro. */
   code: string;
   /** Mensagem do erro. */
   message: string;
@@ -61,7 +61,7 @@ interface APIError {
 /**
  * Handler de erros para queries.
  * 
- * Exibe notificação com mensagem apropriada baseada no tipo de erro.
+ * Exibe notificaÃ§Ã£o com mensagem apropriada baseada no tipo de erro.
  * 
  * @param error - Erro capturado.
  */
@@ -101,8 +101,8 @@ const handleQueryError = (error: unknown) => {
  * Handler de erros para mutations.
  * 
  * @param error - Erro capturado.
- * @param _variables - Variáveis da mutation (não utilizado).
- * @param _context - Contexto da mutation (não utilizado).
+ * @param _variables - VariÃ¡veis da mutation (nÃ£o utilizado).
+ * @param _context - Contexto da mutation (nÃ£o utilizado).
  */
 const handleMutationError = (error: unknown, _variables: unknown, _context: unknown) => {
   handleQueryError(error);
@@ -111,29 +111,29 @@ const handleMutationError = (error: unknown, _variables: unknown, _context: unkn
 // ============ QUERY CLIENT ============
 
 /**
- * Política de staleTime por tipo de dado:
+ * PolÃ­tica de staleTime por tipo de dado:
  *
  * | Tipo                       | staleTime | Justificativa                                     |
  * |----------------------------|-----------|---------------------------------------------------|
- * | Referência (boards, stages)| 5min      | Raramente muda, default global                    |
+ * | ReferÃªncia (boards, stages)| 5min      | Raramente muda, default global                    |
  * | Deals                      | 2min      | Kanban precisa de dados relativamente frescos     |
- * | Conversations (inbox)      | 30s       | Alta frequência de updates, near-realtime         |
- * | AI metrics                 | 5min      | Dashboard, não requer refresh frequente           |
+ * | Conversations (inbox)      | 30s       | Alta frequÃªncia de updates, near-realtime         |
+ * | AI metrics                 | 5min      | Dashboard, nÃ£o requer refresh frequente           |
  * | User profile               | 5min      | Default global                                    |
  *
  * Realtime (Supabase) invalida o cache automaticamente via queryClient.invalidateQueries
- * quando eventos INSERT/UPDATE chegam — portanto staleTime alto é seguro para entidades
+ * quando eventos INSERT/UPDATE chegam â portanto staleTime alto Ã© seguro para entidades
  * cobertas pelo Realtime.
  */
 
 /**
- * Cliente TanStack Query configurado para o NossoCRM.
+ * Cliente TanStack Query configurado para o Foco Imo.
  * 
- * Configurações:
+ * ConfiguraÃ§Ãµes:
  * - Stale time: 5 minutos
  * - Cache time: 30 minutos
  * - Retry: 3x com backoff exponencial
- * - Refetch automático em foco/reconexão
+ * - Refetch automÃ¡tico em foco/reconexÃ£o
  */
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -146,7 +146,7 @@ export const queryClient = new QueryClient({
       retry: 3,
       // Retry delay with exponential backoff
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-      // Realtime covers main entities — window focus refetch is redundant
+      // Realtime covers main entities â window focus refetch is redundant
       refetchOnWindowFocus: false,
       // Don't refetch on mount if data is fresh
       refetchOnMount: true,
@@ -179,10 +179,10 @@ interface QueryProviderProps {
 }
 
 /**
- * Provider do TanStack Query para a aplicação.
+ * Provider do TanStack Query para a aplicaÃ§Ã£o.
  * 
- * Envolve a aplicação com o cliente de query configurado.
- * Deve ser colocado próximo à raiz da árvore de componentes.
+ * Envolve a aplicaÃ§Ã£o com o cliente de query configurado.
+ * Deve ser colocado prÃ³ximo Ã  raiz da Ã¡rvore de componentes.
  * 
  * @param props - Props do componente.
  * @returns Componente provider.
@@ -195,7 +195,7 @@ export const QueryProvider: React.FC<QueryProviderProps> = ({ children }) => {
 /**
  * Query keys centralizadas para gerenciamento de cache.
  * 
- * Usar estas keys garante consistência na invalidação e prefetch.
+ * Usar estas keys garante consistÃªncia na invalidaÃ§Ã£o e prefetch.
  * Pattern: `queryKeys.entity.action(params)`
  * 
  * @example
@@ -203,7 +203,7 @@ export const QueryProvider: React.FC<QueryProviderProps> = ({ children }) => {
  * // Invalidar todos os deals
  * queryClient.invalidateQueries({ queryKey: queryKeys.deals.all });
  * 
- * // Invalidar deals de um board específico
+ * // Invalidar deals de um board especÃ­fico
  * queryClient.invalidateQueries({ 
  *   queryKey: queryKeys.deals.list({ boardId: 'xxx' }) 
  * });
@@ -216,15 +216,15 @@ import { queryKeys } from './queryKeys';
 // ============ PREFETCH HELPERS ============
 
 /**
- * Pré-carrega dados para uma rota antes da navegação.
+ * PrÃ©-carrega dados para uma rota antes da navegaÃ§Ã£o.
  * 
- * Melhora a percepção de velocidade ao carregar dados antecipadamente.
+ * Melhora a percepÃ§Ã£o de velocidade ao carregar dados antecipadamente.
  * 
- * @param route - Nome da rota a ser pré-carregada.
+ * @param route - Nome da rota a ser prÃ©-carregada.
  * 
  * @example
  * ```typescript
- * // No hover de um link de navegação
+ * // No hover de um link de navegaÃ§Ã£o
  * <Link onMouseEnter={() => prefetchRouteData('contacts')}>
  *   Contatos
  * </Link>

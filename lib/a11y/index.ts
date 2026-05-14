@@ -1,22 +1,22 @@
 /**
- * @fileoverview Biblioteca de acessibilidade para o NossoCRM.
+ * @fileoverview Biblioteca de acessibilidade para o Foco Imo.
  * 
- * Este módulo fornece componentes e hooks para implementar acessibilidade
+ * Este mÃ³dulo fornece componentes e hooks para implementar acessibilidade
  * seguindo as diretrizes WCAG 2.1 Level AA.
  * 
  * ## Componentes
  * 
- * - `FocusTrap` - Armadilha de foco para modais e diálogos
- * - `VisuallyHidden` - Conteúdo visível apenas para leitores de tela
- * - `SkipLink` - Link para pular navegação
- * - `LiveRegion` - Anúncios para leitores de tela
+ * - `FocusTrap` - Armadilha de foco para modais e diÃ¡logos
+ * - `VisuallyHidden` - ConteÃºdo visÃ­vel apenas para leitores de tela
+ * - `SkipLink` - Link para pular navegaÃ§Ã£o
+ * - `LiveRegion` - AnÃºncios para leitores de tela
  * 
  * ## Hooks
  * 
- * - `useFocusReturn` - Retorna foco ao elemento anterior após fechar modal
+ * - `useFocusReturn` - Retorna foco ao elemento anterior apÃ³s fechar modal
  * - `useAnnounce` - Anuncia mensagens para leitores de tela
  * - `useKeyboardShortcut` - Gerencia atalhos de teclado
- * - `useFormErrorFocus` - Foca automaticamente no primeiro erro de formulário
+ * - `useFormErrorFocus` - Foca automaticamente no primeiro erro de formulÃ¡rio
  * 
  * @module lib/a11y
  * 

@@ -31,19 +31,19 @@ const COLORS = {
 };
 
 /**
- * Gera um PDF com o relatório de performance do pipeline.
+ * Gera um PDF com o relatÃ³rio de performance do pipeline.
  *
- * Usa dynamic imports para carregar jsPDF e jspdf-autotable apenas quando necessário,
+ * Usa dynamic imports para carregar jsPDF e jspdf-autotable apenas quando necessÃ¡rio,
  * reduzindo o bundle inicial em ~200KB.
  *
- * @param {ReportData} data - Dados do relatório (pipeline, win rate, deals, etc.)
- * @param {PeriodFilter} period - Período selecionado para o relatório
+ * @param {ReportData} data - Dados do relatÃ³rio (pipeline, win rate, deals, etc.)
+ * @param {PeriodFilter} period - PerÃ­odo selecionado para o relatÃ³rio
  * @param {string | undefined} boardName - Nome do pipeline/board
- * @param {string | undefined} generatedBy - Nome do usuário que gerou o relatório
- * @returns {Promise<void>} Promise que resolve quando o PDF é gerado e aberto
+ * @param {string | undefined} generatedBy - Nome do usuÃ¡rio que gerou o relatÃ³rio
+ * @returns {Promise<void>} Promise que resolve quando o PDF Ã© gerado e aberto
  */
 export const generateReportPDF = async (data: ReportData, period: PeriodFilter, boardName?: string, generatedBy?: string) => {
-    // Dynamic imports - carrega jsPDF apenas quando a função é chamada
+    // Dynamic imports - carrega jsPDF apenas quando a funÃ§Ã£o Ã© chamada
     // Isso remove ~200KB do bundle inicial
     const [{ jsPDF }, autoTableModule] = await Promise.all([
         import('jspdf'),
@@ -59,8 +59,8 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
 
     // Helpers
     const formatCurrency = (value: number) => {
-        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M €`;
-        if (value >= 1000) return `${(value / 1000).toFixed(0)}k €`;
+        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M â¬`;
+        if (value >= 1000) return `${(value / 1000).toFixed(0)}k â¬`;
         return `$${value.toLocaleString('en-US')}`;
     };
 
@@ -73,7 +73,7 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
     // HEADER
     // ============================================
 
-    // Logo placeholder (N for NossoCRM)
+    // Logo placeholder (N for Foco Imo)
     doc.setFillColor(...COLORS.blue);
     doc.roundedRect(margin, 12, 12, 12, 2, 2, 'F');
     doc.setFontSize(10);
@@ -85,13 +85,13 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...COLORS.primary);
-    doc.text('Relatório de Performance', margin + 18, 21);
+    doc.text('RelatÃ³rio de Performance', margin + 18, 21);
 
     // Pipeline name
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLORS.secondary);
-    doc.text(`Pipeline: ${boardName || 'Padrão'}`, margin, 32);
+    doc.text(`Pipeline: ${boardName || 'PadrÃ£o'}`, margin, 32);
 
     // Period badge - Rocket science precision
     const periodLabel = PERIOD_LABELS[period];
@@ -123,7 +123,7 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLORS.secondary);
-    doc.text(`Por: ${generatedBy || 'Usuário'} | ${dateStr} às ${timeStr}`, pageWidth - margin, metaY, { align: 'right' });
+    doc.text(`Por: ${generatedBy || 'UsuÃ¡rio'} | ${dateStr} Ã s ${timeStr}`, pageWidth - margin, metaY, { align: 'right' });
 
     // Divider
     doc.setDrawColor(...COLORS.border);
@@ -154,9 +154,9 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
             accent: COLORS.emerald
         },
         {
-            label: 'Ciclo Médio',
+            label: 'Ciclo MÃ©dio',
             value: `${data.avgSalesCycle} dias`,
-            change: `Mín: ${data.fastestDeal}d`,
+            change: `MÃ­n: ${data.fastestDeal}d`,
             isPositive: true,
             accent: COLORS.purple
         },
@@ -277,7 +277,7 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
             rep.deals.toString(),
             formatCurrency(rep.revenue)
         ])
-        : [['—', 'Sem dados no período', '—', '—']];
+        : [['â', 'Sem dados no perÃ­odo', 'â', 'â']];
 
     autoTable(doc, {
         startY: leaderboardY + 5,
@@ -319,8 +319,8 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
     // Footer text
     doc.setFontSize(7);
     doc.setTextColor(...COLORS.secondary);
-    doc.text('NossoCRM', margin, pageHeight - 10);
-    doc.text('Página 1', pageWidth / 2, pageHeight - 10, { align: 'center' });
+    doc.text('Foco Imo', margin, pageHeight - 10);
+    doc.text('PÃ¡gina 1', pageWidth / 2, pageHeight - 10, { align: 'center' });
     doc.text(new Date().toLocaleDateString('pt-BR'), pageWidth - margin, pageHeight - 10, { align: 'right' });
 
     // ============================================

@@ -1,7 +1,7 @@
 /**
  * @fileoverview AI Agent Module
  *
- * Agente autônomo de vendas para o NossoCRM.
+ * Agente autÃ´nomo de vendas para o Foco Imo.
  * Processa mensagens automaticamente e move leads pelo funil.
  *
  * @module lib/ai/agent

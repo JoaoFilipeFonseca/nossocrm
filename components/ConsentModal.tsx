@@ -21,22 +21,22 @@ interface ConsentModalProps {
 const CONSENT_LABELS: Record<ConsentType, { title: string; description: string }> = {
   terms: {
     title: 'Termos de Uso',
-    description: 'Li e aceito os Termos de Uso do NossoCRM.',
+    description: 'Li e aceito os Termos de Uso do Foco Imo.',
   },
   privacy: {
-    title: 'Política de Privacidade',
-    description: 'Li e aceito a Política de Privacidade, que explica como seus dados são coletados e utilizados.',
+    title: 'PolÃ­tica de Privacidade',
+    description: 'Li e aceito a PolÃ­tica de Privacidade, que explica como seus dados sÃ£o coletados e utilizados.',
   },
   data_processing: {
     title: 'Processamento de Dados',
     description: 'Autorizo o processamento dos meus dados pessoais para uso da plataforma, conforme a LGPD.',
   },
   marketing: {
-    title: 'Comunicações de Marketing',
-    description: 'Aceito receber comunicações promocionais e novidades por email.',
+    title: 'ComunicaÃ§Ãµes de Marketing',
+    description: 'Aceito receber comunicaÃ§Ãµes promocionais e novidades por email.',
   },
   analytics: {
-    title: 'Análise de Uso',
+    title: 'AnÃ¡lise de Uso',
     description: 'Autorizo a coleta de dados de uso para melhoria da plataforma.',
   },
 };
@@ -49,7 +49,7 @@ const CONSENT_LABELS: Record<ConsentType, { title: string; description: string }
   missingConsents,
   onAccept,
   onClose,
-} - Parâmetro `{
+} - ParÃ¢metro `{
   isOpen,
   missingConsents,
   onAccept,
@@ -117,10 +117,10 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Consentimentos Necessários
+            Consentimentos NecessÃ¡rios
           </h2>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Para continuar usando o NossoCRM, precisamos do seu consentimento.
+            Para continuar usando o Foco Imo, precisamos do seu consentimento.
           </p>
         </div>
 
@@ -130,7 +130,7 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({
           {requiredMissing.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                Obrigatórios
+                ObrigatÃ³rios
               </h3>
               <div className="space-y-3">
                 {requiredMissing.map(type => (
@@ -183,7 +183,7 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({
                 rel="noopener noreferrer"
                 className="text-primary-600 hover:text-primary-700 dark:text-primary-400"
               >
-                Política de Privacidade (v{CONSENT_VERSIONS.privacy})
+                PolÃ­tica de Privacidade (v{CONSENT_VERSIONS.privacy})
               </a>
             </div>
           </div>
@@ -248,7 +248,7 @@ const ConsentItem: React.FC<ConsentItemProps> = ({
           </span>
           {required && (
             <span className="text-xs text-red-500 font-medium">
-              Obrigatório
+              ObrigatÃ³rio
             </span>
           )}
         </div>

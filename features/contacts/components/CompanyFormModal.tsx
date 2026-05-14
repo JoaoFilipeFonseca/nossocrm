@@ -25,7 +25,7 @@ interface CompanyFormModalProps {
   onClose,
   onSubmit,
   editingCompany,
-} - Parâmetro `{
+} - ParÃ¢metro `{
   isOpen,
   onClose,
   onSubmit,
@@ -81,7 +81,7 @@ export const CompanyFormModal: React.FC<CompanyFormModalProps> = ({
       <ModalForm onSubmit={handleSubmit(handleFormSubmit)}>
         <InputField
           label="Nome"
-          placeholder="Ex: NossoCRM LTDA"
+          placeholder="Ex: Foco Imo LTDA"
           required
           error={errors.name}
           registration={register('name')}
@@ -103,7 +103,7 @@ export const CompanyFormModal: React.FC<CompanyFormModalProps> = ({
         />
 
         <SubmitButton isLoading={isSubmitting}>
-          {editingCompany ? 'Salvar Alterações' : 'Criar Empresa'}
+          {editingCompany ? 'Salvar AlteraÃ§Ãµes' : 'Criar Empresa'}
         </SubmitButton>
       </ModalForm>
     </Modal>
