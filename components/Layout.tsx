@@ -303,7 +303,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             { to: '/inbox', icon: Inbox, label: 'Inbox', prefetch: 'inbox' as const, badge: undefined },
             { to: '/messaging', icon: MessageSquare, label: 'Mensagens', prefetch: undefined, badge: unreadMessagesCount },
             { to: '/dashboard', icon: LayoutDashboard, label: 'Visão Geral', prefetch: 'dashboard' as const, badge: undefined },
-            { to: '/inbox-bruto', icon: Inbox, label: 'Inbox Bruto', prefetch: undefined, badge: undefined },
+            { to: '/matches', icon: Inbox, label: 'Matches', prefetch: undefined, badge: undefined },
       { to: '/ai/workflows/angariacao', icon: Sparkles, label: 'Angariação IA', prefetch: undefined, badge: undefined },
             { to: '/boards', icon: KanbanSquare, label: 'Boards', prefetch: 'boards' as const, badge: undefined },
             { to: '/contacts', icon: Users, label: 'Contactos', prefetch: 'contacts' as const, badge: undefined },
@@ -537,9 +537,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <aside
           aria-label="Assistente de IA"
           aria-hidden={!isGlobalAIOpen}
-          className={`bg-surface transition-all duration-300 ease-in-out overflow-hidden flex flex-col ${isGlobalAIOpen ? 'fixed inset-0 z-50 w-full opacity-100 md:relative md:inset-auto md:z-auto md:w-96 md:border-l md:border-[var(--color-border)]' : 'w-0 opacity-0'}`}
+          className={`border-l border-[var(--color-border)] bg-surface transition-all duration-300 ease-in-out overflow-hidden flex flex-col ${isGlobalAIOpen ? 'w-96 opacity-100' : 'w-0 opacity-0'}`}
         >
-          <div className="w-full md:w-96 h-full">
+          <div className="w-96 h-full">
             {isGlobalAIOpen && (
               <UIChat />
             )}
