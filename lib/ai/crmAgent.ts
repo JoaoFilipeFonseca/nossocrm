@@ -6,7 +6,7 @@ import { createCRMTools } from './tools';
 import { formatPriorityPtBr } from '@/lib/utils/priority';
 import { AI_DEFAULT_MODELS, AI_DEFAULT_PROVIDER } from './defaults';
 
-type AIProvider = 'google';
+type AIProvider = 'google' | 'anthropic';
 
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
