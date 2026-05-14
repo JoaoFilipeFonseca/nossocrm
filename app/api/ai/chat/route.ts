@@ -11,7 +11,7 @@ import { isAIFeatureEnabled } from '@/lib/ai/features/server';
 
 export const maxDuration = 60;
 
-type AIProvider = 'google';
+type AIProvider = 'google' | 'anthropic';
 
 function asOptionalString(v: unknown): string | undefined {
     return typeof v === 'string' ? v : undefined;
