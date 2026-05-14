@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { DeleteConfirmModal } from '@/components/ui/DeleteConfirmModal';
 import { Package, Pencil, Plus, Save, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-react';
 import { productsService } from '@/lib/supabase';
 import type { Product } from '@/types';
@@ -149,19 +150,21 @@ export const ProductsCatalogManager: React.FC = () => {
     if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
   };
 
-  const remove = async (p: Product) => {
-    const ok = window.confirm(`Excluir "${p.name}"? Isso não remove itens já usados em deals históricos.`);
-    if (!ok) return;
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const remove = (p: Product) => setDeleteTarget(p);
+  const performDelete = async () => {
+    if (!deleteTarget) return;
     setLoading(true);
     setError(null);
-    const res = await productsService.delete(p.id);
+    const res = await supabase.from('products').delete().eq('id', deleteTarget.id);
     if (res.error) {
       setError(res.error.message);
       setLoading(false);
-      return;
+      throw new Error(res.error.message);
     }
     await load();
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
+    setDeleteTarget(null);
+    setLoading(false);
   };
 
   return (
@@ -370,6 +373,17 @@ export const ProductsCatalogManager: React.FC = () => {
         </div>
       </div>
     </div>
+  
+  {deleteTarget && (
+    <DeleteConfirmModal
+      isOpen={true}
+      onClose={() => setDeleteTarget(null)}
+      onConfirm={performDelete}
+      itemName={deleteTarget.name}
+      itemType="produto"
+      consequence="O produto será apagado permanentemente do catálogo. Deals históricos que já o usavam não são afectados."
+    />
+  )}
   );
 };
 
