@@ -52,11 +52,11 @@ function formatCockpitSnapshotForPrompt(snapshot: any): string[] {
         const role = clampText(contact.role, 80);
         const email = clampText(contact.email, 120);
         const phone = clampText(contact.phone, 60);
-        lines.push(`👤 Contato (cockpit): ${name ?? '(sem nome)'}${role ? ` — ${role}` : ''}`);
+        lines.push(`👤 Contacto (cockpit): ${name ?? '(sem nome)'}${role ? ` — ${role}` : ''}`);
         if (email) lines.push(`   - Email: ${email}`);
         if (phone) lines.push(`   - Telefone: ${phone}`);
         const notes = clampText(contact.notes, 220);
-        if (notes) lines.push(`   - Notas do contato: ${notes}`);
+        if (notes) lines.push(`   - Notas do contacto: ${notes}`);
     }
 
     const signals = snapshot.cockpitSignals;
@@ -101,7 +101,7 @@ function formatCockpitSnapshotForPrompt(snapshot: any): string[] {
 
         const filesTotal = lists.files?.total;
         if (typeof filesTotal === 'number') {
-            lines.push(`📎 Arquivos no cockpit: ${filesTotal}`);
+            lines.push(`📎 Ficheiros no cockpit: ${filesTotal}`);
         }
 
         const scriptsTotal = lists.scripts?.total;
@@ -137,7 +137,7 @@ function buildContextPrompt(options: CRMCallOptions): string {
     }
 
     if (options.contactId) {
-        parts.push(`👤 Contato ID: ${options.contactId}`);
+        parts.push(`👤 Contacto ID: ${options.contactId}`);
     }
 
     if (options.stages && options.stages.length > 0) {
@@ -157,7 +157,7 @@ function buildContextPrompt(options: CRMCallOptions): string {
     if (options.lostStage) parts.push(`❌ Estágio Perdido: ${options.lostStage}`);
 
     if (options.userName) {
-        parts.push(`👋 Usuário: ${options.userName}`);
+        parts.push(`👋 Utilizador: ${options.userName}`);
     }
 
     if ((options as any).cockpitSnapshot) {
@@ -369,7 +369,7 @@ export async function createCRMAgent(
             // If we found deals, inject a context reminder
             if (foundDeals.length > 0) {
                 const lastDeal = foundDeals[foundDeals.length - 1];
-                const contextReminder = `\n\n[CONTEXTO DA CONVERSA: Você já obteve informações sobre ${foundDeals.length} deal(s). O último mencionado foi "${lastDeal.title}" (ID: ${lastDeal.id}). Use este ID automaticamente quando o usuário se referir a "esse deal", "ele", "o único", etc.]`;
+                const contextReminder = `\n\n[CONTEXTO DA CONVERSA: Você já obteve informações sobre ${foundDeals.length} deal(s). O último mencionado foi "${lastDeal.title}" (ID: ${lastDeal.id}). Use este ID automaticamente quando o utilizador se referir a "esse deal", "ele", "o único", etc.]`;
 
                 console.log('[CRMAgent] 💡 Injecting context reminder:', {
                     dealsFound: foundDeals.length,

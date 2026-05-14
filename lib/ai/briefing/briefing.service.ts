@@ -233,7 +233,7 @@ function extractTextContent(content: Record<string, unknown>): string {
   if (content.type === 'audio') return '[Áudio]';
   if (content.type === 'video') return '[Vídeo]';
   if (content.type === 'document') {
-    return `[Documento: ${content.filename || 'arquivo'}]`;
+    return `[Documento: ${content.filename || 'ficheiro'}]`;
   }
 
   return '[Mensagem]';
@@ -260,7 +260,7 @@ function formatContextForPrompt(context: DealContext): string {
   lines.push('');
 
   // Contact info
-  lines.push('## Contato');
+  lines.push('## Contacto');
   if (context.contact) {
     if (context.contact.name) lines.push(`Nome: ${context.contact.name}`);
     if (context.contact.email) lines.push(`Email: ${context.contact.email}`);
@@ -268,7 +268,7 @@ function formatContextForPrompt(context: DealContext): string {
     if (context.contact.company) lines.push(`Empresa: ${context.contact.company}`);
     if (context.contact.position) lines.push(`Cargo: ${context.contact.position}`);
   } else {
-    lines.push('Nenhum contato vinculado');
+    lines.push('Nenhum contacto vinculado');
   }
   lines.push('');
 

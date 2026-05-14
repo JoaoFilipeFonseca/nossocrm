@@ -170,7 +170,7 @@ export async function GET(req: Request) {
     const csv = withUtf8Bom(stringifyCsv([header, ...dataRows], d));
 
     const today = new Date().toISOString().slice(0, 10);
-    const filename = `contatos-${today}.csv`;
+    const filename = `contactos-${today}.csv`;
 
     return new NextResponse(csv, {
       status: 200,

@@ -140,7 +140,7 @@ const WEBHOOK_CONFIGS: Record<string, {
       { label: 'Presença do chat', description: 'Mostra "online" e "digitando..." na tela de mensagens' },
     ],
     toggles: [
-      'Ative "Notificar as enviadas por mim também" — senão mensagens enviadas pelo celular não aparecem no CRM',
+      'Ative "Notificar as enviadas por mim também" — senão mensagens enviadas pelo telemóvel não aparecem no CRM',
       'Cole a mesma URL em todos os campos (exceto Presença do chat). O sistema identifica o tipo de evento automaticamente.',
     ],
   },

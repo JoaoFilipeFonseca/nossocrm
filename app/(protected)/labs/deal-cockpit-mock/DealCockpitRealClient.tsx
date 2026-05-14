@@ -45,7 +45,7 @@ import { ScheduleModal, type ScheduleData, type ScheduleType } from '@/features/
 import type { QuickScript, ScriptCategory } from '@/lib/supabase/quickScripts';
 import type { Activity, Board, BoardStage, Contact, DealView } from '@/types';
 
-type Tab = 'chat' | 'notas' | 'scripts' | 'arquivos';
+type Tab = 'chat' | 'notas' | 'scripts' | 'ficheiros';
 
 type StageTone = 'blue' | 'violet' | 'amber' | 'green' | 'slate';
 
@@ -627,7 +627,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
       profile?.nickname?.trim() ||
       [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim() ||
       user?.email?.split('@')[0] ||
-      'Usuário';
+      'Utilizador';
 
     return {
       name,
@@ -1141,7 +1141,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
 
   const handleCall = useCallback((suggestedTitle?: string) => {
     if (!selectedContact?.phone) {
-      pushToast('Contato sem telefone', 'danger');
+      pushToast('Contacto sem telefone', 'danger');
       return;
     }
     setCallSuggestedTitle(suggestedTitle || 'Ligação');
@@ -1986,7 +1986,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                 <TabButton active={tab === 'chat'} onClick={() => setTab('chat')}>Chat IA</TabButton>
                 <TabButton active={tab === 'notas'} onClick={() => setTab('notas')}>Notas</TabButton>
                 <TabButton active={tab === 'scripts'} onClick={() => setTab('scripts')}>Scripts</TabButton>
-                <TabButton active={tab === 'arquivos'} onClick={() => setTab('arquivos')}>Arquivos</TabButton>
+                <TabButton active={tab === 'ficheiros'} onClick={() => setTab('ficheiros')}>Arquivos</TabButton>
               </div>
 
               <div className="min-h-0 flex-1 overflow-hidden p-4">
@@ -2128,7 +2128,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                           if (!f) return;
                           await uploadFile.mutateAsync(f);
                           e.currentTarget.value = '';
-                          pushToast('Arquivo enviado', 'success');
+                          pushToast('Ficheiro enviado', 'success');
                         }}
                         className="block w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-slate-100 hover:file:bg-white/15"
                       />
@@ -2189,7 +2189,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
         isOpen={isCallModalOpen}
         onClose={() => setIsCallModalOpen(false)}
         onSave={handleCallLogSave}
-        contactName={contact?.name || 'Contato'}
+        contactName={contact?.name || 'Contacto'}
         contactPhone={contact?.phone || ''}
         suggestedTitle={callSuggestedTitle}
       />
@@ -2214,7 +2214,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
           setMessageLogContext(null);
         }}
         channel={messageChannel}
-        contactName={contact?.name || 'Contato'}
+        contactName={contact?.name || 'Contacto'}
         contactEmail={contact?.email}
         contactPhone={contact?.phone}
         initialSubject={messagePrefill?.subject}
@@ -2238,7 +2238,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
           setScheduleInitial(null);
         }}
         onSave={(data) => void handleScheduleSave(data)}
-        contactName={contact?.name || 'Contato'}
+        contactName={contact?.name || 'Contacto'}
         initialType={scheduleInitial?.type}
         initialTitle={scheduleInitial?.title}
         initialDescription={scheduleInitial?.description}

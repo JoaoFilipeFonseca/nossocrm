@@ -156,7 +156,7 @@ async function pickExistingSalesTeam(params: {
   const best = sorted[0];
   if (!best) {
     throw new AuthAdminUnavailableError(
-      `Não encontrei nenhum profile com organization_id em public.profiles (preciso de usuários já existentes).`,
+      `Não encontrei nenhum profile com organization_id em public.profiles (preciso de utilizadores já existentes).`,
     );
   }
 
@@ -164,7 +164,7 @@ async function pickExistingSalesTeam(params: {
 
   if (params.strict && list.length < params.minUsers) {
     throw new AuthAdminUnavailableError(
-      `Encontrei organization_id=${organizationId} com apenas ${list.length} usuários em public.profiles, mas o mínimo exigido é ${params.minUsers} (modo strict).`,
+      `Encontrei organization_id=${organizationId} com apenas ${list.length} utilizadores em public.profiles, mas o mínimo exigido é ${params.minUsers} (modo strict).`,
     );
   }
 
@@ -327,7 +327,7 @@ export async function createSalesTeamFixtures(): Promise<SalesTeamFixtureBundle>
       const openContact = await createContact({
         organizationId: fx.organizationId,
         ownerId: user.userId,
-        name: `AI Tools Contato Open ${user.firstName} ${runId}`,
+        name: `AI Tools Contacto Open ${user.firstName} ${runId}`,
         email: `ai-tools.contact.open.${user.firstName.toLowerCase()}.${runId}.${randomUUID()}@example.com`,
       });
       fx.created.contactIds.push(openContact.contactId);
@@ -335,7 +335,7 @@ export async function createSalesTeamFixtures(): Promise<SalesTeamFixtureBundle>
       const wonContact = await createContact({
         organizationId: fx.organizationId,
         ownerId: user.userId,
-        name: `AI Tools Contato Won ${user.firstName} ${runId}`,
+        name: `AI Tools Contacto Won ${user.firstName} ${runId}`,
         email: `ai-tools.contact.won.${user.firstName.toLowerCase()}.${runId}.${randomUUID()}@example.com`,
       });
       fx.created.contactIds.push(wonContact.contactId);
@@ -343,7 +343,7 @@ export async function createSalesTeamFixtures(): Promise<SalesTeamFixtureBundle>
       const lostContact = await createContact({
         organizationId: fx.organizationId,
         ownerId: user.userId,
-        name: `AI Tools Contato Lost ${user.firstName} ${runId}`,
+        name: `AI Tools Contacto Lost ${user.firstName} ${runId}`,
         email: `ai-tools.contact.lost.${user.firstName.toLowerCase()}.${runId}.${randomUUID()}@example.com`,
       });
       fx.created.contactIds.push(lostContact.contactId);

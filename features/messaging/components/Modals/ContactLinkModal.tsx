@@ -95,7 +95,7 @@ export function ContactLinkModal({
       await onLinkContact(contactId);
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao vincular contato');
+      setError(err instanceof Error ? err.message : 'Erro ao vincular contacto');
     } finally {
       setIsLinking(false);
     }
@@ -119,7 +119,7 @@ export function ContactLinkModal({
       await onLinkContact(contactId);
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar contato');
+      setError(err instanceof Error ? err.message : 'Erro ao criar contacto');
     } finally {
       setIsCreating(false);
     }
@@ -129,7 +129,7 @@ export function ContactLinkModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Vincular Contato"
+      title="Vincular Contacto"
       size="md"
     >
       <div className="space-y-4">
@@ -149,7 +149,7 @@ export function ContactLinkModal({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar contato por nome, email ou telefone..."
+                placeholder="Buscar contacto por nome, email ou telefone..."
                 className={cn(
                   'w-full pl-10 pr-4 py-2.5 rounded-lg border',
                   'bg-white dark:bg-black/20',
@@ -271,7 +271,7 @@ export function ContactLinkModal({
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Nome do contato"
+                  placeholder="Nome do contacto"
                   className={cn(
                     'w-full px-4 py-2.5 rounded-lg border',
                     'bg-white dark:bg-black/20',

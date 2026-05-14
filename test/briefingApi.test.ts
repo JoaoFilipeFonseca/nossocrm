@@ -142,7 +142,7 @@ describe('GET /api/ai/briefing/[dealId]', () => {
 
   // ── Autenticação ──────────────────────────────────────────────────────────
 
-  it('retorna 401 quando usuário não autenticado', async () => {
+  it('retorna 401 quando utilizador não autenticado', async () => {
     // Arrange
     supabaseClientMock = {
       ...buildAuthMock(null),
@@ -181,7 +181,7 @@ describe('GET /api/ai/briefing/[dealId]', () => {
 
   // ── Autorização (multi-tenant) ────────────────────────────────────────────
 
-  it('retorna 404 quando deal não pertence à organização do usuário', async () => {
+  it('retorna 404 quando deal não pertence à organização do utilizador', async () => {
     // Arrange — deal não encontrado para essa org (isolamento multi-tenant via eq+eq)
     dealQueryBuilder = buildDealQB(false)
     supabaseClientMock = {

@@ -121,7 +121,7 @@ export function ConversationPicker({
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar por contato ou deal..."
+          placeholder="Buscar por contacto ou deal..."
           className={cn(
             'w-full pl-10 pr-4 py-2 rounded-lg border',
             'bg-white dark:bg-slate-800',
@@ -185,7 +185,7 @@ function ConversationCard({
   onToggle,
   disabled,
 }: ConversationCardProps) {
-  const displayName = conversation.contactName || conversation.externalContactName || 'Contato';
+  const displayName = conversation.contactName || conversation.externalContactName || 'Contacto';
 
   return (
     <button

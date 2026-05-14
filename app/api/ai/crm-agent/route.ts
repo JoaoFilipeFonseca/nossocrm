@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     const organizationId = profile?.organization_id ?? null;
     if (!organizationId) {
         return new Response(
-            'Perfil sem organização. Finalize o setup para vincular seu usuário antes de usar a IA.',
+            'Perfil sem organização. Finalize o setup para vincular seu utilizador antes de usar a IA.',
             { status: 409 }
         );
     }
@@ -147,9 +147,9 @@ export async function POST(req: Request) {
         }),
 
         getContact: tool({
-            description: 'Busca informações de um contato pelo nome ou email',
+            description: 'Busca informações de um contacto pelo nome ou email',
             inputSchema: z.object({
-                query: z.string().describe('Nome ou email do contato'),
+                query: z.string().describe('Nome ou email do contacto'),
             }),
             execute: async ({ query }) => {
                 const q = `%${query}%`;
@@ -162,7 +162,7 @@ export async function POST(req: Request) {
 
                 const found = contacts?.[0];
                 if (!found) {
-                    return { found: false, message: `Contato "${query}" não encontrado.` };
+                    return { found: false, message: `Contacto "${query}" não encontrado.` };
                 }
 
                 return {
@@ -600,7 +600,7 @@ export async function POST(req: Request) {
                 let priority = 'medium';
 
                 if (!lastActivity) {
-                    suggestion = 'Fazer primeiro contato — agendar reunião de descoberta';
+                    suggestion = 'Fazer primeiro contacto — agendar reunião de descoberta';
                     priority = 'high';
                 } else {
                     const daysSinceContact = Math.floor(
@@ -608,7 +608,7 @@ export async function POST(req: Request) {
                     );
 
                     if (daysSinceContact > 7) {
-                        suggestion = `Fazer follow-up — último contato foi há ${daysSinceContact} dias`;
+                        suggestion = `Fazer follow-up — último contacto foi há ${daysSinceContact} dias`;
                         priority = 'high';
                     } else if ((deal.probability ?? 0) >= 70) {
                         suggestion = 'Deal com alta probabilidade — verificar se está pronto para fechamento';

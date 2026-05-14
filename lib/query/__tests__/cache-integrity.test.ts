@@ -63,7 +63,7 @@ describe('Cache Integrity - Deals', () => {
       
       it(`${fileName}: não deve usar setQueriesData com prefix matcher`, () => {
         if (!fs.existsSync(filePath)) {
-          console.warn(`⚠️ Arquivo não encontrado: ${filePath}`);
+          console.warn(`⚠️ Ficheiro não encontrado: ${filePath}`);
           return;
         }
 
@@ -101,7 +101,7 @@ describe('Cache Integrity - Deals', () => {
           const filePath = CRITICAL_FILES.find(f => f.endsWith(fileName));
           
           if (!filePath || !fs.existsSync(filePath)) {
-            console.warn(`⚠️ Arquivo não encontrado: ${fileName}`);
+            console.warn(`⚠️ Ficheiro não encontrado: ${fileName}`);
             return;
           }
 

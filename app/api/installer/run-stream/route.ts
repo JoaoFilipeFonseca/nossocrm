@@ -106,7 +106,7 @@ function createCinemaPhases(firstName: string) {
     },
     contact: {
       id: 'contact',
-      title: 'Primeiro contato',
+      title: 'Primeiro contacto',
       subtitle: 'Criando sua identidade no novo mundo...',
     },
     landing: {
@@ -538,7 +538,7 @@ export async function POST(req: Request) {
               password: admin.password,
             });
 
-            if (!bootstrap.ok) throw new Error(bootstrap.error || 'Falha ao estabelecer primeiro contato.');
+            if (!bootstrap.ok) throw new Error(bootstrap.error || 'Falha ao estabelecer primeiro contacto.');
 
             const login2 = await verifyPasswordLogin({
               supabaseUrl: supabase.url,

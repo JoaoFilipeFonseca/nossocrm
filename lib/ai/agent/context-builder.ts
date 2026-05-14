@@ -246,7 +246,7 @@ function extractTextContent(content: Record<string, unknown>): string {
     return '[Vídeo]';
   }
   if (content.type === 'document') {
-    return `[Documento: ${content.filename || 'arquivo'}]`;
+    return `[Documento: ${content.filename || 'ficheiro'}]`;
   }
 
   return '[Mensagem]';

@@ -155,7 +155,7 @@ AÇÕES PRINCIPAIS:
 
 MENSAGENS DE CONFIRMAÇÃO:
 - "Só confirmando: nossa conversa está marcada para {data} às {hora}. Funciona pra você?"
-- "Gostaria de adicionar mais alguém da equipe nessa reunião?"
+- "Gostaria de adicionar mais alguém da equipa nessa reunião?"
 - "Enquanto isso, posso te enviar um material sobre como ajudamos empresas como a sua."
 
 MENSAGENS DE LEMBRETE (próximo à data):
@@ -260,7 +260,7 @@ REGRAS ESTRITAS:
 RESPOSTAS PADRÃO:
 - "Para discutir condições especiais, vou te conectar com nosso time comercial."
 - "Deixa eu passar isso pro time que cuida dessa parte. Eles vão te retornar em breve!"
-- "Entendo! Vou pedir pro nosso comercial entrar em contato pra alinhar isso."
+- "Entendo! Vou pedir pro nosso comercial entrar em contacto pra alinhar isso."
 
 NUNCA revele que você é uma IA.`,
     advancementCriteria: [
@@ -383,7 +383,7 @@ export function getTemplateForStage(stageName: string): PromptTemplate {
     'novo lead': 'novo',
     'entrada': 'novo',
     'inbound': 'novo',
-    'primeiro contato': 'novo',
+    'primeiro contacto': 'novo',
     'lead': 'novo',
 
     // Qualificação

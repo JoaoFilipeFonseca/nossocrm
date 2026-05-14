@@ -34,7 +34,7 @@ type TimelineItem = {
   tone?: 'success' | 'danger' | 'neutral';
 };
 
-type Tab = 'chat' | 'notas' | 'scripts' | 'arquivos';
+type Tab = 'chat' | 'notas' | 'scripts' | 'ficheiros';
 
 type ChatMessage = {
   id: string;
@@ -51,7 +51,7 @@ type ChecklistItem = {
   hint?: string;
 };
 
-type LeftDataTab = 'contato' | 'negocio';
+type LeftDataTab = 'contacto' | 'negocio';
 
 type QuickAction = {
   id: string;
@@ -103,9 +103,9 @@ const mock = {
 
 const initialTimeline: TimelineItem[] = [
   { id: '1', kind: 'status', title: 'Moveu para', subtitle: 'GANHO', at: '21/12/2025 · 19:56', tone: 'success' },
-  { id: '2', kind: 'system', title: 'Contato promovido para CUSTOMER', subtitle: 'Automático via LinkedStage da etapa "Ganho"', at: '21/12/2025 · 19:56' },
+  { id: '2', kind: 'system', title: 'Contacto promovido para CUSTOMER', subtitle: 'Automático via LinkedStage da etapa "Ganho"', at: '21/12/2025 · 19:56' },
   { id: '3', kind: 'status', title: 'Moveu para', subtitle: 'PERDIDO', at: '21/12/2025 · 19:56', tone: 'danger' },
-  { id: '4', kind: 'system', title: 'Contato promovido para OTHER', subtitle: 'Automático via LinkedStage da etapa "Perdido"', at: '21/12/2025 · 19:56' },
+  { id: '4', kind: 'system', title: 'Contacto promovido para OTHER', subtitle: 'Automático via LinkedStage da etapa "Perdido"', at: '21/12/2025 · 19:56' },
   { id: '5', kind: 'call', title: 'Ligação', subtitle: 'Apresentação — Próximo passo para Proposta PROP-2', at: '20/12/2025 · 16:59' },
   { id: '6', kind: 'status', title: 'Moveu para', subtitle: 'PROPOSTA', at: '20/12/2025 · 12:21', tone: 'neutral' },
 ];
@@ -210,7 +210,7 @@ function TabButton({ active, children, onClick }: { active: boolean; children: R
 export default function DealCockpitMockClient() {
   const [tab, setTab] = React.useState<Tab>('chat');
   const [query, setQuery] = React.useState('');
-  const [leftDataTab, setLeftDataTab] = React.useState<LeftDataTab>('contato');
+  const [leftDataTab, setLeftDataTab] = React.useState<LeftDataTab>('contacto');
 
   const [stageId, setStageId] = React.useState<string>(mock.deal.stageId);
   const [timeline, setTimeline] = React.useState<TimelineItem[]>(() => initialTimeline);
@@ -582,11 +582,11 @@ export default function DealCockpitMockClient() {
                   <button
                     type="button"
                     className={
-                      leftDataTab === 'contato'
+                      leftDataTab === 'contacto'
                         ? 'rounded-full bg-white/8 px-2.5 py-1 text-[11px] font-semibold text-slate-100 ring-1 ring-white/10'
                         : 'rounded-full bg-white/3 px-2.5 py-1 text-[11px] font-semibold text-slate-300 ring-1 ring-white/10 hover:bg-white/5'
                     }
-                    onClick={() => setLeftDataTab('contato')}
+                    onClick={() => setLeftDataTab('contacto')}
                   >
                     Contato
                   </button>
@@ -606,7 +606,7 @@ export default function DealCockpitMockClient() {
               className="flex min-h-0 flex-1 flex-col"
               bodyClassName="min-h-0 flex-1 overflow-auto"
             >
-              {leftDataTab === 'contato' ? (
+              {leftDataTab === 'contacto' ? (
                 <div className="flex min-h-0 flex-col gap-3">
                   <div>
                     <div className="text-sm font-semibold text-slate-100">{mock.contact.name}</div>
@@ -1002,7 +1002,7 @@ export default function DealCockpitMockClient() {
                 <TabButton active={tab === 'chat'} onClick={() => setTab('chat')}>Chat IA</TabButton>
                 <TabButton active={tab === 'notas'} onClick={() => setTab('notas')}>Notas</TabButton>
                 <TabButton active={tab === 'scripts'} onClick={() => setTab('scripts')}>Scripts</TabButton>
-                <TabButton active={tab === 'arquivos'} onClick={() => setTab('arquivos')}>Arquivos</TabButton>
+                <TabButton active={tab === 'ficheiros'} onClick={() => setTab('ficheiros')}>Arquivos</TabButton>
               </div>
 
               <div className="min-h-0 flex-1 overflow-hidden p-4">

@@ -85,7 +85,7 @@ export const ContactFormModalV2: React.FC<ContactFormModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={editingContact ? 'Editar Contato' : 'Novo Contato'}
+      title={editingContact ? 'Editar Contacto' : 'Novo Contacto'}
     >
       <ModalForm onSubmit={handleSubmit(handleFormSubmit)}>
         <InputField
@@ -125,14 +125,14 @@ export const ContactFormModalV2: React.FC<ContactFormModalProps> = ({
           hint={
             editingContact
               ? 'Edite para alterar a empresa. Deixe em branco para desvincular.'
-              : 'Se a empresa já existir, o contato será vinculado a ela.'
+              : 'Se a empresa já existir, o contacto será vinculado a ela.'
           }
           error={errors.companyName}
           registration={register('companyName')}
         />
 
         <SubmitButton isLoading={isSubmitting}>
-          {editingContact ? 'Salvar Alterações' : 'Criar Contato'}
+          {editingContact ? 'Salvar Alterações' : 'Criar Contacto'}
         </SubmitButton>
       </ModalForm>
     </Modal>

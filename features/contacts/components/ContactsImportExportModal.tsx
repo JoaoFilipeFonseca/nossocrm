@@ -86,7 +86,7 @@ export function ContactsImportExportModal(props: {
   }, [delimiter]);
 
   const handleDownloadTemplate = () => {
-    downloadText('template-contatos.csv', templateCsv, 'text/csv;charset=utf-8');
+    downloadText('template-contactos.csv', templateCsv, 'text/csv;charset=utf-8');
     toast?.('Template CSV baixado.', 'success');
   };
 
@@ -94,7 +94,7 @@ export function ContactsImportExportModal(props: {
     const errs: Array<{ rowNumber: number; message: string }> = importResult?.errors || [];
     const d: CsvDelimiter = delimiter === 'auto' ? ';' : delimiter;
     const rows = [['rowNumber', 'message'], ...errs.map(e => [String(e.rowNumber), e.message])];
-    downloadText('import-erros-contatos.csv', withUtf8Bom(stringifyCsv(rows, d)), 'text/csv;charset=utf-8');
+    downloadText('import-erros-contactos.csv', withUtf8Bom(stringifyCsv(rows, d)), 'text/csv;charset=utf-8');
   };
 
   const buildExportUrl = () => {
@@ -121,7 +121,7 @@ export function ContactsImportExportModal(props: {
       }
 
       const disposition = res.headers.get('Content-Disposition');
-      const filename = parseFilenameFromDisposition(disposition) || 'contatos.csv';
+      const filename = parseFilenameFromDisposition(disposition) || 'contactos.csv';
       const text = await res.text();
       downloadText(filename, text, 'text/csv;charset=utf-8');
       toast?.('Export iniciado.', 'success');
@@ -134,7 +134,7 @@ export function ContactsImportExportModal(props: {
 
   const handleImport = async () => {
     if (!file) {
-      toast?.('Selecione um arquivo CSV.', 'error');
+      toast?.('Selecione um ficheiro CSV.', 'error');
       return;
     }
     setIsImporting(true);
@@ -168,7 +168,7 @@ export function ContactsImportExportModal(props: {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Importar / Exportar contatos"
+      title="Importar / Exportar contactos"
       size="lg"
       bodyClassName="space-y-5 max-h-[75vh] overflow-y-auto"
     >

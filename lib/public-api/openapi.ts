@@ -20,7 +20,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
       { name: 'Meta', description: 'Sobre a API e autenticação' },
       { name: 'Boards', description: 'Pipelines/boards e etapas' },
       { name: 'Companies', description: 'Empresas (clientes do CRM)' },
-      { name: 'Contacts', description: 'Contatos (leads/pessoas)' },
+      { name: 'Contacts', description: 'Contactos (leads/pessoas)' },
       { name: 'Deals', description: 'Negócios (cards)' },
       { name: 'Activities', description: 'Atividades (nota/tarefa/reunião/ligação)' },
     ],
@@ -426,7 +426,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
       '/contacts': {
         get: {
           tags: ['Contacts'],
-          summary: 'Listar contatos',
+          summary: 'Listar contactos',
           security: [{ ApiKeyAuth: [] }],
           parameters: [
             { name: 'q', in: 'query', schema: { type: 'string' } },
@@ -458,7 +458,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
         },
         post: {
           tags: ['Contacts'],
-          summary: 'Criar/atualizar contato (upsert)',
+          summary: 'Criar/atualizar contacto (upsert)',
           security: [{ ApiKeyAuth: [] }],
           requestBody: {
             required: true,
@@ -498,7 +498,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
       '/contacts/{contactId}': {
         get: {
           tags: ['Contacts'],
-          summary: 'Obter contato',
+          summary: 'Obter contacto',
           security: [{ ApiKeyAuth: [] }],
           parameters: [{ name: 'contactId', in: 'path', required: true, schema: { type: 'string' } }],
           responses: {
@@ -508,7 +508,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
         },
         patch: {
           tags: ['Contacts'],
-          summary: 'Atualizar contato',
+          summary: 'Atualizar contacto',
           security: [{ ApiKeyAuth: [] }],
           parameters: [{ name: 'contactId', in: 'path', required: true, schema: { type: 'string' } }],
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } },

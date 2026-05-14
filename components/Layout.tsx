@@ -74,7 +74,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Visão Geral',
   '/boards': 'Boards',
   '/pipeline': 'Boards',
-  '/contacts': 'Contatos',
+  '/contacts': 'Contactos',
   '/activities': 'Atividades',
   '/decisions': 'Decisões',
   '/reports': 'Relatórios',
@@ -192,7 +192,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, []);
 
   // If the user signed out (or session expired), leave protected shell ASAP.
-  // This prevents rendering fallbacks like "Usuário" while unauthenticated.
+  // This prevents rendering fallbacks like "Utilizador" while unauthenticated.
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace('/login');
@@ -305,7 +305,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             { to: '/dashboard', icon: LayoutDashboard, label: 'Visão Geral', prefetch: 'dashboard' as const, badge: undefined },
             { to: '/ai/workflows/angariacao', icon: Sparkles, label: 'Angariação IA', prefetch: undefined, badge: undefined },
             { to: '/boards', icon: KanbanSquare, label: 'Boards', prefetch: 'boards' as const, badge: undefined },
-            { to: '/contacts', icon: Users, label: 'Contatos', prefetch: 'contacts' as const, badge: undefined },
+            { to: '/contacts', icon: Users, label: 'Contactos', prefetch: 'contacts' as const, badge: undefined },
             { to: '/activities', icon: CheckSquare, label: 'Atividades', prefetch: 'activities' as const, badge: undefined },
             { to: '/reports', icon: BarChart3, label: 'Relatórios', prefetch: 'reports' as const, badge: undefined },
             { to: '/settings', icon: Settings, label: 'Configurações', prefetch: 'settings' as const, badge: undefined },
@@ -404,7 +404,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <>
                   <div className="flex-1 min-w-0 text-left">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                      {profile?.nickname || profile?.first_name || profile?.email?.split('@')[0] || 'Usuário'}
+                      {profile?.nickname || profile?.first_name || profile?.email?.split('@')[0] || 'Utilizador'}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                       {profile?.email || ''}

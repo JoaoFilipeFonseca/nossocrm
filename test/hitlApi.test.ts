@@ -140,7 +140,7 @@ describe('GET /api/ai/hitl', () => {
     }
   })
 
-  it('retorna 401 quando usuário não autenticado', async () => {
+  it('retorna 401 quando utilizador não autenticado', async () => {
     // Arrange
     supabaseClientMock = {
       ...buildAuthMock(null),
@@ -276,7 +276,7 @@ describe('POST /api/ai/hitl/[id]', () => {
     expect(body.error).toMatch(/pending advance ID/i)
   })
 
-  it('retorna 401 quando usuário não autenticado', async () => {
+  it('retorna 401 quando utilizador não autenticado', async () => {
     // Arrange
     supabaseClientMock = {
       ...buildAuthMock(null),

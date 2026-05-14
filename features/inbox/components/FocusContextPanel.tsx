@@ -454,7 +454,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
         if (daysSinceActivity > 7) {
             return {
                 action: 'Ligar agora',
-                reason: `${daysSinceActivity} dias sem contato`,
+                reason: `${daysSinceActivity} dias sem contacto`,
                 urgency: 'high' as const,
                 actionType: 'CALL' as const,
                 icon: Phone,
@@ -660,7 +660,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
         onAddActivity({
             type: data.type,
             title: data.title,
-            description: data.description || `${data.type === 'CALL' ? 'Ligação' : data.type === 'MEETING' ? 'Reunião' : 'Tarefa'} com ${contact?.name || 'contato'}`,
+            description: data.description || `${data.type === 'CALL' ? 'Ligação' : data.type === 'MEETING' ? 'Reunião' : 'Tarefa'} com ${contact?.name || 'contacto'}`,
             date: dateTime.toISOString(),
             completed: false
         });
@@ -1520,7 +1520,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                             : 'text-slate-500 hover:text-slate-300'
                                             }`}
                                     >
-                                        {tab === 'notas' ? 'Notas' : tab === 'chat' ? 'Chat IA' : tab === 'scripts' ? 'Scripts' : 'Arquivos'}
+                                        {tab === 'notas' ? 'Notas' : tab === 'chat' ? 'Chat IA' : tab === 'scripts' ? 'Scripts' : 'Ficheiros'}
                                         {activeTab === tab && (
                                             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500 shadow-[0_0_15px_rgba(var(--primary-500),0.8)]" />
                                         )}
@@ -1631,7 +1631,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                                             const result = await generateSalesScript({
                                                                 deal: { title: deal.title },
                                                                 scriptType: type,
-                                                                context: `Estágio: ${currentStage?.label || deal.status}. Contato: ${contact?.name || 'Cliente'}.`,
+                                                                context: `Estágio: ${currentStage?.label || deal.status}. Contacto: ${contact?.name || 'Cliente'}.`,
                                                             });
 
                                                             if (result?.script) {
@@ -1751,7 +1751,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                             )}
                                         </div>
                                         <p className="text-sm font-medium text-white">
-                                            {uploadFile.isPending ? 'Enviando...' : 'Adicionar arquivo'}
+                                            {uploadFile.isPending ? 'Enviando...' : 'Adicionar ficheiro'}
                                         </p>
                                         <p className="text-xs text-slate-500">Clique ou arraste (máx 10MB)</p>
                                     </div>
@@ -1831,7 +1831,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                 isOpen={isCallModalOpen}
                 onClose={() => setIsCallModalOpen(false)}
                 onSave={handleCallLogSave}
-                contactName={contact?.name || 'Contato'}
+                contactName={contact?.name || 'Contacto'}
                 contactPhone={contact?.phone || ''}
                 suggestedTitle={callSuggestedTitle}
             />
@@ -1878,7 +1878,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                     setSchedulePrefill(null);
                 }}
                 onSave={handleScheduleSave}
-                contactName={contact?.name || 'Contato'}
+                contactName={contact?.name || 'Contacto'}
                 initialType={scheduleType}
                 initialTitle={schedulePrefill?.title}
                 initialDescription={schedulePrefill?.description}
@@ -1893,7 +1893,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                     setMessagePrefill(null);
                 }}
                 channel={messageChannel}
-                contactName={contact?.name || 'Contato'}
+                contactName={contact?.name || 'Contacto'}
                 contactEmail={contact?.email}
                 contactPhone={contact?.phone}
                 initialSubject={messagePrefill?.subject}

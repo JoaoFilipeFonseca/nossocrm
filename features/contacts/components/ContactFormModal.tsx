@@ -88,7 +88,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
           <div className="p-5 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <h2 id={headingId} className="text-lg font-bold text-slate-900 dark:text-white font-display">
-                {editingContact ? 'Editar Contato' : 'Novo Contato'}
+                {editingContact ? 'Editar Contacto' : 'Novo Contacto'}
               </h2>
               <DebugFillButton onClick={fillWithFakeData} />
               {createFakeContactsBatch && (
@@ -189,7 +189,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
             <p className="text-[10px] text-slate-400 mt-1">
               {editingContact
                 ? 'Edite para alterar a empresa. Deixe em branco para desvincular.'
-                : 'Se a empresa já existir, o contato será vinculado a ela.'}
+                : 'Se a empresa já existir, o contacto será vinculado a ela.'}
             </p>
           </div>
 
@@ -198,7 +198,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
               disabled={isSubmitting}
             className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-2.5 rounded-lg mt-2 shadow-lg shadow-primary-600/20 transition-all"
           >
-            {isSubmitting ? 'Criando...' : (editingContact ? 'Salvar Alterações' : 'Criar Contato')}
+            {isSubmitting ? 'Criando...' : (editingContact ? 'Salvar Alterações' : 'Criar Contacto')}
           </button>
         
             {editingContact?.id && (

@@ -41,7 +41,7 @@ const HEADER_SYNONYMS: Record<keyof ParsedRow, string[]> = {
   firstName: ['first name', 'firstname', 'primeiro nome', 'nome'],
   lastName: ['last name', 'lastname', 'sobrenome'],
   email: ['email', 'e-mail', 'e-mail address', 'mail'],
-  phone: ['phone', 'telefone', 'celular', 'whatsapp', 'fone'],
+  phone: ['phone', 'telefone', 'telemóvel', 'whatsapp', 'fone'],
   role: ['role', 'cargo', 'titulo', 'title', 'funcao', 'funçao', 'funcao/cargo'],
   company: ['company', 'empresa', 'conta', 'account', 'organization', 'organizacao', 'organização'],
   status: ['status'],
@@ -120,7 +120,7 @@ export async function POST(req: Request) {
     const mode: ImportMode = modeResult.data;
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: 'Arquivo CSV não enviado (field "file").' }, { status: 400 });
+      return NextResponse.json({ error: 'Ficheiro CSV não enviado (field "file").' }, { status: 400 });
     }
 
     const text = await file.text();
@@ -156,7 +156,7 @@ export async function POST(req: Request) {
           : name;
 
       if (!computedName && !email) {
-        errors.push({ rowNumber, message: 'Linha sem nome e sem email (não consigo criar contato).' });
+        errors.push({ rowNumber, message: 'Linha sem nome e sem email (não consigo criar contacto).' });
         continue;
       }
 

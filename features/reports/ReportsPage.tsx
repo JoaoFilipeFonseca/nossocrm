@@ -140,7 +140,7 @@ const ReportsPage: React.FC = () => {
 
   const generatedBy = useMemo(() => {
     if (profile?.first_name && profile?.last_name) return `${profile.first_name} ${profile.last_name}`;
-    return profile?.first_name || profile?.email || 'Usuário';
+    return profile?.first_name || profile?.email || 'Utilizador';
   }, [profile?.email, profile?.first_name, profile?.last_name]);
 
   const handleExportPDF = useCallback(async () => {

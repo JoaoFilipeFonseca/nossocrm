@@ -63,7 +63,7 @@ export const dealsViewQueryFn = async (
     return {
       ...deal,
       companyName: company?.name || 'Sem empresa',
-      contactName: contact?.name || 'Sem contato',
+      contactName: contact?.name || 'Sem contacto',
       contactEmail: contact?.email || '',
       stageLabel: stageMap.get(deal.status) || 'Estágio não identificado',
     };
@@ -627,7 +627,7 @@ export const useCreateDealWithContact = () => {
         id: tempId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        contactName: relatedData?.contact?.name || 'Sem contato',
+        contactName: relatedData?.contact?.name || 'Sem contacto',
         contactEmail: relatedData?.contact?.email || '',
         contactPhone: '',
         companyName: relatedData?.companyName || 'Sem empresa',

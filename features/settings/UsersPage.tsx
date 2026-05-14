@@ -71,7 +71,7 @@ export const UsersPage: React.FC = () => {
 
             const data = await res.json().catch(() => null);
             if (!res.ok) {
-                throw new Error(data?.error || `Falha ao carregar usuários (HTTP ${res.status})`);
+                throw new Error(data?.error || `Falha ao carregar utilizadores (HTTP ${res.status})`);
             }
 
             setUsers(data?.users || []);
@@ -228,11 +228,11 @@ export const UsersPage: React.FC = () => {
             });
             const data = await res.json().catch(() => null);
             if (!res.ok) {
-                throw new Error(data?.error || `Erro ao remover usuário (HTTP ${res.status})`);
+                throw new Error(data?.error || `Erro ao remover utilizador (HTTP ${res.status})`);
             }
 
             addToast(
-                userToDelete.status === 'pending' ? 'Convite cancelado' : 'Usuário removido',
+                userToDelete.status === 'pending' ? 'Convite cancelado' : 'Utilizador removido',
                 'success'
             );
             fetchUsers();
@@ -379,7 +379,7 @@ export const UsersPage: React.FC = () => {
                                                 <button
                                                     onClick={() => handleDeleteUser(user)}
                                                     className="opacity-0 group-hover:opacity-100 p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-                                                    title={user.status === 'pending' ? 'Cancelar convite' : 'Remover usuário'}
+                                                    title={user.status === 'pending' ? 'Cancelar convite' : 'Remover utilizador'}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
@@ -622,10 +622,10 @@ export const UsersPage: React.FC = () => {
                 isOpen={!!userToDelete}
                 onClose={() => setUserToDelete(null)}
                 onConfirm={confirmDeleteUser}
-                title={userToDelete?.status === 'pending' ? 'Cancelar Convite' : 'Remover Usuário'}
+                title={userToDelete?.status === 'pending' ? 'Cancelar Convite' : 'Remover Utilizador'}
                 message={userToDelete?.status === 'pending'
                     ? `Tem certeza que deseja cancelar o convite para ${userToDelete?.email}?`
-                    : `Tem certeza que deseja remover ${userToDelete?.email} da equipe?`
+                    : `Tem certeza que deseja remover ${userToDelete?.email} da equipa?`
                 }
                 confirmText={userToDelete?.status === 'pending' ? 'Cancelar Convite' : 'Remover'}
                 cancelText="Voltar"

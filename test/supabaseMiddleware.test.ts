@@ -131,7 +131,7 @@ describe('updateSession (Proxy/Supabase)', () => {
     expect(res).toMatchObject({ kind: 'redirect' })
   })
 
-  it('redireciona usuário autenticado para /dashboard quando acessa /login', async () => {
+  it('redireciona utilizador autenticado para /dashboard quando acessa /login', async () => {
     mocks.state.currentUser = { id: 'user-1' }
     const req = makeRequest('/login')
 

@@ -39,7 +39,7 @@ beforeEach(() => {
 })
 
 describe('AI Tools permissions', () => {
-  it('permite assignDeal para vendedor (regra: vendedor só não mexe em usuários/configs)', async () => {
+  it('permite assignDeal para vendedor (regra: vendedor só não mexe em utilizadores/configs)', async () => {
     const tools = createCRMTools(
       {
         organizationId: '11111111-1111-1111-1111-111111111111',

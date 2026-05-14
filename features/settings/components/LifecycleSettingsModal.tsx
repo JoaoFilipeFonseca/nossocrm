@@ -130,7 +130,7 @@ export const LifecycleSettingsModal: React.FC<LifecycleSettingsModalProps> = ({ 
                                 {/* Count Badge */}
                                 <span
                                     className="text-[10px] font-medium text-slate-500 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700"
-                                    title={`${stageCounts[stage.id] || 0} contatos neste estágio`}
+                                    title={`${stageCounts[stage.id] || 0} contactos neste estágio`}
                                 >
                                     {stageCounts[stage.id] || 0}
                                 </span>
@@ -162,7 +162,7 @@ export const LifecycleSettingsModal: React.FC<LifecycleSettingsModalProps> = ({ 
                                             stage.isDefault
                                                 ? "Estágio padrão não pode ser removido"
                                                 : (stageCounts[stage.id] || 0) > 0
-                                                    ? "Não é possível remover estágio com contatos vinculados"
+                                                    ? "Não é possível remover estágio com contactos vinculados"
                                                     : "Remover estágio"
                                         }
                                     >

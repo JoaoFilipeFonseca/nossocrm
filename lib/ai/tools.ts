@@ -343,7 +343,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
         }),
 
         searchContacts: tool({
-            description: 'Busca contatos por nome ou email',
+            description: 'Busca contactos por nome ou email',
             inputSchema: z.object({
                 query: z.string().describe('Termo de busca'),
                 limit: z.number().optional().default(5),
@@ -727,7 +727,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
             inputSchema: z.object({
                 title: z.string().min(1).describe('Título do deal'),
                 value: z.number().optional().default(0).describe('Valor do deal em reais'),
-                contactName: z.string().optional().describe('Nome do contato'),
+                contactName: z.string().optional().describe('Nome do contacto'),
                 boardId: z.string().optional(),
             }),
             needsApproval: !bypassApproval,
@@ -1201,7 +1201,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
 
         // =================== ATIVIDADES (P0) ===================
         listActivities: tool({
-            description: 'Lista atividades (tarefas/ligações/reuniões) filtrando por deal/contato/board e status.',
+            description: 'Lista atividades (tarefas/ligações/reuniões) filtrando por deal/contacto/board e status.',
             inputSchema: z.object({
                 boardId: z.string().optional(),
                 dealId: z.string().optional(),
@@ -1404,7 +1404,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
 
         // =================== CONTATOS (P1) ===================
         createContact: tool({
-            description: 'Cria um novo contato. Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
+            description: 'Cria um novo contacto. Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
             inputSchema: z.object({
                 name: z.string().min(1),
                 email: z.string().email().optional(),
@@ -1437,12 +1437,12 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     .select('id, name, email, phone, company_name')
                     .single();
                 if (error) return { error: formatSupabaseFailure(error) };
-                return { success: true, contact: data, message: `Contato "${data.name}" criado.` };
+                return { success: true, contact: data, message: `Contacto "${data.name}" criado.` };
             },
         }),
 
         updateContact: tool({
-            description: 'Atualiza campos de um contato. Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
+            description: 'Atualiza campos de um contacto. Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
             inputSchema: z.object({
                 contactId: z.string(),
                 name: z.string().optional(),
@@ -1476,13 +1476,13 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     .select('id, name, email, phone, company_name')
                     .maybeSingle();
                 if (error) return { error: formatSupabaseFailure(error) };
-                if (!data) return { error: 'Contato não encontrado nesta organização.' };
-                return { success: true, contact: data, message: `Contato "${data.name}" atualizado.` };
+                if (!data) return { error: 'Contacto não encontrado nesta organização.' };
+                return { success: true, contact: data, message: `Contacto "${data.name}" atualizado.` };
             },
         }),
 
         getContactDetails: tool({
-            description: 'Mostra detalhes de um contato.',
+            description: 'Mostra detalhes de um contacto.',
             inputSchema: z.object({
                 contactId: z.string(),
             }),
@@ -1494,16 +1494,16 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     .eq('id', contactId)
                     .maybeSingle();
                 if (error) return { error: formatSupabaseFailure(error) };
-                if (!data) return { error: 'Contato não encontrado nesta organização.' };
+                if (!data) return { error: 'Contacto não encontrado nesta organização.' };
                 return data;
             },
         }),
 
         linkDealToContact: tool({
-            description: 'Associa um deal a um contato (define deal.contact_id). Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
+            description: 'Associa um deal a um contacto (define deal.contact_id). Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
             inputSchema: z.object({
                 dealId: z.string().optional().describe('ID do deal (usa contexto se não fornecido)'),
-                contactId: z.string().describe('ID do contato'),
+                contactId: z.string().describe('ID do contacto'),
             }),
             needsApproval: !bypassApproval,
             execute: async ({ dealId, contactId }) => {
@@ -1520,7 +1520,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     .eq('id', contactId)
                     .maybeSingle();
                 if (contactError) return { error: formatSupabaseFailure(contactError) };
-                if (!contact) return { error: 'Contato não encontrado nesta organização.' };
+                if (!contact) return { error: 'Contacto não encontrado nesta organização.' };
 
                 const { error } = await supabase
                     .from('deals')
@@ -1529,7 +1529,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     .eq('id', targetDealId);
                 if (error) return { error: formatSupabaseFailure(error) };
 
-                return { success: true, message: `Deal "${dealGuard.deal.title}" associado ao contato "${contact.name}".` };
+                return { success: true, message: `Deal "${dealGuard.deal.title}" associado ao contacto "${contact.name}".` };
             },
         }),
 

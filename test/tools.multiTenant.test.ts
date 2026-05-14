@@ -62,7 +62,7 @@ describeSupabase('Next AI tools - multi-tenant isolation (service-role sentinel)
     if (runId) await cleanupFixtures(runId);
   }, 60_000);
 
-  it('searchContacts deve respeitar organizationId (não pode vazar contatos de outro tenant)', async () => {
+  it('searchContacts deve respeitar organizationId (não pode vazar contactos de outro tenant)', async () => {
     const toolsA = createCRMTools({ organizationId: orgAId }, '00000000-0000-0000-0000-000000000000');
     const toolMap = toolsA as unknown as Record<string, { execute: (input: unknown) => unknown | Promise<unknown> }>;
 

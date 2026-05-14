@@ -385,12 +385,12 @@ export function UIChat({
 
         if (hasDealContext) {
             return {
-                subtitle: 'Deal • Contato • Atividades • Notas • Arquivos • Scripts',
+                subtitle: 'Deal • Contacto • Atividades • Notas • Ficheiros • Scripts',
                 quickActions: [
                     {
                         label: '🧾 Diagnóstico do Deal',
                         prompt:
-                            'Faça um diagnóstico completo deste deal usando o contexto do cockpit (notas, atividades e arquivos). Liste riscos, próximos passos e um plano de follow-up para 7 dias.',
+                            'Faça um diagnóstico completo deste deal usando o contexto do cockpit (notas, atividades e ficheiros). Liste riscos, próximos passos e um plano de follow-up para 7 dias.',
                     },
                     {
                         label: '👉 Próxima ação',
@@ -400,7 +400,7 @@ export function UIChat({
                     {
                         label: '✍️ Mensagem WhatsApp',
                         prompt:
-                            'Escreva uma mensagem curta de follow-up para WhatsApp para este contato, baseada no estágio atual e no histórico do cockpit. Traga 2 variações.',
+                            'Escreva uma mensagem curta de follow-up para WhatsApp para este contacto, baseada no estágio atual e no histórico do cockpit. Traga 2 variações.',
                     },
                     {
                         label: '✅ Tarefas da semana',
@@ -413,7 +413,7 @@ export function UIChat({
 
         if (hasBoardContext) {
             return {
-                subtitle: 'Pipeline • Deals • Contatos • Tarefas',
+                subtitle: 'Pipeline • Deals • Contactos • Tarefas',
                 quickActions: [
                     { label: '📊 Analisar Pipeline', prompt: 'Analise meu pipeline de vendas' },
                     { label: '⏰ Deals Parados', prompt: 'Quais deals estão parados há mais de 7 dias?' },
@@ -423,10 +423,10 @@ export function UIChat({
         }
 
         return {
-            subtitle: 'Deals • Contatos • Tarefas',
+            subtitle: 'Deals • Contactos • Tarefas',
             quickActions: [
                 { label: '🔍 Buscar deals', prompt: 'Buscar deals por: ' },
-                { label: '👤 Buscar contatos', prompt: 'Buscar contatos por: ' },
+                { label: '👤 Buscar contactos', prompt: 'Buscar contactos por: ' },
                 { label: '✅ Próximas tarefas', prompt: 'Quais tarefas eu deveria priorizar hoje?' },
             ],
         };
@@ -435,11 +435,11 @@ export function UIChat({
     const headerSubtitle = useMemo(() => {
         // No cockpit, priorizar título do deal / nome do contato em vez de IDs.
         if (cockpitDealTitle) return `Deal: ${cockpitDealTitle}`;
-        if (cockpitContactName) return `Contato: ${cockpitContactName}`;
+        if (cockpitContactName) return `Contacto: ${cockpitContactName}`;
 
         if (context.dealId) return `Deal: ${context.dealId.slice(0, 8)}...`;
         if (context.boardId) return `Board: ${context.boardId.slice(0, 8)}...`;
-        if (context.contactId) return `Contato: ${context.contactId.slice(0, 8)}...`;
+        if (context.contactId) return `Contacto: ${context.contactId.slice(0, 8)}...`;
         return 'AI Assistant';
     }, [cockpitContactName, cockpitDealTitle, context.boardId, context.contactId, context.dealId]);
 

@@ -149,7 +149,7 @@ describe('GET /api/public/v1/contacts', () => {
     expect(body.code).toBe('AUTH_MISSING')
   })
 
-  it('retorna lista de contatos com shape correta', async () => {
+  it('retorna lista de contactos com shape correta', async () => {
     // Act
     const res = await GET(makeGetRequest('http://localhost/api/public/v1/contacts'))
     const body = await res.json()
@@ -248,7 +248,7 @@ describe('POST /api/public/v1/contacts', () => {
     contactQueryBuilder.single.mockResolvedValue({ data: CONTACT_FIXTURE, error: null })
   })
 
-  it('cria contato novo quando email não existe (happy path)', async () => {
+  it('cria contacto novo quando email não existe (happy path)', async () => {
     // Arrange
     const payload = {
       name: 'João Novo',
@@ -265,7 +265,7 @@ describe('POST /api/public/v1/contacts', () => {
     expect(body.data).toBeDefined()
   })
 
-  it('atualiza contato existente (upsert)', async () => {
+  it('atualiza contacto existente (upsert)', async () => {
     // Arrange — contato já existe
     contactQueryBuilder.maybeSingle.mockResolvedValueOnce({
       data: { id: CONTACT_ID },
@@ -289,7 +289,7 @@ describe('POST /api/public/v1/contacts', () => {
 
   it('retorna 422 quando nem email nem phone fornecidos', async () => {
     // Arrange
-    const payload = { name: 'Sem Contato' }
+    const payload = { name: 'Sem Contacto' }
 
     // Act
     const res = await POST(makePostRequest(payload))
@@ -301,7 +301,7 @@ describe('POST /api/public/v1/contacts', () => {
     expect(body.error).toMatch(/email|phone/i)
   })
 
-  it('retorna 422 ao criar contato novo sem nome', async () => {
+  it('retorna 422 ao criar contacto novo sem nome', async () => {
     // Arrange — contato não existe, nome não fornecido
     const payload = { email: 'sem-nome@exemplo.com' }
 

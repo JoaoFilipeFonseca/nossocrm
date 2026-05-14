@@ -139,7 +139,7 @@ async function POST_INNER(req: Request): Promise<Response> {
 
     if (!organizationId) {
         return new Response(
-            'Profile sem organização. Finalize o setup (ou re-login) para vincular seu usuário a uma organização antes de usar a IA.',
+            'Profile sem organização. Finalize o setup (ou re-login) para vincular seu utilizador a uma organização antes de usar a IA.',
             { status: 409 }
         );
     }

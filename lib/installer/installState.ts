@@ -108,7 +108,7 @@ export function createInstallState(config: InstallState['config']): InstallState
     { id: 'wait_project', name: 'Aguardando sinal', status: 'pending' },
     { id: 'migrations', name: 'Construção da estação', status: 'pending' },
     { id: 'edge_functions', name: 'Ativação de comunicadores', status: 'pending' },
-    { id: 'bootstrap', name: 'Primeiro contato', status: 'pending' },
+    { id: 'bootstrap', name: 'Primeiro contacto', status: 'pending' },
     { id: 'redeploy', name: 'Preparação do pouso', status: 'pending' },
   ];
 

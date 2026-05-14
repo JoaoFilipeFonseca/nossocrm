@@ -560,7 +560,7 @@ export function MessageInput({ conversation, replyTo, onCancelReply }: MessageIn
           <Reply className="w-4 h-4 text-primary-500 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[11px] font-medium text-primary-500">
-              {replyTo.direction === 'outbound' ? 'Você' : (replyTo.senderName ?? 'Contato')}
+              {replyTo.direction === 'outbound' ? 'Você' : (replyTo.senderName ?? 'Contacto')}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
               {replyTo.contentType === 'text'
@@ -645,8 +645,8 @@ export function MessageInput({ conversation, replyTo, onCancelReply }: MessageIn
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
             className="flex-shrink-0 p-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors disabled:opacity-50"
-            title="Anexar arquivo"
-            aria-label="Anexar arquivo"
+            title="Anexar ficheiro"
+            aria-label="Anexar ficheiro"
           >
             {isUploading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

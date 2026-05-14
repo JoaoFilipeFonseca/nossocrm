@@ -60,7 +60,7 @@ const STEP_LABELS: Record<string, string> = {
   migrations: 'Aplicando estrutura do banco (migrations)',
   edge_secrets: 'Configurando funções (segredos)',
   edge_deploy: 'Publicando funções (edge)',
-  bootstrap: 'Criando usuário administrador',
+  bootstrap: 'Criando utilizador administrador',
   redeploy: 'Iniciando redeploy na Vercel',
   wait_vercel_deploy: 'Aguardando redeploy na Vercel (etapa final)',
 };
@@ -548,7 +548,7 @@ export default function InstallWizardPage() {
     // Em contas FREE, o limite pode ser GLOBAL por usuário (não por organização).
     // Se o preflight indicar que o usuário já atingiu o limite global, não tente criar projeto.
     if (preflight.freeGlobalLimitHit) {
-      console.log('🚫 [SUPABASE] Limite global FREE atingido (usuário). Indo para needspace.');
+      console.log('🚫 [SUPABASE] Limite global FREE atingido (utilizador). Indo para needspace.');
       setNeedSpaceReason('global_limit');
       setSupabaseUiStep('needspace');
       return;

@@ -113,8 +113,8 @@ const ACTION_LABELS: Record<string, string> = {
   LOGIN: 'Login',
   LOGOUT: 'Logout',
   PASSWORD_CHANGE: 'Alteração de Senha',
-  USER_CREATED: 'Usuário Criado',
-  USER_DELETED: 'Usuário Excluído',
+  USER_CREATED: 'Utilizador Criado',
+  USER_DELETED: 'Utilizador Excluído',
 };
 
 /**

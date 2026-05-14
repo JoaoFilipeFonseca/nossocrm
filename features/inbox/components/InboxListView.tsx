@@ -69,7 +69,7 @@ const SuggestionRow: React.FC<{
   const navigationTarget = dealId
     ? { href: `/boards?deal=${dealId}`, label: 'Ver negócio' }
     : contactId
-      ? { href: `/contacts?contactId=${contactId}`, label: 'Ver contato' }
+      ? { href: `/contacts?contactId=${contactId}`, label: 'Ver contacto' }
       : null;
 
   // Navigate to deal or contact

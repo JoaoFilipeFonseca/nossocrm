@@ -123,7 +123,7 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLORS.secondary);
-    doc.text(`Por: ${generatedBy || 'Usuário'} | ${dateStr} às ${timeStr}`, pageWidth - margin, metaY, { align: 'right' });
+    doc.text(`Por: ${generatedBy || 'Utilizador'} | ${dateStr} às ${timeStr}`, pageWidth - margin, metaY, { align: 'right' });
 
     // Divider
     doc.setDrawColor(...COLORS.border);

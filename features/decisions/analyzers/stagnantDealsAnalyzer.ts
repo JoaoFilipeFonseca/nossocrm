@@ -116,7 +116,7 @@ function generateSuggestedAction(
       activityType: actionType,
       activityTitle: `Follow-up: ${deal.title}`,
       activityDate: tomorrow.toISOString(),
-      activityDescription: `Retomar contato após ${lastActivity ? 'última atividade: ' + lastActivity.title : 'período sem interação'}`,
+      activityDescription: `Retomar contacto após ${lastActivity ? 'última atividade: ' + lastActivity.title : 'período sem interação'}`,
       dealId: deal.id,
       contactId: deal.contactId,
     },

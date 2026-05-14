@@ -172,7 +172,7 @@ const ActivityRowComponent: React.FC<ActivityRowProps> = ({
                         <Link
                             href={`/contacts?contactId=${contact.id}`}
                             className="flex items-center gap-1.5 text-primary-600 dark:text-primary-400 font-medium hover:underline"
-                            title={`Abrir contato: ${contact.name}`}
+                            title={`Abrir contacto: ${contact.name}`}
                         >
                             <Users size={14} />
                             <span className="truncate max-w-[280px]">{contact.name}</span>

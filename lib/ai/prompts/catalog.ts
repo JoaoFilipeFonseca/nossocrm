@@ -50,7 +50,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
     usedBy: ['app/api/ai/tasks/deals/email-draft', 'app/api/ai/actions → generateEmailDraft'],
     defaultTemplate:
       `Gere um rascunho de email profissional para:\n` +
-      `- Contato: {{contactName}}\n` +
+      `- Contacto: {{contactName}}\n` +
       `- Empresa: {{companyName}}\n` +
       `- Deal: {{dealTitle}}\n` +
       `Escreva um email conciso e eficaz em português do Brasil.`,
@@ -123,7 +123,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
       `REGRAS:\n` +
       `- Sempre explique os resultados das ferramentas\n` +
       `- Se der erro, informe de forma amigável\n` +
-      `- Não mostre IDs/UUIDs para o usuário final\n`,
+      `- Não mostre IDs/UUIDs para o utilizador final\n`,
     notes:
       'Importante: esse prompt é “sensível”. Mudanças ruins degradam o agente e podem quebrar fluxos. Ideal ter versionamento e botão “reset”.',
   },

@@ -254,7 +254,7 @@ export async function processIncomingMessage(
         success: true,
         decision: {
           action: 'skipped',
-          reason: 'AI pausado para este contato',
+          reason: 'AI pausado para este contacto',
         },
       };
     }
@@ -498,7 +498,7 @@ export async function processIncomingMessage(
       conversationId,
       organizationId,
       context,
-      'Estágio configurado para notificar equipe (notify_team)',
+      'Estágio configurado para notificar equipa (notify_team)',
       incomingMessage,
     );
     await logAIInteraction({ supabase, organizationId, conversationId, messageId, stageId: deal.stage_id, context, decision: handoffDecision });
@@ -906,7 +906,7 @@ async function sendAIResponse(params: {
   if (!conversation.external_contact_id) {
     return {
       success: false,
-      error: { code: 'NO_CONTACT', message: 'Conversa sem contato externo' },
+      error: { code: 'NO_CONTACT', message: 'Conversa sem contacto externo' },
     };
   }
 

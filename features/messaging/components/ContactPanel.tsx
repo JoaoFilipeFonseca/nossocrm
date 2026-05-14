@@ -159,7 +159,7 @@ export const ContactPanel = memo(function ContactPanel({
     priority,
   } = conversation;
 
-  const displayName = contactName || externalContactName || 'Contato desconhecido';
+  const displayName = contactName || externalContactName || 'Contacto desconhecido';
   const hasLinkedContact = !!contactId;
 
   return (
@@ -299,7 +299,7 @@ export const ContactPanel = memo(function ContactPanel({
               )}
               <div className="min-w-0">
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  IA {contactId ? '(contato)' : '(conversa)'}
+                  IA {contactId ? '(contacto)' : '(conversa)'}
                 </p>
                 <p className="text-sm text-slate-900 dark:text-white">
                   {isAiPaused ? 'Pausada' : 'Ativa'}
@@ -318,8 +318,8 @@ export const ContactPanel = memo(function ContactPanel({
               )}
               title={
                 isAiPaused
-                  ? contactId ? 'Reativar IA para este contato' : 'Reativar IA para esta conversa'
-                  : contactId ? 'Pausar IA para este contato' : 'Pausar IA para esta conversa'
+                  ? contactId ? 'Reativar IA para este contacto' : 'Reativar IA para esta conversa'
+                  : contactId ? 'Pausar IA para este contacto' : 'Pausar IA para esta conversa'
               }
             >
               <span

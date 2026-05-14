@@ -65,7 +65,7 @@ export const MergeContactsModal: React.FC<MergeContactsModalProps> = ({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Resolver contatos duplicados"
+          aria-label="Resolver contactos duplicados"
           className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col animate-in zoom-in-95 duration-200"
           onClick={(e) => e.stopPropagation()}
         >
@@ -215,8 +215,8 @@ export const MergeContactsModal: React.FC<MergeContactsModalProps> = ({
                           <>
                             <GitMerge className="w-4 h-4" />
                             {selectedTarget
-                              ? `Mesclar ${group.group_size - 1} contato${group.group_size - 1 !== 1 ? 's' : ''} no selecionado`
-                              : 'Selecione o contato principal'}
+                              ? `Mesclar ${group.group_size - 1} contacto${group.group_size - 1 !== 1 ? 's' : ''} no selecionado`
+                              : 'Selecione o contacto principal'}
                           </>
                         )}
                       </button>

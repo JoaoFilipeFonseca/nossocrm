@@ -315,7 +315,7 @@ export function MessageComposerModal({
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                            {contactName || 'Contato'}
+                            {contactName || 'Contacto'}
                         </p>
                         <div className="flex items-center gap-2">
                             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -333,7 +333,7 @@ export function MessageComposerModal({
                                         type="button"
                                         onClick={() => handleCopy('contact')}
                                         className="p-1 rounded-md hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors"
-                                        title={copied === 'contact' ? 'Copiado' : 'Copiar contato'}
+                                        title={copied === 'contact' ? 'Copiado' : 'Copiar contacto'}
                                     >
                                         <Copy size={12} />
                                     </button>

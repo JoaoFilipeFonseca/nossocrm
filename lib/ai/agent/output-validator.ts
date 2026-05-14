@@ -18,7 +18,7 @@ import { logStructured } from './structured-logger';
 const MAX_RESPONSE_LENGTH = 4096;
 
 /** Generic fallback when output is deemed unsafe */
-const FALLBACK_RESPONSE = 'Obrigado pelo contato! Nossa equipe retornará em breve.';
+const FALLBACK_RESPONSE = 'Obrigado pelo contacto! Nossa equipa retornará em breve.';
 
 // =============================================================================
 // Leakage Detection Patterns

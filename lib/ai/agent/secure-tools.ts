@@ -267,7 +267,7 @@ export function createSecureToolCollection(context: ToolContext) {
         if (userEdits && !userEdits.approved) {
           return {
             success: false,
-            message: 'Avanço rejeitado pelo usuário',
+            message: 'Avanço rejeitado pelo utilizador',
             hitlStatus: 'rejected',
           };
         }
@@ -342,7 +342,7 @@ export function createSecureToolCollection(context: ToolContext) {
           organization_id: organizationId,
           type: 'stage_change',
           description: userEdits
-            ? `Estágio avançado (aprovado por usuário): ${finalReason}`
+            ? `Estágio avançado (aprovado por utilizador): ${finalReason}`
             : `Estágio avançado automaticamente: ${finalReason}`,
           metadata: {
             from_stage_id: deal.stage_id,
@@ -405,7 +405,7 @@ export function createSecureToolCollection(context: ToolContext) {
         if (!userEdits.approved) {
           return {
             success: false,
-            message: 'Envio de mensagem rejeitado pelo usuário',
+            message: 'Envio de mensagem rejeitado pelo utilizador',
             hitlStatus: 'rejected',
           };
         }
@@ -471,7 +471,7 @@ export function createSecureToolCollection(context: ToolContext) {
     // =========================================================================
     getDealContext: {
       name: 'get_deal_context',
-      description: 'Busca contexto completo de um deal incluindo contato, estágio e histórico',
+      description: 'Busca contexto completo de um deal incluindo contacto, estágio e histórico',
       parameters: GetDealContextSchema,
 
       async execute(params: z.infer<typeof GetDealContextSchema>): Promise<ToolExecutionResult> {
@@ -542,12 +542,12 @@ export function createSecureToolCollection(context: ToolContext) {
     // =========================================================================
     searchContacts: {
       name: 'search_contacts',
-      description: 'Busca contatos por nome, email ou telefone',
+      description: 'Busca contactos por nome, email ou telefone',
       parameters: SearchContactsSchema,
 
       async execute(params: z.infer<typeof SearchContactsSchema>): Promise<ToolExecutionResult> {
         if (!permissions.canAccessContacts) {
-          throw new ToolPermissionError('Sem permissão para acessar contatos');
+          throw new ToolPermissionError('Sem permissão para acessar contactos');
         }
 
         // Sanitize for PostgREST filter syntax (strips , . ( ) * \)

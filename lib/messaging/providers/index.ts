@@ -211,7 +211,7 @@ registerProvider({
       label: 'Reply-To (opcional)',
       type: 'email',
       required: false,
-      placeholder: 'contato@suaempresa.com',
+      placeholder: 'contacto@suaempresa.com',
       helpText: 'Endereço para receber respostas',
     },
   ],

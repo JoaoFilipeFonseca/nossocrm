@@ -97,7 +97,7 @@ const MODE_OPTIONS: ModeOption[] = [
       'Prompt customizado por estágio',
       'Critérios de avanço manuais',
       'Controle granular',
-      'Para usuários avançados',
+      'Para utilizadores avançados',
     ],
     forExperts: true,
   },

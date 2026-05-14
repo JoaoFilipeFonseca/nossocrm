@@ -304,7 +304,7 @@ Deno.serve(async (req) => {
       .or(filters.join(","))
       .limit(1);
 
-    if (findErr) return json(500, { error: "Falha ao buscar contato", details: findErr.message });
+    if (findErr) return json(500, { error: "Falha ao buscar contacto", details: findErr.message });
 
     if (existingContacts && existingContacts.length > 0) {
       const existing = existingContacts[0];
@@ -324,7 +324,7 @@ Deno.serve(async (req) => {
           .from("contacts")
           .update(updates)
           .eq("id", contactId);
-        if (updErr) return json(500, { error: "Falha ao atualizar contato", details: updErr.message });
+        if (updErr) return json(500, { error: "Falha ao atualizar contacto", details: updErr.message });
         contactAction = "updated";
       } else {
         contactAction = "none";
@@ -345,7 +345,7 @@ Deno.serve(async (req) => {
         .select("id")
         .single();
 
-      if (createErr) return json(500, { error: "Falha ao criar contato", details: createErr.message });
+      if (createErr) return json(500, { error: "Falha ao criar contacto", details: createErr.message });
       contactId = created?.id ?? null;
       if (contactId) contactAction = "created";
     }

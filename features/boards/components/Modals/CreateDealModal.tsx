@@ -316,7 +316,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                                     <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                     <input
                                         type="text"
-                                        placeholder="Nome do contato *"
+                                        placeholder="Nome do contacto *"
                                         required={isCreatingNew}
                                         value={newContactData.name}
                                         onChange={(e) => setNewContactData(prev => ({ ...prev, name: e.target.value }))}

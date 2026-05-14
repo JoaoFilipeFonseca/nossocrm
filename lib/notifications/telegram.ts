@@ -52,7 +52,7 @@ export async function detectRecentTelegramMessage(
   if (!recent?.message) return null;
   return {
     chatId: recent.message.chat.id,
-    firstName: recent.message.from?.first_name ?? 'Usuário',
+    firstName: recent.message.from?.first_name ?? 'Utilizador',
     username: recent.message.from?.username,
   };
 }
@@ -99,7 +99,7 @@ export function formatHandoffMessage({
   const lines = [
     `🔔 <b>Lead precisa de atenção humana</b>`,
     ``,
-    `👤 <b>Contato:</b> ${escapeHtml(contactName)}`,
+    `👤 <b>Contacto:</b> ${escapeHtml(contactName)}`,
     `💼 <b>Deal:</b> ${escapeHtml(dealTitle)}`,
     `📍 <b>Estágio:</b> ${escapeHtml(stageName)}`,
     ``,

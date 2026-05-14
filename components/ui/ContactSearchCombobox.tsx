@@ -24,7 +24,7 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
   onCreateNew,
   selectedContact,
   selectedCompany,
-  placeholder = 'Buscar contato (nome, telefone ou email)...'
+  placeholder = 'Buscar contacto (nome, telefone ou email)...'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);

@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   const mediaType = getMediaType(file.type);
   if (!mediaType) {
     return NextResponse.json(
-      { error: `Tipo de arquivo não suportado: ${file.type}` },
+      { error: `Tipo de ficheiro não suportado: ${file.type}` },
       { status: 400 }
     );
   }
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
   if (file.size > maxSize) {
     const maxMB = Math.round(maxSize / (1024 * 1024));
     return NextResponse.json(
-      { error: `Arquivo excede o limite de ${maxMB}MB para ${mediaType}` },
+      { error: `Ficheiro excede o limite de ${maxMB}MB para ${mediaType}` },
       { status: 400 }
     );
   }

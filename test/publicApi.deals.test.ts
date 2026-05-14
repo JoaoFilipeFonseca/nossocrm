@@ -410,7 +410,7 @@ describe('POST /api/public/v1/deals', () => {
 
   it('retorna 422 quando nem contact_id nem contact fornecidos', async () => {
     // Arrange
-    const payload = { title: 'Deal sem contato', board_id: BOARD_ID, stage_id: STAGE_ID }
+    const payload = { title: 'Deal sem contacto', board_id: BOARD_ID, stage_id: STAGE_ID }
 
     // Act
     const res = await POST(makePostRequest(payload))
@@ -455,13 +455,13 @@ describe('POST /api/public/v1/deals', () => {
     expect(body.code).toBe('AUTH_INVALID')
   })
 
-  it('retorna 422 ao criar contato inline sem email/phone', async () => {
+  it('retorna 422 ao criar contacto inline sem email/phone', async () => {
     // Arrange — contact inline sem identificador obrigatório
     const payload = {
-      title: 'Deal com contato inválido',
+      title: 'Deal com contacto inválido',
       board_id: BOARD_ID,
       stage_id: STAGE_ID,
-      contact: { name: 'Sem Contato' },  // sem email nem phone
+      contact: { name: 'Sem Contacto' },  // sem email nem phone
     }
 
     // Act

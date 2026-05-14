@@ -99,7 +99,7 @@ export function useUpsertStageAIConfigMutation() {
   return useMutation({
     mutationFn: async (input: StageAIConfigInput) => {
       if (!profile?.organization_id) {
-        throw new Error('Usuário não autenticado');
+        throw new Error('Utilizador não autenticado');
       }
 
       // Check if config already exists

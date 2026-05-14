@@ -41,7 +41,7 @@ const CONTEXT_WITH_PII: LeadContext = {
   } as any,
 }
 
-const FALLBACK = 'Obrigado pelo contato! Nossa equipe retornará em breve.'
+const FALLBACK = 'Obrigado pelo contacto! Nossa equipa retornará em breve.'
 
 // ---------------------------------------------------------------------------
 // Respostas seguras — devem passar
@@ -59,7 +59,7 @@ describe('validateAIOutput — respostas seguras', () => {
 
   it('aprova resposta com nome genérico não PII', () => {
     const result = validateAIOutput(
-      'Obrigado pelo interesse! Nossa equipe entrará em contato.',
+      'Obrigado pelo interesse! Nossa equipa entrará em contacto.',
       CONTEXT_WITH_PII
     )
     expect(result.safe).toBe(true)

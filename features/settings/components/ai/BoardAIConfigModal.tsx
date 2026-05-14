@@ -106,8 +106,8 @@ const GOAL_CATEGORIES: { id: GoalCategory; label: string; emoji: string; what: s
     id: 'filtragem',
     label: 'Filtragem',
     emoji: '🔍',
-    what: 'Entender a necessidade do contato e classificar se é um lead qualificado antes de envolver a equipe.',
-    limits: 'Não fazer promoção do produto. Ser neutro e objetivo. Não criar expectativas de resposta imediata da equipe.',
+    what: 'Entender a necessidade do contacto e classificar se é um lead qualificado antes de envolver a equipa.',
+    limits: 'Não fazer promoção do produto. Ser neutro e objetivo. Não criar expectativas de resposta imediata da equipa.',
   },
 ];
 

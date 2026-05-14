@@ -70,7 +70,7 @@ export const ProfilePage: React.FC = () => {
     const displayName = useMemo(() => {
         if (nickname) return nickname;
         if (firstName) return firstName;
-        return profile?.email?.split('@')[0] || 'Usuário';
+        return profile?.email?.split('@')[0] || 'Utilizador';
     }, [firstName, nickname, profile?.email]);
 
     const fullName = useMemo(() => {

@@ -20,7 +20,7 @@ export const getErrorMessage = (error: unknown): string => {
     const translations: Record<string, string> = {
         'Invalid login credentials': 'Email ou senha incorretos.',
         'Email not confirmed': 'Por favor, confirme seu email antes de entrar.',
-        'User not found': 'Usuário não encontrado.',
+        'User not found': 'Utilizador não encontrado.',
         'Password is known to be weak and easy to guess, please choose a different one.': 'A senha é muito fraca. Por favor, escolha uma senha mais forte (use letras maiúsculas, minúsculas e números).',
         'New password should be different from the old password.': 'A nova senha deve ser diferente da senha anterior.',
         'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres.',

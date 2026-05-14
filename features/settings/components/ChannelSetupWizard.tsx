@@ -282,7 +282,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         key: 'replyTo',
         label: 'Reply-To (opcional)',
         type: 'text',
-        placeholder: 'contato@suaempresa.com',
+        placeholder: 'contacto@suaempresa.com',
         required: false,
         helpText: 'Endereço para receber respostas dos clientes.',
       },

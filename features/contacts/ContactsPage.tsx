@@ -123,7 +123,7 @@ export const ContactsPage: React.FC = () => {
                 <div className="flex items-center justify-between bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg px-4 py-3">
                     <div className="flex items-center gap-3">
                         <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
-                            {controller.selectedIds.size} {controller.viewMode === 'people' ? 'contato(s)' : 'empresa(s)'} selecionado(s)
+                            {controller.selectedIds.size} {controller.viewMode === 'people' ? 'contacto(s)' : 'empresa(s)'} selecionado(s)
                         </span>
                         <button
                             onClick={controller.clearSelection}
@@ -207,8 +207,8 @@ export const ContactsPage: React.FC = () => {
                 isOpen={!!controller.deleteId}
                 onClose={() => controller.setDeleteId(null)}
                 onConfirm={controller.confirmDelete}
-                title="Excluir Contato"
-                message="Tem certeza que deseja excluir este contato? Esta ação não pode ser desfeita."
+                title="Excluir Contacto"
+                message="Tem certeza que deseja excluir este contacto? Esta ação não pode ser desfeita."
                 confirmText="Excluir"
                 variant="danger"
             />
@@ -228,7 +228,7 @@ export const ContactsPage: React.FC = () => {
                 isOpen={!!controller.deleteWithDeals}
                 onClose={() => controller.setDeleteWithDeals(null)}
                 onConfirm={controller.confirmDeleteWithDeals}
-                title="Contato com Negócios"
+                title="Contacto com Negócios"
                 message={
                     <div className="space-y-3">
                         <p>Este contato possui {controller.deleteWithDeals?.dealCount || 0} negócio(s) vinculado(s):</p>
@@ -256,12 +256,12 @@ export const ContactsPage: React.FC = () => {
                 isOpen={controller.bulkDeleteConfirm}
                 onClose={() => controller.setBulkDeleteConfirm(false)}
                 onConfirm={controller.confirmBulkDelete}
-                title={controller.viewMode === 'people' ? 'Excluir Contatos em Massa' : 'Excluir Empresas em Massa'}
+                title={controller.viewMode === 'people' ? 'Excluir Contactos em Massa' : 'Excluir Empresas em Massa'}
                 message={
                     <div className="space-y-2">
                         <p>
                             Tem certeza que deseja excluir <strong>{controller.selectedIds.size}</strong>{' '}
-                            {controller.viewMode === 'people' ? 'contato(s)' : 'empresa(s)'}?
+                            {controller.viewMode === 'people' ? 'contacto(s)' : 'empresa(s)'}?
                         </p>
                         {controller.viewMode === 'people' ? (
                             <p className="text-red-500 dark:text-red-400 text-sm">
@@ -274,7 +274,7 @@ export const ContactsPage: React.FC = () => {
                         )}
                     </div>
                 }
-                confirmText={`Excluir ${controller.selectedIds.size} ${controller.viewMode === 'people' ? 'contato(s)' : 'empresa(s)'}`}
+                confirmText={`Excluir ${controller.selectedIds.size} ${controller.viewMode === 'people' ? 'contacto(s)' : 'empresa(s)'}`}
                 variant="danger"
             />
 

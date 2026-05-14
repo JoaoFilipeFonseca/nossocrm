@@ -658,7 +658,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-slate-900 dark:text-white font-medium text-sm flex items-center gap-2">
-                        {deal.contactName || 'Sem contato'}
+                        {deal.contactName || 'Sem contacto'}
                         {contact?.stage &&
                           (() => {
                             const stage = lifecycleStageById.get(contact.stage);

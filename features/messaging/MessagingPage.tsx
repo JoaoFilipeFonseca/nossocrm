@@ -194,7 +194,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
                 {sanitizeUrl(selectedConversation.externalContactAvatar) ? (
                   <img
                     src={sanitizeUrl(selectedConversation.externalContactAvatar)}
-                    alt={selectedConversation.externalContactName || 'Contato'}
+                    alt={selectedConversation.externalContactName || 'Contacto'}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
@@ -208,7 +208,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="font-semibold text-slate-900 dark:text-white truncate">
-                  {selectedConversation.contactName || selectedConversation.externalContactName || 'Contato desconhecido'}
+                  {selectedConversation.contactName || selectedConversation.externalContactName || 'Contacto desconhecido'}
                 </h2>
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -253,7 +253,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
                     type="button"
                     onClick={() => setIsLinkModalOpen(true)}
                     className="p-2 text-slate-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-colors"
-                    title="Vincular contato"
+                    title="Vincular contacto"
                   >
                     <LinkIcon className="w-5 h-5" />
                   </button>

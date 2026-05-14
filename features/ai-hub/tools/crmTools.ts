@@ -17,9 +17,9 @@ export const searchDeals = tool({
 });
 
 export const getContact = tool({
-  description: 'Busca informações de um contato específico por nome ou email',
+  description: 'Busca informações de um contacto específico por nome ou email',
   inputSchema: z.object({
-    query: z.string().describe('Nome ou email do contato para buscar'),
+    query: z.string().describe('Nome ou email do contacto para buscar'),
   }),
 });
 
@@ -60,7 +60,7 @@ export const createActivity = tool({
     type: z.enum(['MEETING', 'CALL', 'TASK', 'EMAIL']).describe('Tipo da atividade'),
     date: z.string().describe('Data e hora no formato ISO (ex: 2025-12-01T14:00:00)'),
     description: z.string().optional().describe('Descrição ou notas'),
-    contactName: z.string().optional().describe('Nome do contato relacionado'),
+    contactName: z.string().optional().describe('Nome do contacto relacionado'),
     dealTitle: z.string().optional().describe('Título do deal relacionado'),
   }),
 });
@@ -94,7 +94,7 @@ export const createDeal = tool({
   inputSchema: z.object({
     title: z.string().describe('Título do deal'),
     value: z.number().describe('Valor estimado'),
-    contactName: z.string().optional().describe('Nome do contato principal'),
+    contactName: z.string().optional().describe('Nome do contacto principal'),
     companyName: z.string().optional().describe('Nome da empresa'),
     description: z.string().optional().describe('Descrição do deal'),
   }),
