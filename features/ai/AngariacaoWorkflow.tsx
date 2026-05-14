@@ -37,16 +37,36 @@ const ESTADOS = ['Novo', 'Usado-Bom', 'Usado-Reabilitar', 'Em Construção', 'Em
 
 function parseSwotSections(text: string): {forcas: string; fraquezas: string; oportunidades: string; ameacas: string; recomendacoes: string} {
     const sections = {forcas: '', fraquezas: '', oportunidades: '', ameacas: '', recomendacoes: ''};
-    const patterns = [
-        {key: 'forcas' as const, re: /(?:##\s*)?(?:✅\s*)?(?:FORÇAS|Forças|STRENGTHS)[\s\S]*?(?=(?:##\s*)?(?:❌|FRAQUEZAS|Fraquezas|WEAKNESSES))/i},
-        {key: 'fraquezas' as const, re: /(?:##\s*)?(?:❌\s*)?(?:FRAQUEZAS|Fraquezas|WEAKNESSES)[\s\S]*?(?=(?:##\s*)?(?:🚀|OPORTUNIDADES|Oportunidades|OPPORTUNITIES))/i},
-        {key: 'oportunidades' as const, re: /(?:##\s*)?(?:🚀\s*)?(?:OPORTUNIDADES|Oportunidades|OPPORTUNITIES)[\s\S]*?(?=(?:##\s*)?(?:⚠️|AMEAÇAS|Ameaças|THREATS))/i},
-        {key: 'ameacas' as const, re: /(?:##\s*)?(?:⚠️\s*)?(?:AMEAÇAS|Ameaças|THREATS)[\s\S]*?(?=(?:##\s*)?(?:🎯|RECOMENDAÇÕES|Recomendações|$))/i},
-        {key: 'recomendacoes' as const, re: /(?:##\s*)?(?:🎯\s*)?(?:RECOMENDAÇÕES[\s\S]+?ESTRATÉGICAS|Recomendações)[\s\S]*$/i},
-    ];
-    for (const {key, re} of patterns) {
-        const m = text.match(re);
-        if (m) sections[key] = m[0].replace(/^(?:##\s*)?[✅❌🚀⚠️🎯]\s*(?:FORÇAS|FRAQUEZAS|OPORTUNIDADES|AMEAÇAS|RECOMENDAÇÕES[^\n]*)\s*\n?/i, '').trim();
+    // Match emoji+title section headers anywhere in text
+    const splitRegex = /(?:#{1,3}\s*)?[✅❌🚀⚠️🎯]\s*[A-ZÀ-Úa-zà-ú\s\/]+(?:\([^)]*\))?\s*\n/g;
+    const matches: Array<{idx: number; len: number; key: string}> = [];
+    let m: RegExpExecArray | null;
+    while ((m = splitRegex.exec(text)) !== null) {
+        const header = m[0].toLowerCase();
+        let key = '';
+        if (/✅|forças|strengths/i.test(header)) key = 'forcas';
+        else if (/❌|fraquezas|weaknesses/i.test(header)) key = 'fraquezas';
+        else if (/🚀|oportunidades|opportunities/i.test(header)) key = 'oportunidades';
+        else if (/⚠️|ameaças|threats/i.test(header)) key = 'ameacas';
+        else if (/🎯|recomendações|strategic/i.test(header)) key = 'recomendacoes';
+        if (key) matches.push({idx: m.index, len: m[0].length, key});
+    }
+    // Keep only the FIRST match for each key (avoids duplicates)
+    const seen = new Set<string>();
+    const unique = matches.filter(x => {
+        if (seen.has(x.key)) return false;
+        seen.add(x.key);
+        return true;
+    });
+    // Sort by position
+    unique.sort((a, b) => a.idx - b.idx);
+    for (let j = 0; j < unique.length; j++) {
+        const cur = unique[j];
+        const next = unique[j + 1];
+        const contentStart = cur.idx + cur.len;
+        const contentEnd = next ? next.idx : text.length;
+        const content = text.substring(contentStart, contentEnd).trim();
+        (sections as any)[cur.key] = content;
     }
     return sections;
 }
