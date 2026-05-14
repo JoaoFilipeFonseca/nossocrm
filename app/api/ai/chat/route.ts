@@ -170,8 +170,10 @@ async function POST_INNER(req: Request): Promise<Response> {
     // CLAUDE PREFIX DETECTION: if user starts message with "claude" (no slash), use Claude
     let forceClaude = false;
     try {
-        const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user');
-        const lastText = lastUserMsg?.parts?.find?.((p: any) => p.type === 'text')?.text || '';
+        const lastUserMsg: any = [...messages].reverse().find((m: any) => m.role === 'user');
+        const partsArr: any[] = Array.isArray(lastUserMsg?.parts) ? lastUserMsg.parts : [];
+        const textPart: any = partsArr.find((p: any) => p?.type === 'text');
+        const lastText: string = (textPart?.text as string) || '';
         const trimmed = lastText.trim();
         if (/^claude\b/i.test(trimmed)) {
             forceClaude = true;
