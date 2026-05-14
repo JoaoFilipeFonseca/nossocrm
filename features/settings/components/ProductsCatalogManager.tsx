@@ -154,15 +154,16 @@ export const ProductsCatalogManager: React.FC = () => {
     if (!ok) return;
     setLoading(true);
     setError(null);
-    const res = await supabase.from('products').delete().eq('id', p.id);
+    const res = await productsService.delete(p.id);
     if (res.error) {
       setError(res.error.message);
       setLoading(false);
       return;
     }
     await load();
-    setLoading(false);
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('crm:products-updated'));
   };
+
   return (
     <div className="mb-12">
       <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6">
