@@ -479,13 +479,13 @@ function buildSuggestedWhatsAppMessage(opts: {
   const { contact, deal, actionType, action, reason } = opts;
 
   const firstName = contact?.name?.split(' ')[0] || '';
-  const greeting = firstName ? `Oi ${firstName}, tudo bem?` : 'Oi, tudo bem?';
+  const greeting = firstName ? `Olá ${firstName}, espero que esteja tudo bem.` : 'Olá, espero que esteja tudo bem.';
   const r = normalizeReason(reason);
   const dealTitle = deal?.title?.trim();
   const dealCtx = dealTitle ? ` sobre ${dealTitle}` : '';
 
   const { a, b } = proposeTwoSlots();
-  const reasonSentence = r ? `\n\nPensei nisso porque ${r.charAt(0).toLowerCase()}${r.slice(1)}.` : '';
+  const reasonSentence = r ? `\n\nDecidi contactar porque ${r.charAt(0).toLowerCase()}${r.slice(1)}.` : '';
 
   if (actionType === 'MEETING') {
     return (
@@ -499,9 +499,9 @@ function buildSuggestedWhatsAppMessage(opts: {
   if (actionType === 'CALL') {
     return (
       `${greeting}` +
-      `\n\nPodemos fazer uma ligação rapidinha${dealCtx}?` +
+      `\n\nPodemos fazer uma breve conversa${dealCtx}?` +
       `${reasonSentence}` +
-      `\n\nVocê prefere ${formatSlot(a)} ou ${formatSlot(b)}?`
+      `\n\nTem preferência por ${formatSlot(a)} ou ${formatSlot(b)}?`
     );
   }
 
