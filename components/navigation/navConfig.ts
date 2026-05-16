@@ -12,7 +12,7 @@ import {
   User,
 } from 'lucide-react';
 
-export type PrimaryNavId = 'inbox' | 'messaging' | 'boards' | 'contacts' | 'activities' | 'more';
+export type PrimaryNavId = 'inbox' | 'messaging' | 'matches' | 'boards' | 'contacts' | 'activities' | 'more';
 
 export interface PrimaryNavItem {
   id: PrimaryNavId;
