@@ -84,7 +84,7 @@ function formatForWhatsApp(input: string) {
     text = text.replace(/Você\s+(?:consegue|prefere)\s+([^\n?]+?)\s+ou\s+([^\n?]+?)\?/i, (_m, a, b) => {
         const A = String(a).trim().replace(/[?.!]+$/g, '');
         const B = String(b).trim().replace(/[?.!]+$/g, '');
-        return `Você prefere:\n- ${A}\n- ${B}`;
+        return `Tem preferência por:\n- ${A}\n- ${B}`;
     });
     text = text.replace(/Sugest(?:ões|oes) de hor[áa]rio:\s*([^\n?]+?)\s+ou\s+([^\n?]+?)\.?/i, (_m, a, b) => {
         const A = String(a).trim().replace(/[?.!]+$/g, '');
@@ -396,8 +396,8 @@ export function MessageComposerModal({
                             className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white text-sm focus:outline-none focus-visible-ring resize-y min-h-80 max-h-[60vh]"
                         placeholder={
                             channel === 'WHATSAPP'
-                                ? 'Ex: Oi! Podemos falar rapidinho hoje?'
-                                : 'Ex: Olá, tudo bem? Seguem os próximos passos...'
+                                ? 'Ex: Olá, espero que esteja tudo bem. Quando lhe der jeito, podemos falar?'
+                                : 'Ex: Olá, espero que esteja tudo bem. Seguem os próximos passos...'
                         }
                     />
                     <div className="flex items-center justify-between">
