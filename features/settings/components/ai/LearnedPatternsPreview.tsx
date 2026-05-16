@@ -102,7 +102,7 @@ export function LearnedPatternsPreview({
       <div className="flex flex-wrap gap-3">
         <Badge variant="outline" className="text-xs">
           <Calendar className="h-3 w-3 mr-1" />
-          {new Date(patterns.learnedAt).toLocaleDateString('pt-BR')}
+          {new Date(patterns.learnedAt).toLocaleDateString('pt-PT')}
         </Badge>
         <Badge variant="outline" className="text-xs">
           <Hash className="h-3 w-3 mr-1" />

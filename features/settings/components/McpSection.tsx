@@ -57,7 +57,7 @@ export const McpSection: React.FC = () => {
 
     setCreatingKey(true);
     try {
-      const name = `MCP ${new Date().toLocaleDateString('pt-BR')}`;
+      const name = `MCP ${new Date().toLocaleDateString('pt-PT')}`;
       const { data, error } = await supabase.rpc('create_api_key', { p_name: name });
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;

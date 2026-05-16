@@ -359,8 +359,8 @@ export const UsersPage: React.FC = () => {
                                         <span className="text-slate-300 dark:text-slate-600">•</span>
                                         <span className="text-sm text-slate-400 dark:text-slate-500">
                                             {user.status === 'pending'
-                                                ? `Convidado ${new Date(user.invited_at || user.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}`
-                                                : `Desde ${new Date(user.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}`
+                                                ? `Convidado ${new Date(user.invited_at || user.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}`
+                                                : `Desde ${new Date(user.created_at).toLocaleDateString('pt-PT', { month: 'short', year: 'numeric' })}`
                                             }
                                         </span>
                                     </div>

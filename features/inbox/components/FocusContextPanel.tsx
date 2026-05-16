@@ -64,7 +64,7 @@ import { callAIProxy } from '@/lib/supabase/ai-proxy';
 import type { ScriptCategory } from '@/lib/supabase/quickScripts';
 
 // Performance: reuse Intl formatter instances.
-const PT_BR_SHORT_DATE_FORMATTER = new Intl.DateTimeFormat('pt-BR');
+const PT_BR_SHORT_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
 
 interface FocusContextPanelProps {
     deal: Deal;
@@ -249,8 +249,8 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
     };
 
     const formatSlot = (d: Date) => {
-        const day = d.toLocaleDateString('pt-BR', { weekday: 'short' });
-        const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const day = d.toLocaleDateString('pt-PT', { weekday: 'short' });
+        const time = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
         return `${day} ${time}`;
     };
 
@@ -768,7 +768,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                         </div>
                         <div className="text-right">
                             <p className="text-lg font-bold text-emerald-400 font-mono tracking-tight">
-                                R$ {deal.value?.toLocaleString('pt-BR') || '0'}
+                                € {deal.value?.toLocaleString('pt-PT') || '0'}
                             </p>
                         </div>
                     </div>
@@ -1076,7 +1076,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                             )}
                                             {contact.totalValue && contact.totalValue > 0 && (
                                                 <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">
-                                                    LTV: R$ {contact.totalValue.toLocaleString('pt-BR')}
+                                                    LTV: € {contact.totalValue.toLocaleString('pt-PT')}
                                                 </span>
                                             )}
                                         </div>
@@ -1110,7 +1110,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                 <div>
                                     <span className="text-slate-600">Valor</span>
                                     <p className="text-emerald-400 font-semibold">
-                                        R$ {deal.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        € {deal.value.toLocaleString('pt-PT', { minimumFractionDigits: 2 })}
                                     </p>
                                 </div>
                                 <div>
@@ -1120,13 +1120,13 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                 <div>
                                     <span className="text-slate-600">Criado em</span>
                                     <p className="text-slate-400">
-                                        {new Date(deal.createdAt).toLocaleDateString('pt-BR')}
+                                        {new Date(deal.createdAt).toLocaleDateString('pt-PT')}
                                     </p>
                                 </div>
                                 <div>
                                     <span className="text-slate-600">Atualizado</span>
                                     <p className="text-slate-400">
-                                        {new Date(deal.updatedAt).toLocaleDateString('pt-BR')}
+                                        {new Date(deal.updatedAt).toLocaleDateString('pt-PT')}
                                     </p>
                                 </div>
                             </div>
@@ -1421,7 +1421,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                                             )}
                                                         </div>
                                                         <span className="text-[11px] text-slate-600 font-mono shrink-0 self-center">
-                                                            {new Date(activity.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })} - {new Date(activity.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(activity.date).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })} - {new Date(activity.date).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -1580,7 +1580,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                                     <p className="text-sm text-slate-300 whitespace-pre-wrap">{n.content}</p>
                                                     <div className="flex justify-between items-center mt-2">
                                                         <span className="text-[10px] text-slate-600">
-                                                            {new Date(n.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(n.created_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                         <button
                                                             onClick={() => deleteNote.mutate(n.id)}
@@ -1775,7 +1775,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                                         <div className="ml-3 flex-1 min-w-0">
                                                             <p className="text-sm font-medium text-white truncate">{file.file_name}</p>
                                                             <p className="text-xs text-slate-500">
-                                                                {formatFileSize(file.file_size)} • {new Date(file.created_at).toLocaleDateString('pt-BR')}
+                                                                {formatFileSize(file.file_size)} • {new Date(file.created_at).toLocaleDateString('pt-PT')}
                                                             </p>
                                                         </div>
                                                         <button

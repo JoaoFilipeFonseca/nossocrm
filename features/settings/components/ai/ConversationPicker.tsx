@@ -239,7 +239,7 @@ function ConversationCard({
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               {new Date(conversation.lastMessageAt || conversation.createdAt).toLocaleDateString(
-                'pt-BR'
+                'pt-PT'
               )}
             </span>
           </div>

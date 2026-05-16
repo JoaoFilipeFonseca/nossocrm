@@ -23,7 +23,7 @@ import { useDecisionQueue } from './hooks/useDecisionQueue';
 import { PRIORITY_LABELS, CATEGORY_LABELS } from './types';
 
 // Performance: reuse formatter instance.
-const PT_BR_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
+const PT_BR_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
   day: 'numeric',
   month: 'short',
   hour: '2-digit',

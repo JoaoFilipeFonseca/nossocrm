@@ -45,9 +45,9 @@ import type { Activity, Board, BoardStage, Contact, DealView } from '@/types';
 type Tab = 'chat' | 'notas' | 'scripts' | 'ficheiros';
 
 // Performance: reuse Intl formatter instances (avoid creating them per call).
-const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-BR');
-const PT_BR_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
-const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
+const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
+const PT_BR_TIME_FORMATTER = new Intl.DateTimeFormat('pt-PT', { hour: '2-digit', minute: '2-digit' });
+const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-PT', {
   style: 'currency',
   currency: 'EUR',
   maximumFractionDigits: 2,
@@ -346,7 +346,7 @@ function formatCurrencyBRL(value: number): string {
   try {
     return BRL_CURRENCY_FORMATTER.format(value);
   } catch {
-    return `R$ ${value.toFixed(2)}`;
+    return `€ ${value.toFixed(2)}`;
   }
 }
 
@@ -452,8 +452,8 @@ function normalizeReason(raw?: string) {
 }
 
 function formatSlot(d: Date) {
-  const day = d.toLocaleDateString('pt-BR', { weekday: 'short' });
-  const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const day = d.toLocaleDateString('pt-PT', { weekday: 'short' });
+  const time = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
   return `${day} ${time}`;
 }
 

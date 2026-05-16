@@ -50,7 +50,7 @@ function normalizeTitleKey(value: string) {
 function tryExtractContactNameFromText(text?: string) {
   if (!text) return '';
 
-  // Common patterns in the app (pt-BR):
+  // Common patterns in the app (pt-PT):
   // - "Ligar para o cliente Amanda Ribeiro"
   // - "Reativar cliente: Amanda Ribeiro"
   const match =

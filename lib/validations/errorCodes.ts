@@ -137,12 +137,12 @@ const enUS: Translations = {
 };
 
 const translations: Record<string, Translations> = {
-  'pt-BR': ptBR,
+  'pt-PT': ptBR,
   'en-US': enUS,
 };
 
 // Current locale (can be changed dynamically)
-let currentLocale = 'pt-BR';
+let currentLocale = 'pt-PT';
 
 /**
  * Função pública `setLocale` do projeto.
@@ -173,7 +173,7 @@ interface ErrorParams {
  * Get translated error message
  */
 export const getErrorMessage = (code: ErrorCode, params: ErrorParams = {}): string => {
-  const template = translations[currentLocale]?.[code] || translations['pt-BR'][code] || code;
+  const template = translations[currentLocale]?.[code] || translations['pt-PT'][code] || code;
 
   return template.replace(/\{(\w+)\}/g, (_, key) => {
     const value = params[key];

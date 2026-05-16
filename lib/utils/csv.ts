@@ -24,7 +24,7 @@ export function detectCsvDelimiter(sample: string): CsvDelimiter {
     ';': (firstLine.match(/;/g) || []).length,
     '\t': (firstLine.match(/\t/g) || []).length,
   };
-  // Prefer ; when tied with , (common in pt-BR Excel exports)
+  // Prefer ; when tied with , (common in pt-PT Excel exports)
   const entries = (Object.entries(counts) as Array<[CsvDelimiter, number]>)
     .sort((a, b) => b[1] - a[1] || (a[0] === ';' ? -1 : 1));
   return entries[0][1] > 0 ? entries[0][0] : ',';

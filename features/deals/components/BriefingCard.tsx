@@ -82,7 +82,7 @@ export function BriefingCard({
   isRefreshing,
   className,
 }: BriefingCardProps) {
-  const formattedDate = new Date(briefing.generatedAt).toLocaleString('pt-BR', {
+  const formattedDate = new Date(briefing.generatedAt).toLocaleString('pt-PT', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',

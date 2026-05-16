@@ -334,14 +334,14 @@ function InfoView({
             <div className="flex justify-between py-2 border-b border-slate-100 dark:border-white/5">
               <span className="text-slate-500 dark:text-slate-400">Última conexão</span>
               <span className="text-slate-900 dark:text-white font-medium">
-                {new Date(channel.lastConnectedAt).toLocaleString('pt-BR')}
+                {new Date(channel.lastConnectedAt).toLocaleString('pt-PT')}
               </span>
             </div>
           )}
           <div className="flex justify-between py-2">
             <span className="text-slate-500 dark:text-slate-400">Criado em</span>
             <span className="text-slate-900 dark:text-white font-medium">
-              {new Date(channel.createdAt).toLocaleDateString('pt-BR')}
+              {new Date(channel.createdAt).toLocaleDateString('pt-PT')}
             </span>
           </div>
         </div>

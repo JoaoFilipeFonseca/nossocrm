@@ -24,7 +24,7 @@ const InboxItemComponent: React.FC<InboxItemProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const isMeeting = activity.type === 'MEETING' || activity.type === 'CALL';
   const date = new Date(activity.date);
-  const timeString = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const timeString = date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
 
   const getIconColor = () => {
     switch (activity.type) {

@@ -99,7 +99,7 @@ interface SpeechRecognitionErrorEvent {
  * Hook para reconhecimento de fala usando Web Speech API
  * 
  * Fornece interface simples para capturar e transcrever fala do usuário
- * em tempo real. Configurado para português brasileiro (pt-BR).
+ * em tempo real. Configurado para português brasileiro (pt-PT).
  * 
  * @returns {SpeechRecognitionHook} Estado e controles do reconhecimento de fala
  * 
@@ -155,7 +155,7 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
 
       recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
-      recognitionInstance.lang = 'pt-BR';
+      recognitionInstance.lang = 'pt-PT';
 
       recognitionInstance.onstart = () => {
       };

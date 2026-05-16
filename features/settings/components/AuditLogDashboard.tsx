@@ -26,7 +26,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
 // Performance: reuse Intl formatter to avoid allocating options objects for every log row.
-const PT_BR_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
+const PT_BR_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
   day: '2-digit',
   month: '2-digit',
   year: 'numeric',

@@ -328,7 +328,7 @@ export const ApiKeysSection: React.FC = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Api-Key': token },
           body: JSON.stringify({
-            title: `Deal Teste ${new Date().toLocaleTimeString('pt-BR')}`,
+            title: `Deal Teste ${new Date().toLocaleTimeString('pt-PT')}`,
             value: 0,
             board_key: selectedBoardKey,
             contact: {
@@ -852,7 +852,7 @@ export const ApiKeysSection: React.FC = () => {
                       {k.key_prefix}…
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Último uso: {k.last_used_at ? new Date(k.last_used_at).toLocaleString('pt-BR') : '—'}
+                      Último uso: {k.last_used_at ? new Date(k.last_used_at).toLocaleString('pt-PT') : '—'}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

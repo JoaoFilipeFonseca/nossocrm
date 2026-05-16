@@ -171,7 +171,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({
               </div>
               {selectedAction.preview?.scheduledFor && (
                 <div className="text-xs text-primary-600/70 dark:text-primary-400/70">
-                  {new Date(selectedAction.preview.scheduledFor).toLocaleDateString('pt-BR', {
+                  {new Date(selectedAction.preview.scheduledFor).toLocaleDateString('pt-PT', {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',

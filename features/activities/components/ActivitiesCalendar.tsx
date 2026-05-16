@@ -120,7 +120,7 @@ export const ActivitiesCalendar: React.FC<ActivitiesCalendarProps> = ({
             <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50">
                 <div className="flex items-center gap-4">
                     <h2 className="font-bold text-2xl text-slate-900 dark:text-white font-display">
-                        {weekStart.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                        {weekStart.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })}
                     </h2>
                     <button
                         onClick={goToToday}
@@ -210,7 +210,7 @@ export const ActivitiesCalendar: React.FC<ActivitiesCalendarProps> = ({
                                                                 {getActivityIcon(activity.type)}
                                                             </div>
                                                             <span className="font-black text-white text-sm">
-                                                                {new Date(activity.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                                {new Date(activity.date).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
                                                             </span>
                                                         </div>
                                                         <div className={`font-bold text-white leading-tight ${activity.completed ? 'line-through' : ''}`}>

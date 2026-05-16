@@ -66,8 +66,8 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
 
     // Current date/time
     const now = new Date();
-    const dateStr = now.toLocaleDateString('pt-BR');
-    const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('pt-PT');
+    const timeStr = now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
 
     // ============================================
     // HEADER
@@ -321,7 +321,7 @@ export const generateReportPDF = async (data: ReportData, period: PeriodFilter, 
     doc.setTextColor(...COLORS.secondary);
     doc.text('Foco Imo', margin, pageHeight - 10);
     doc.text('Página 1', pageWidth / 2, pageHeight - 10, { align: 'center' });
-    doc.text(new Date().toLocaleDateString('pt-BR'), pageWidth - margin, pageHeight - 10, { align: 'right' });
+    doc.text(new Date().toLocaleDateString('pt-PT'), pageWidth - margin, pageHeight - 10, { align: 'right' });
 
     // ============================================
     // OUTPUT

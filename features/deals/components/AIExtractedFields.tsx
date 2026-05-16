@@ -168,7 +168,7 @@ export function AIExtractedFields({ data, className, compact }: AIExtractedField
       </div>
       {data?.lastExtractedAt && (
         <p className="text-[10px] text-slate-400 mt-2 text-right">
-          Atualizado em {new Date(data.lastExtractedAt).toLocaleString('pt-BR', {
+          Atualizado em {new Date(data.lastExtractedAt).toLocaleString('pt-PT', {
             day: '2-digit',
             month: '2-digit',
             hour: '2-digit',

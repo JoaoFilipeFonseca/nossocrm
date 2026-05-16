@@ -15,7 +15,7 @@ interface ActivityFeedItemProps {
 }
 
 // Performance: reuse Intl formatter instead of instantiating options object per render.
-const ACTIVITY_FEED_DATE_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
+const ACTIVITY_FEED_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',

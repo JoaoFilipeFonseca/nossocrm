@@ -565,7 +565,7 @@ export const ProfilePage: React.FC = () => {
                         <div className="flex items-center gap-3 text-sm">
                             <Calendar className="w-4 h-4 text-slate-400" />
                             <span className="text-slate-500 dark:text-slate-400">
-                                Membro desde {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : '-'}
+                                Membro desde {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' }) : '-'}
                             </span>
                         </div>
                     </div>

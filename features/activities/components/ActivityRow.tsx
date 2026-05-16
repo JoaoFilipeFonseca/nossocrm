@@ -84,7 +84,7 @@ const ActivityRowComponent: React.FC<ActivityRowProps> = ({
         if (diffInSeconds < 3600) return `há ${Math.floor(diffInSeconds / 60)} min`;
         if (diffInSeconds < 86400) return `há ${Math.floor(diffInSeconds / 3600)} h`;
         if (diffInSeconds < 172800) return 'ontem';
-        return date.toLocaleDateString('pt-BR');
+        return date.toLocaleDateString('pt-PT');
     };
 
     const formatTitle = (title: string) => {
