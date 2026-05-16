@@ -463,7 +463,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
 
                 {isEditingValue ? (
                   <div className="flex gap-2 items-center">
-                    <span className="text-lg font-mono font-bold text-slate-500">$</span>
+                    <span className="text-lg font-mono font-bold text-slate-500">€</span>
                     <input
                       autoFocus
                       type="number"
