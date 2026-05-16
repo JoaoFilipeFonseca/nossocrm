@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!profile?.organization_id) {
-    return json({ models: [] });
+    return json({ models: [...ANTHROPIC_MODELS] });
   }
 
   const { data: settings, error: settingsError } = await supabase
@@ -129,12 +129,12 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (settingsError || !settings?.ai_google_key) {
-    return json({ models: [] });
+    return json({ models: [...ANTHROPIC_MODELS] });
   }
 
   try {
     const models = await fetchGoogleModels(settings.ai_google_key);
-    return json({ models });
+    return json({ models: [...models, ...ANTHROPIC_MODELS] });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error(`[api/ai/models] ${message}`);
