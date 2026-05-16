@@ -84,7 +84,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
           if (e.target === e.currentTarget) onClose();
         }}
       >
-        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 max-h-[90dvh] overflow-y-auto">
           <div className="p-5 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <h2 id={headingId} className="text-lg font-bold text-slate-900 dark:text-white font-display">
