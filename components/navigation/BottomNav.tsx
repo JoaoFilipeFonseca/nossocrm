@@ -12,7 +12,7 @@ export function BottomNav({ onOpenMore }: BottomNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav
+    <nav style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)', paddingTop: '6px' }}
       aria-label="Navegação principal (mobile)"
       className={cn(
         'fixed inset-x-0 bottom-0 z-50 md:hidden',
@@ -43,7 +43,7 @@ export function BottomNav({ onOpenMore }: BottomNavProps) {
                   'focus-visible-ring'
                 )}
               >
-                <Icon className="h-5 w-5" aria-hidden="true" />
+                <Icon className="h-6 w-6" aria-hidden="true" />
                 <span className="font-display tracking-wide">{item.label}</span>
               </button>
             );
@@ -62,7 +62,7 @@ export function BottomNav({ onOpenMore }: BottomNavProps) {
               )}
               aria-current={isActive ? 'page' : undefined}
             >
-              <Icon className={cn('h-5 w-5', isActive ? 'text-primary-500' : '')} aria-hidden="true" />
+              <Icon className={cn('h-6 w-6', isActive ? 'text-primary-500' : '')} aria-hidden="true" />
               <span className="font-display tracking-wide">{item.label}</span>
             </Link>
           );
