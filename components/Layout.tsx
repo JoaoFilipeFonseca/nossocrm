@@ -178,7 +178,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isMobile = mode === 'mobile';
   const isTablet = mode === 'tablet';
   const isDesktop = mode === 'desktop';
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  
+  // [back-arrow]
+  const _router = useRouter();
+  const _pn = usePathname() || '/';
+  const _TOP_LEVEL = new Set(['/', '/dashboard', '/inbox', '/messaging', '/matches', '/boards', '/contacts', '/activities', '/reports', '/settings', '/profile']);
+  const showBack = !_TOP_LEVEL.has(_pn);
+  const handleBack = () => { try { _router.back(); } catch (e) { _router.push('/dashboard'); } };
+const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   // Hydration safety: `isDebugMode()` reads localStorage. On SSR it is always false.
   // Initialize deterministically and sync on mount to avoid hydration mismatch warnings.
@@ -315,6 +322,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             if (sidebarCollapsed) {
               return (
                 <TooltipProvider key={item.to} delayDuration={200}>
+      {/* back-arrow */}
+      {showBack && (
+        <button type="button" onClick={handleBack} aria-label="Voltar" className="md:hidden fixed top-3 left-3 z-50 h-9 w-9 rounded-full bg-slate-900/90 backdrop-blur ring-1 ring-white/10 text-white shadow-lg flex items-center justify-center active:scale-95 transition">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+      )}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link
