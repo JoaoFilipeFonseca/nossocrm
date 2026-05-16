@@ -18,10 +18,18 @@ import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 export interface AIModelInfo {
   id: string;
   name: string;
-  provider: 'google';
+  provider: 'google' | 'anthropic';
   /** true = alias auto-atualizado (ex: gemini-flash-latest) */
   isAlias: boolean;
 }
+
+
+// Modelos Anthropic (Claude) — lista estatica porque a API Anthropic nao expoe /models publico
+const ANTHROPIC_MODELS: AIModelInfo[] = [
+  { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic', isAlias: false },
+  { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', provider: 'anthropic', isAlias: false },
+  { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', provider: 'anthropic', isAlias: false },
+];
 
 // =============================================================================
 // Helpers
@@ -85,7 +93,7 @@ async function fetchGoogleModels(apiKey: string): Promise<AIModelInfo[]> {
     .filter((m) => !m.isAlias)
     .sort((a, b) => b.id.localeCompare(a.id));
 
-  return [...aliases, ...pinned];
+  return [...aliases, ...pinned, ...ANTHROPIC_MODELS];
 }
 
 // =============================================================================
