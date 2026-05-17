@@ -243,7 +243,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
   return (
     <div className="max-w-5xl mx-auto">
       {/* Tabs minimalistas */}
-      <div className="flex items-center gap-1 mb-8 border-b border-slate-200 dark:border-white/10">
+      <div className="flex items-center gap-1 mb-8 border-b border-slate-200 dark:border-white/10 overflow-x-auto whitespace-nowrap scroll-smooth -mx-4 px-4 md:mx-0 md:px-0">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
