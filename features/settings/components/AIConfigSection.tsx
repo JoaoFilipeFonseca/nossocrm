@@ -108,6 +108,8 @@ export const AIConfigSection: React.FC = () => {
     // UX: mostrar LGPD expandido apenas quando ainda NÃO há key salva (primeira configuração).
     // Depois que a key existe, manter colapsado por padrão para não “inflar” a tela.
     const [lgpdExpanded, setLgpdExpanded] = useState(!aiApiKey);
+  const [localAnthropicKey, setLocalAnthropicKey] = useState('');
+  const [savingAnthropic, setSavingAnthropic] = useState(false);
 
     // Sync local state when context changes (ex: carregamento inicial)
     useEffect(() => {
@@ -401,7 +403,68 @@ export const AIConfigSection: React.FC = () => {
                     </p>
 
                     {/* Seção LGPD Colapsável - Expandida por padrão */}
-                    <div className="mt-4 border border-amber-200 dark:border-amber-500/30 rounded-lg overflow-hidden">
+                                  {/* Anthropic Claude Key (espelho do Google Gemini) */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <Key size={14} /> Chave de API (Anthropic Claude)
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="password"
+                      value={localAnthropicKey}
+                      onChange={(e) => setLocalAnthropicKey(e.target.value)}
+                      placeholder={(orgSettings as any)?.aiHasAnthropicKey ? '•••••••••• guardada' : 'Cole sua chave sk-ant-api03-...'}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!localAnthropicKey.trim()) return;
+                      setSavingAnthropic(true);
+                      try {
+                        const r = await fetch('/api/settings/ai', {
+                          method: 'POST', credentials: 'include',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ aiAnthropicKey: localAnthropicKey.trim() }),
+                        });
+                        if (r.ok) {
+                          setLocalAnthropicKey('');
+                          window.location.reload();
+                        }
+                      } finally { setSavingAnthropic(false); }
+                    }}
+                    disabled={!localAnthropicKey.trim() || savingAnthropic}
+                    className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    {savingAnthropic ? 'A guardar...' : ((orgSettings as any)?.aiHasAnthropicKey ? 'Atualizar' : 'Guardar')}
+                  </button>
+                  {(orgSettings as any)?.aiHasAnthropicKey ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!window.confirm('Apagar chave Anthropic?')) return;
+                        await fetch('/api/settings/ai', {
+                          method: 'POST', credentials: 'include',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ aiAnthropicKey: '' }),
+                        });
+                        window.location.reload();
+                      }}
+                      className="px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-600 dark:text-red-400 transition"
+                      aria-label="Apagar chave Anthropic"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  ) : null}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Necessária para modelos Claude (Sonnet 4.6, Opus 4.6, Haiku 4.5). Obtém em console.anthropic.com/settings/keys.
+                </p>
+              </div>
+
+<div className="mt-4 border border-amber-200 dark:border-amber-500/30 rounded-lg overflow-hidden">
                         <button
                             type="button"
                             onClick={() => setLgpdExpanded(!lgpdExpanded)}
