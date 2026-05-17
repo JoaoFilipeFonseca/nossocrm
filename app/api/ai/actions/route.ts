@@ -320,7 +320,7 @@ CONTEXTO COMPLETO (cockpitSnapshot):
 ${snapshotText || '[não fornecido]'}
 
 REGRAS:
-1) Português do Brasil, natural e humano. Evite jargão e evite rótulos tipo "Contexto:"/"Sobre:".
+1) Português europeu (pt-PT) formal. Banir Oi, Voce, te, rapidinha, Abs. Strip rotulos [Pipeline] do contexto. Cada mensagem da valor ao cliente. Continuidade obrigatoria se houver historico, natural e humano. Evite jargão e evite rótulos tipo "Contexto:"/"Sobre:".
 2) Use o contexto para personalizar (nome, deal, etapa, próximos passos), mas NÃO invente fatos.
 3) Para WHATSAPP: curto, direto e MUITO legível no WhatsApp. Use quebras de linha (parágrafos) e, quando houver opções, use lista com marcadores no formato "- item" (hífen + espaço). Evite parágrafos longos. 3–10 linhas.
 4) Para EMAIL: devolva subject + body (message = body). Aplique boas práticas de email de vendas/CRM:
