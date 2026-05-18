@@ -1,3 +1,4 @@
+import { runWithAIFallback } from '@/lib/ai/run-with-fallback';
 import { generateText, Output } from 'ai';
 import { z } from 'zod';
 import { requireAITaskContext, AITaskHttpError } from '@/lib/ai/tasks/server';
@@ -23,7 +24,7 @@ function json(body: unknown, status = 200): Response {
  */
 export async function POST(req: Request) {
   try {
-    const { model, supabase, organizationId, modelId } = await requireAITaskContext(req);
+    const { model, fallbackModel, supabase, organizationId, modelId } = await requireAITaskContext(req);
     const enabled = await isAIFeatureEnabled(supabase as any, organizationId, 'ai_deal_analyze');
     if (!enabled) {
       return json({ error: { code: 'AI_FEATURE_DISABLED', message: 'Função de IA desativada: Análise de deal.' } }, 403);
@@ -43,12 +44,10 @@ export async function POST(req: Request) {
       probability: deal?.probability || 50,
     });
 
-    const result = await generateText({
-      model,
-      maxRetries: 3,
-      output: Output.object({ schema: AnalyzeLeadOutputSchema }),
-      prompt,
-    });
+    const { result } = await runWithAIFallback(
+      () => generateText({ model, maxRetries: 3, output: Output.object({ schema: AnalyzeLeadOutputSchema }), prompt }),
+      fallbackModel ? () => generateText({ model: fallbackModel, maxRetries: 1, output: Output.object({ schema: AnalyzeLeadOutputSchema }), prompt }) : null,
+    );
 
     void (supabase as any).from('ai_conversation_log').insert({
       organization_id: organizationId,

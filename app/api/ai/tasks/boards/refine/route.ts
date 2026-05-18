@@ -1,3 +1,4 @@
+import { runWithAIFallback } from '@/lib/ai/run-with-fallback';
 import { generateText, Output } from 'ai';
 import { z } from 'zod';
 import { requireAITaskContext, AITaskHttpError } from '@/lib/ai/tasks/server';
@@ -23,7 +24,7 @@ function json(body: unknown, status = 200): Response {
  */
 export async function POST(req: Request) {
   try {
-    const { model, supabase, organizationId } = await requireAITaskContext(req);
+    const { model, fallbackModel, supabase, organizationId } = await requireAITaskContext(req);
     const enabled = await isAIFeatureEnabled(supabase as any, organizationId, 'ai_board_refine');
     if (!enabled) {
       return json({ error: { code: 'AI_FEATURE_DISABLED', message: 'Função de IA desativada: Refinar board.' } }, 403);
@@ -42,12 +43,10 @@ export async function POST(req: Request) {
       historyContext,
     });
 
-    const result = await generateText({
-      model,
-      maxRetries: 3,
-      output: Output.object({ schema: RefineBoardOutputSchema }),
-      prompt,
-    });
+    const { result } = await runWithAIFallback(
+      () => generateText({ model, maxRetries: 3, output: Output.object({ schema: RefineBoardOutputSchema }), prompt }),
+      fallbackModel ? () => generateText({ model: fallbackModel, maxRetries: 1, output: Output.object({ schema: RefineBoardOutputSchema }), prompt }) : null,
+    );
 
     return json(result.output);
   } catch (err: unknown) {
