@@ -739,7 +739,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
 
           <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden min-h-0">
             {/* Left Sidebar (Static Info + Custom Fields) */}
-            <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/5 p-4 sm:p-6 md:overflow-y-auto bg-white dark:bg-dark-card md:max-h-none">
+            <div className="hidden md:flex md:w-1/3 md:border-r border-slate-200 dark:border-white/5 p-4 sm:p-6 md:overflow-y-auto bg-white dark:bg-dark-card md:max-h-none">
               <div className="space-y-6">
                 {(deal.companyName && deal.companyName !== 'Sem empresa') ? (
                 <div>
