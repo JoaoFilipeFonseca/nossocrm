@@ -103,7 +103,7 @@ const RecommendedApproachSchema = z.object({
  */
 export const MeetingBriefingSchema = z.object({
   /** Executive summary (3-5 sentences) */
-  executiveSummary: z.string().describe('Resumo executivo conciso do status do deal em português brasileiro'),
+  executiveSummary: z.string().describe('Resumo executivo conciso do status do deal em português europeu'),
 
   /** Current BANT qualification status */
   bantStatus: BantStatusSchema,

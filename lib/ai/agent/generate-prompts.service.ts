@@ -74,14 +74,14 @@ REGRAS PARA OS PROMPTS GERADOS:
 4. Regras obrigatórias em TODOS os prompts: não revelar que é IA, ser conciso (2-3 frases), terminar com pergunta
 5. Primeiro estágio = conexão e descoberta. Último estágio = apresentação/fechamento + handoff para humano
 6. Os critérios de avanço devem ser objetivos e verificáveis (ex: "Lead informou orçamento" e não "Lead parece interessado")
-7. handoffKeywords devem incluir variações naturais do português brasileiro
+7. handoffKeywords devem incluir variações naturais do português europeu
 8. suggestedMaxMessages: estágios iniciais = menos mensagens (5-8), estágios finais = mais (8-15)
 
 IMPORTANTE:
 - Adapte ao tipo de negócio descrito pelo usuário
 - Se o usuário mencionar metodologia (BANT, SPIN, etc.), use-a como base
 - Se não mencionar, use uma abordagem consultiva genérica
-- Gere prompts em português brasileiro`;
+- Gere prompts em português europeu`;
 
   const user = `DESCRIÇÃO DO NEGÓCIO:
 ${businessDescription}

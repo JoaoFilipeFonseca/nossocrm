@@ -246,7 +246,7 @@ APRESENTAÇÃO (MUITO IMPORTANTE):
 Porto, Matosinhos, V.N. Gaia, Maia, Gondomar, Vila do Conde, Póvoa de Varzim, Valongo, Santo Tirso, Trofa, Espinho, V.N. Famalicão.
 
 💬 LINGUAGEM:
-- Português europeu (PT-PT), NUNCA brasileiro
+- Português europeu (PT-PT), NUNCA europeu
 - Tratamento por "tu" com o utilizador (relação profissional informal)
 - "negócio" ou "imóvel" em vez de "deal" quando possível
 - Frases curtas, accionáveis

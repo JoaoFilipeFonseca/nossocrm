@@ -39,7 +39,7 @@ REGRAS:
 - Se não encontrar, retorne null para o value
 - Confidence deve refletir clareza da informação (0.9+ = muito claro, 0.7-0.9 = mencionado, 0.5-0.7 = implícito)
 - Reasoning deve citar brevemente de onde veio a informação
-- Responda SEMPRE em português brasileiro`;
+- Responda SEMPRE em português europeu`;
 
 // =============================================================================
 // Extraction Service

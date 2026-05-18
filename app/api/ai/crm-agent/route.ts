@@ -650,7 +650,7 @@ REGRAS:
 3. Quando criar algo, confirme o que foi criado
 4. Quando analisar, forneça insights acionáveis
 5. Use valores em Reais (€) formatados
-6. Datas em formato brasileiro (dd/mm/aaaa)
+6. Datas em formato europeu (dd/mm/aaaa)
 
 Você é proativo — se perceber oportunidades ou riscos, mencione-os.`,
         messages: await convertToModelMessages(messages),
