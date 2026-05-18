@@ -888,15 +888,69 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
               <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-black/10">
                 {activeTab === 'cockpit' && (
                 <div className="space-y-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-500/30 rounded-xl p-6">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Cockpit do Negocio</h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
-                      Aqui vais ver Health, Proxima Accao e historico de toques (mensagens, chamadas, emails) deste deal. Em construcao na sessao seguinte.
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Por agora: usa as outras tabs ou clica no contacto principal para abrir as opcoes de mensagem e chamada.
+                  <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-orange-500 text-lg">♥</span>
+                        <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Health</span>
+                      </div>
+                      <span className="text-3xl font-bold text-orange-500">{deal.probability ?? 50}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-2">
+                      <div className="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full transition-all" style={{ width: `${deal.probability ?? 50}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-500/30 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-red-500 text-lg">⚡</span>
+                      <span className="text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">Próxima Acção</span>
+                      <span className="ml-auto text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full font-medium">✨ IA</span>
+                    </div>
+                    <p className="text-sm text-slate-700 dark:text-slate-200 mb-3">
+                      Carrega num ícone abaixo para abrir o canal de contacto. A IA prepara uma mensagem pt-PT formal com continuidade automática.
                     </p>
                   </div>
+
+                  <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Executar como</span>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {deal.contactEmail ? (
+                        <a href={`mailto:${deal.contactEmail}`} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 transition text-sm font-medium" title={`Email: ${deal.contactEmail}`}>✉️ Email</a>
+                      ) : null}
+                      <button type="button" onClick={() => setActiveTab('timeline')} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 transition text-sm font-medium">📅 Agendar</button>
+                      <button type="button" onClick={() => setActiveTab('timeline')} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 transition text-sm font-medium">📝 Nota</button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-3 text-center">
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wide">Dias</div>
+                      <div className="text-2xl font-bold text-slate-700 dark:text-white">{deal.createdAt ? Math.max(0, Math.floor((Date.now() - new Date(deal.createdAt).getTime()) / 86400000)) : 0}</div>
+                    </div>
+                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-3 text-center">
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wide">Prob</div>
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">{deal.probability ?? 50}%</div>
+                    </div>
+                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-3 text-center">
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wide">Valor</div>
+                      <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">€ {Number(deal.value || 0).toLocaleString('pt-PT')}</div>
+                    </div>
+                  </div>
+
+                  {(deal.contactName || deal.companyName) ? (
+                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
+                        {(deal.contactName || deal.companyName || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 dark:text-white truncate">{deal.contactName || 'Sem contacto'}</div>
+                        {deal.contactEmail ? <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{deal.contactEmail}</div> : null}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
 
