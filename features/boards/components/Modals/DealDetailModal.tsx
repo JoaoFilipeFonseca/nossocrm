@@ -589,7 +589,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                   </p>
                 )}
               </div>
-              <div className="flex gap-3 items-center">
+              <div className="flex flex-wrap gap-2 items-center justify-end">
                 {/* Se fechado: mostra badge + botão Reabrir */}
                 {(deal.isWon || deal.isLost) ? (
                   <>
