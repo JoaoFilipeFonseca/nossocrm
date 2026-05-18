@@ -8,6 +8,7 @@
  */
 
 import { generateText, Output } from 'ai';
+import { IMOBILIARIO_PT_KNOWLEDGE } from '@/lib/ai/knowledge/imobiliario-pt';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getModel } from '../config';
 import { getOrgAIConfig } from '../agent/agent.service';
@@ -24,7 +25,7 @@ const MIN_CONFIDENCE_TO_STORE = 0.5; // Só salva se confiança >= 50%
 // System Prompt
 // =============================================================================
 
-const EXTRACTION_SYSTEM_PROMPT = `Você é um especialista em extrair informações de qualificação de leads (BANT) de conversas de vendas.
+const EXTRACTION_SYSTEM_PROMPT = `${IMOBILIARIO_PT_KNOWLEDGE}\n\nVocê é um especialista em extrair informações de qualificação de leads (BANT) de conversas de vendas.
 
 Analise o histórico de conversa e extraia:
 

@@ -8,6 +8,7 @@
  */
 
 import { generateText, Output } from 'ai';
+import { IMOBILIARIO_PT_KNOWLEDGE } from '@/lib/ai/knowledge/imobiliario-pt';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getModel } from '../config';
 import { getOrgAIConfig } from '../agent/agent.service';
@@ -23,7 +24,7 @@ const MAX_MESSAGES_FOR_BRIEFING = 50;
 // System Prompt
 // =============================================================================
 
-const BRIEFING_SYSTEM_PROMPT = `Você é um assistente de vendas portugues (consultor imobiliario em Portugal) especializado em preparar briefings pré-conversa.
+const BRIEFING_SYSTEM_PROMPT = `${IMOBILIARIO_PT_KNOWLEDGE}\n\nVocê é um assistente de vendas portugues (consultor imobiliario em Portugal) especializado em preparar briefings pré-conversa.
 
 IMPORTANTE: TODO o conteúdo gerado DEVE estar em PORTUGUÊS EUROPEU (pt-PT) formal. Não use inglês em nenhuma parte da resposta.
 

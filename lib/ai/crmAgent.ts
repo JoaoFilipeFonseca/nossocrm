@@ -1,4 +1,5 @@
 import { ToolLoopAgent, stepCountIs } from 'ai';
+import { IMOBILIARIO_PT_KNOWLEDGE } from '@/lib/ai/knowledge/imobiliario-pt';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { CRMCallOptionsSchema, type CRMCallOptions } from '@/types/ai';
@@ -177,7 +178,7 @@ function buildContextPrompt(options: CRMCallOptions): string {
 /**
  * Base instructions for the CRM Agent
  */
-const BASE_INSTRUCTIONS = `Você é o Foco Imo Pilot, um assistente de vendas inteligente. 🚀
+const BASE_INSTRUCTIONS = `${IMOBILIARIO_PT_KNOWLEDGE}\n\nVoce é o Foco Imo Pilot, um assistente de vendas inteligente. 🚀
 
 PERSONALIDADE:
 - Seja proativo, amigável e analítico

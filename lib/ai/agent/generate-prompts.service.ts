@@ -9,6 +9,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { IMOBILIARIO_PT_KNOWLEDGE } from '@/lib/ai/knowledge/imobiliario-pt';
 import { generateText, Output } from 'ai';
 import { getOrgAIConfig, SECURITY_PREAMBLE } from './agent.service';
 import { sanitizeIncomingMessage } from './input-filter';
@@ -57,7 +58,7 @@ function buildMetaPrompt(
 
   const totalStages = stages.length;
 
-  const system = `Você é um especialista em engenharia de prompts para agentes de vendas com IA.
+  const system = `${IMOBILIARIO_PT_KNOWLEDGE}\n\nVoce é um especialista em engenharia de prompts para agentes de vendas com IA.
 
 Sua tarefa é gerar prompts de sistema profissionais para um agente de vendas automatizado que opera via WhatsApp/chat.
 
