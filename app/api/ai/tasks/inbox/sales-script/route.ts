@@ -1,4 +1,5 @@
 import { generateText } from 'ai';
+import { runWithAIFallback } from '@/lib/ai/run-with-fallback';
 import { z } from 'zod';
 import { requireAITaskContext, AITaskHttpError } from '@/lib/ai/tasks/server';
 import { GenerateSalesScriptInputSchema } from '@/lib/ai/tasks/schemas';
@@ -23,7 +24,7 @@ function json(body: unknown, status = 200): Response {
  */
 export async function POST(req: Request) {
   try {
-    const { model, supabase, organizationId } = await requireAITaskContext(req);
+    const { model, fallbackModel, supabase, organizationId } = await requireAITaskContext(req);
     const enabled = await isAIFeatureEnabled(supabase as any, organizationId, 'ai_sales_script');
     if (!enabled) {
       return json({ error: { code: 'AI_FEATURE_DISABLED', message: 'Função de IA desativada: Script de vendas.' } }, 403);
@@ -40,11 +41,10 @@ export async function POST(req: Request) {
       context: context || '',
     });
 
-    const result = await generateText({
-      model,
-      maxRetries: 3,
-      prompt,
-    });
+    const { result } = await runWithAIFallback(
+      () => generateText({ model, maxRetries: 3, prompt }),
+      fallbackModel ? () => generateText({ model: fallbackModel, maxRetries: 1, prompt }) : null,
+    );
 
     return json({ script: result.text, scriptType, generatedFor: deal?.title });
   } catch (err: unknown) {

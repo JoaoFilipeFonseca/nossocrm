@@ -12,6 +12,10 @@ export type AITaskContext = {
   modelId: string;
   apiKey: string;
   model: ReturnType<typeof getModel>;
+  fallbackProvider: AIProvider | null;
+  fallbackModelId: string | null;
+  fallbackApiKey: string | null;
+  fallbackModel: ReturnType<typeof getModel> | null;
 };
 
 function json(body: unknown, status = 200): Response {
@@ -114,6 +118,24 @@ export async function requireAITaskContext(req: Request): Promise<AITaskContext>
   const modelId = orgSettings?.ai_model || '';
   const model = getModel(provider, apiKey, modelId);
 
+  // Fallback automatico para o outro provedor quando a chave estiver configurada
+  const hasGoogleKey = Boolean(orgSettings?.ai_google_key);
+  const hasAnthropicKey = Boolean(orgSettings?.ai_anthropic_key);
+  const fallbackProvider: AIProvider | null = isClaude
+    ? (hasGoogleKey ? 'google' : null)
+    : (hasAnthropicKey ? 'anthropic' : null);
+  const fallbackApiKey: string | null =
+    fallbackProvider === 'google' ? (orgSettings?.ai_google_key ?? null)
+      : fallbackProvider === 'anthropic' ? (orgSettings?.ai_anthropic_key ?? null)
+      : null;
+  const fallbackModelId: string | null =
+    fallbackProvider === 'google' ? 'gemini-2.5-flash'
+      : fallbackProvider === 'anthropic' ? 'claude-sonnet-4-5'
+      : null;
+  const fallbackModel = fallbackProvider && fallbackApiKey && fallbackModelId
+    ? getModel(fallbackProvider, fallbackApiKey, fallbackModelId)
+    : null;
+
   return {
     supabase,
     userId: user.id,
@@ -122,5 +144,9 @@ export async function requireAITaskContext(req: Request): Promise<AITaskContext>
     modelId,
     apiKey,
     model,
+    fallbackProvider,
+    fallbackModelId,
+    fallbackApiKey,
+    fallbackModel,
   };
 }
