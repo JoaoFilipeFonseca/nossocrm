@@ -913,16 +913,35 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                   </div>
 
                   <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-4">
                       <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Executar como</span>
                     </div>
-                    <div className="flex gap-2 flex-wrap">
-                      {deal.contactEmail ? (
-                        <a href={`mailto:${deal.contactEmail}`} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 transition text-sm font-medium" title={`Email: ${deal.contactEmail}`}>✉️ Email</a>
+                    <div className="flex gap-3 items-center justify-start flex-wrap">
+                      {(deal as any).contactPhone ? (
+                        <a href={`https://wa.me/${String((deal as any).contactPhone).replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-600 dark:text-green-400 transition" aria-label="Abrir WhatsApp">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                        </a>
                       ) : null}
-                      <button type="button" onClick={() => setActiveTab('timeline')} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 transition text-sm font-medium">📅 Agendar</button>
-                      <button type="button" onClick={() => setActiveTab('timeline')} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 transition text-sm font-medium">📝 Nota</button>
+                      {(deal as any).contactPhone ? (
+                        <a href={`tel:${(deal as any).contactPhone}`} title="Chamada telefónica" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 transition" aria-label="Telefonar">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        </a>
+                      ) : null}
+                      {deal.contactEmail ? (
+                        <a href={`mailto:${deal.contactEmail}`} title={`Email: ${deal.contactEmail}`} className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-blue-400 transition" aria-label="Enviar email">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        </a>
+                      ) : null}
+                      <button type="button" title="Agendar reunião" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-600 dark:text-purple-400 transition" aria-label="Agendar">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      </button>
+                      <button type="button" title="Marcar reunião / café" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 transition" aria-label="Reunião">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
                     </div>
+                    {!(deal as any).contactPhone && !deal.contactEmail ? (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">Adiciona telefone ou email ao contacto para activar os ícones.</p>
+                    ) : null}
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
