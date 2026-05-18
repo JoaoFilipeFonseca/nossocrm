@@ -59,6 +59,7 @@ import { ActivityRow } from '@/features/activities/components/ActivityRow';
 import { formatPriorityPtBr } from '@/lib/utils/priority';
 import { BriefingDrawer } from '@/features/deals/components/BriefingDrawer';
 import { AIExtractedFields } from '@/features/deals/components/AIExtractedFields';
+import { useUpdateContact } from '@/lib/query/hooks/useContactsQuery';
 
 interface DealDetailModalProps {
   dealId: string | null;
@@ -68,6 +69,57 @@ interface DealDetailModalProps {
 
 // Performance: reuse date formatter instance.
 const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
+
+function ContactInlineField({ icon, value, placeholder, type = 'text', onSave }: {
+  icon: any;
+  value: string;
+  placeholder: string;
+  type?: string;
+  onSave: (v: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  useEffect(() => { setDraft(value); }, [value]);
+  const commit = () => {
+    setEditing(false);
+    const next = draft.trim();
+    if (next !== (value ?? '').trim()) onSave(next);
+  };
+  if (editing) {
+    return (
+      <div className="flex items-center gap-2.5">
+        {icon}
+        <input
+          autoFocus
+          type={type}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur();
+            if (e.key === 'Escape') { setDraft(value); setEditing(false); }
+          }}
+          placeholder={placeholder}
+          className="flex-1 bg-transparent border-b border-blue-500 outline-none text-sm py-1 text-slate-800 dark:text-white"
+        />
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="flex items-center gap-2.5 w-full text-left hover:bg-slate-50 dark:hover:bg-white/5 px-2 py-1 -mx-2 rounded transition"
+    >
+      {icon}
+      {value ? (
+        <span className="text-sm text-slate-700 dark:text-slate-200 truncate">{value}</span>
+      ) : (
+        <span className="text-sm text-slate-400 italic">{placeholder}</span>
+      )}
+    </button>
+  );
+}
 
 /**
  * Componente React `DealDetailModal`.
@@ -173,6 +225,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   const [availableTags, setAvailableTags] = usePersistedState<string[]>('crm_tags', []);
   const [tagQuery, setTagQuery] = useState('');
 
+  const updateContactMutation = useUpdateContact();
   const normalizeTag = (value: string) => value.trim().replace(/\s+/g, ' ');
   const tagsLower = useMemo(() => new Set((deal?.tags || []).map(t => t.toLowerCase())), [deal?.tags]);
   const availableTagsLower = useMemo(() => new Set((availableTags || []).map(t => t.toLowerCase())), [availableTags]);
@@ -961,17 +1014,16 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     </div>
                   </div>
 
-                  {(deal.contactName || deal.companyName) ? (
-                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
-                        {(deal.contactName || deal.companyName || '?').charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-slate-800 dark:text-white truncate">{deal.contactName || 'Sem contacto'}</div>
-                        {deal.contactEmail ? <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{deal.contactEmail}</div> : null}
-                      </div>
+                  <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Contacto Principal</span>
                     </div>
-                  ) : null}
+                    <div className="space-y-1">
+                      <ContactInlineField icon={<User size={14} className="text-slate-400 flex-shrink-0" />} value={deal.contactName ?? ''} placeholder="Adicionar nome" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { name: v } as any }); }} />
+                      <ContactInlineField icon={<Mail size={14} className="text-slate-400 flex-shrink-0" />} type="email" value={deal.contactEmail ?? ''} placeholder="Adicionar email" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { email: v } as any }); }} />
+                      <ContactInlineField icon={<Phone size={14} className="text-slate-400 flex-shrink-0" />} type="tel" value={(deal as any).contactPhone ?? ''} placeholder="Adicionar telefone" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { phone: v } as any }); }} />
+                    </div>
+                  </div>
                 </div>
               )}
 
