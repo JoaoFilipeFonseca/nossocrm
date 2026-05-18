@@ -149,7 +149,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   const [aiResult, setAiResult] = useState<{ suggestion: string; score: number } | null>(null);
   const [emailDraft, setEmailDraft] = useState<string | null>(null);
   const [newNote, setNewNote] = useState('');
-  const [activeTab, setActiveTab] = useState<'timeline' | 'products' | 'info'>('timeline');
+  const [activeTab, setActiveTab] = useState<'cockpit' | 'timeline' | 'products' | 'info'>('cockpit');
   const noteTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const [objection, setObjection] = useState('');
@@ -188,7 +188,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
       setEmailDraft(null);
       setObjectionResponses([]);
       setObjection('');
-      setActiveTab('timeline');
+      setActiveTab('cockpit');
       setIsEditingTitle(false);
       setIsEditingValue(false);
       setShowLossReasonModal(false);
@@ -859,6 +859,12 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
               <div className="h-14 border-b border-slate-200 dark:border-white/5 flex items-center px-6 shrink-0">
                 <div className="flex gap-6">
                   <button
+                    onClick={() => setActiveTab('cockpit')}
+                    className={`text-sm font-bold h-14 border-b-2 transition-colors ${activeTab === 'cockpit' ? 'border-primary-500 text-primary-600 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-white'}`}
+                  >
+                    Cockpit
+                  </button>
+                  <button
                     onClick={() => setActiveTab('timeline')}
                     className={`text-sm font-bold h-14 border-b-2 transition-colors ${activeTab === 'timeline' ? 'border-primary-500 text-primary-600 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-white'}`}
                   >
@@ -880,7 +886,21 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-black/10">
-                {activeTab === 'timeline' && (
+                {activeTab === 'cockpit' && (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-500/30 rounded-xl p-6">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Cockpit do Negocio</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
+                      Aqui vais ver Health, Proxima Accao e historico de toques (mensagens, chamadas, emails) deste deal. Em construcao na sessao seguinte.
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Por agora: usa as outras tabs ou clica no contacto principal para abrir as opcoes de mensagem e chamada.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'timeline' && (
                   <div className="space-y-6">
                     <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 shadow-sm">
                       <textarea
