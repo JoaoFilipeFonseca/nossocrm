@@ -226,6 +226,52 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   const [tagQuery, setTagQuery] = useState('');
 
   const updateContactMutation = useUpdateContact();
+  const [execLoading, setExecLoading] = useState<'wa' | 'email' | null>(null);
+
+  const execActionWhatsApp = async () => {
+    const d: any = deal;
+    const phone: string = d.contactPhone ? String(d.contactPhone).replace(/[^0-9]/g, '') : '';
+    if (!phone) return;
+    setExecLoading('wa');
+    try {
+      const res = await fetch('/api/ai/tasks/inbox/sales-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deal: { title: d.title }, scriptType: 'whatsapp' }),
+      });
+      const data: any = await res.json();
+      const text: string = (data && (data.script || data.text)) || '';
+      const url = 'https://wa.me/' + phone + (text ? '?text=' + encodeURIComponent(text) : '');
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      console.error('[execActionWhatsApp]', e);
+      window.open('https://wa.me/' + phone, '_blank', 'noopener,noreferrer');
+    } finally {
+      setExecLoading(null);
+    }
+  };
+
+  const execActionEmail = async () => {
+    const d: any = deal;
+    const email: string = d.contactEmail || '';
+    if (!email) return;
+    setExecLoading('email');
+    try {
+      const res = await fetch('/api/ai/tasks/deals/email-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deal: { title: d.title } }),
+      });
+      const data: any = await res.json();
+      const body: string = (data && (data.text || data.email)) || '';
+      window.location.href = 'mailto:' + email + (body ? '?body=' + encodeURIComponent(body) : '');
+    } catch (e) {
+      console.error('[execActionEmail]', e);
+      window.location.href = 'mailto:' + email;
+    } finally {
+      setExecLoading(null);
+    }
+  };
   const normalizeTag = (value: string) => value.trim().replace(/\s+/g, ' ');
   const tagsLower = useMemo(() => new Set((deal?.tags || []).map(t => t.toLowerCase())), [deal?.tags]);
   const availableTagsLower = useMemo(() => new Set((availableTags || []).map(t => t.toLowerCase())), [availableTags]);
@@ -973,9 +1019,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     </div>
                     <div className="flex gap-3 items-center justify-start flex-wrap">
                       {(deal as any).contactPhone ? (
-                        <a href={`https://wa.me/${String((deal as any).contactPhone).replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-600 dark:text-green-400 transition" aria-label="Abrir WhatsApp">
+                        <button type="button" onClick={execActionWhatsApp} disabled={execLoading === 'wa'} title="WhatsApp (mensagem preparada com IA)" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-600 dark:text-green-400 transition" aria-label="Abrir WhatsApp">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                        </a>
+                        </button>
                       ) : null}
                       {(deal as any).contactPhone ? (
                         <a href={`tel:${(deal as any).contactPhone}`} title="Chamada telefónica" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 transition" aria-label="Telefonar">
@@ -983,9 +1029,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                         </a>
                       ) : null}
                       {deal.contactEmail ? (
-                        <a href={`mailto:${deal.contactEmail}`} title={`Email: ${deal.contactEmail}`} className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-blue-400 transition" aria-label="Enviar email">
+                        <button type="button" onClick={execActionEmail} disabled={execLoading === 'email'} title={`Email com IA: ${deal.contactEmail}`} className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-blue-400 transition" aria-label="Enviar email">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        </a>
+                        </button>
                       ) : null}
                       <button type="button" title="Agendar reunião (Google Calendar)" onClick={() => { const lines = ['Negocio: ' + (deal.title || '')]; if (deal.contactName) lines.push('Contacto: ' + deal.contactName); if (deal.contactEmail) lines.push('Email: ' + deal.contactEmail); if ((deal as any).contactPhone) lines.push('Telefone: ' + (deal as any).contactPhone); const url = 'https://calendar.google.com/calendar/u/0/r/eventedit?text=' + encodeURIComponent('Reuniao - ' + (deal.title || 'Foco Imo')) + '&details=' + encodeURIComponent(lines.join('\n')); window.open(url, '_blank', 'noopener,noreferrer'); }} className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-600 dark:text-purple-400 transition" aria-label="Agendar">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
