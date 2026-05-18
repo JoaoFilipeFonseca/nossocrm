@@ -695,7 +695,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
             {/* Left Sidebar (Static Info + Custom Fields) */}
             <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/5 p-4 sm:p-6 overflow-y-auto bg-white dark:bg-dark-card max-h-[38vh] md:max-h-none">
               <div className="space-y-6">
-                {deal.companyName ? (
+                {(deal.companyName && deal.companyName !== 'Sem empresa') ? (
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
                     <Building2 size={14} /> Empresa (Conta)
@@ -1019,7 +1019,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Contacto Principal</span>
                     </div>
                     <div className="space-y-1">
-                      <ContactInlineField icon={<User size={14} className="text-slate-400 flex-shrink-0" />} value={deal.contactName ?? ''} placeholder="Adicionar nome" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { name: v } as any }); }} />
+                      <ContactInlineField icon={<User size={14} className="text-slate-400 flex-shrink-0" />} value={(deal.contactName && deal.contactName !== 'Sem contacto') ? deal.contactName : ''} placeholder="Adicionar nome" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { name: v } as any }); }} />
                       <ContactInlineField icon={<Mail size={14} className="text-slate-400 flex-shrink-0" />} type="email" value={deal.contactEmail ?? ''} placeholder="Adicionar email" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { email: v } as any }); }} />
                       <ContactInlineField icon={<Phone size={14} className="text-slate-400 flex-shrink-0" />} type="tel" value={(deal as any).contactPhone ?? ''} placeholder="Adicionar telefone" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { phone: v } as any }); }} />
                     </div>
