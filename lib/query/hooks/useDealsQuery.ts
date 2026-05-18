@@ -65,6 +65,7 @@ export const dealsViewQueryFn = async (
       companyName: company?.name || 'Sem empresa',
       contactName: contact?.name || 'Sem contacto',
       contactEmail: contact?.email || '',
+      contactPhone: contact?.phone || '',
       stageLabel: stageMap.get(deal.status) || 'Estágio não identificado',
     };
   });
