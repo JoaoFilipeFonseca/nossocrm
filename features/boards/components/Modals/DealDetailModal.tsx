@@ -642,12 +642,14 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
             {/* Left Sidebar (Static Info + Custom Fields) */}
             <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/5 p-4 sm:p-6 overflow-y-auto bg-white dark:bg-dark-card max-h-[38vh] md:max-h-none">
               <div className="space-y-6">
+                {deal.companyName ? (
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
                     <Building2 size={14} /> Empresa (Conta)
                   </h3>
                   <p className="text-slate-900 dark:text-white font-medium">{deal.companyName}</p>
                 </div>
+                ) : null}
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
                     <User size={14} /> Contato Principal
