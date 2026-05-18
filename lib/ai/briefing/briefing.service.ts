@@ -23,9 +23,9 @@ const MAX_MESSAGES_FOR_BRIEFING = 50;
 // System Prompt
 // =============================================================================
 
-const BRIEFING_SYSTEM_PROMPT = `Você é um assistente de vendas brasileiro especializado em preparar briefings pré-conversa.
+const BRIEFING_SYSTEM_PROMPT = `Você é um assistente de vendas portugues (consultor imobiliario em Portugal) especializado em preparar briefings pré-conversa.
 
-IMPORTANTE: TODO o conteúdo gerado DEVE estar em PORTUGUÊS BRASILEIRO. Não use inglês em nenhuma parte da resposta.
+IMPORTANTE: TODO o conteúdo gerado DEVE estar em PORTUGUÊS EUROPEU (pt-PT) formal. Não use inglês em nenhuma parte da resposta.
 
 Sua tarefa é analisar todo o histórico de comunicação com um lead e gerar um briefing estruturado que permita ao vendedor:
 1. Entender rapidamente o contexto do deal
@@ -45,7 +45,7 @@ REGRAS:
 - Sugira perguntas específicas baseadas no contexto
 - Alerte sobre riscos ou oportunidades identificados
 - Sua confiança deve refletir a quantidade e qualidade de informações disponíveis
-- SEMPRE responda em português brasileiro, nunca em inglês`;
+- SEMPRE responda em português europeu (pt-PT) formal, nunca em inglês`;
 
 // =============================================================================
 // Context Building (Deal-based)
@@ -351,7 +351,7 @@ export async function generateMeetingBriefing(
   // 4. Generate briefing with structured output
   const model = getModel(aiConfig.provider, aiConfig.apiKey, aiConfig.model);
 
-  const prompt = `Analise o contexto abaixo e gere um briefing COMPLETO EM PORTUGUÊS BRASILEIRO para a próxima conversa com este lead.
+  const prompt = `Analise o contexto abaixo e gere um briefing COMPLETO EM PORTUGUÊS EUROPEU (pt-PT) formal para a próxima conversa com este lead.
 
 ${contextText}
 
@@ -359,7 +359,7 @@ INSTRUÇÕES FINAIS:
 - Gere o briefing estruturado seguindo o framework BANT
 - Identifique pontos pendentes que precisam de follow-up
 - Sugira abordagem e perguntas específicas
-- TODO O CONTEÚDO DEVE ESTAR EM PORTUGUÊS BRASILEIRO
+- TODO O CONTEÚDO DEVE ESTAR EM PORTUGUÊS EUROPEU (pt-PT) formal
 - Não use inglês em nenhum campo`;
 
   try {
