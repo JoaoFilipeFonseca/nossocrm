@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     const { deal, stageLabel } = AnalyzeLeadInputSchema.parse(body);
 
     const value = deal?.value ?? 0;
-    const formattedValue = typeof value === 'number' ? value.toLocaleString('pt-BR') : String(value);
+    const formattedValue = typeof value === 'number' ? value.toLocaleString('pt-PT') : String(value);
 
     const resolved = await getResolvedPrompt(supabase, organizationId, 'task_deals_analyze');
     const prompt = renderPromptTemplate(resolved?.content || '', {

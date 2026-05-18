@@ -37,7 +37,7 @@ export default function RootLayout({
 }) {
   return (
     // suppressHydrationWarning: necessário porque a classe "dark" é aplicada no servidor mas pode ser sobrescrita por tema do sistema no cliente
-    <html lang="pt-BR" className="dark" suppressHydrationWarning>
+    <html lang="pt-PT" className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-[var(--color-bg)] text-[var(--color-text-primary)]`}>
         <ServiceWorkerRegister />
         <InstallBanner />

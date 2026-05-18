@@ -24,7 +24,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
     defaultTemplate:
       `Gere script de vendas ({{scriptType}}).\n` +
       `Deal: {{dealTitle}}. Contexto: {{context}}.\n` +
-      `Seja natural, 4 parágrafos max. Português do Brasil.`,
+      `Seja natural, 4 parágrafos max. Português europeu (pt-PT).`,
     notes:
       'Variáveis: scriptType, dealTitle, context. Dica: mantenha curto para WhatsApp e evite jargões.',
   },
@@ -32,7 +32,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
     key: 'task_inbox_daily_briefing',
     title: 'Inbox · Briefing diário',
     usedBy: ['app/api/ai/tasks/inbox/daily-briefing', 'app/api/ai/actions → generateDailyBriefing'],
-    defaultTemplate: `Briefing diário. Dados: {{dataJson}}. Resuma prioridades em português do Brasil.`,
+    defaultTemplate: `Briefing diário. Dados: {{dataJson}}. Resuma prioridades em português do Portugal.`,
     notes: 'Variáveis: dataJson (JSON string).',
   },
   {
@@ -41,7 +41,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
     usedBy: ['app/api/ai/tasks/deals/objection-responses', 'app/api/ai/actions → generateObjectionResponse'],
     defaultTemplate:
       `Objeção: "{{objection}}" no deal "{{dealTitle}}".\n` +
-      `Gere 3 respostas práticas (Empática, Valor, Pergunta). Português do Brasil.`,
+      `Gere 3 respostas práticas (Empática, Valor, Pergunta). Português europeu (pt-PT).`,
     notes: 'Variáveis: objection, dealTitle.',
   },
   {
@@ -53,7 +53,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
       `- Contacto: {{contactName}}\n` +
       `- Empresa: {{companyName}}\n` +
       `- Deal: {{dealTitle}}\n` +
-      `Escreva um email conciso e eficaz em português do Brasil.`,
+      `Escreva um email conciso e eficaz em português do Portugal.`,
     notes: 'Variáveis: contactName, companyName, dealTitle.',
   },
   {
@@ -73,7 +73,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
       `3. actionType: CALL, MEETING, EMAIL, TASK ou WHATSAPP\n` +
       `4. urgency: low, medium, high\n` +
       `5. probabilityScore: 0-100\n` +
-      `Seja conciso. Português do Brasil.`,
+      `Seja conciso. Português europeu (pt-PT).`,
     notes: 'Variáveis: dealTitle, dealValue, stageLabel, probability.',
   },
   {
@@ -83,7 +83,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
     defaultTemplate:
       `Crie uma estrutura de board Kanban para: {{description}}.\n` +
       `LIFECYCLES: {{lifecycleJson}}\n` +
-      `Crie 4-7 estágios com cores Tailwind. Português do Brasil.`,
+      `Crie 4-7 estágios com cores Tailwind. Português europeu (pt-PT).`,
     notes: 'Variáveis: description, lifecycleJson (JSON string).',
   },
   {
@@ -92,7 +92,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
     usedBy: ['app/api/ai/tasks/boards/generate-strategy', 'app/api/ai/actions → generateBoardStrategy'],
     defaultTemplate:
       `Defina estratégia para board: {{boardName}}.\n` +
-      `Meta, KPI, Persona. Português do Brasil.`,
+      `Meta, KPI, Persona. Português europeu (pt-PT).`,
     notes: 'Variáveis: boardName.',
   },
   {

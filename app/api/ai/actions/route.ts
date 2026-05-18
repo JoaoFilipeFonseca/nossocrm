@@ -250,7 +250,7 @@ export async function POST(req: Request) {
         const resolved = await getResolvedPrompt(supabase as any, profile.organization_id as any, 'task_deals_analyze');
         const prompt = renderPromptTemplate(resolved?.content || '', {
           dealTitle: deal?.title || '',
-          dealValue: deal?.value?.toLocaleString?.('pt-BR') ?? deal?.value ?? 0,
+          dealValue: deal?.value?.toLocaleString?.('pt-PT') ?? deal?.value ?? 0,
           stageLabel: stageLabel || deal?.status || '',
           probability: deal?.probability || 50,
         });
@@ -352,7 +352,7 @@ Retorne APENAS no formato do schema (subject opcional, message obrigatório).`,
           prompt: `Gere uma mensagem de resgate/follow-up para reativar um deal parado.
 DEAL: ${deal?.title} (${deal?.contactName || ''})
 CANAL: ${channel}
-Responda em português do Brasil.`,
+Responda em português do Portugal.`,
         });
         logAIAction(supabase, profile.organization_id, 'generateRescueMessage', modelId, result);
         return json<AIActionResponse>({ result: result.text });

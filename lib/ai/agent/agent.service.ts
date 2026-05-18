@@ -99,7 +99,7 @@ export interface OrgAIConfig {
   takeoverMinutes: number;
   /** Org-level base system prompt (rules, tone, identity). DB: ai_base_system_prompt. Null → use built-in default. */
   baseSystemPrompt: string | null;
-  /** Org timezone. DB: timezone. Default 'America/Sao_Paulo'. */
+  /** Org timezone. DB: timezone. Default 'Europe/Lisbon'. */
   timezone: string;
 }
 
@@ -162,7 +162,7 @@ export async function getOrgAIConfig(
     takeoverEnabled: orgSettings.ai_takeover_enabled === true,
     takeoverMinutes: orgSettings.ai_takeover_minutes ?? 15,
     baseSystemPrompt: orgSettings.ai_base_system_prompt || null,
-    timezone: orgSettings.timezone || 'America/Sao_Paulo',
+    timezone: orgSettings.timezone || 'Europe/Lisbon',
   };
 }
 

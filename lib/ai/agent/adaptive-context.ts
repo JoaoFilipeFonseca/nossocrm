@@ -549,9 +549,9 @@ async function searchRelevantHistory(
 /**
  * Determina período do dia baseado na hora atual.
  * @param timezone IANA timezone string. Deve vir de organization_settings.timezone.
- *   Default 'America/Sao_Paulo' usado apenas como fallback — prefira sempre passar o valor do banco.
+ *   Default 'Europe/Lisbon' usado apenas como fallback — prefira sempre passar o valor do banco.
  */
-export function getTimeOfDay(timezone = 'America/Sao_Paulo'): ImplicitSignals['timeOfDay'] {
+export function getTimeOfDay(timezone = 'Europe/Lisbon'): ImplicitSignals['timeOfDay'] {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
@@ -573,7 +573,7 @@ export function getTimeOfDay(timezone = 'America/Sao_Paulo'): ImplicitSignals['t
  * @param endHour Hora de fim (0-23). Configurável em stage_ai_config.settings.business_hours.
  */
 export function isWithinBusinessHours(
-  timezone = 'America/Sao_Paulo',
+  timezone = 'Europe/Lisbon',
   startHour = 9,
   endHour = 18
 ): boolean {
@@ -602,7 +602,7 @@ export function isWithinBusinessHours(
  * Cria sinais implícitos padrão.
  * @param timezone IANA timezone. Passe organization_settings.timezone para comportamento correto.
  */
-export function createDefaultImplicitSignals(timezone = 'America/Sao_Paulo'): ImplicitSignals {
+export function createDefaultImplicitSignals(timezone = 'Europe/Lisbon'): ImplicitSignals {
   return {
     timeOfDay: getTimeOfDay(timezone),
     isBusinessHours: isWithinBusinessHours(timezone),

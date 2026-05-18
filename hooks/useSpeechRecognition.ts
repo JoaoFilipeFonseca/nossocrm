@@ -99,7 +99,7 @@ interface SpeechRecognitionErrorEvent {
  * Hook para reconhecimento de fala usando Web Speech API
  * 
  * Fornece interface simples para capturar e transcrever fala do usuário
- * em tempo real. Configurado para português brasileiro (pt-PT).
+ * em tempo real. Configurado para português europeu (pt-PT).
  * 
  * @returns {SpeechRecognitionHook} Estado e controles do reconhecimento de fala
  * 

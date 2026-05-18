@@ -39,7 +39,7 @@ export interface StageAISettings {
   business_hours?: {
     start: string; // "09:00"
     end: string; // "18:00"
-    timezone: string; // "America/Sao_Paulo"
+    timezone: string; // "Europe/Lisbon"
   };
 }
 
