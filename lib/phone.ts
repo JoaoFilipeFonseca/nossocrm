@@ -25,7 +25,7 @@ export function normalizePhoneE164(
   const e164Candidate = raw.replace(/[\s\-()]/g, '');
   if (isE164(e164Candidate)) return e164Candidate;
 
-  const defaultCountry = opts?.defaultCountry ?? 'BR';
+  const defaultCountry = opts?.defaultCountry ?? 'PT';
 
   // Parse com fallback de país; funciona bem para inputs sem + (ex.: (11) 99999-0000)
   const phone = parsePhoneNumberFromString(raw, defaultCountry);
