@@ -284,13 +284,17 @@ export const useMoveDeal = () => {
         
         return old.map(d => {
           if (d.id === dealId) {
+            const now = new Date().toISOString();
             const newDeal = {
               ...d,
               status: targetStageId,
-              lastStageChangeDate: new Date().toISOString(),
+              lastStageChangeDate: now,
               isWon: isWon ?? d.isWon,
               isLost: isLost ?? d.isLost,
-              updatedAt: new Date().toISOString(),
+              // #124 pause-on-touch — mirror do server-side update
+              automationsPausedAt: now,
+              automationsPausedReason: 'moved_stage',
+              updatedAt: now,
             };
             // #region agent log
             if (process.env.NODE_ENV !== 'production') {
@@ -312,13 +316,17 @@ export const useMoveDeal = () => {
       // Também atualizar o detail cache se existir
       queryClient.setQueryData<Deal>(queryKeys.deals.detail(dealId), (old) => {
         if (!old) return old;
+        const now = new Date().toISOString();
         return {
           ...old,
           status: targetStageId,
-          lastStageChangeDate: new Date().toISOString(),
+          lastStageChangeDate: now,
           isWon: isWon ?? old.isWon,
           isLost: isLost ?? old.isLost,
-          updatedAt: new Date().toISOString(),
+          // #124 pause-on-touch — mirror do server-side update
+          automationsPausedAt: now,
+          automationsPausedReason: 'moved_stage',
+          updatedAt: now,
         };
       });
 

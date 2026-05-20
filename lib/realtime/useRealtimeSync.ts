@@ -877,7 +877,16 @@ export function useRealtimeSync(
                         normalizedData.lastStageChangeDate = newData.last_stage_change_date;
                         delete normalizedData.last_stage_change_date;
                       }
-                      
+                      // #124 pause-on-touch — normalizar pause fields
+                      if (newData.automations_paused_at !== undefined && newData.automationsPausedAt === undefined) {
+                        normalizedData.automationsPausedAt = newData.automations_paused_at;
+                        delete normalizedData.automations_paused_at;
+                      }
+                      if (newData.automations_paused_reason !== undefined && newData.automationsPausedReason === undefined) {
+                        normalizedData.automationsPausedReason = newData.automations_paused_reason;
+                        delete normalizedData.automations_paused_reason;
+                      }
+
                       // Merge normalized data into existing deal (preserves enriched fields like companyName, owner, etc.)
                       return { ...deal, ...normalizedData };
                     }
