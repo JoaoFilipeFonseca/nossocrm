@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CARACTERISTICAS_CATALOG } from '@/lib/imoveis';
+import { CARACTERISTICAS_CATALOG } from '@/lib/imoveis/shared';
 
 const TIPOS = [
   { v: 'apartamento', l: 'Apartamento' }, { v: 'moradia', l: 'Moradia' },
