@@ -74,20 +74,20 @@ export function ContactsImportExportModal(props: {
     const header = ['name', 'email', 'phone', 'role', 'company', 'status', 'stage', 'notes'];
     const example = [
       'Maria Silva',
-      'maria@empresa.com',
-      '+55 11 99999-9999',
-      'Compras',
-      'Empresa Exemplo',
+      'maria@empresa.pt',
+      '+351 912 345 678',
+      'Compradora',
+      'Empresa Exemplo, Lda.',
       'ACTIVE',
       'LEAD',
-      'Conheci em evento',
+      'Conheci num evento',
     ];
     return withUtf8Bom(stringifyCsv([header, example], d));
   }, [delimiter]);
 
   const handleDownloadTemplate = () => {
     downloadText('template-contactos.csv', templateCsv, 'text/csv;charset=utf-8');
-    toast?.('Template CSV baixado.', 'success');
+    toast?.('Template CSV descarregado.', 'success');
   };
 
   const handleDownloadErrorReport = () => {
@@ -154,7 +154,7 @@ export function ContactsImportExportModal(props: {
       setImportResult(data);
       const totals = data?.totals;
       toast?.(
-        `Import concluído: ${totals?.created ?? 0} criados, ${totals?.updated ?? 0} atualizados, ${totals?.skipped ?? 0} ignorados, ${totals?.errors ?? 0} erros.`,
+        `Importação concluída: ${totals?.created ?? 0} criados, ${totals?.updated ?? 0} actualizados, ${totals?.skipped ?? 0} ignorados, ${totals?.errors ?? 0} erros.`,
         (totals?.errors ?? 0) > 0 ? 'warning' : 'success'
       );
     } catch (e) {
@@ -219,10 +219,10 @@ export function ContactsImportExportModal(props: {
         <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-slate-50/50 dark:bg-white/5 space-y-3">
           <div>
             <div className="text-sm font-bold text-slate-900 dark:text-white">
-              Exportar contatos (CSV)
+              Exportar contactos (CSV)
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Padrão de mercado: exportar a lista respeitando filtros/pesquisa/ordenação atuais.
+              Padrão de mercado: exportar a lista respeitando filtros/pesquisa/ordenação actuais.
             </div>
           </div>
 
@@ -240,7 +240,7 @@ export function ContactsImportExportModal(props: {
                 : 'bg-primary-600 hover:bg-primary-700 text-white'
             }`}
           >
-            <FileDown size={16} /> {isExporting ? 'Gerando…' : 'Exportar CSV'}
+            <FileDown size={16} /> {isExporting ? 'A gerar…' : 'Exportar CSV'}
           </button>
         </div>
       )}
@@ -249,7 +249,7 @@ export function ContactsImportExportModal(props: {
         <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-slate-50/50 dark:bg-white/5 space-y-4">
           <div>
             <div className="text-sm font-bold text-slate-900 dark:text-white">
-              Importar contatos (CSV)
+              Importar contactos (CSV)
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Padrão de mercado: upload → validação → dedupe (por email) → resumo + relatório de erros.
@@ -262,13 +262,13 @@ export function ContactsImportExportModal(props: {
               onClick={handleDownloadTemplate}
               className="px-3 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-semibold flex items-center gap-2"
             >
-              <Download size={16} /> Baixar template
+              <Download size={16} /> Descarregar template
             </button>
           </div>
 
           <div className="space-y-2">
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
-              Arquivo CSV
+              Ficheiro CSV
             </label>
             <input
               type="file"
@@ -290,7 +290,7 @@ export function ContactsImportExportModal(props: {
                   checked={mode === 'upsert_by_email'}
                   onChange={() => setMode('upsert_by_email')}
                 />
-                Atualizar se existir (recomendado)
+                Actualizar se existir (recomendado)
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -327,9 +327,9 @@ export function ContactsImportExportModal(props: {
             </span>
           </label>
           <div className="text-xs text-slate-500 dark:text-slate-400 pl-7">
-            Quando marcado: se o CSV vier com o nome da empresa e ela ainda não existir no CRM, nós criamos a empresa e vinculamos o contato.
+            Quando marcado: se o CSV vier com o nome da empresa e ela ainda não existir no CRM, criamos a empresa e ligamos o contacto.
             <br />
-            Quando desmarcado: não criamos empresas — se a empresa não existir, o contato entra <b>sem vínculo</b> de empresa.
+            Quando desmarcado: não criamos empresas — se a empresa não existir, o contacto entra <b>sem ligação</b> de empresa.
           </div>
           </div>
 
@@ -344,7 +344,7 @@ export function ContactsImportExportModal(props: {
                   : 'bg-primary-600 hover:bg-primary-700 text-white'
               }`}
             >
-              <Upload size={16} /> {isImporting ? 'Importando…' : 'Importar'}
+              <Upload size={16} /> {isImporting ? 'A importar…' : 'Importar'}
             </button>
           </div>
 
@@ -352,7 +352,7 @@ export function ContactsImportExportModal(props: {
             <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/30 p-3 space-y-2">
               <div className="text-xs text-slate-600 dark:text-slate-300">
                 <b>Resumo:</b> {importResult.totals?.created ?? 0} criados •{' '}
-                {importResult.totals?.updated ?? 0} atualizados •{' '}
+                {importResult.totals?.updated ?? 0} actualizados •{' '}
                 {importResult.totals?.skipped ?? 0} ignorados •{' '}
                 {importResult.totals?.errors ?? 0} erros
               </div>
@@ -362,7 +362,7 @@ export function ContactsImportExportModal(props: {
                   onClick={handleDownloadErrorReport}
                   className="text-xs font-semibold text-primary-700 dark:text-primary-300 hover:underline w-fit"
                 >
-                  Baixar relatório de erros (CSV)
+                  Descarregar relatório de erros (CSV)
                 </button>
               )}
             </div>
