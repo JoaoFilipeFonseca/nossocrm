@@ -320,6 +320,12 @@ export async function POST(req: Request) {
     let updated = 0;
     let skipped = 0;
 
+    // Dedup intra-CSV: chaves já vistas no batch corrente. Garante que se duas
+    // linhas do mesmo ficheiro têm o mesmo telemóvel ou email, só a primeira
+    // é importada (as restantes contam como skipped).
+    const seenPhonesInBatch = new Set<string>();
+    const seenEmailsInBatch = new Set<string>();
+
     const insertBatch: Array<{ rowNumber: number; payload: Record<string, unknown> }> = [];
     const flushInsert = async () => {
       if (!insertBatch.length) return;
@@ -361,7 +367,21 @@ export async function POST(req: Request) {
       const emailMatches = dedupOnEmail && email ? contactIdsByEmail.get(email) || [] : [];
       const existingIds = phoneMatches.length ? phoneMatches : emailMatches;
 
+      // Dedup intra-batch: se outra linha do mesmo CSV já reservou este
+      // telemóvel ou email, esta passa a skipped (excepto em create_only).
+      if (mode !== 'create_only') {
+        const dupInBatch =
+          (dedupOnPhone && phoneE164 && seenPhonesInBatch.has(phoneE164)) ||
+          (dedupOnEmail && email && seenEmailsInBatch.has(email));
+        if (dupInBatch) {
+          skipped += 1;
+          continue;
+        }
+      }
+
       if (mode === 'create_only') {
+        if (phoneE164) seenPhonesInBatch.add(phoneE164);
+        if (email) seenEmailsInBatch.add(email);
         insertBatch.push({ rowNumber, payload: base });
         if (insertBatch.length >= 200) await flushInsert();
         continue;
@@ -386,11 +406,15 @@ export async function POST(req: Request) {
           errors.push({ rowNumber, message: updateError.message });
         } else {
           updated += 1;
+          if (phoneE164) seenPhonesInBatch.add(phoneE164);
+          if (email) seenEmailsInBatch.add(email);
         }
         continue;
       }
 
       // No match: create
+      if (phoneE164) seenPhonesInBatch.add(phoneE164);
+      if (email) seenEmailsInBatch.add(email);
       insertBatch.push({ rowNumber, payload: base });
       if (insertBatch.length >= 200) await flushInsert();
     }
