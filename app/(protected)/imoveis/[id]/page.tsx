@@ -8,6 +8,7 @@ import {
   CARACTERISTICAS_CATALOG,
 } from '@/lib/imoveis';
 import ImovelActions from '@/components/imoveis/ImovelActions';
+import { createClient } from '@/lib/supabase/server';
 import ImovelGaleria from '@/components/imoveis/ImovelGaleria';
 import ImovelDocumentos from '@/components/imoveis/ImovelDocumentos';
 import ImovelProprietarios from '@/components/imoveis/ImovelProprietarios';
@@ -30,6 +31,25 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
     listMandatosByImovelId(id),
     listProprietarioDocsByImovel(id),
   ]);
+
+  // Telegram activo?
+  let isTelegramActive = false;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles').select('organization_id').eq('id', user.id).single();
+      if (profile?.organization_id) {
+        const { data: settings } = await supabase
+          .from('organization_settings')
+          .select('telegram_active_imovel_id')
+          .eq('organization_id', profile.organization_id)
+          .maybeSingle();
+        isTelegramActive = settings?.telegram_active_imovel_id === id;
+      }
+    }
+  } catch { /* opcional */ }
 
   const label = imovel.referencia ?? imovel.titulo_anuncio ?? imovel.id.slice(0, 8);
   const caracs = imovel.caracteristicas ?? {};
@@ -61,7 +81,7 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
             </p>
           )}
         </div>
-        <ImovelActions imovelId={id} imovelLabel={label} />
+        <ImovelActions imovelId={id} imovelLabel={label} isTelegramActive={isTelegramActive} />
       </div>
 
       {/* KPIs */}
