@@ -7,6 +7,11 @@ import type { AIKeys } from '@/lib/ai/router';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm-joao.vercel.app';
 
+interface TelegramPhotoSize { file_id: string; file_unique_id: string; width: number; height: number; file_size?: number; }
+interface TelegramDocument { file_id: string; file_unique_id: string; file_name?: string; mime_type?: string; file_size?: number; }
+interface TelegramAudio { file_id: string; file_unique_id: string; mime_type?: string; file_size?: number; duration?: number; }
+interface TelegramVoice { file_id: string; file_unique_id: string; mime_type?: string; file_size?: number; duration?: number; }
+
 interface TelegramUpdate {
   update_id: number;
   message?: {
@@ -15,6 +20,10 @@ interface TelegramUpdate {
     from?: { id: number; first_name?: string };
     text?: string;
     caption?: string;
+    photo?: TelegramPhotoSize[];
+    document?: TelegramDocument;
+    audio?: TelegramAudio;
+    voice?: TelegramVoice;
     date: number;
   };
 }
@@ -70,7 +79,7 @@ export async function POST(request: NextRequest) {
 
   const { data: org } = await supabase
     .from('organization_settings')
-    .select('organization_id, telegram_crm_bot_token, telegram_crm_webhook_secret, ai_google_key, ai_anthropic_key')
+    .select('organization_id, telegram_crm_bot_token, telegram_crm_webhook_secret, telegram_active_imovel_id, ai_google_key, ai_anthropic_key')
     .eq('telegram_crm_chat_id', chatId)
     .maybeSingle();
 
@@ -89,10 +98,20 @@ export async function POST(request: NextRequest) {
 
   const text = (message.text ?? message.caption ?? '').trim();
 
+  // FOTOS via Telegram → adicionar ao imóvel activo
+  if (message.photo && message.photo.length > 0) {
+    return await handleTelegramPhoto(message.photo, token, chatId, supabase, org);
+  }
+
+  // DOCUMENTO imagem via Telegram (raw, sem compressão)
+  if (message.document && message.document.mime_type?.startsWith('image/')) {
+    return await handleTelegramDocument(message.document, token, chatId, supabase, org);
+  }
+
   if (!text) {
     await sendTelegramMessage(token, chatId,
-      '🤖 Recebi a tua mensagem mas ainda só consigo processar <b>texto</b>. Foto/áudio/PDF chegam em breve.');
-    return NextResponse.json({ ok: true, processed: 'no text' });
+      '🤖 Manda texto, foto, ou link. PDFs e áudio chegam em breve.');
+    return NextResponse.json({ ok: true, processed: 'no text/photo' });
   }
 
   if (text.startsWith('/start') || text === '/help' || text === '/ajuda') {
@@ -172,6 +191,12 @@ async function handleSingle(
       await sendTelegramMessage(token, chatId, `❌ Erro a gravar imóvel: ${error?.message ?? 'desconhecido'}`);
       return NextResponse.json({ ok: false, error: error?.message }, { status: 500 });
     }
+
+    // Marcar como imóvel activo para próximas fotos
+    await supabase
+      .from('organization_settings')
+      .update({ telegram_active_imovel_id: data.id })
+      .eq('organization_id', org.organization_id);
 
     // Importar fotos automaticamente do link, se houver
     let fotosImportadas = 0;
@@ -279,6 +304,126 @@ async function handleList(
     try {
       await sendTelegramMessage(token, chatId, `❌ Falhou a extracção da lista: ${escapeHtml(msg)}`);
     } catch {}
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+  }
+}
+
+async function handleTelegramPhoto(
+  photos: TelegramPhotoSize[],
+  token: string,
+  chatId: string,
+  supabase: ReturnType<typeof createStaticAdminClient>,
+  org: { organization_id: string; telegram_active_imovel_id: string | null },
+) {
+  if (!org.telegram_active_imovel_id) {
+    await sendTelegramMessage(token, chatId,
+      'ℹ️ Recebi foto mas <b>não tenho imóvel activo</b>. Manda primeiro a descrição/link do imóvel para eu o criar, depois manda as fotos.');
+    return NextResponse.json({ ok: true, ignored: 'no active imovel' });
+  }
+
+  // Maior resolução: última do array (Telegram ordena por size asc)
+  const biggest = photos[photos.length - 1];
+  return await downloadAndAttachToImovel(
+    biggest.file_id, undefined, 'image/jpeg', token, chatId, supabase, org.organization_id, org.telegram_active_imovel_id,
+  );
+}
+
+async function handleTelegramDocument(
+  doc: TelegramDocument,
+  token: string,
+  chatId: string,
+  supabase: ReturnType<typeof createStaticAdminClient>,
+  org: { organization_id: string; telegram_active_imovel_id: string | null },
+) {
+  if (!org.telegram_active_imovel_id) {
+    await sendTelegramMessage(token, chatId,
+      'ℹ️ Recebi documento mas <b>não tenho imóvel activo</b>. Cria o imóvel primeiro.');
+    return NextResponse.json({ ok: true, ignored: 'no active imovel' });
+  }
+  return await downloadAndAttachToImovel(
+    doc.file_id, doc.file_name, doc.mime_type ?? 'image/jpeg', token, chatId, supabase, org.organization_id, org.telegram_active_imovel_id,
+  );
+}
+
+async function downloadAndAttachToImovel(
+  fileId: string,
+  filename: string | undefined,
+  mimeType: string,
+  token: string,
+  chatId: string,
+  supabase: ReturnType<typeof createStaticAdminClient>,
+  organizationId: string,
+  imovelId: string,
+) {
+  try {
+    // getFile → file_path
+    const infoRes = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`);
+    const infoJson = await infoRes.json();
+    if (!infoJson.ok) {
+      await sendTelegramMessage(token, chatId, `❌ Não consegui obter o ficheiro: ${infoJson.description ?? 'erro'}`);
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
+    const filePath = infoJson.result.file_path as string;
+    const fileSize = (infoJson.result.file_size as number | undefined) ?? 0;
+
+    if (fileSize > 20 * 1024 * 1024) {
+      await sendTelegramMessage(token, chatId, '❌ Ficheiro maior que 20MB.');
+      return NextResponse.json({ ok: false }, { status: 400 });
+    }
+
+    const fileRes = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
+    if (!fileRes.ok) {
+      await sendTelegramMessage(token, chatId, `❌ Erro a baixar ficheiro (HTTP ${fileRes.status}).`);
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
+    const buf = await fileRes.arrayBuffer();
+    const safeName = (filename ?? `telegram_${Date.now()}.jpg`).replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `${organizationId}/${imovelId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
+
+    const { error: upErr } = await supabase.storage
+      .from('imovel-fotos')
+      .upload(storagePath, buf, { contentType: mimeType, upsert: false });
+    if (upErr) {
+      await sendTelegramMessage(token, chatId, `❌ Erro a guardar foto: ${upErr.message}`);
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
+
+    const { data: pub } = supabase.storage.from('imovel-fotos').getPublicUrl(storagePath);
+
+    const { data: existing } = await supabase
+      .from('imovel_fotos').select('ordem, is_principal').eq('imovel_id', imovelId);
+    const maxOrdem = existing?.reduce((m, f) => Math.max(m, Number(f.ordem ?? 0)), -1) ?? -1;
+    const hasPrincipal = existing?.some((f) => f.is_principal) ?? false;
+
+    const { error: insErr } = await supabase
+      .from('imovel_fotos').insert({
+        organization_id: organizationId,
+        imovel_id: imovelId,
+        storage_path: storagePath,
+        url_publica: pub?.publicUrl ?? null,
+        ordem: maxOrdem + 1,
+        is_principal: !hasPrincipal,
+        bytes: buf.byteLength,
+        origem: 'telegram',
+      });
+    if (insErr) {
+      await sendTelegramMessage(token, chatId, `❌ Erro a registar foto: ${insErr.message}`);
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
+
+    const { data: count } = await supabase
+      .from('imovel_fotos').select('id').eq('imovel_id', imovelId);
+    const total = count?.length ?? 1;
+
+    await sendTelegramMessage(
+      token, chatId,
+      `📸 Foto adicionada ao imóvel activo (${total} no total).\n` +
+      `<a href="${APP_URL}/imoveis/${imovelId}">Ver no CRM ↗</a>`,
+    );
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Erro';
+    try { await sendTelegramMessage(token, chatId, `❌ Erro: ${escapeHtml(msg)}`); } catch {}
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }
 }
