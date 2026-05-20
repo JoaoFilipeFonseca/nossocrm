@@ -168,6 +168,18 @@ export function scorePair(procura: PropertyNorm, imovel: ImovelRow, ageDays: str
   };
 }
 
+/**
+ * Fire-and-forget seguro: dispara computeMatches sem bloquear o caller nem
+ * propagar erros. Loga falhas em console.error (visivel nos logs Vercel).
+ * Usar apos INSERT raw_intel (Telegram) ou INSERT/UPDATE imovel.
+ */
+export function triggerMatchesAsync(organizationId: string): void {
+  void computeMatches(organizationId).catch((err) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[matches] auto-trigger falhou para org ${organizationId}:`, msg);
+  });
+}
+
 export async function computeMatches(organizationId: string): Promise<{
   computed: number;
   inserted: number;

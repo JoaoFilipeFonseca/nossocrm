@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { triggerMatchesAsync } from '@/lib/matches/engine';
 
 const ESTADOS = ['disponivel', 'reservado', 'vendido', 'retirado', 'em_avaliacao'];
 const NEGOCIOS = ['venda', 'arrendamento', 'ambos', 'trespasse', 'permuta'];
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
     if (error) return NextResponse.json({ message: error.message }, { status: 500 });
 
     revalidatePath('/imoveis');
+    triggerMatchesAsync(profile.organization_id);
     return NextResponse.json({ id: data.id }, { status: 201 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';

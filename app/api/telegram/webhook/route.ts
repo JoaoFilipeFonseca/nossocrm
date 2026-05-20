@@ -5,6 +5,7 @@ import { extractImovelFromInput, extractRawIntelList, classifyTelegramMessage } 
 import { fetchImagesFromUrl, downloadAndUploadPhotos } from '@/lib/imoveis/fotos-from-url';
 import { classifyOperational } from '@/lib/telegram/router';
 import { mudaEstado, mudaPreco, addProprietario, reclassifyLastDoc } from '@/lib/telegram/handlers/imovel';
+import { triggerMatchesAsync } from '@/lib/matches/engine';
 import type { AIKeys } from '@/lib/ai/router';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm-joao.vercel.app';
@@ -516,6 +517,9 @@ async function handleSingle(
       .update({ telegram_active_imovel_id: data.id })
       .eq('organization_id', org.organization_id);
 
+    // Auto-trigger: imovel novo pode bater com procuras existentes
+    triggerMatchesAsync(org.organization_id);
+
     let fotosImportadas = 0;
     if (draft.link_externo && /^https?:\/\//.test(draft.link_externo)) {
       try {
@@ -594,6 +598,11 @@ async function handleListOrProcura(
       await clearBusy(supabase, org);
       await safeSend(supabase, org, token, chatId, `❌ Erro: ${escapeHtml(error.message).slice(0, 200)}`);
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    }
+
+    // Auto-trigger: re-corre match engine se entrou alguma procura nova
+    if (kind === 'procura' || items.some((it) => it.intent === 'procura')) {
+      triggerMatchesAsync(org.organization_id);
     }
 
     const lines = items.slice(0, 8).map((it, idx) => {

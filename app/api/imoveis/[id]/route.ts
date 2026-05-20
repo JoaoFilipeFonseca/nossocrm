@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeImovelPayload } from '@/app/api/imoveis/route';
+import { triggerMatchesAsync } from '@/lib/matches/engine';
 
 export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
@@ -30,6 +31,14 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
 
     revalidatePath('/imoveis');
     revalidatePath(`/imoveis/${id}`);
+
+    // Auto-trigger: imovel actualizado pode mudar pares de match (preco/estado/tipologia/zona)
+    try {
+      const { data: prof } = await supabase
+        .from('imoveis').select('organization_id').eq('id', id).single();
+      if (prof?.organization_id) triggerMatchesAsync(prof.organization_id);
+    } catch { /* nao bloquear */ }
+
     return NextResponse.json({ id: data.id });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
