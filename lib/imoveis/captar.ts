@@ -235,15 +235,62 @@ function toNum(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function parseAIJson(raw: string): ImovelDraft {
+function extractFirstJsonObject(raw: string): string {
+  // Encontra primeiro objecto JSON balanceado, ignorando texto antes/depois.
   let cleaned = raw.trim();
   const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (fenceMatch) cleaned = fenceMatch[1].trim();
-  const firstBrace = cleaned.indexOf('{');
-  const lastBrace = cleaned.lastIndexOf('}');
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+
+  const start = cleaned.indexOf('{');
+  if (start < 0) throw new Error('Sem JSON object no resultado');
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (escape) { escape = false; continue; }
+    if (ch === '\\') { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) return cleaned.slice(start, i + 1);
+    }
   }
+  // Devolve até ao final se não fechou — JSON.parse vai falhar com mensagem clara.
+  return cleaned.slice(start);
+}
+
+function extractFirstJsonArray(raw: string): string {
+  let cleaned = raw.trim();
+  const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (fenceMatch) cleaned = fenceMatch[1].trim();
+
+  const start = cleaned.indexOf('[');
+  if (start < 0) throw new Error('Sem JSON array no resultado');
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (escape) { escape = false; continue; }
+    if (ch === '\\') { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '[') depth++;
+    else if (ch === ']') {
+      depth--;
+      if (depth === 0) return cleaned.slice(start, i + 1);
+    }
+  }
+  return cleaned.slice(start);
+}
+
+function parseAIJson(raw: string): ImovelDraft {
+  const cleaned = extractFirstJsonObject(raw);
   const p = JSON.parse(cleaned);
   const base = emptyDraft();
   return {
@@ -389,14 +436,7 @@ Texto fonte:
 `;
 
 function parseAIJsonArray(raw: string): RawIntelDraft[] {
-  let cleaned = raw.trim();
-  const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  if (fenceMatch) cleaned = fenceMatch[1].trim();
-  const firstBracket = cleaned.indexOf('[');
-  const lastBracket = cleaned.lastIndexOf(']');
-  if (firstBracket >= 0 && lastBracket > firstBracket) {
-    cleaned = cleaned.slice(firstBracket, lastBracket + 1);
-  }
+  const cleaned = extractFirstJsonArray(raw);
   const arr = JSON.parse(cleaned);
   if (!Array.isArray(arr)) return [];
   return arr.map((p: Record<string, unknown>) => ({
@@ -454,12 +494,7 @@ export async function classifyTelegramMessage(text: string, keys: AIKeys): Promi
       keys,
       temperature: 0.0,
     });
-    let cleaned = result.text.trim();
-    const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (fenceMatch) cleaned = fenceMatch[1].trim();
-    const firstBrace = cleaned.indexOf('{');
-    const lastBrace = cleaned.lastIndexOf('}');
-    if (firstBrace >= 0 && lastBrace > firstBrace) cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+    const cleaned = extractFirstJsonObject(result.text);
     const p = JSON.parse(cleaned);
     return {
       kind: (p.kind as ClassificationResult['kind']) ?? 'irrelevante',
