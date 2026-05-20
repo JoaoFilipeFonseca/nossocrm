@@ -196,7 +196,6 @@ export async function computeMatches(organizationId: string): Promise<{
     supabase.from('imoveis')
       .select('id, tipologia, concelho, freguesia, preco_actual, caracteristicas, estado')
       .eq('organization_id', organizationId)
-      .is('deleted_at', null)
       .in('estado', ['disponivel', 'em_avaliacao']),
   ]);
 

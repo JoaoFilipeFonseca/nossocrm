@@ -350,7 +350,6 @@ async function handleUltimos(token: string, chatId: string, supabase: ReturnType
     .from('imoveis')
     .select('id, referencia, morada, titulo_anuncio, tipologia, concelho, preco_actual, estado, created_at')
     .eq('organization_id', org.organization_id)
-    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(5);
   if (!data || data.length === 0) {
@@ -379,9 +378,9 @@ async function handleBriefing(token: string, chatId: string, supabase: ReturnTyp
 
   const [imoveisHoje, emAvaliacao, intelNovo, tarefasHoje, dealsAbertos] = await Promise.all([
     supabase.from('imoveis').select('id', { count: 'exact', head: true })
-      .eq('organization_id', org.organization_id).is('deleted_at', null).gte('created_at', todayIso),
+      .eq('organization_id', org.organization_id).gte('created_at', todayIso),
     supabase.from('imoveis').select('id', { count: 'exact', head: true })
-      .eq('organization_id', org.organization_id).is('deleted_at', null).eq('estado', 'em_avaliacao'),
+      .eq('organization_id', org.organization_id).eq('estado', 'em_avaliacao'),
     supabase.from('raw_intel').select('id', { count: 'exact', head: true })
       .eq('organization_id', org.organization_id).gte('created_at', ontem),
     supabase.from('activities').select('id', { count: 'exact', head: true })
