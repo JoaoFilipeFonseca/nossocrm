@@ -1,6 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
-import type { Imovel, ImovelEvento, ImovelFoto, ImovelDocumento } from './shared';
+import type { Imovel, ImovelEvento, ImovelFoto, ImovelDocumento, ImovelProprietario, ImovelMandato, ProprietarioDocumento } from './shared';
 
 export * from './shared';
 
@@ -64,6 +64,59 @@ export interface DealLite {
   title: string | null;
   status: string | null;
   value: number | null;
+}
+
+export async function listProprietariosByImovelId(imovelId: string): Promise<ImovelProprietario[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('imovel_proprietarios')
+    .select('*')
+    .eq('imovel_id', imovelId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ImovelProprietario[];
+}
+
+export async function listMandatosByImovelId(imovelId: string): Promise<ImovelMandato[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('imovel_mandatos')
+    .select('*')
+    .eq('imovel_id', imovelId)
+    .order('data_inicio', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as ImovelMandato[];
+}
+
+export async function listProprietarioDocs(propId: string): Promise<ProprietarioDocumento[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('proprietario_documentos')
+    .select('*')
+    .eq('proprietario_id', propId)
+    .order('uploaded_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as ProprietarioDocumento[];
+}
+
+export async function listProprietarioDocsByImovel(imovelId: string): Promise<Record<string, ProprietarioDocumento[]>> {
+  const supabase = await createClient();
+  const { data: props } = await supabase
+    .from('imovel_proprietarios').select('id').eq('imovel_id', imovelId);
+  if (!props || props.length === 0) return {};
+  const ids = props.map((p) => p.id);
+  const { data, error } = await supabase
+    .from('proprietario_documentos')
+    .select('*')
+    .in('proprietario_id', ids)
+    .order('uploaded_at', { ascending: false });
+  if (error) throw error;
+  const grouped: Record<string, ProprietarioDocumento[]> = {};
+  for (const d of (data ?? []) as ProprietarioDocumento[]) {
+    if (!grouped[d.proprietario_id]) grouped[d.proprietario_id] = [];
+    grouped[d.proprietario_id].push(d);
+  }
+  return grouped;
 }
 
 export async function listDealsByImovelId(imovelId: string): Promise<DealLite[]> {

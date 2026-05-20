@@ -123,6 +123,63 @@ export interface ImovelFoto {
   uploaded_at: string;
 }
 
+export interface ImovelProprietario {
+  id: string;
+  organization_id: string;
+  imovel_id: string;
+  contact_id: string | null;
+  nome: string | null;
+  percentagem: number | null;
+  regime_bens: string | null;
+  e_residente: boolean;
+  notas: string | null;
+  created_at: string;
+}
+
+export interface ImovelMandato {
+  id: string;
+  organization_id: string;
+  imovel_id: string;
+  tipo: 'simples' | 'exclusivo' | 'misto';
+  data_inicio: string;
+  data_fim: string | null;
+  comissao_pct: number | null;
+  comissao_paga_por: string | null;
+  documento_id: string | null;
+  notas: string | null;
+  activo: boolean;
+  created_at: string;
+}
+
+export interface ProprietarioDocumento {
+  id: string;
+  organization_id: string;
+  proprietario_id: string;
+  kind: ProprietarioDocKind;
+  filename: string;
+  storage_path: string;
+  bytes: number | null;
+  validade: string | null;
+  metadata: Record<string, unknown>;
+  uploaded_at: string;
+}
+
+const PROP_DOC_LABEL: Record<ProprietarioDocKind, string> = {
+  cc: 'Cartão de Cidadão',
+  bi: 'BI',
+  nif: 'NIF (Finanças)',
+  comprovativo_morada: 'Comprovativo de morada',
+  certidao_casamento: 'Certidão de casamento',
+  sentenca_divorcio: 'Sentença de divórcio',
+  habilitacao_herdeiros: 'Habilitação de herdeiros',
+  procuracao: 'Procuração',
+  declaracao_nao_residencia: 'Declaração não-residência',
+  outro: 'Outro',
+};
+export function proprietarioDocLabel(k: ProprietarioDocKind): string {
+  return PROP_DOC_LABEL[k] ?? k;
+}
+
 export interface ImovelDocumento {
   id: string;
   organization_id: string;

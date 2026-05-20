@@ -3,12 +3,15 @@ import { notFound } from 'next/navigation';
 import {
   getImovelById, listEventosByImovelId, listDealsByImovelId,
   listFotosByImovelId, listDocumentosByImovelId,
+  listProprietariosByImovelId, listMandatosByImovelId, listProprietarioDocsByImovel,
   formatPrecoEur, estadoChipClass, estadoLabel, eventoLabel, tipoLabel,
   CARACTERISTICAS_CATALOG,
 } from '@/lib/imoveis';
 import ImovelActions from '@/components/imoveis/ImovelActions';
 import ImovelGaleria from '@/components/imoveis/ImovelGaleria';
 import ImovelDocumentos from '@/components/imoveis/ImovelDocumentos';
+import ImovelProprietarios from '@/components/imoveis/ImovelProprietarios';
+import ImovelMandatos from '@/components/imoveis/ImovelMandatos';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Imóvel | Foco Imo' };
@@ -18,11 +21,14 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
   const imovel = await getImovelById(id);
   if (!imovel) notFound();
 
-  const [eventos, deals, fotos, documentos] = await Promise.all([
+  const [eventos, deals, fotos, documentos, proprietarios, mandatos, docsByProp] = await Promise.all([
     listEventosByImovelId(id),
     listDealsByImovelId(id),
     listFotosByImovelId(id),
     listDocumentosByImovelId(id),
+    listProprietariosByImovelId(id),
+    listMandatosByImovelId(id),
+    listProprietarioDocsByImovel(id),
   ]);
 
   const label = imovel.referencia ?? imovel.titulo_anuncio ?? imovel.id.slice(0, 8);
@@ -181,9 +187,19 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
         </Section>
       )}
 
-      {/* Documentos */}
-      <Section title="Documentos">
+      {/* Documentos do imóvel */}
+      <Section title="Documentos do imóvel">
         <ImovelDocumentos imovelId={id} documentos={documentos} />
+      </Section>
+
+      {/* Proprietários */}
+      <Section title={`Proprietários${proprietarios.length > 0 ? ` (${proprietarios.length})` : ''}`}>
+        <ImovelProprietarios imovelId={id} proprietarios={proprietarios} docsByProp={docsByProp} />
+      </Section>
+
+      {/* Mandato */}
+      <Section title="Mandato">
+        <ImovelMandatos imovelId={id} mandatos={mandatos} />
       </Section>
 
       {/* Deals associados */}
