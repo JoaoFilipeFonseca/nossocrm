@@ -1,6 +1,14 @@
 /**
  * Stagnant Deals Analyzer
  * Detecta deals que estão parados há muito tempo sem atividade
+ *
+ * REGRA PERMANENTE (#126, Pinheirinho A4 — 18 Mai 2026):
+ * Este analyzer NUNCA muda `deal.status` para 'CLOSED_LOST' automaticamente.
+ * Só sugere acções (create_activity) que requerem confirmação humana.
+ * Decisão de marcar deal como perdido é SEMPRE humana — mesmo após 42+ dias parado.
+ * Em vez disso, cria-se tarefa "decidir: perdido ou follow-up D+180" para o humano decidir.
+ *
+ * Se editares este ficheiro, mantém este invariante.
  */
 
 import { DealView, Activity } from '@/types';
