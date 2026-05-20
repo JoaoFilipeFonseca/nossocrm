@@ -3,6 +3,8 @@ import { createStaticAdminClient } from '@/lib/supabase/server';
 import { sendTelegramMessage } from '@/lib/notifications/telegram';
 import { extractImovelFromInput, extractRawIntelList, classifyTelegramMessage } from '@/lib/imoveis/captar';
 import { fetchImagesFromUrl, downloadAndUploadPhotos } from '@/lib/imoveis/fotos-from-url';
+import { classifyOperational } from '@/lib/telegram/router';
+import { mudaEstado, mudaPreco, addProprietario, reclassifyLastDoc } from '@/lib/telegram/handlers/imovel';
 import type { AIKeys } from '@/lib/ai/router';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm-joao.vercel.app';
@@ -220,6 +222,32 @@ export async function POST(request: NextRequest) {
   // Prefixos forçados
   const forced = parseForcePrefix(text);
   if (forced) return await processWithKind(forced.text, forced.kind, token, chatId, supabase, org, keys);
+
+  // Router operacional: comandos sobre imóvel activo (estado/preço/dono/doc)
+  // Só corre se houver activo definido e texto curto — economiza chamadas IA
+  if (org.telegram_active_imovel_id && text.length <= 300) {
+    const op = await classifyOperational(text, { hasActiveImovel: true }, keys);
+    if (op.domain === 'imovel' && op.confidence >= 75) {
+      const orgCtx = { organization_id: org.organization_id, telegram_active_imovel_id: org.telegram_active_imovel_id };
+      let res: { ok: boolean; mensagem: string } | null = null;
+      if (op.action === 'muda_estado') {
+        res = await mudaEstado(supabase, orgCtx, String(op.payload.estado ?? ''));
+      } else if (op.action === 'muda_preco') {
+        res = await mudaPreco(supabase, orgCtx, Number(op.payload.preco ?? 0));
+      } else if (op.action === 'add_dono') {
+        const pct = op.payload.percentagem != null ? Number(op.payload.percentagem) : null;
+        const res2 = op.payload.residente;
+        const resid = res2 == null ? null : Boolean(res2);
+        res = await addProprietario(supabase, orgCtx, String(op.payload.nome ?? ''), pct, resid);
+      } else if (op.action === 'attach_doc') {
+        res = await reclassifyLastDoc(supabase, orgCtx, String(op.payload.kind ?? 'outro'));
+      }
+      if (res) {
+        await safeSend(supabase, org, token, chatId, res.mensagem);
+        return NextResponse.json({ ok: true, op: op.action, ok_action: res.ok });
+      }
+    }
+  }
 
   // Classificação IA
   await setBusy(supabase, org);
