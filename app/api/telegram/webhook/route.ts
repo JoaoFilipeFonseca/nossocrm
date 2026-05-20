@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createStaticAdminClient } from '@/lib/supabase/server';
 import { sendTelegramMessage } from '@/lib/notifications/telegram';
-import { extractImovelFromInput } from '@/lib/imoveis/captar';
+import { extractImovelFromInput, extractRawIntelList } from '@/lib/imoveis/captar';
 import type { AIKeys } from '@/lib/ai/router';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm-joao.vercel.app';
@@ -16,6 +16,34 @@ interface TelegramUpdate {
     caption?: string;
     date: number;
   };
+}
+
+/**
+ * Heurística simples: a mensagem parece partilha de vários imóveis?
+ * - 2+ blocos numerados (1️⃣ 2️⃣ 3️⃣) ou enumeração 1., 2., 3.
+ * - 2+ ocorrências de "€" ou preços
+ * - 2+ tipologias (T1, T2, T3...)
+ * - Palavras-chave de partilha entre colegas (off-market, partilho, oportunidades)
+ */
+function looksLikeList(text: string): boolean {
+  const numberedEmojis = (text.match(/[1-9]️⃣/g) ?? []).length;
+  if (numberedEmojis >= 2) return true;
+
+  const numberedDots = (text.match(/(?:^|\n)\s*[1-9]\s*[.\)\-]/g) ?? []).length;
+  if (numberedDots >= 2) return true;
+
+  const priceMatches = (text.match(/\d{2,3}\.?\d{3}\s*€/g) ?? []).length
+    + (text.match(/\d{2,3}\s*\.?\s*000\s*€?/g) ?? []).length;
+  const tipMatches = (text.match(/\bT[0-5]\+?\b/g) ?? []).length;
+
+  if (priceMatches >= 2 && tipMatches >= 2) return true;
+
+  const lower = text.toLowerCase();
+  if (/(off.?market|partilho|partilha|oportunidades|tem clientes|colegas)/.test(lower) && (priceMatches >= 2 || tipMatches >= 2)) {
+    return true;
+  }
+
+  return false;
 }
 
 export async function POST(request: NextRequest) {
@@ -71,14 +99,12 @@ export async function POST(request: NextRequest) {
       token,
       chatId,
       '👋 <b>Foco Imo — Captura por Telegram</b>\n\n' +
-      'Manda-me uma mensagem com detalhes de um imóvel (texto solto serve) e eu crio um rascunho no CRM.\n\n' +
-      'Exemplo:\n<i>"T2 Boavista, Rua Sá da Bandeira, 85m², 280k, ano 2010, cert. B"</i>\n\n' +
-      'A IA extrai os campos e cria o imóvel em estado <b>"Em avaliação"</b> para tu confirmares.',
+      '• Manda detalhes de <b>1 imóvel</b> → crio rascunho em <i>/imoveis</i> (em avaliação).\n' +
+      '• Manda <b>lista de imóveis off-market / partilhas de colegas</b> → vai para <i>/matches</i> (raw_intel) para cruzar com clientes.\n\n' +
+      'Eu detecto automaticamente.',
     );
     return NextResponse.json({ ok: true, processed: 'help' });
   }
-
-  await sendTelegramMessage(token, chatId, '⏳ A processar...');
 
   const keys: AIKeys = {
     google: org.ai_google_key ?? undefined,
@@ -91,6 +117,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: 'No AI keys' }, { status: 400 });
   }
 
+  // Detect list vs single
+  const isList = looksLikeList(text);
+
+  await sendTelegramMessage(token, chatId, isList ? '⏳ A processar lista…' : '⏳ A processar…');
+
+  if (isList) {
+    return await handleList(text, supabase, org, token, chatId, keys);
+  }
+  return await handleSingle(text, supabase, org, token, chatId, keys);
+}
+
+async function handleSingle(
+  text: string,
+  supabase: ReturnType<typeof createStaticAdminClient>,
+  org: { organization_id: string },
+  token: string,
+  chatId: string,
+  keys: AIKeys,
+) {
   try {
     const { draft, modelUsed } = await extractImovelFromInput({ kind: 'text', payload: text }, keys);
 
@@ -121,11 +166,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('imoveis')
-      .insert(payload)
-      .select('id')
-      .single();
-
+      .from('imoveis').insert(payload).select('id').single();
     if (error || !data) {
       await sendTelegramMessage(token, chatId, `❌ Erro a gravar imóvel: ${error?.message ?? 'desconhecido'}`);
       return NextResponse.json({ ok: false, error: error?.message }, { status: 500 });
@@ -140,20 +181,81 @@ export async function POST(request: NextRequest) {
     ].filter(Boolean).join(' · ');
 
     await sendTelegramMessage(
-      token,
-      chatId,
+      token, chatId,
       `✅ <b>Rascunho criado:</b> ${escapeHtml(label)}\n` +
       (summary ? `${summary}\n` : '') +
       `\n<a href="${url}">Abrir no CRM ↗</a>\n\n` +
       `<i>Estado: Em avaliação. Confirma os dados e muda para Disponível quando ok.</i>\n` +
       `<i>Modelo: ${modelUsed}</i>`,
     );
-
     return NextResponse.json({ ok: true, imovel_id: data.id });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
     try {
       await sendTelegramMessage(token, chatId, `❌ Falhou a extracção: ${escapeHtml(msg)}`);
+    } catch {}
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+  }
+}
+
+async function handleList(
+  text: string,
+  supabase: ReturnType<typeof createStaticAdminClient>,
+  org: { organization_id: string },
+  token: string,
+  chatId: string,
+  keys: AIKeys,
+) {
+  try {
+    const { items, modelUsed } = await extractRawIntelList(text, keys);
+
+    if (items.length === 0) {
+      await sendTelegramMessage(token, chatId,
+        '🤷 Não consegui detectar imóveis nesta lista. Tenta reformular ou envia 1 por mensagem.');
+      return NextResponse.json({ ok: true, items: 0 });
+    }
+
+    const rows = items.map((it) => ({
+      organization_id: org.organization_id,
+      source_kind: 'telegram',
+      raw_text: it.raw_segment || text,
+      intent: it.intent,
+      ownership: it.ownership,
+      confidence_overall: it.confidence_overall,
+      property: it.property,
+      contact: it.contact,
+      status: 'novo',
+      tags: it.tags ?? [],
+      source_attribution: 'telegram_bot',
+    }));
+
+    const { data, error } = await supabase
+      .from('raw_intel').insert(rows).select('id, intent, property');
+    if (error) {
+      await sendTelegramMessage(token, chatId, `❌ Erro a gravar lista: ${error.message}`);
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    }
+
+    const lines = items.slice(0, 8).map((it, idx) => {
+      const tip = it.property.tipologia ?? '?';
+      const zona = it.property.zona ?? it.property.freguesia ?? it.property.concelho ?? '';
+      const preco = it.property.preco;
+      const intent = it.intent === 'procura' ? '🔍' : it.intent === 'angariacao' ? '🏠' : '·';
+      return `${idx + 1}. ${intent} <b>${tip}</b>${zona ? ' em ' + escapeHtml(String(zona)) : ''}${preco ? ' · ' + formatPreco(Number(preco)) + '€' : ''}`;
+    });
+
+    await sendTelegramMessage(
+      token, chatId,
+      `✅ <b>${items.length} item(s) registado(s) em /matches</b>\n\n` +
+      lines.join('\n') +
+      `\n\n<a href="${APP_URL}/matches">Abrir matches no CRM ↗</a>\n\n` +
+      `<i>Origem: telegram · Modelo: ${modelUsed}</i>`,
+    );
+    return NextResponse.json({ ok: true, items: data?.length ?? 0 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Erro';
+    try {
+      await sendTelegramMessage(token, chatId, `❌ Falhou a extracção da lista: ${escapeHtml(msg)}`);
     } catch {}
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }

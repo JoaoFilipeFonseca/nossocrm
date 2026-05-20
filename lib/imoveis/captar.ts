@@ -327,6 +327,108 @@ Coloca a transcrição original em "notas_privadas" (para o consultor rever).`;
   return { draft, modelUsed: result.modelUsed };
 }
 
+export interface RawIntelDraft {
+  property: Record<string, unknown>;
+  contact: Record<string, unknown>;
+  intent: 'angariacao' | 'procura' | 'fsbo_tip' | 'parceiro' | 'evento_mercado' | 'concorrente' | 'irrelevante';
+  ownership: 'minha' | 'colega' | 'externa';
+  confidence_overall: number;
+  raw_segment: string;
+  tags: string[];
+}
+
+const LIST_EXTRACTION_PROMPT = `Recebes um texto curto/médio de partilha entre consultores imobiliários portugueses (típico de grupos WhatsApp/Telegram). O texto pode conter:
+- 1 imóvel descrito
+- VÁRIOS imóveis enumerados (off-market, partilhas, "tenho aqui 3 oportunidades…")
+- Procura(s) de cliente ("preciso de T2 até 250k em…")
+- Mistura
+
+Tarefa: devolve JSON ARRAY (sem markdown, sem code fences) com 1 entry por item de interesse detectado. Schema por item:
+
+{
+  "intent": "angariacao"|"procura"|"fsbo_tip"|"parceiro"|"evento_mercado"|"concorrente"|"irrelevante",
+  "ownership": "minha"|"colega"|"externa",
+  "property": {
+    "tipologia": "T0"|"T1"|"T2"|"T3"|"T4"|"T5+"|"V3"|"V4"|"V5"|"V5+"|"Loja"|"Armazem"|"Terreno"|null,
+    "tipo": "apartamento"|"moradia"|"terreno"|"loja"|"armazem"|null,
+    "freguesia": string|null,
+    "concelho": string|null,
+    "distrito": string|null,
+    "zona": string|null,
+    "preco": number|null,
+    "area_util": number|null,
+    "wcs": number|null,
+    "quartos": number|null,
+    "garagem": boolean|null,
+    "varanda": boolean|null,
+    "estado": "off_market"|"mercado"|"reservado"|null,
+    "extras": string|null
+  },
+  "contact": {
+    "nome": string|null,
+    "telefone": string|null,
+    "agencia": string|null
+  },
+  "confidence_overall": 0-100,
+  "raw_segment": string,
+  "tags": string[]
+}
+
+Regras:
+- pt-PT formal. Nunca pt-BR.
+- Tudo o que parece imóvel à venda partilhado por colega → intent="angariacao", ownership="colega"
+- Procuras de cliente → intent="procura", ownership="colega"
+- FSBO (proprietário sem mediadora) → intent="fsbo_tip", ownership="minha"
+- Notícias/regulação → intent="evento_mercado", ownership="externa"
+- raw_segment: copia LITERAL a parte do texto fonte que originou este item.
+- Preços em euros sem símbolo (260000 não "260.000€"). Areas só número.
+- estado: "off_market" se mencionar off-market/privado, "mercado" se mencionar "disponível no mercado".
+- tags: array com palavras chave: ["off-market", "luxo", "garagem", "centro", etc.]
+
+Texto fonte:
+`;
+
+function parseAIJsonArray(raw: string): RawIntelDraft[] {
+  let cleaned = raw.trim();
+  const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (fenceMatch) cleaned = fenceMatch[1].trim();
+  const firstBracket = cleaned.indexOf('[');
+  const lastBracket = cleaned.lastIndexOf(']');
+  if (firstBracket >= 0 && lastBracket > firstBracket) {
+    cleaned = cleaned.slice(firstBracket, lastBracket + 1);
+  }
+  const arr = JSON.parse(cleaned);
+  if (!Array.isArray(arr)) return [];
+  return arr.map((p: Record<string, unknown>) => ({
+    intent: (p.intent as RawIntelDraft['intent']) ?? 'irrelevante',
+    ownership: (p.ownership as RawIntelDraft['ownership']) ?? 'externa',
+    property: (p.property && typeof p.property === 'object') ? p.property as Record<string, unknown> : {},
+    contact: (p.contact && typeof p.contact === 'object') ? p.contact as Record<string, unknown> : {},
+    confidence_overall: typeof p.confidence_overall === 'number' ? p.confidence_overall : 50,
+    raw_segment: typeof p.raw_segment === 'string' ? p.raw_segment : '',
+    tags: Array.isArray(p.tags) ? p.tags.filter((t: unknown) => typeof t === 'string') as string[] : [],
+  }));
+}
+
+export async function extractRawIntelList(
+  text: string,
+  keys: AIKeys,
+): Promise<{ items: RawIntelDraft[]; modelUsed: string }> {
+  const trimmed = text.trim();
+  if (trimmed.length < 5) throw new Error('Conteúdo insuficiente.');
+
+  const fullPrompt = `${LIST_EXTRACTION_PROMPT}\n${trimmed.slice(0, 20000)}`;
+  const result = await routedGenerate({
+    feature: 'imovel_extract',
+    prompt: fullPrompt,
+    keys,
+    temperature: 0.1,
+  });
+
+  const items = parseAIJsonArray(result.text).filter((i) => i.intent !== 'irrelevante');
+  return { items, modelUsed: result.modelUsed };
+}
+
 export async function extractImovelFromInput(
   input: { kind: 'text' | 'link'; payload: string },
   keys: AIKeys,
