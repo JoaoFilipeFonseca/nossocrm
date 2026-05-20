@@ -1,5 +1,5 @@
 import 'server-only';
-import { routedGenerate, type AIKeys } from '@/lib/ai/router';
+import { routedGenerate, routedGenerateMultimodal, type AIKeys } from '@/lib/ai/router';
 
 export interface ImovelDraft {
   // identificação
@@ -292,6 +292,28 @@ function parseAIJson(raw: string): ImovelDraft {
     caracteristicas: (p.caracteristicas && typeof p.caracteristicas === 'object') ? p.caracteristicas : {},
     confidence: (p.confidence && typeof p.confidence === 'object') ? p.confidence : {},
   };
+}
+
+export async function extractImovelFromFile(
+  file: { data: ArrayBuffer; mimeType: string; name: string },
+  keys: AIKeys,
+): Promise<{ draft: ImovelDraft; modelUsed: string }> {
+  const kindDescription = file.mimeType.startsWith('image/')
+    ? `Imagem do anúncio/placard (${file.name})`
+    : `Documento (${file.name})`;
+
+  const prompt = `${EXTRACTION_PROMPT}\n\nFonte: ${kindDescription}\nExtrai TUDO o que conseguir ver na imagem ou ler no documento.`;
+
+  const result = await routedGenerateMultimodal({
+    feature: 'imovel_extract',
+    prompt,
+    files: [{ data: file.data, mimeType: file.mimeType }],
+    keys,
+    temperature: 0.1,
+  });
+
+  const draft = parseAIJson(result.text);
+  return { draft, modelUsed: result.modelUsed };
 }
 
 export async function extractImovelFromInput(

@@ -131,6 +131,59 @@ export async function routedGenerate(opts: RouterCallOptions): Promise<RouterCal
     throw new Error(`Todos os providers falharam para feature=${opts.feature}. Última erro: ${lastError?.message || 'unknown'}`);
 }
 
+export interface MultimodalCallOptions {
+    feature: AIFeature;
+    prompt: string;
+    files: Array<{ data: ArrayBuffer | Uint8Array; mimeType: string }>;
+    keys: AIKeys;
+    temperature?: number;
+}
+
+/**
+ * Multimodal generate — passes prompt + files (image or PDF) to Gemini/Claude.
+ * Uses `messages` API with content parts (text + file).
+ */
+export async function routedGenerateMultimodal(opts: MultimodalCallOptions): Promise<RouterCallResult> {
+    const [primary, secondary] = ROUTING[opts.feature];
+    const attempts: Array<{ cfg: ProviderConfig; isPrimary: boolean }> = [
+        { cfg: primary, isPrimary: true },
+        { cfg: secondary, isPrimary: false },
+    ];
+
+    let lastError: Error | null = null;
+    for (const { cfg, isPrimary } of attempts) {
+        const model = makeModel(cfg, opts.keys);
+        if (!model) continue;
+
+        try {
+            const content: Array<Record<string, unknown>> = [{ type: 'text', text: opts.prompt }];
+            for (const f of opts.files) {
+                const buf = f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data);
+                if (f.mimeType.startsWith('image/')) {
+                    content.push({ type: 'image', image: buf, mediaType: f.mimeType });
+                } else {
+                    content.push({ type: 'file', data: buf, mediaType: f.mimeType });
+                }
+            }
+            const { text } = await generateText({
+                model,
+                messages: [{ role: 'user', content: content as never }],
+                temperature: opts.temperature ?? 0.7,
+            });
+            return {
+                text,
+                modelUsed: `${cfg.provider}/${cfg.model}`,
+                fallbackUsed: !isPrimary,
+            };
+        } catch (err: any) {
+            lastError = err;
+            console.warn(`[ai-router multimodal] ${cfg.provider}/${cfg.model} failed:`, err?.message);
+        }
+    }
+
+    throw new Error(`Multimodal providers falharam: ${lastError?.message || 'unknown'}`);
+}
+
 /**
  * Get a model instance for the given feature, returning the FIRST provider with a valid key.
  * Used by routes that need streaming (e.g. chat with tools) where we can't easily wrap with fallback.

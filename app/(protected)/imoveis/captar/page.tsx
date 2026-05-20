@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { ImovelDraft } from '@/lib/imoveis/captar';
@@ -14,8 +14,10 @@ type CaptarResult = {
 
 export default function CaptarImovelPage() {
   const router = useRouter();
-  const [kind, setKind] = useState<'text' | 'link'>('text');
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [kind, setKind] = useState<'text' | 'link' | 'file'>('text');
   const [payload, setPayload] = useState('');
+  const [file, setFile] = useState<File | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,11 +29,19 @@ export default function CaptarImovelPage() {
     setError(null);
     setResult(null);
     try {
-      const res = await fetch('/api/imoveis/captar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind, payload }),
-      });
+      let res: Response;
+      if (kind === 'file') {
+        if (!file) throw new Error('Selecciona um ficheiro');
+        const fd = new FormData();
+        fd.append('file', file);
+        res = await fetch('/api/imoveis/captar', { method: 'POST', body: fd });
+      } else {
+        res = await fetch('/api/imoveis/captar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind, payload }),
+        });
+      }
       const json = await res.json();
       if (!res.ok) throw new Error(json.message ?? 'Erro a extrair');
       setResult(json);
@@ -82,27 +92,62 @@ export default function CaptarImovelPage() {
 
       <form onSubmit={onExtract} className="space-y-4">
         <div className="inline-flex rounded-md border border-slate-300 p-0.5 bg-slate-50">
-          <button type="button" onClick={() => setKind('text')}
-            className={`px-3 py-1.5 text-sm font-medium rounded ${kind === 'text' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'}`}>
-            Texto
-          </button>
-          <button type="button" onClick={() => setKind('link')}
-            className={`px-3 py-1.5 text-sm font-medium rounded ${kind === 'link' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'}`}>
-            Link
-          </button>
+          {(['text', 'link', 'file'] as const).map((k) => (
+            <button key={k} type="button" onClick={() => setKind(k)}
+              className={`px-3 py-1.5 text-sm font-medium rounded ${kind === k ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'}`}>
+              {k === 'text' ? 'Texto' : k === 'link' ? 'Link' : 'Foto / PDF'}
+            </button>
+          ))}
         </div>
 
-        {kind === 'link' ? (
+        {kind === 'link' && (
           <input type="url" value={payload} onChange={(e) => setPayload(e.target.value)}
             placeholder="https://www.remax.pt/..." className={inputCls} />
-        ) : (
+        )}
+        {kind === 'text' && (
           <textarea value={payload} onChange={(e) => setPayload(e.target.value)}
             placeholder="Cola aqui mensagem WhatsApp, descrição completa, anúncio, etc." rows={10} className={inputCls} />
         )}
+        {kind === 'file' && (
+          <div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full rounded-md border-2 border-dashed border-slate-300 p-8 text-center hover:border-blue-400 transition"
+            >
+              {file ? (
+                <div>
+                  <p className="text-sm font-medium text-slate-900">{file.name}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB · {file.type}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-2">Clique para mudar</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm text-slate-700">📷 Carrega para escolher foto ou PDF</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Foto de anúncio, placard, caderneta predial, certificado energético… (máx 15 MB)
+                  </p>
+                </div>
+              )}
+            </button>
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
-          <button type="submit" disabled={extracting || !payload.trim()}
-            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={extracting || (kind === 'file' ? !file : !payload.trim())}
+            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
             {extracting ? 'A extrair…' : 'Extrair com IA'}
           </button>
           <Link href="/imoveis" className="text-sm text-slate-600 hover:text-slate-900">Cancelar</Link>
