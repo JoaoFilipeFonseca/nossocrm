@@ -11,9 +11,10 @@ import {
   Settings,
   User,
   ScrollText,
+  Home,
 } from 'lucide-react';
 
-export type PrimaryNavId = 'inbox' | 'messaging' | 'matches' | 'boards' | 'contacts' | 'activities' | 'more';
+export type PrimaryNavId = 'inbox' | 'messaging' | 'matches' | 'boards' | 'contacts' | 'imoveis' | 'activities' | 'more';
 
 export interface PrimaryNavItem {
   id: PrimaryNavId;
@@ -29,6 +30,7 @@ export const PRIMARY_NAV: PrimaryNavItem[] = [
   { id: 'matches', href: '/matches', label: 'Matches', icon: Inbox },
   { id: 'boards', label: 'Boards', href: '/boards', icon: KanbanSquare },
   { id: 'contacts', label: 'Contactos', href: '/contacts', icon: Users },
+  { id: 'imoveis', label: 'Imóveis', href: '/imoveis', icon: Home },
   { id: 'activities', label: 'Atividades', href: '/activities', icon: CheckSquare },
   { id: 'more', label: 'Mais', icon: MoreHorizontal },
 ];
