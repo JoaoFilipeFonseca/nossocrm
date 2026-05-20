@@ -41,19 +41,19 @@ export async function POST(request: NextRequest) {
 
   const { data: org } = await supabase
     .from('organization_settings')
-    .select('organization_id, telegram_bot_token, telegram_webhook_secret, ai_google_key, ai_anthropic_key')
-    .eq('telegram_chat_id', chatId)
+    .select('organization_id, telegram_crm_bot_token, telegram_crm_webhook_secret, ai_google_key, ai_anthropic_key')
+    .eq('telegram_crm_chat_id', chatId)
     .maybeSingle();
 
   if (!org) {
     return NextResponse.json({ ok: true, ignored: 'unknown chat_id' });
   }
 
-  if (org.telegram_webhook_secret && org.telegram_webhook_secret !== secretHeader) {
+  if (org.telegram_crm_webhook_secret && org.telegram_crm_webhook_secret !== secretHeader) {
     return NextResponse.json({ ok: false, error: 'Invalid secret' }, { status: 401 });
   }
 
-  const token = org.telegram_bot_token as string | null;
+  const token = org.telegram_crm_bot_token as string | null;
   if (!token) {
     return NextResponse.json({ ok: false, error: 'Bot token missing' }, { status: 500 });
   }

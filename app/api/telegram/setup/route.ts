@@ -33,28 +33,28 @@ export async function POST(request: NextRequest) {
 
   const { data: org } = await supabase
     .from('organization_settings')
-    .select('telegram_bot_token, telegram_webhook_secret')
+    .select('telegram_crm_bot_token, telegram_crm_webhook_secret')
     .eq('organization_id', profile.organization_id)
     .single();
 
-  if (!org?.telegram_bot_token) {
-    return NextResponse.json({ message: 'Falta telegram_bot_token na organização' }, { status: 400 });
+  if (!org?.telegram_crm_bot_token) {
+    return NextResponse.json({ message: 'Falta telegram_crm_bot_token na organização' }, { status: 400 });
   }
 
   const body = await request.json().catch(() => ({}));
   const action = body.action ?? 'register';
 
   if (action === 'delete') {
-    const res = await fetch(`${TELEGRAM_API}/bot${org.telegram_bot_token}/deleteWebhook`, { method: 'POST' });
+    const res = await fetch(`${TELEGRAM_API}/bot${org.telegram_crm_bot_token}/deleteWebhook`, { method: 'POST' });
     const json = await res.json();
     return NextResponse.json({ ok: json.ok, telegram: json });
   }
 
   // Default: register webhook with fresh secret
-  const secret = org.telegram_webhook_secret ?? randomSecret();
+  const secret = org.telegram_crm_webhook_secret ?? randomSecret();
   const webhookUrl = `${APP_URL}/api/telegram/webhook`;
 
-  const setRes = await fetch(`${TELEGRAM_API}/bot${org.telegram_bot_token}/setWebhook`, {
+  const setRes = await fetch(`${TELEGRAM_API}/bot${org.telegram_crm_bot_token}/setWebhook`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -72,11 +72,11 @@ export async function POST(request: NextRequest) {
   // Persist secret
   await supabase
     .from('organization_settings')
-    .update({ telegram_webhook_secret: secret })
+    .update({ telegram_crm_webhook_secret: secret })
     .eq('organization_id', profile.organization_id);
 
   // Check info
-  const infoRes = await fetch(`${TELEGRAM_API}/bot${org.telegram_bot_token}/getWebhookInfo`);
+  const infoRes = await fetch(`${TELEGRAM_API}/bot${org.telegram_crm_bot_token}/getWebhookInfo`);
   const infoJson = await infoRes.json();
 
   return NextResponse.json({ ok: true, url: webhookUrl, info: infoJson.result });
@@ -99,19 +99,19 @@ export async function GET() {
 
   const { data: org } = await supabase
     .from('organization_settings')
-    .select('telegram_bot_token, telegram_chat_id, telegram_webhook_secret')
+    .select('telegram_crm_bot_token, telegram_crm_chat_id, telegram_crm_webhook_secret')
     .eq('organization_id', profile.organization_id)
     .single();
 
-  if (!org?.telegram_bot_token) {
-    return NextResponse.json({ message: 'Falta telegram_bot_token' }, { status: 400 });
+  if (!org?.telegram_crm_bot_token) {
+    return NextResponse.json({ message: 'Falta telegram_crm_bot_token' }, { status: 400 });
   }
 
-  const infoRes = await fetch(`${TELEGRAM_API}/bot${org.telegram_bot_token}/getWebhookInfo`);
+  const infoRes = await fetch(`${TELEGRAM_API}/bot${org.telegram_crm_bot_token}/getWebhookInfo`);
   const infoJson = await infoRes.json();
   return NextResponse.json({
-    chat_id: org.telegram_chat_id,
-    has_secret: !!org.telegram_webhook_secret,
+    chat_id: org.telegram_crm_chat_id,
+    has_secret: !!org.telegram_crm_webhook_secret,
     webhook: infoJson.result,
   });
 }
