@@ -20,6 +20,7 @@ export type AIFeature =
     | 'email_draft'       // Email para cliente
     | 'whatsapp_draft'    // WhatsApp/SMS para cliente
     | 'deal_coach'        // Análise de visita / coach
+    | 'imovel_extract'    // Captar imóvel de link/texto — extracção estruturada
     | 'generic';          // Default
 
 export type Provider = 'google' | 'anthropic';
@@ -43,6 +44,7 @@ const ROUTING: Record<AIFeature, [ProviderConfig, ProviderConfig]> = {
     email_draft:     [{ provider: 'anthropic', model: 'claude-sonnet-4-5' }, { provider: 'google',    model: 'gemini-2.5-flash' }],
     whatsapp_draft:  [{ provider: 'anthropic', model: 'claude-sonnet-4-5' }, { provider: 'google',    model: 'gemini-2.5-flash' }],
     deal_coach:      [{ provider: 'anthropic', model: 'claude-sonnet-4-5' }, { provider: 'google',    model: 'gemini-2.5-pro' }],
+    imovel_extract:  [{ provider: 'google',    model: 'gemini-2.5-flash' }, { provider: 'anthropic', model: 'claude-sonnet-4-5' }],
     generic:         [{ provider: 'google',    model: 'gemini-2.5-flash' }, { provider: 'anthropic', model: 'claude-sonnet-4-5' }],
 };
 

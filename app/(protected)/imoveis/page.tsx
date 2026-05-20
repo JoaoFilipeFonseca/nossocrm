@@ -26,12 +26,20 @@ export default async function ImoveisPage() {
                 : `${imoveis.length} imóveis registados.`}
           </p>
         </div>
-        <Link
-          href="/imoveis/novo"
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Novo imóvel
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/imoveis/captar"
+            className="inline-flex items-center rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+          >
+            ✨ Captar com IA
+          </Link>
+          <Link
+            href="/imoveis/novo"
+            className="inline-flex items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Novo imóvel
+          </Link>
+        </div>
       </div>
 
       {errorMsg ? (
