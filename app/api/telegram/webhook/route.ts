@@ -510,7 +510,8 @@ async function handleSingle(
     if (error || !data) {
       await clearBusy(supabase, org);
       await safeSend(supabase, org, token, chatId, `❌ Erro a gravar: ${escapeHtml(error?.message ?? '?')}`);
-      return NextResponse.json({ ok: false }, { status: 500 });
+      // 200 (nao 500) — erro ja comunicado, evitar retry Telegram
+      return NextResponse.json({ ok: false, handled: true });
     }
     await supabase.from('organization_settings')
       .update({ telegram_active_imovel_id: data.id })
@@ -548,7 +549,10 @@ async function handleSingle(
     const msg = err instanceof Error ? err.message : 'Erro';
     await clearBusy(supabase, org);
     await safeSend(supabase, org, token, chatId, `❌ Falhou: ${escapeHtml(msg).slice(0, 200)}`);
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+    // IMPORTANTE: devolver 200 (nao 500). Telegram faz retry agressivo em 5xx,
+    // o que provoca spam de mesma mensagem de erro. O erro logico ja foi
+    // comunicado ao utilizador via safeSend.
+    return NextResponse.json({ ok: false, error: msg, handled: true });
   }
 }
 
@@ -596,7 +600,7 @@ async function handleListOrProcura(
     if (error) {
       await clearBusy(supabase, org);
       await safeSend(supabase, org, token, chatId, `❌ Erro: ${escapeHtml(error.message).slice(0, 200)}`);
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+      return NextResponse.json({ ok: false, error: error.message, handled: true });
     }
 
     // Auto-trigger: re-corre match engine se entrou alguma procura nova
@@ -620,7 +624,7 @@ async function handleListOrProcura(
     const msg = err instanceof Error ? err.message : 'Erro';
     await clearBusy(supabase, org);
     await safeSend(supabase, org, token, chatId, `❌ Falhou: ${escapeHtml(msg).slice(0, 200)}`);
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+    return NextResponse.json({ ok: false, error: msg, handled: true });
   }
 }
 
@@ -668,16 +672,25 @@ async function downloadAndAttach(
   try {
     const infoRes = await fetch(`${TELEGRAM_API}/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`);
     const infoJson = await infoRes.json();
-    if (!infoJson.ok) return NextResponse.json({ ok: false }, { status: 500 });
+    if (!infoJson.ok) {
+      await sendTelegramMessage(token, chatId, '❌ Não consegui baixar o ficheiro.').catch(() => {});
+      return NextResponse.json({ ok: false, handled: true });
+    }
     const filePath = infoJson.result.file_path as string;
     const fileRes = await fetch(`${TELEGRAM_API}/file/bot${token}/${filePath}`);
-    if (!fileRes.ok) return NextResponse.json({ ok: false }, { status: 500 });
+    if (!fileRes.ok) {
+      await sendTelegramMessage(token, chatId, '❌ Falha a descarregar ficheiro do Telegram.').catch(() => {});
+      return NextResponse.json({ ok: false, handled: true });
+    }
     const buf = await fileRes.arrayBuffer();
     const safeName = (filename ?? `tg_${Date.now()}.jpg`).replace(/[^a-zA-Z0-9._-]/g, '_');
     const storagePath = `${org.organization_id}/${imovelId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
     const { error: upErr } = await supabase.storage.from('imovel-fotos')
       .upload(storagePath, buf, { contentType: mimeType, upsert: false });
-    if (upErr) return NextResponse.json({ ok: false }, { status: 500 });
+    if (upErr) {
+      await sendTelegramMessage(token, chatId, `❌ Erro no upload: ${upErr.message}`.slice(0, 200)).catch(() => {});
+      return NextResponse.json({ ok: false, handled: true });
+    }
     const { data: pub } = supabase.storage.from('imovel-fotos').getPublicUrl(storagePath);
     const { data: existing } = await supabase.from('imovel_fotos').select('ordem, is_principal').eq('imovel_id', imovelId);
     const maxOrdem = existing?.reduce((m, f) => Math.max(m, Number(f.ordem ?? 0)), -1) ?? -1;
@@ -693,7 +706,8 @@ async function downloadAndAttach(
     return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro';
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+    await sendTelegramMessage(token, chatId, `❌ Erro inesperado a processar ficheiro: ${msg}`.slice(0, 200)).catch(() => {});
+    return NextResponse.json({ ok: false, error: msg, handled: true });
   }
 }
 
