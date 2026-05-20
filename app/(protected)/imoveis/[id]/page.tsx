@@ -33,8 +33,9 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
     listProprietarioDocsByImovel(id),
   ]);
 
-  // Telegram activo?
+  // Telegram activo? + contagem de matches activos para este imovel
   let isTelegramActive = false;
+  let matchesCount = 0;
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -42,12 +43,18 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
       const { data: profile } = await supabase
         .from('profiles').select('organization_id').eq('id', user.id).single();
       if (profile?.organization_id) {
-        const { data: settings } = await supabase
-          .from('organization_settings')
-          .select('telegram_active_imovel_id')
-          .eq('organization_id', profile.organization_id)
-          .maybeSingle();
-        isTelegramActive = settings?.telegram_active_imovel_id === id;
+        const [settingsRes, matchesRes] = await Promise.all([
+          supabase.from('organization_settings')
+            .select('telegram_active_imovel_id')
+            .eq('organization_id', profile.organization_id)
+            .maybeSingle(),
+          supabase.from('matches')
+            .select('id', { count: 'exact', head: true })
+            .eq('imovel_id', id)
+            .neq('status', 'ignorado'),
+        ]);
+        isTelegramActive = settingsRes.data?.telegram_active_imovel_id === id;
+        matchesCount = matchesRes.count ?? 0;
       }
     }
   } catch { /* opcional */ }
@@ -70,6 +77,13 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-semibold">{label}</h1>
             <span className="text-xs uppercase tracking-wide text-slate-500">{tipoLabel(imovel.tipo)}</span>
+            {matchesCount > 0 && (
+              <Link href="/cruzamentos"
+                className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-200"
+                title="Cruzamentos activos para este imóvel">
+                💎 {matchesCount} {matchesCount === 1 ? 'match' : 'matches'}
+              </Link>
+            )}
           </div>
           <div className="mt-3">
             <ImovelEstadoSelector imovelId={id} estadoActual={imovel.estado} />

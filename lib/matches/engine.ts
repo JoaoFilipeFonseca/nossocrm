@@ -1,5 +1,6 @@
 import 'server-only';
 import { createStaticAdminClient } from '@/lib/supabase/server';
+import { notifyNewMatches } from './notify';
 
 /**
  * Match engine v1: cruza raw_intel (intent=procura) com imoveis disponiveis.
@@ -226,6 +227,20 @@ export async function computeMatches(organizationId: string): Promise<{
     return { computed: intel.length * imoveis.length, inserted: 0, candidates: [] };
   }
 
+  // Identifica candidatos NOVOS (pares que nao existiam) para notificacao
+  const { data: existing } = await supabase
+    .from('matches')
+    .select('raw_intel_id, imovel_id, property_index')
+    .eq('organization_id', organizationId)
+    .in('raw_intel_id', Array.from(new Set(candidates.map((c) => c.raw_intel_id))));
+  const existingKeys = new Set(
+    ((existing ?? []) as { raw_intel_id: string; imovel_id: string; property_index: number }[])
+      .map((e) => `${e.raw_intel_id}|${e.imovel_id}|${e.property_index}`)
+  );
+  const novos = candidates.filter(
+    (c) => !existingKeys.has(`${c.raw_intel_id}|${c.imovel_id}|${c.property_index}`)
+  );
+
   // Upsert: nao destruir status existente (visto/contactado/ignorado)
   const rows = candidates.map((c) => ({
     organization_id: organizationId,
@@ -242,6 +257,15 @@ export async function computeMatches(organizationId: string): Promise<{
   });
 
   if (error) throw new Error(`Erro a gravar matches: ${error.message}`);
+
+  // Notificacao Telegram fire-and-forget para matches recem-criados
+  if (novos.length > 0) {
+    void notifyNewMatches(supabase, organizationId, novos.map((c) => ({
+      raw_intel_id: c.raw_intel_id,
+      imovel_id: c.imovel_id,
+      score: c.score,
+    })));
+  }
 
   return { computed: intel.length * imoveis.length, inserted: candidates.length, candidates };
 }
