@@ -5,7 +5,67 @@ export type ImovelTipo =
   | 'apartamento' | 'moradia' | 'terreno' | 'predio'
   | 'loja' | 'armazem' | 'escritorio' | 'garagem' | 'quinta';
 
-export type ImovelEstado = 'disponivel' | 'reservado' | 'vendido' | 'retirado' | 'em_avaliacao';
+export type ImovelEstado = 'em_avaliacao' | 'disponivel' | 'reservado' | 'cpcv' | 'vendido' | 'suspenso' | 'anulado' | 'retirado';
+
+export interface EstadoDef {
+  value: ImovelEstado;
+  label: string;
+  chipClass: string;
+  pillSelected: string;
+  pillIdle: string;
+  ordem: number;
+  descricao: string;
+}
+
+// Catálogo canónico — usado em selector, badges, validações, Telegram.
+export const ESTADOS_IMOVEL: EstadoDef[] = [
+  { value: 'em_avaliacao', label: 'Em avaliação', ordem: 1,
+    chipClass: 'bg-amber-100 text-amber-700',
+    pillSelected: 'bg-amber-500 text-white border-amber-500',
+    pillIdle: 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50',
+    descricao: 'Captado, ainda não listado' },
+  { value: 'disponivel', label: 'Disponível', ordem: 2,
+    chipClass: 'bg-green-100 text-green-700',
+    pillSelected: 'bg-green-600 text-white border-green-600',
+    pillIdle: 'bg-white text-green-700 border-green-200 hover:bg-green-50',
+    descricao: 'À venda, promoção activa' },
+  { value: 'reservado', label: 'Reservado', ordem: 3,
+    chipClass: 'bg-yellow-100 text-yellow-800',
+    pillSelected: 'bg-yellow-500 text-white border-yellow-500',
+    pillIdle: 'bg-white text-yellow-800 border-yellow-200 hover:bg-yellow-50',
+    descricao: 'Cliente fez sinal, antes de CPCV' },
+  { value: 'cpcv', label: 'CPCV', ordem: 4,
+    chipClass: 'bg-blue-100 text-blue-700',
+    pillSelected: 'bg-blue-600 text-white border-blue-600',
+    pillIdle: 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50',
+    descricao: 'Promessa firmada, antes de escritura' },
+  { value: 'vendido', label: 'Vendido', ordem: 5,
+    chipClass: 'bg-slate-700 text-white',
+    pillSelected: 'bg-slate-800 text-white border-slate-800',
+    pillIdle: 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100',
+    descricao: 'Escritura realizada' },
+  { value: 'suspenso', label: 'Suspenso', ordem: 6,
+    chipClass: 'bg-slate-100 text-slate-500',
+    pillSelected: 'bg-slate-400 text-white border-slate-400',
+    pillIdle: 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50',
+    descricao: 'Temporariamente fora do mercado' },
+  { value: 'anulado', label: 'Anulado', ordem: 7,
+    chipClass: 'bg-red-100 text-red-700',
+    pillSelected: 'bg-red-600 text-white border-red-600',
+    pillIdle: 'bg-white text-red-700 border-red-200 hover:bg-red-50',
+    descricao: 'Negócio caído' },
+  { value: 'retirado', label: 'Retirado', ordem: 8,
+    chipClass: 'bg-slate-200 text-slate-700',
+    pillSelected: 'bg-slate-600 text-white border-slate-600',
+    pillIdle: 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50',
+    descricao: 'Proprietário tirou do mercado' },
+];
+
+export const ESTADOS_IMOVEL_VALUES = ESTADOS_IMOVEL.map((e) => e.value);
+
+export function getEstadoDef(estado: string | null | undefined): EstadoDef {
+  return ESTADOS_IMOVEL.find((e) => e.value === estado) ?? ESTADOS_IMOVEL[0];
+}
 export type ImovelTipoNegocio = 'venda' | 'arrendamento' | 'ambos' | 'trespasse' | 'permuta';
 export type EstadoConservacao = 'novo' | 'como_novo' | 'usado' | 'recuperar' | 'construcao' | 'projecto';
 
@@ -229,24 +289,14 @@ export function formatPrecoEur(v: number | null | undefined): string {
   return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
 }
 
-export function estadoChipClass(estado: ImovelEstado): string {
+export function estadoChipClass(estado: ImovelEstado | string | null): string {
   const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
-  switch (estado) {
-    case 'disponivel': return `${base} bg-green-100 text-green-700`;
-    case 'reservado': return `${base} bg-amber-100 text-amber-700`;
-    case 'vendido': return `${base} bg-blue-100 text-blue-700`;
-    case 'retirado': return `${base} bg-slate-100 text-slate-600`;
-    case 'em_avaliacao': return `${base} bg-purple-100 text-purple-700`;
-    default: return `${base} bg-slate-100 text-slate-600`;
-  }
+  const def = getEstadoDef(estado);
+  return `${base} ${def.chipClass}`;
 }
 
-const ESTADO_LABEL: Record<ImovelEstado, string> = {
-  disponivel: 'Disponível', reservado: 'Reservado', vendido: 'Vendido',
-  retirado: 'Retirado', em_avaliacao: 'Em avaliação',
-};
-export function estadoLabel(estado: ImovelEstado): string {
-  return ESTADO_LABEL[estado] ?? estado;
+export function estadoLabel(estado: ImovelEstado | string | null): string {
+  return getEstadoDef(estado).label;
 }
 
 const TIPO_LABEL: Record<ImovelTipo, string> = {

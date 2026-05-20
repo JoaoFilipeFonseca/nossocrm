@@ -8,6 +8,7 @@ import {
   CARACTERISTICAS_CATALOG,
 } from '@/lib/imoveis';
 import ImovelActions from '@/components/imoveis/ImovelActions';
+import ImovelEstadoSelector from '@/components/imoveis/ImovelEstadoSelector';
 import { createClient } from '@/lib/supabase/server';
 import ImovelGaleria from '@/components/imoveis/ImovelGaleria';
 import ImovelDocumentos from '@/components/imoveis/ImovelDocumentos';
@@ -68,8 +69,10 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
         <div className="min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-semibold">{label}</h1>
-            <span className={estadoChipClass(imovel.estado)}>{estadoLabel(imovel.estado)}</span>
             <span className="text-xs uppercase tracking-wide text-slate-500">{tipoLabel(imovel.tipo)}</span>
+          </div>
+          <div className="mt-3">
+            <ImovelEstadoSelector imovelId={id} estadoActual={imovel.estado} />
           </div>
           {imovel.titulo_anuncio && <p className="text-sm text-slate-700 mt-1 font-medium">{imovel.titulo_anuncio}</p>}
           {imovel.morada && (

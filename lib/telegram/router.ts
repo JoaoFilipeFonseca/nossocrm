@@ -17,7 +17,7 @@ const ROUTER_PROMPT = `Es um router de intents de um CRM imobiliario portugues. 
 Contexto: utilizador escreveu mensagem curta no Telegram, possivelmente referindo o imovel "activo" definido ou um deal/tarefa.
 
 DOMINIO "imovel" (acoes sobre imovel activo):
-  - "muda_estado" -> payload: {estado: "disponivel|reservado|vendido|retirado|pausado|em_avaliacao"}
+  - "muda_estado" -> payload: {estado: "em_avaliacao|disponivel|reservado|cpcv|vendido|suspenso|anulado|retirado"}
   - "muda_preco" -> payload: {preco: 285000}  // sempre numero inteiro em euros
   - "add_dono" -> payload: {nome: "Nome Completo", percentagem: 50, residente: true|false|null}
   - "attach_doc" -> payload: {kind: "caderneta|certidao|licenca_utilizacao|ftecnica|certificado_energetico|planta|mandato|outro"}
@@ -32,6 +32,10 @@ DOMINIO "none": quando nao se encaixa (texto longo descrevendo imovel novo, list
 EXEMPLOS:
 "ja esta vendido" -> {"domain":"imovel","action":"muda_estado","payload":{"estado":"vendido"},"confidence":95,"summary":"Marcar como vendido"}
 "passa a reservado" -> {"domain":"imovel","action":"muda_estado","payload":{"estado":"reservado"},"confidence":95,"summary":"Marcar como reservado"}
+"assinou o CPCV" -> {"domain":"imovel","action":"muda_estado","payload":{"estado":"cpcv"},"confidence":95,"summary":"CPCV assinado"}
+"o negocio caiu" -> {"domain":"imovel","action":"muda_estado","payload":{"estado":"anulado"},"confidence":90,"summary":"Negocio anulado"}
+"poe a disponivel" -> {"domain":"imovel","action":"muda_estado","payload":{"estado":"disponivel"},"confidence":95,"summary":"Marcar como disponivel"}
+"suspende este imovel" -> {"domain":"imovel","action":"muda_estado","payload":{"estado":"suspenso"},"confidence":90,"summary":"Suspender"}
 "baixei para 275000" -> {"domain":"imovel","action":"muda_preco","payload":{"preco":275000},"confidence":95,"summary":"Preco 275000 EUR"}
 "275 mil" -> {"domain":"imovel","action":"muda_preco","payload":{"preco":275000},"confidence":80,"summary":"Preco 275000 EUR"}
 "novo preco 1.65M" -> {"domain":"imovel","action":"muda_preco","payload":{"preco":1650000},"confidence":85,"summary":"Preco 1650000 EUR"}
