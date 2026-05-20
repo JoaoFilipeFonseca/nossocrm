@@ -55,6 +55,7 @@ async function tgSendMenu(token: string, chatId: string) {
         [{ text: '🏠 Imóvel meu', callback_data: 'mode:single' }, { text: '💎 Off-market / Match', callback_data: 'mode:list' }],
         [{ text: '🔍 Procura cliente', callback_data: 'mode:procura' }, { text: '📸 Só foto', callback_data: 'mode:foto' }],
         [{ text: '📌 Imóvel activo', callback_data: 'cmd:activo' }, { text: '🧹 Esquecer activo', callback_data: 'cmd:novo' }],
+        [{ text: '📋 Últimos 5', callback_data: 'cmd:ultimos' }, { text: '📊 Briefing', callback_data: 'cmd:briefing' }],
         [{ text: '⛔ Parar', callback_data: 'cmd:parar' }],
       ],
     },
@@ -299,6 +300,8 @@ async function handleCallback(
   }
 
   if (data === 'cmd:activo') return await handleActivo(token, chatId, supabase, org);
+  if (data === 'cmd:ultimos') return await handleUltimos(token, chatId, supabase, org);
+  if (data === 'cmd:briefing') return await handleBriefing(token, chatId, supabase, org);
   if (data === 'cmd:novo') {
     await clearBusy(supabase, org, { telegram_active_imovel_id: null, telegram_pending_action: null, telegram_mode: null });
     await sendTelegramMessage(token, chatId, '🧹 Limpo.');
@@ -310,6 +313,64 @@ async function handleCallback(
     return NextResponse.json({ ok: true });
   }
 
+  return NextResponse.json({ ok: true });
+}
+
+async function handleUltimos(token: string, chatId: string, supabase: ReturnType<typeof createStaticAdminClient>, org: OrgRow) {
+  const { data } = await supabase
+    .from('imoveis')
+    .select('id, referencia, morada, titulo_anuncio, tipologia, concelho, preco_actual, estado, created_at')
+    .eq('organization_id', org.organization_id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(5);
+  if (!data || data.length === 0) {
+    await sendTelegramMessage(token, chatId, 'Sem imóveis ainda. /menu para começar.');
+    return NextResponse.json({ ok: true });
+  }
+  const lines = data.map((i, idx) => {
+    const rec = i as { id: string; referencia?: string | null; morada?: string | null; titulo_anuncio?: string | null; tipologia?: string | null; concelho?: string | null; preco_actual?: number | string | null; estado?: string | null };
+    const label = rec.referencia ?? rec.morada ?? rec.titulo_anuncio ?? 'sem nome';
+    const tip = rec.tipologia ? `${escapeHtml(rec.tipologia)} ` : '';
+    const concelho = rec.concelho ? ` · ${escapeHtml(rec.concelho)}` : '';
+    const preco = rec.preco_actual ? ` · ${formatPreco(Number(rec.preco_actual))}€` : '';
+    const estado = rec.estado ? ` <i>(${escapeHtml(rec.estado)})</i>` : '';
+    return `${idx + 1}. ${tip}<b>${escapeHtml(String(label))}</b>${concelho}${preco}${estado}\n   <a href="${APP_URL}/imoveis/${rec.id}">Abrir ↗</a>`;
+  });
+  await sendTelegramMessage(token, chatId, `📋 <b>Últimos 5 imóveis</b>\n\n${lines.join('\n\n')}`);
+  return NextResponse.json({ ok: true });
+}
+
+async function handleBriefing(token: string, chatId: string, supabase: ReturnType<typeof createStaticAdminClient>, org: OrgRow) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayIso = today.toISOString();
+  const amanha = new Date(today.getTime() + 24 * 3600 * 1000).toISOString();
+  const ontem = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+
+  const [imoveisHoje, emAvaliacao, intelNovo, tarefasHoje, dealsAbertos] = await Promise.all([
+    supabase.from('imoveis').select('id', { count: 'exact', head: true })
+      .eq('organization_id', org.organization_id).is('deleted_at', null).gte('created_at', todayIso),
+    supabase.from('imoveis').select('id', { count: 'exact', head: true })
+      .eq('organization_id', org.organization_id).is('deleted_at', null).eq('estado', 'em_avaliacao'),
+    supabase.from('raw_intel').select('id', { count: 'exact', head: true })
+      .eq('organization_id', org.organization_id).gte('created_at', ontem),
+    supabase.from('activities').select('id', { count: 'exact', head: true })
+      .eq('organization_id', org.organization_id).is('deleted_at', null).eq('completed', false).lt('date', amanha),
+    supabase.from('deals').select('id', { count: 'exact', head: true })
+      .eq('organization_id', org.organization_id).is('deleted_at', null).eq('is_won', false).eq('is_lost', false),
+  ]);
+
+  const text =
+    `📊 <b>Briefing do dia</b>\n\n` +
+    `🆕 Imóveis novos hoje: <b>${imoveisHoje.count ?? 0}</b>\n` +
+    `⏳ Em avaliação: <b>${emAvaliacao.count ?? 0}</b>\n` +
+    `💎 Intel novo (24h): <b>${intelNovo.count ?? 0}</b>\n` +
+    `✅ Tarefas pendentes até hoje: <b>${tarefasHoje.count ?? 0}</b>\n` +
+    `💼 Deals em aberto: <b>${dealsAbertos.count ?? 0}</b>\n\n` +
+    `<a href="${APP_URL}">Abrir CRM ↗</a>`;
+
+  await sendTelegramMessage(token, chatId, text);
   return NextResponse.json({ ok: true });
 }
 
