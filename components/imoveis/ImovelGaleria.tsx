@@ -21,9 +21,10 @@ interface Foto {
 interface Props {
   imovelId: string;
   fotos: Foto[];
+  linkExterno?: string | null;
 }
 
-export default function ImovelGaleria({ imovelId, fotos }: Props) {
+export default function ImovelGaleria({ imovelId, fotos, linkExterno }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -124,6 +125,33 @@ export default function ImovelGaleria({ imovelId, fotos }: Props) {
 
   const sorted = [...fotos].sort((a, b) => a.ordem - b.ordem);
   const busy = uploading || pending;
+  const [importingFromLink, setImportingFromLink] = useState(false);
+
+  async function importFromLink() {
+    if (!linkExterno) return;
+    setImportingFromLink(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/imoveis/${imovelId}/fotos/from-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: linkExterno }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message ?? 'Erro');
+      if (json.errors?.length > 0 && json.ok === 0) {
+        setError(`Nenhuma imagem importada. ${json.errors.slice(0, 2).join(' · ')}`);
+      } else {
+        const msg = `${json.ok} foto(s) importadas de ${json.found} detectadas` + (json.errors?.length ? ` (${json.errors.length} falharam)` : '');
+        if (json.errors?.length > 0) setError(msg);
+      }
+      startTransition(() => router.refresh());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro');
+    } finally {
+      setImportingFromLink(false);
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -134,6 +162,13 @@ export default function ImovelGaleria({ imovelId, fotos }: Props) {
             <span className="text-xs text-slate-600">
               {progress.done} / {progress.total} carregadas…
             </span>
+          )}
+          {linkExterno && (
+            <button type="button" onClick={importFromLink} disabled={busy || importingFromLink}
+              className="inline-flex items-center rounded-md bg-violet-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50"
+              title="Importar fotos do anúncio externo">
+              {importingFromLink ? 'A importar…' : '✨ Importar do link'}
+            </button>
           )}
           <input ref={inputRef} type="file" accept="image/*" multiple onChange={onUpload} className="hidden" />
           <button type="button" onClick={() => inputRef.current?.click()} disabled={busy}

@@ -67,6 +67,20 @@ export default function CaptarImovelPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message ?? 'Erro a criar imóvel');
+
+      // Se foi captura via link OU draft tem link_externo, dispara fetch de fotos
+      const linkParaFotos = kind === 'link' ? payload : (result.draft.link_externo ? { link: result.draft.link_externo } : null);
+      const sourceUrl = kind === 'link' ? payload : result.draft.link_externo;
+      if (sourceUrl && typeof sourceUrl === 'string' && sourceUrl.startsWith('http')) {
+        // Background — não bloquear redirect. Pequeno delay para deixar o detail page abrir primeiro.
+        fetch(`/api/imoveis/${json.id}/fotos/from-url`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: sourceUrl }),
+        }).catch(() => {});
+      }
+      void linkParaFotos;
+
       router.push(`/imoveis/${json.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');

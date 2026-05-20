@@ -74,7 +74,7 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
 
       {/* Galeria */}
       <section className="mb-10">
-        <ImovelGaleria imovelId={id} fotos={fotos} />
+        <ImovelGaleria imovelId={id} fotos={fotos} linkExterno={imovel.link_externo} />
       </section>
 
       {/* Características */}

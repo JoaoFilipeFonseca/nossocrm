@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createStaticAdminClient } from '@/lib/supabase/server';
 import { sendTelegramMessage } from '@/lib/notifications/telegram';
 import { extractImovelFromInput, extractRawIntelList } from '@/lib/imoveis/captar';
+import { fetchImagesFromUrl, downloadAndUploadPhotos } from '@/lib/imoveis/fotos-from-url';
 import type { AIKeys } from '@/lib/ai/router';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm-joao.vercel.app';
@@ -172,6 +173,26 @@ async function handleSingle(
       return NextResponse.json({ ok: false, error: error?.message }, { status: 500 });
     }
 
+    // Importar fotos automaticamente do link, se houver
+    let fotosImportadas = 0;
+    if (draft.link_externo && /^https?:\/\//.test(draft.link_externo)) {
+      try {
+        const urls = await fetchImagesFromUrl(draft.link_externo);
+        if (urls.length > 0) {
+          const r = await downloadAndUploadPhotos(
+            supabase as never,
+            org.organization_id,
+            data.id,
+            urls,
+            { maxBytes: 8 * 1024 * 1024, maxCount: 20 },
+          );
+          fotosImportadas = r.ok;
+        }
+      } catch (err) {
+        console.warn('[telegram] auto-import fotos falhou:', err);
+      }
+    }
+
     const label = draft.referencia ?? draft.morada ?? 'sem referência';
     const url = `${APP_URL}/imoveis/${data.id}`;
     const summary = [
@@ -184,6 +205,7 @@ async function handleSingle(
       token, chatId,
       `✅ <b>Rascunho criado:</b> ${escapeHtml(label)}\n` +
       (summary ? `${summary}\n` : '') +
+      (fotosImportadas > 0 ? `📸 ${fotosImportadas} fotos importadas do link\n` : '') +
       `\n<a href="${url}">Abrir no CRM ↗</a>\n\n` +
       `<i>Estado: Em avaliação. Confirma os dados e muda para Disponível quando ok.</i>\n` +
       `<i>Modelo: ${modelUsed}</i>`,
