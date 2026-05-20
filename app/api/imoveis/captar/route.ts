@@ -30,6 +30,8 @@ export async function POST(request: NextRequest) {
       const supportedMimes = new Set([
         'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/gif',
         'application/pdf',
+        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave',
+        'audio/webm', 'audio/ogg', 'audio/m4a', 'audio/mp4', 'audio/x-m4a',
       ]);
       if (!supportedMimes.has(file.type)) {
         return NextResponse.json({ message: `Tipo não suportado: ${file.type}` }, { status: 400 });
@@ -40,11 +42,14 @@ export async function POST(request: NextRequest) {
         { data: arrayBuffer, mimeType: file.type, name: file.name },
         keys,
       );
+      const via = file.type.startsWith('image/') ? 'imagem'
+        : file.type.startsWith('audio/') ? 'áudio'
+        : 'pdf';
       return NextResponse.json({
         draft: result.draft,
         modelUsed: result.modelUsed,
         sourceLength: file.size,
-        via: file.type.startsWith('image/') ? 'imagem' : 'pdf',
+        via,
       });
     }
 

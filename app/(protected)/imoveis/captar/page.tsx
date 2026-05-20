@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { ImovelDraft } from '@/lib/imoveis/captar';
+import AudioRecorder from '@/components/imoveis/AudioRecorder';
 
 type CaptarResult = {
   draft: ImovelDraft;
@@ -15,7 +16,8 @@ type CaptarResult = {
 export default function CaptarImovelPage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const [kind, setKind] = useState<'text' | 'link' | 'file'>('text');
+  const audioRef = useRef<HTMLInputElement | null>(null);
+  const [kind, setKind] = useState<'text' | 'link' | 'file' | 'audio'>('text');
   const [payload, setPayload] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [extracting, setExtracting] = useState(false);
@@ -30,7 +32,7 @@ export default function CaptarImovelPage() {
     setResult(null);
     try {
       let res: Response;
-      if (kind === 'file') {
+      if (kind === 'file' || kind === 'audio') {
         if (!file) throw new Error('Selecciona um ficheiro');
         const fd = new FormData();
         fd.append('file', file);
@@ -91,11 +93,11 @@ export default function CaptarImovelPage() {
       </p>
 
       <form onSubmit={onExtract} className="space-y-4">
-        <div className="inline-flex rounded-md border border-slate-300 p-0.5 bg-slate-50">
-          {(['text', 'link', 'file'] as const).map((k) => (
-            <button key={k} type="button" onClick={() => setKind(k)}
+        <div className="inline-flex rounded-md border border-slate-300 p-0.5 bg-slate-50 flex-wrap">
+          {(['text', 'link', 'file', 'audio'] as const).map((k) => (
+            <button key={k} type="button" onClick={() => { setKind(k); setFile(null); }}
               className={`px-3 py-1.5 text-sm font-medium rounded ${kind === k ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'}`}>
-              {k === 'text' ? 'Texto' : k === 'link' ? 'Link' : 'Foto / PDF'}
+              {k === 'text' ? 'Texto' : k === 'link' ? 'Link' : k === 'file' ? 'Foto / PDF' : 'Áudio'}
             </button>
           ))}
         </div>
@@ -142,10 +144,39 @@ export default function CaptarImovelPage() {
           </div>
         )}
 
+        {kind === 'audio' && (
+          <div className="space-y-3">
+            <AudioRecorder onReady={(f) => setFile(f)} />
+            <div className="text-xs text-slate-500">— ou —</div>
+            <input
+              ref={audioRef}
+              type="file"
+              accept="audio/*"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => audioRef.current?.click()}
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              Carregar ficheiro áudio existente
+            </button>
+            {file && kind === 'audio' && (
+              <div className="rounded-md bg-slate-50 border border-slate-200 p-3 text-sm">
+                <p className="font-medium text-slate-900">{file.name}</p>
+                <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(0)} KB · {file.type}</p>
+                <button type="button" onClick={() => setFile(null)}
+                  className="text-xs text-red-600 hover:text-red-700 mt-1">Apagar gravação</button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            disabled={extracting || (kind === 'file' ? !file : !payload.trim())}
+            disabled={extracting || (kind === 'file' || kind === 'audio' ? !file : !payload.trim())}
             className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {extracting ? 'A extrair…' : 'Extrair com IA'}

@@ -298,11 +298,22 @@ export async function extractImovelFromFile(
   file: { data: ArrayBuffer; mimeType: string; name: string },
   keys: AIKeys,
 ): Promise<{ draft: ImovelDraft; modelUsed: string }> {
-  const kindDescription = file.mimeType.startsWith('image/')
-    ? `Imagem do anúncio/placard (${file.name})`
-    : `Documento (${file.name})`;
+  let kindDescription: string;
+  let extraInstr = '';
+  if (file.mimeType.startsWith('image/')) {
+    kindDescription = `Imagem do anúncio/placard (${file.name})`;
+    extraInstr = 'Extrai TUDO o que conseguir ver na imagem (texto visível, preço, áreas, contactos).';
+  } else if (file.mimeType.startsWith('audio/')) {
+    kindDescription = `Áudio com descrição falada de um imóvel (${file.name})`;
+    extraInstr = `Primeiro transcreve mentalmente o áudio. Depois extrai os campos do imóvel mencionado.
+Foca-te em: tipo, tipologia, áreas, divisões, localização, preço, estado e características.
+Coloca a transcrição original em "notas_privadas" (para o consultor rever).`;
+  } else {
+    kindDescription = `Documento (${file.name})`;
+    extraInstr = 'Extrai TUDO o que conseguir ler no documento.';
+  }
 
-  const prompt = `${EXTRACTION_PROMPT}\n\nFonte: ${kindDescription}\nExtrai TUDO o que conseguir ver na imagem ou ler no documento.`;
+  const prompt = `${EXTRACTION_PROMPT}\n\nFonte: ${kindDescription}\n${extraInstr}`;
 
   const result = await routedGenerateMultimodal({
     feature: 'imovel_extract',
