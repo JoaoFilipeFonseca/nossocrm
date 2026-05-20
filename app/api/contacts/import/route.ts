@@ -1,27 +1,30 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { detectCsvDelimiter, parseCsv, type CsvDelimiter } from '@/lib/utils/csv';
+import { type CsvDelimiter } from '@/lib/utils/csv';
 import { normalizePhoneE164 } from '@/lib/phone';
+import { parseImportFile } from '@/lib/contacts/import/parseFile';
+import {
+  buildHeaderIndex,
+  normalizeHeader,
+  normalizeStage,
+  normalizeStatus,
+  type ContactField,
+} from '@/lib/contacts/import/mapping';
 
 export const maxDuration = 120;
 
 const ImportModeSchema = z.enum(['create_only', 'upsert_by_email', 'skip_duplicates_by_email']);
 type ImportMode = z.infer<typeof ImportModeSchema>;
 
+const DedupBySchema = z.enum(['email', 'phone', 'both']);
+type DedupBy = z.infer<typeof DedupBySchema>;
+
 const BooleanStringSchema = z
   .string()
   .optional()
   .transform(v => (v ?? '').toLowerCase())
   .transform(v => v === 'true' || v === '1' || v === 'yes' || v === 'on');
-
-function normalizeHeader(h: string) {
-  return (h || '')
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
 
 type ParsedRow = {
   name?: string;
@@ -36,48 +39,6 @@ type ParsedRow = {
   notes?: string;
 };
 
-const HEADER_SYNONYMS: Record<keyof ParsedRow, string[]> = {
-  name: ['name', 'nome', 'nome completo', 'full name'],
-  firstName: ['first name', 'firstname', 'primeiro nome', 'nome'],
-  lastName: ['last name', 'lastname', 'sobrenome'],
-  email: ['email', 'e-mail', 'e-mail address', 'mail'],
-  phone: ['phone', 'telefone', 'telemóvel', 'whatsapp', 'fone'],
-  role: ['role', 'cargo', 'titulo', 'title', 'funcao', 'funçao', 'funcao/cargo'],
-  company: ['company', 'empresa', 'conta', 'account', 'organization', 'organizacao', 'organização'],
-  status: ['status'],
-  stage: ['stage', 'etapa', 'lifecycle stage', 'ciclo de vida', 'pipeline stage'],
-  notes: ['notes', 'nota', 'notas', 'observacoes', 'observações', 'obs'],
-};
-
-function buildHeaderIndex(headers: string[]) {
-  const idx = new Map<string, number>();
-  headers.forEach((h, i) => idx.set(normalizeHeader(h), i));
-
-  const find = (syns: string[]) => {
-    for (const s of syns) {
-      const key = normalizeHeader(s);
-      const found = idx.get(key);
-      if (found !== undefined) return found;
-    }
-    return undefined;
-  };
-
-  const mapping: Record<keyof ParsedRow, number | undefined> = {
-    name: find(HEADER_SYNONYMS.name),
-    firstName: find(HEADER_SYNONYMS.firstName),
-    lastName: find(HEADER_SYNONYMS.lastName),
-    email: find(HEADER_SYNONYMS.email),
-    phone: find(HEADER_SYNONYMS.phone),
-    role: find(HEADER_SYNONYMS.role),
-    company: find(HEADER_SYNONYMS.company),
-    status: find(HEADER_SYNONYMS.status),
-    stage: find(HEADER_SYNONYMS.stage),
-    notes: find(HEADER_SYNONYMS.notes),
-  };
-
-  return mapping;
-}
-
 function getCell(row: string[], idx: number | undefined): string | undefined {
   if (idx === undefined) return undefined;
   const v = row[idx];
@@ -85,24 +46,44 @@ function getCell(row: string[], idx: number | undefined): string | undefined {
   return t ? t : undefined;
 }
 
-function normalizeStatus(v: string | undefined): string | undefined {
-  if (!v) return undefined;
-  const s = normalizeHeader(v).toUpperCase();
-  if (s === 'ACTIVE' || s === 'ATIVO') return 'ACTIVE';
-  if (s === 'INACTIVE' || s === 'INATIVO') return 'INACTIVE';
-  if (s === 'CHURNED' || s === 'PERDIDO' || s === 'CANCELADO') return 'CHURNED';
-  return undefined;
-}
+/**
+ * Constrói um índice {ContactField → posição} a partir de um mapping vindo do
+ * wizard (formato `Record<ContactField, headerName | null>`). Usa os headers
+ * reais do ficheiro para resolver para posições.
+ *
+ * Devolve null se o mapping fornecido não bater com nenhum header — nesse caso
+ * o caller faz fallback para o auto-detect (buildHeaderIndex).
+ */
+function applyManualMapping(
+  headers: string[],
+  manual: Record<string, string | null> | undefined | null
+): Record<ContactField, number | undefined> | null {
+  if (!manual) return null;
+  const headerIdx = new Map<string, number>();
+  headers.forEach((h, i) => headerIdx.set(normalizeHeader(h), i));
 
-function normalizeStage(v: string | undefined): string | undefined {
-  if (!v) return undefined;
-  const s = normalizeHeader(v).toUpperCase();
-  if (s === 'LEAD') return 'LEAD';
-  if (s === 'MQL') return 'MQL';
-  if (s === 'PROSPECT' || s === 'OPORTUNIDADE') return 'PROSPECT';
-  if (s === 'CUSTOMER' || s === 'CLIENTE') return 'CUSTOMER';
-  if (s === 'OTHER' || s === 'OUTRO' || s === 'OUTROS') return 'OTHER';
-  return undefined;
+  const out: Record<ContactField, number | undefined> = {
+    name: undefined,
+    firstName: undefined,
+    lastName: undefined,
+    email: undefined,
+    phone: undefined,
+    role: undefined,
+    company: undefined,
+    status: undefined,
+    stage: undefined,
+    notes: undefined,
+  };
+  let anyMatch = false;
+  for (const [field, headerName] of Object.entries(manual) as Array<[ContactField, string | null]>) {
+    if (!headerName) continue;
+    const pos = headerIdx.get(normalizeHeader(headerName));
+    if (pos !== undefined && field in out) {
+      out[field] = pos;
+      anyMatch = true;
+    }
+  }
+  return anyMatch ? out : null;
 }
 
 export async function POST(req: Request) {
@@ -111,6 +92,9 @@ export async function POST(req: Request) {
     const file = form.get('file');
     const modeRaw = form.get('mode');
     const delimiterRaw = form.get('delimiter');
+    const sourceLabelRaw = form.get('sourceLabel');
+    const dedupByRaw = form.get('dedupBy');
+    const mappingRaw = form.get('mapping');
     const createCompanies = BooleanStringSchema.parse(String(form.get('createCompanies') ?? 'true'));
 
     const modeResult = ImportModeSchema.safeParse(String(modeRaw ?? 'upsert_by_email'));
@@ -119,25 +103,42 @@ export async function POST(req: Request) {
     }
     const mode: ImportMode = modeResult.data;
 
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: 'Ficheiro CSV não enviado (field "file").' }, { status: 400 });
+    const dedupResult = DedupBySchema.safeParse(String(dedupByRaw ?? 'both'));
+    const dedupBy: DedupBy = dedupResult.success ? dedupResult.data : 'both';
+
+    const sourceLabel = sourceLabelRaw ? String(sourceLabelRaw).trim().slice(0, 80) : null;
+
+    let manualMapping: Record<string, string | null> | null = null;
+    if (mappingRaw) {
+      try {
+        manualMapping = JSON.parse(String(mappingRaw));
+      } catch {
+        return NextResponse.json({ error: 'Parâmetro mapping não é JSON válido.' }, { status: 400 });
+      }
     }
 
-    const text = await file.text();
-    const delimiter: CsvDelimiter =
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: 'Ficheiro não enviado (campo "file").' }, { status: 400 });
+    }
+
+    const forcedDelimiter: CsvDelimiter | undefined =
       delimiterRaw === ',' || delimiterRaw === ';' || delimiterRaw === '\t'
         ? (delimiterRaw as CsvDelimiter)
-        : detectCsvDelimiter(text);
+        : undefined;
 
-    const { headers, rows } = parseCsv(text, delimiter);
+    const buffer = await file.arrayBuffer();
+    const parsed = parseImportFile(buffer, file.name, forcedDelimiter);
+    const { headers, rows } = parsed;
+
     if (!headers.length) {
-      return NextResponse.json({ error: 'CSV sem cabeçalho.' }, { status: 400 });
+      return NextResponse.json({ error: 'Ficheiro sem cabeçalho.' }, { status: 400 });
     }
 
-    const mapping = buildHeaderIndex(headers);
+    // Mapping: usar manual se fornecido e válido, senão fallback auto-detect
+    const mapping = applyManualMapping(headers, manualMapping) ?? buildHeaderIndex(headers);
 
     // Parse rows
-    const parsed: Array<{ rowNumber: number; data: ParsedRow }> = [];
+    const parsedRows: Array<{ rowNumber: number; data: ParsedRow }> = [];
     const errors: Array<{ rowNumber: number; message: string }> = [];
 
     for (let i = 0; i < rows.length; i += 1) {
@@ -151,16 +152,19 @@ export async function POST(req: Request) {
       const phone = getCell(r, mapping.phone);
 
       const computedName =
-        (firstName || lastName)
+        firstName || lastName
           ? [firstName, lastName].filter(Boolean).join(' ').trim()
           : name;
 
-      if (!computedName && !email) {
-        errors.push({ rowNumber, message: 'Linha sem nome e sem email (não consigo criar contacto).' });
+      if (!computedName && !email && !phone) {
+        errors.push({
+          rowNumber,
+          message: 'Linha sem nome, email e telemóvel (não consigo criar contacto).',
+        });
         continue;
       }
 
-      parsed.push({
+      parsedRows.push({
         rowNumber,
         data: {
           name: computedName,
@@ -175,20 +179,19 @@ export async function POST(req: Request) {
       });
     }
 
-    if (!parsed.length) {
+    if (!parsedRows.length) {
       return NextResponse.json(
-        {
-          error: 'Nenhuma linha válida para importar.',
-          errors,
-        },
+        { error: 'Nenhuma linha válida para importar.', errors },
         { status: 400 }
       );
     }
 
     const supabase = await createClient();
 
-    // Auth check — must come before any data access
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -205,10 +208,11 @@ export async function POST(req: Request) {
 
     const orgId = profile.organization_id;
 
-    // Companies: preload and optionally create missing ones
+    // ── Companies: preload + opcionalmente criar em falta ─────────────────────
     const { data: companies, error: companiesError } = await supabase
       .from('crm_companies')
       .select('id,name')
+      .eq('organization_id', orgId)
       .is('deleted_at', null);
 
     if (companiesError) {
@@ -222,7 +226,7 @@ export async function POST(req: Request) {
 
     const missingCompanies = new Set<string>();
     if (createCompanies) {
-      for (const p of parsed) {
+      for (const p of parsedRows) {
         const companyName = (p.data.company || '').trim();
         if (!companyName) continue;
         const key = normalizeHeader(companyName);
@@ -245,26 +249,38 @@ export async function POST(req: Request) {
       }
     }
 
-    // Existing contacts by email (batch)
+    // ── Pré-fetch existing por email + telemóvel (E.164) para dedup ────────
+    const dedupOnEmail = dedupBy === 'email' || dedupBy === 'both';
+    const dedupOnPhone = dedupBy === 'phone' || dedupBy === 'both';
+
     const emails = Array.from(
       new Set(
-        parsed
+        parsedRows
           .map(p => (p.data.email || '').trim().toLowerCase())
+          .filter(Boolean)
+      )
+    );
+    const phonesE164 = Array.from(
+      new Set(
+        parsedRows
+          .map(p => (p.data.phone ? normalizePhoneE164(p.data.phone) : ''))
           .filter(Boolean)
       )
     );
 
     const contactIdsByEmail = new Map<string, string[]>();
-    if (emails.length) {
-      const chunkSize = 500;
+    const contactIdsByPhone = new Map<string, string[]>();
+
+    const chunkSize = 500;
+    if (dedupOnEmail && emails.length) {
       for (let i = 0; i < emails.length; i += chunkSize) {
         const chunk = emails.slice(i, i + chunkSize);
         const { data: existing, error: existingError } = await supabase
           .from('contacts')
           .select('id,email')
+          .eq('organization_id', orgId)
           .in('email', chunk)
           .is('deleted_at', null);
-
         if (existingError) {
           return NextResponse.json({ error: existingError.message }, { status: 400 });
         }
@@ -278,18 +294,38 @@ export async function POST(req: Request) {
       }
     }
 
+    if (dedupOnPhone && phonesE164.length) {
+      for (let i = 0; i < phonesE164.length; i += chunkSize) {
+        const chunk = phonesE164.slice(i, i + chunkSize);
+        const { data: existing, error: existingError } = await supabase
+          .from('contacts')
+          .select('id,phone')
+          .eq('organization_id', orgId)
+          .in('phone', chunk)
+          .is('deleted_at', null);
+        if (existingError) {
+          return NextResponse.json({ error: existingError.message }, { status: 400 });
+        }
+        for (const c of (existing || []) as Array<{ id: string; phone: string | null }>) {
+          const ph = (c.phone || '').trim();
+          if (!ph) continue;
+          const arr = contactIdsByPhone.get(ph) || [];
+          arr.push(c.id);
+          contactIdsByPhone.set(ph, arr);
+        }
+      }
+    }
+
     let created = 0;
     let updated = 0;
     let skipped = 0;
 
-    // Import in manageable chunks to reduce payload sizes
     const insertBatch: Array<{ rowNumber: number; payload: Record<string, unknown> }> = [];
     const flushInsert = async () => {
       if (!insertBatch.length) return;
       const payloads = insertBatch.map(i => i.payload);
       const { error: insertError } = await supabase.from('contacts').insert(payloads);
       if (insertError) {
-        // If batch insert fails, mark all rows as errors (keep it simple for v1)
         for (const item of insertBatch) {
           errors.push({ rowNumber: item.rowNumber, message: insertError.message });
         }
@@ -299,14 +335,14 @@ export async function POST(req: Request) {
       insertBatch.length = 0;
     };
 
-    for (const p of parsed) {
+    for (const p of parsedRows) {
       const rowNumber = p.rowNumber;
       const email = (p.data.email || '').trim().toLowerCase();
-      const phoneE164 = p.data.phone ? normalizePhoneE164(p.data.phone) : undefined;
+      const phoneE164 = p.data.phone ? normalizePhoneE164(p.data.phone) : '';
       const companyName = (p.data.company || '').trim();
       const companyId = companyName ? companyIdByName.get(normalizeHeader(companyName)) : undefined;
 
-      const base = {
+      const base: Record<string, unknown> = {
         name: p.data.name || '',
         email: p.data.email || null,
         phone: phoneE164 || null,
@@ -318,11 +354,14 @@ export async function POST(req: Request) {
         organization_id: orgId,
         updated_at: new Date().toISOString(),
       };
+      if (sourceLabel) base.source = sourceLabel;
 
-      const existingIds = email ? (contactIdsByEmail.get(email) || []) : [];
+      // Match priority: phone (E.164) > email (telefone é identificador mais único)
+      const phoneMatches = dedupOnPhone && phoneE164 ? contactIdsByPhone.get(phoneE164) || [] : [];
+      const emailMatches = dedupOnEmail && email ? contactIdsByEmail.get(email) || [] : [];
+      const existingIds = phoneMatches.length ? phoneMatches : emailMatches;
 
       if (mode === 'create_only') {
-        // Always create, even if duplicates exist.
         insertBatch.push({ rowNumber, payload: base });
         if (insertBatch.length >= 200) await flushInsert();
         continue;
@@ -335,15 +374,14 @@ export async function POST(req: Request) {
 
       if (mode === 'upsert_by_email' && existingIds.length > 0) {
         if (existingIds.length > 1) {
-          errors.push({ rowNumber, message: `Email duplicado no CRM (${existingIds.length} registros). Importação ambígua.` });
+          errors.push({
+            rowNumber,
+            message: `Telemóvel/email duplicado no CRM (${existingIds.length} registos). Importação ambígua.`,
+          });
           continue;
         }
         const id = existingIds[0];
-        const { error: updateError } = await supabase
-          .from('contacts')
-          .update(base)
-          .eq('id', id);
-
+        const { error: updateError } = await supabase.from('contacts').update(base).eq('id', id);
         if (updateError) {
           errors.push({ rowNumber, message: updateError.message });
         } else {
@@ -352,23 +390,24 @@ export async function POST(req: Request) {
         continue;
       }
 
-      // No email match (or no email): create
+      // No match: create
       insertBatch.push({ rowNumber, payload: base });
       if (insertBatch.length >= 200) await flushInsert();
     }
 
     await flushInsert();
 
-    // Remove internal field from potential logs; not persisted in DB anyway (supabase ignores unknown)
-    // but we keep it only in memory; ok.
-
     return NextResponse.json({
       ok: true,
-      delimiter,
+      format: parsed.format,
+      delimiter: parsed.delimiter,
+      encoding: parsed.encoding,
       mode,
+      dedupBy,
+      sourceLabel,
       totals: {
         rows: rows.length,
-        parsed: parsed.length,
+        parsed: parsedRows.length,
         created,
         updated,
         skipped,
@@ -384,4 +423,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
