@@ -1024,16 +1024,33 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       <button
                         type="button"
                         onClick={async () => {
+                          // Optimistic update primeiro — evita refetch global que partia o modal
+                          queryClient.setQueryData<DealView[]>(DEALS_VIEW_KEY, (old) => {
+                            if (!old) return old;
+                            return old.map((d) =>
+                              d.id === deal.id
+                                ? { ...d, automationsPausedAt: null, automationsPausedReason: null }
+                                : d
+                            );
+                          });
                           const { error } = await dealsService.update(deal.id, {
                             automationsPausedAt: null,
                             automationsPausedReason: null,
                           });
                           if (error) {
+                            // Rollback se falhou
+                            queryClient.setQueryData<DealView[]>(DEALS_VIEW_KEY, (old) => {
+                              if (!old) return old;
+                              return old.map((d) =>
+                                d.id === deal.id
+                                  ? { ...d, automationsPausedAt: deal.automationsPausedAt, automationsPausedReason: deal.automationsPausedReason }
+                                  : d
+                              );
+                            });
                             addToast('Falha ao retomar automações', 'error');
                             return;
                           }
                           addToast('Automações retomadas', 'success');
-                          queryClient.invalidateQueries({ queryKey: DEALS_VIEW_KEY });
                         }}
                         className="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition flex-shrink-0"
                       >
