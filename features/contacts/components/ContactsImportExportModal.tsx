@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Download, Upload, FileDown } from 'lucide-react';
+import { Download, FileDown } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/context/ToastContext';
 import { stringifyCsv, withUtf8Bom, type CsvDelimiter } from '@/lib/utils/csv';
+import { ImportWizard } from './ImportWizard';
 
 type Panel = 'export' | 'import';
 
@@ -57,15 +58,6 @@ export function ContactsImportExportModal(props: {
   const [panel, setPanel] = useState<Panel>('export');
   const [delimiter, setDelimiter] = useState<'auto' | CsvDelimiter>('auto');
 
-  // Import state
-  const [file, setFile] = useState<File | null>(null);
-  const [mode, setMode] = useState<'upsert_by_email' | 'skip_duplicates_by_email' | 'create_only'>(
-    'upsert_by_email'
-  );
-  const [createCompanies, setCreateCompanies] = useState(true);
-  const [isImporting, setIsImporting] = useState(false);
-  const [importResult, setImportResult] = useState<any>(null);
-
   // Export state
   const [isExporting, setIsExporting] = useState(false);
 
@@ -88,13 +80,6 @@ export function ContactsImportExportModal(props: {
   const handleDownloadTemplate = () => {
     downloadText('template-contactos.csv', templateCsv, 'text/csv;charset=utf-8');
     toast?.('Template CSV descarregado.', 'success');
-  };
-
-  const handleDownloadErrorReport = () => {
-    const errs: Array<{ rowNumber: number; message: string }> = importResult?.errors || [];
-    const d: CsvDelimiter = delimiter === 'auto' ? ';' : delimiter;
-    const rows = [['rowNumber', 'message'], ...errs.map(e => [String(e.rowNumber), e.message])];
-    downloadText('import-erros-contactos.csv', withUtf8Bom(stringifyCsv(rows, d)), 'text/csv;charset=utf-8');
   };
 
   const buildExportUrl = () => {
@@ -129,38 +114,6 @@ export function ContactsImportExportModal(props: {
       toast?.((e as Error)?.message || 'Erro ao exportar.', 'error');
     } finally {
       setIsExporting(false);
-    }
-  };
-
-  const handleImport = async () => {
-    if (!file) {
-      toast?.('Selecione um ficheiro CSV.', 'error');
-      return;
-    }
-    setIsImporting(true);
-    setImportResult(null);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('mode', mode);
-      fd.append('createCompanies', String(createCompanies));
-      if (delimiter !== 'auto') fd.append('delimiter', delimiter);
-
-      const res = await fetch('/api/contacts/import', { method: 'POST', body: fd });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(data?.error || `Falha ao importar (HTTP ${res.status})`);
-      }
-      setImportResult(data);
-      const totals = data?.totals;
-      toast?.(
-        `Importação concluída: ${totals?.created ?? 0} criados, ${totals?.updated ?? 0} actualizados, ${totals?.skipped ?? 0} ignorados, ${totals?.errors ?? 0} erros.`,
-        (totals?.errors ?? 0) > 0 ? 'warning' : 'success'
-      );
-    } catch (e) {
-      toast?.((e as Error)?.message || 'Erro ao importar.', 'error');
-    } finally {
-      setIsImporting(false);
     }
   };
 
@@ -246,127 +199,17 @@ export function ContactsImportExportModal(props: {
       )}
 
       {panel === 'import' && (
-        <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-slate-50/50 dark:bg-white/5 space-y-4">
-          <div>
-            <div className="text-sm font-bold text-slate-900 dark:text-white">
-              Importar contactos (CSV)
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Padrão de mercado: upload → validação → dedupe (por email) → resumo + relatório de erros.
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="space-y-3">
+          <div className="flex items-center justify-end">
             <button
               type="button"
               onClick={handleDownloadTemplate}
-              className="px-3 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-semibold flex items-center gap-2"
+              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-2"
             >
-              <Download size={16} /> Descarregar template
+              <Download size={14} /> Descarregar template
             </button>
           </div>
-
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
-              Ficheiro CSV
-            </label>
-            <input
-              type="file"
-              accept=".csv,text/csv"
-              onChange={e => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-sm text-slate-600 dark:text-slate-300"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-              Duplicados (match por email)
-            </div>
-            <div className="flex flex-col gap-2 text-sm text-slate-700 dark:text-slate-200">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="importMode"
-                  checked={mode === 'upsert_by_email'}
-                  onChange={() => setMode('upsert_by_email')}
-                />
-                Actualizar se existir (recomendado)
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="importMode"
-                  checked={mode === 'skip_duplicates_by_email'}
-                  onChange={() => setMode('skip_duplicates_by_email')}
-                />
-                Ignorar linhas com email já existente
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="importMode"
-                  checked={mode === 'create_only'}
-                  onChange={() => setMode('create_only')}
-                />
-                Sempre criar (pode duplicar)
-              </label>
-            </div>
-          </div>
-
-          <div className="space-y-1">
-          <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-200">
-            <input
-              type="checkbox"
-              checked={createCompanies}
-              onChange={e => setCreateCompanies(e.target.checked)}
-              className="mt-1"
-            />
-            <span>
-              Criar empresas automaticamente a partir da coluna{' '}
-              <code className="px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-white/10">company</code>
-            </span>
-          </label>
-          <div className="text-xs text-slate-500 dark:text-slate-400 pl-7">
-            Quando marcado: se o CSV vier com o nome da empresa e ela ainda não existir no CRM, criamos a empresa e ligamos o contacto.
-            <br />
-            Quando desmarcado: não criamos empresas — se a empresa não existir, o contacto entra <b>sem ligação</b> de empresa.
-          </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void handleImport()}
-              disabled={!file || isImporting}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${
-                !file || isImporting
-                  ? 'bg-slate-200 dark:bg-white/10 text-slate-400 cursor-not-allowed'
-                  : 'bg-primary-600 hover:bg-primary-700 text-white'
-              }`}
-            >
-              <Upload size={16} /> {isImporting ? 'A importar…' : 'Importar'}
-            </button>
-          </div>
-
-          {importResult && (
-            <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/30 p-3 space-y-2">
-              <div className="text-xs text-slate-600 dark:text-slate-300">
-                <b>Resumo:</b> {importResult.totals?.created ?? 0} criados •{' '}
-                {importResult.totals?.updated ?? 0} actualizados •{' '}
-                {importResult.totals?.skipped ?? 0} ignorados •{' '}
-                {importResult.totals?.errors ?? 0} erros
-              </div>
-              {(importResult.totals?.errors ?? 0) > 0 && (
-                <button
-                  type="button"
-                  onClick={handleDownloadErrorReport}
-                  className="text-xs font-semibold text-primary-700 dark:text-primary-300 hover:underline w-fit"
-                >
-                  Descarregar relatório de erros (CSV)
-                </button>
-              )}
-            </div>
-          )}
+          <ImportWizard />
         </div>
       )}
     </Modal>
