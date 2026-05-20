@@ -12,6 +12,8 @@ import { IMOBILIARIO_PT_KNOWLEDGE } from '@/lib/ai/knowledge/imobiliario-pt';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getModel } from '../config';
 import { getOrgAIConfig } from '../agent/agent.service';
+import { getBoardAIConfig } from '../messaging/board-config';
+import type { BoardAIConfig } from '../messaging/types';
 import { MeetingBriefingSchema, type BriefingResponse, type MeetingBriefing } from './schemas';
 
 // =============================================================================
@@ -83,6 +85,8 @@ interface DealContext {
     id: string;
     name: string;
   };
+  boardId: string;
+  boardAIConfig: BoardAIConfig | null;
 }
 
 /**
@@ -121,7 +125,7 @@ async function buildDealContext(
   const stageData = deal.stage as unknown as { id: string; name: string; board_id: string };
 
   // 2. Parallelizar queries independentes após obter deal
-  const [orgResult, contactResult, conversationsResult, stageConfigResult] = await Promise.all([
+  const [orgResult, contactResult, conversationsResult, stageConfigResult, boardAIConfig] = await Promise.all([
     // 2a. Fetch organization
     supabase
       .from('organizations')
@@ -151,6 +155,9 @@ async function buildDealContext(
       .select('stage_goal, advancement_criteria')
       .eq('stage_id', stageData.id)
       .single(),
+
+    // 2e. Fetch board AI config (Fase 2 do #83 — wiring)
+    getBoardAIConfig(supabase, stageData.board_id),
   ]);
 
   const org = orgResult.data;
@@ -215,6 +222,8 @@ async function buildDealContext(
       id: org.id,
       name: org.name,
     },
+    boardId: stageData.board_id,
+    boardAIConfig,
   };
 }
 
@@ -349,6 +358,19 @@ export async function generateMeetingBriefing(
   // 3. Format context for prompt
   const contextText = formatContextForPrompt(context);
 
+  // 3b. Compose funnel context from board_ai_config (Fase 2 do #83)
+  let funnelContext = '';
+  const cfg = context.boardAIConfig;
+  if (cfg) {
+    const parts: string[] = [];
+    if (cfg.agent_name) parts.push(`Atua como ${cfg.agent_name}.`);
+    if (cfg.business_context) parts.push(`Contexto do funil:\n${cfg.business_context}`);
+    if (cfg.agent_goal) parts.push(`Objectivo do agente:\n${cfg.agent_goal}`);
+    if (cfg.persona_prompt) parts.push(`Persona:\n${cfg.persona_prompt}`);
+    if (parts.length) funnelContext = `\n\n# CONTEXTO DO FUNIL\n${parts.join('\n\n')}\n`;
+  }
+  const finalSystemPrompt = `${BRIEFING_SYSTEM_PROMPT}${funnelContext}`;
+
   // 4. Generate briefing with structured output
   const model = getModel(aiConfig.provider, aiConfig.apiKey, aiConfig.model);
 
@@ -371,7 +393,7 @@ INSTRUÇÕES FINAIS:
         name: 'MeetingBriefing',
         description: 'Briefing estruturado pré-conversa com status BANT e recomendações',
       }),
-      system: BRIEFING_SYSTEM_PROMPT,
+      system: finalSystemPrompt,
       prompt,
       maxRetries: 2,
     });
