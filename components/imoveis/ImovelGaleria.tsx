@@ -3,6 +3,11 @@
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 interface Foto {
   id: string;
@@ -22,26 +27,73 @@ export default function ImovelGaleria({ imovelId, fotos }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number; errors: string[] }>({ done: 0, total: 0, errors: [] });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    const fileList = Array.from(files);
+
     setUploading(true);
     setError(null);
+    setProgress({ done: 0, total: fileList.length, errors: [] });
+
     try {
-      const fd = new FormData();
-      for (const f of Array.from(files)) fd.append('files', f);
-      const res = await fetch(`/api/imoveis/${imovelId}/fotos`, { method: 'POST', body: fd });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message ?? 'Erro upload');
-      if (json.errors?.length) setError(json.errors.join(' · '));
+      // 1) Request signed upload URLs
+      const initRes = await fetch(`/api/imoveis/${imovelId}/fotos/sign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filenames: fileList.map((f) => f.name) }),
+      });
+      const initJson = await initRes.json();
+      if (!initRes.ok) throw new Error(initJson.message ?? 'Erro a obter signed URLs');
+
+      const items: Array<{ path: string; token: string; signedUrl: string; filename: string }> = initJson.items;
+      if (items.length !== fileList.length) throw new Error('Número de URLs não bate com ficheiros');
+
+      // 2) Upload each file directly to Supabase Storage
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+      const uploaded: Array<{ path: string; bytes: number }> = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        const item = items[i];
+        try {
+          const { error: upErr } = await supabase.storage
+            .from('imovel-fotos')
+            .uploadToSignedUrl(item.path, item.token, file, { contentType: file.type });
+          if (upErr) {
+            errors.push(`${file.name}: ${upErr.message}`);
+          } else {
+            uploaded.push({ path: item.path, bytes: file.size });
+          }
+        } catch (err) {
+          errors.push(`${file.name}: ${err instanceof Error ? err.message : 'erro'}`);
+        }
+        setProgress({ done: i + 1, total: fileList.length, errors });
+      }
+
+      // 3) Commit uploads to DB
+      if (uploaded.length > 0) {
+        const commitRes = await fetch(`/api/imoveis/${imovelId}/fotos/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uploads: uploaded }),
+        });
+        const commitJson = await commitRes.json();
+        if (!commitRes.ok) errors.push(commitJson.message ?? 'Erro a registar fotos');
+      }
+
+      if (errors.length > 0) setError(errors.join(' · '));
       startTransition(() => router.refresh());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setUploading(false);
+      setProgress({ done: 0, total: 0, errors: [] });
       if (inputRef.current) inputRef.current.value = '';
     }
   }
@@ -71,14 +123,20 @@ export default function ImovelGaleria({ imovelId, fotos }: Props) {
   }
 
   const sorted = [...fotos].sort((a, b) => a.ordem - b.ordem);
+  const busy = uploading || pending;
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-lg font-semibold">Fotos ({fotos.length})</h2>
-        <div>
+        <div className="flex items-center gap-3">
+          {uploading && progress.total > 0 && (
+            <span className="text-xs text-slate-600">
+              {progress.done} / {progress.total} carregadas…
+            </span>
+          )}
           <input ref={inputRef} type="file" accept="image/*" multiple onChange={onUpload} className="hidden" />
-          <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading || pending}
+          <button type="button" onClick={() => inputRef.current?.click()} disabled={busy}
             className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
             {uploading ? 'A enviar…' : '+ Fotos'}
           </button>
