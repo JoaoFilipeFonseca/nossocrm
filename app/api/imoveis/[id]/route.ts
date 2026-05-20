@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
 const ESTADOS_VALIDOS = ['disponivel', 'reservado', 'vendido', 'retirado', 'em_avaliacao'];
@@ -58,6 +59,8 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     if (error) return NextResponse.json({ message: error.message }, { status: 500 });
     if (!data) return NextResponse.json({ message: 'Imóvel não encontrado' }, { status: 404 });
 
+    revalidatePath('/imoveis');
+    revalidatePath(`/imoveis/${id}`);
     return NextResponse.json({ id: data.id });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
@@ -78,6 +81,7 @@ export async function DELETE(_request: NextRequest, ctx: { params: Promise<{ id:
     const { error } = await supabase.from('imoveis').delete().eq('id', id);
     if (error) return NextResponse.json({ message: error.message }, { status: 500 });
 
+    revalidatePath('/imoveis');
     return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';

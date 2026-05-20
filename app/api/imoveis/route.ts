@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
 const ESTADOS_VALIDOS = ['disponivel', 'reservado', 'vendido', 'retirado', 'em_avaliacao'];
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: error.message }, { status: 500 });
     }
 
+    revalidatePath('/imoveis');
     return NextResponse.json({ id: data.id }, { status: 201 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
