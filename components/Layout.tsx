@@ -43,6 +43,7 @@ import {
   User,
   Bug,
   CheckSquare,
+  Home,
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
@@ -75,6 +76,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/boards': 'Boards',
   '/pipeline': 'Boards',
   '/contacts': 'Contactos',
+  '/imoveis': 'Imóveis',
   '/activities': 'Atividades',
   '/decisions': 'Decisões',
   '/reports': 'Relatórios',
@@ -182,7 +184,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // [back-arrow]
   const _router = useRouter();
   const _pn = usePathname() || '/';
-  const _TOP_LEVEL = new Set(['/', '/dashboard', '/inbox', '/messaging', '/matches', '/boards', '/contacts', '/activities', '/reports', '/settings', '/profile']);
+  const _TOP_LEVEL = new Set(['/', '/dashboard', '/inbox', '/messaging', '/matches', '/boards', '/contacts', '/imoveis', '/activities', '/reports', '/settings', '/profile']);
   const showBack = !_TOP_LEVEL.has(_pn);
   const handleBack = () => { try { _router.back(); } catch (e) { _router.push('/dashboard'); } };
 const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -315,6 +317,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
       { to: '/ai/workflows/angariacao', icon: Sparkles, label: 'Angariação IA', prefetch: undefined, badge: undefined },
             { to: '/boards', icon: KanbanSquare, label: 'Boards', prefetch: 'boards' as const, badge: undefined },
             { to: '/contacts', icon: Users, label: 'Contactos', prefetch: 'contacts' as const, badge: undefined },
+            { to: '/imoveis', icon: Home, label: 'Imóveis', prefetch: undefined, badge: undefined },
             { to: '/activities', icon: CheckSquare, label: 'Atividades', prefetch: 'activities' as const, badge: undefined },
             { to: '/reports', icon: BarChart3, label: 'Relatórios', prefetch: 'reports' as const, badge: undefined },
             { to: '/settings', icon: Settings, label: 'Configurações', prefetch: 'settings' as const, badge: undefined },
