@@ -19,7 +19,11 @@ export default async function ImoveisPage() {
         <div>
           <h1 className="text-2xl font-semibold">Imóveis</h1>
           <p className="text-sm text-slate-500 mt-1">
-            {imoveis.length === 0 ? 'Sem imóveis ainda.' : `${imoveis.length} imóveis registados.`}
+            {imoveis.length === 0
+              ? 'Sem imóveis ainda.'
+              : imoveis.length === 1
+                ? '1 imóvel registado.'
+                : `${imoveis.length} imóveis registados.`}
           </p>
         </div>
         <Link

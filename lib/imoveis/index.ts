@@ -70,6 +70,24 @@ export async function getImovelById(id: string): Promise<Imovel | null> {
   return (data ?? null) as Imovel | null;
 }
 
+export interface DealLite {
+  id: string;
+  title: string | null;
+  status: string | null;
+  value: number | null;
+}
+
+export async function listDealsByImovelId(imovelId: string): Promise<DealLite[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('deals')
+    .select('id, title, status, value')
+    .eq('imovel_id', imovelId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as DealLite[];
+}
+
 export async function listEventosByImovelId(imovelId: string): Promise<ImovelEvento[]> {
   const supabase = await createClient();
   const { data, error } = await supabase

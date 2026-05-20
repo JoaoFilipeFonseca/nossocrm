@@ -3,11 +3,13 @@ import { notFound } from 'next/navigation';
 import {
   getImovelById,
   listEventosByImovelId,
+  listDealsByImovelId,
   formatPrecoEur,
   estadoChipClass,
   estadoLabel,
   eventoLabel,
 } from '@/lib/imoveis';
+import ImovelActions from '@/components/imoveis/ImovelActions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Imóvel | Foco Imo' };
@@ -17,7 +19,12 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
   const imovel = await getImovelById(id);
   if (!imovel) notFound();
 
-  const eventos = await listEventosByImovelId(id);
+  const [eventos, deals] = await Promise.all([
+    listEventosByImovelId(id),
+    listDealsByImovelId(id),
+  ]);
+
+  const label = imovel.referencia ?? imovel.id.slice(0, 8);
 
   return (
     <div className="p-6 max-w-4xl">
@@ -27,14 +34,15 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
         </Link>
       </div>
 
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex flex-col gap-3 mb-6 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold">
-            {imovel.referencia ?? imovel.id.slice(0, 8)}
-          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl font-semibold">{label}</h1>
+            <span className={estadoChipClass(imovel.estado)}>{estadoLabel(imovel.estado)}</span>
+          </div>
           {imovel.morada && <p className="text-sm text-slate-600 mt-1">{imovel.morada}</p>}
         </div>
-        <span className={estadoChipClass(imovel.estado)}>{estadoLabel(imovel.estado)}</span>
+        <ImovelActions imovelId={id} imovelLabel={label} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -54,12 +62,7 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
 
       {imovel.link_externo && (
         <div className="mb-6">
-          <a
-            href={imovel.link_externo}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-blue-600 hover:underline"
-          >
+          <a href={imovel.link_externo} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline">
             Anúncio externo ↗
           </a>
         </div>
@@ -71,6 +74,27 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
           <p className="text-sm text-slate-600 whitespace-pre-wrap">{imovel.notas_privadas}</p>
         </div>
       )}
+
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold mb-3">Deals associados</h2>
+        {deals.length === 0 ? (
+          <p className="text-sm text-slate-500">Nenhum deal ligado a este imóvel ainda.</p>
+        ) : (
+          <ul className="space-y-2">
+            {deals.map((d) => (
+              <li key={d.id} className="rounded-md border border-slate-200 p-3 flex items-center justify-between">
+                <Link href={`/boards?dealId=${d.id}`} className="text-sm text-blue-600 hover:underline">
+                  {d.title ?? d.id.slice(0, 8)}
+                </Link>
+                <div className="flex items-center gap-3 text-xs text-slate-600">
+                  {d.status && <span>{d.status}</span>}
+                  {d.value != null && <span className="font-medium">{formatPrecoEur(d.value)}</span>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section>
         <h2 className="text-lg font-semibold mb-3">Histórico</h2>
