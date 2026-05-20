@@ -410,6 +410,68 @@ function parseAIJsonArray(raw: string): RawIntelDraft[] {
   }));
 }
 
+const CLASSIFIER_PROMPT = `Classificas mensagens recebidas por um bot de Telegram dum consultor imobiliário em Portugal.
+Categorias possíveis:
+- "single": descrição de 1 imóvel para o consultor criar como angariação dele (criar em /imoveis em estado "em_avaliacao")
+- "list": lista de imóveis off-market ou partilhas de colegas (criar em /matches via raw_intel)
+- "procura": cliente a procurar imóvel (criar em raw_intel intent=procura)
+- "command": parece um comando ou pergunta ao bot (não criar nada)
+- "irrelevante": ruído, conversa, off-topic
+
+Devolve APENAS JSON (sem markdown, sem code fences):
+{
+  "kind": "single" | "list" | "procura" | "command" | "irrelevante",
+  "confidence": 0-100,
+  "summary": "1 frase em pt-PT a descrever o que detectaste"
+}
+
+Regras de decisão:
+- Se há 2+ imóveis claramente enumerados → "list"
+- Se há off-market, partilha de colega, "tem clientes para?" → "list"
+- Se é só 1 imóvel descrito com áreas/preço/zona → "single"
+- Se é cliente a procurar imóvel ("preciso de T2 até X em Y") → "procura"
+- Se há indicação clara de que é o próprio consultor a angariar (1 imóvel) → "single"
+
+Texto:
+`;
+
+export interface ClassificationResult {
+  kind: 'single' | 'list' | 'procura' | 'command' | 'irrelevante';
+  confidence: number;
+  summary: string;
+  modelUsed: string;
+}
+
+export async function classifyTelegramMessage(text: string, keys: AIKeys): Promise<ClassificationResult> {
+  const trimmed = text.trim();
+  if (trimmed.length < 5) {
+    return { kind: 'irrelevante', confidence: 100, summary: 'Mensagem muito curta', modelUsed: 'heuristic' };
+  }
+  try {
+    const result = await routedGenerate({
+      feature: 'imovel_extract',
+      prompt: `${CLASSIFIER_PROMPT}\n${trimmed.slice(0, 5000)}`,
+      keys,
+      temperature: 0.0,
+    });
+    let cleaned = result.text.trim();
+    const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (fenceMatch) cleaned = fenceMatch[1].trim();
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    if (firstBrace >= 0 && lastBrace > firstBrace) cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+    const p = JSON.parse(cleaned);
+    return {
+      kind: (p.kind as ClassificationResult['kind']) ?? 'irrelevante',
+      confidence: typeof p.confidence === 'number' ? p.confidence : 50,
+      summary: typeof p.summary === 'string' ? p.summary : '',
+      modelUsed: result.modelUsed,
+    };
+  } catch {
+    return { kind: 'irrelevante', confidence: 30, summary: 'Erro a classificar', modelUsed: 'fallback' };
+  }
+}
+
 export async function extractRawIntelList(
   text: string,
   keys: AIKeys,
