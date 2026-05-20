@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useId, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { dealsService } from '@/lib/supabase';
 import {
   useContacts,
   useActivities,
@@ -178,6 +179,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   const customFieldDefinitions: import('@/types').CustomFieldDefinition[] = [];
   const { profile } = useAuth();
   const { addToast } = useToast();
+  const queryClient = useQueryClient();
   const router = useRouter();
 
   // Subscribe to the same cache the Kanban uses (DEALS_VIEW_KEY).
@@ -1006,6 +1008,40 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
               <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-black/10">
                 {activeTab === 'cockpit' && (
                 <div className="space-y-4">
+                  {/* #124 Pause-on-touch — banner quando automações estão pausadas */}
+                  {deal.automationsPausedAt && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
+                      <span className="text-amber-600 dark:text-amber-400 text-xl leading-none mt-0.5">⏸</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                          Automações pausadas
+                        </p>
+                        <p className="text-xs text-amber-800 dark:text-amber-300 mt-0.5">
+                          Pausa automática por intervenção humana ({deal.automationsPausedReason || 'manual'}).
+                          As sequências de WhatsApp / email não disparam até retomares.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const { error } = await dealsService.update(deal.id, {
+                            automationsPausedAt: null,
+                            automationsPausedReason: null,
+                          });
+                          if (error) {
+                            addToast('Falha ao retomar automações', 'error');
+                            return;
+                          }
+                          addToast('Automações retomadas', 'success');
+                          queryClient.invalidateQueries({ queryKey: DEALS_VIEW_KEY });
+                        }}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition flex-shrink-0"
+                      >
+                        Retomar
+                      </button>
+                    </div>
+                  )}
+
                   <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">

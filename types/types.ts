@@ -242,6 +242,10 @@ export interface Deal {
   lastStageChangeDate?: string; // For stagnation tracking
   lossReason?: string; // For win/loss analysis
   aiExtracted?: Record<string, any>; // AI-extracted BANT fields (zero config)
+  /** Quando o humano interveio e pausou as automações deste deal. NULL = activas. (#124 pause-on-touch) */
+  automationsPausedAt?: string | null;
+  /** Motivo da pausa: moved_stage | tag_removed | manual_override | task_completed. */
+  automationsPausedReason?: string | null;
 
   // @deprecated - Use clientCompanyId instead
   companyId?: string;

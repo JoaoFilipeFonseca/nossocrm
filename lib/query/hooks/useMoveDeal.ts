@@ -98,6 +98,10 @@ export const useMoveDeal = () => {
       const updates: Partial<Deal> = {
         status: targetStageId,
         lastStageChangeDate: new Date().toISOString(),
+        // #124 pause-on-touch: humano moveu o card → pausar automações
+        // (filosofia Pinheirinho A1-A4: humano é o boss)
+        automationsPausedAt: new Date().toISOString(),
+        automationsPausedReason: 'moved_stage',
         ...(lossReason && { lossReason }),
         ...(isWon !== undefined && { isWon }),
         ...(isLost !== undefined && { isLost }),

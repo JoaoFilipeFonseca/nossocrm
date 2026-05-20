@@ -216,6 +216,15 @@ const DealCardComponent: React.FC<DealCardProps> = ({
             ✗ PERDIDO
           </span>
         )}
+        {/* #124 Pause-on-touch — automações pausadas por intervenção humana */}
+        {deal.automationsPausedAt && !isClosed && (
+          <span
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700"
+            title="Automações deste deal estão pausadas. Abre o deal para retomar."
+          >
+            ⏸ AUTO PAUSADAS
+          </span>
+        )}
         {/* Regular tags */}
         {deal.tags.slice(0, isClosed ? 1 : 2).map((tag, index) => (
           <span

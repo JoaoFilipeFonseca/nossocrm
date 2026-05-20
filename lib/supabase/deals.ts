@@ -102,6 +102,10 @@ export interface DbDeal {
   closed_at: string | null;
   /** AI-extracted BANT fields (zero config). */
   ai_extracted: Record<string, any> | null;
+  /** #124 — Quando humano pausou as automações deste deal. NULL = activas. */
+  automations_paused_at?: string | null;
+  /** #124 — Motivo da pausa: moved_stage | tag_removed | manual_override | task_completed. */
+  automations_paused_reason?: string | null;
 }
 
 /**
@@ -175,6 +179,8 @@ const transformDeal = (db: DbDeal | DbDealWithItems, items?: DbDealItem[]): Deal
     lastStageChangeDate: db.last_stage_change_date || undefined,
     customFields: db.custom_fields || {},
     aiExtracted: db.ai_extracted || undefined,
+    automationsPausedAt: db.automations_paused_at || null,
+    automationsPausedReason: db.automations_paused_reason || null,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
     items: filteredItems.map(i => ({
@@ -225,6 +231,8 @@ const transformDealToDb = (deal: Partial<Deal>): Partial<DbDeal> => {
   if (deal.lastStageChangeDate !== undefined) db.last_stage_change_date = deal.lastStageChangeDate || null;
   if (deal.customFields !== undefined) db.custom_fields = deal.customFields;
   if (deal.ownerId !== undefined) db.owner_id = sanitizeUUID(deal.ownerId);
+  if (deal.automationsPausedAt !== undefined) db.automations_paused_at = deal.automationsPausedAt;
+  if (deal.automationsPausedReason !== undefined) db.automations_paused_reason = deal.automationsPausedReason;
 
   return db;
 };

@@ -95,3 +95,6 @@ debug_navigation_failed_*.png
 *.png
 .env*.local
 .dmux/
+
+# Memoria privada Claude (nao publicar)
+.claude/
