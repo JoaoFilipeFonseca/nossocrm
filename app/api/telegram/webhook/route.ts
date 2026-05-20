@@ -94,25 +94,31 @@ export async function POST(request: NextRequest) {
   try {
     const { draft, modelUsed } = await extractImovelFromInput({ kind: 'text', payload: text }, keys);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       organization_id: org.organization_id,
-      referencia: draft.referencia,
-      morada: draft.morada,
-      freguesia: draft.freguesia,
-      concelho: draft.concelho,
-      distrito: draft.distrito,
-      tipologia: draft.tipologia,
-      area_util: draft.area_util,
-      area_bruta: draft.area_bruta,
-      ano_construcao: draft.ano_construcao,
-      certificado_energetico: draft.certificado_energetico,
-      preco_actual: draft.preco_actual,
-      preco_inicial: draft.preco_inicial,
       estado: 'em_avaliacao',
+      tipo: draft.tipo ?? 'apartamento',
       tipo_negocio: draft.tipo_negocio ?? 'venda',
-      link_externo: draft.link_externo,
-      notas_privadas: draft.notas_privadas,
     };
+    const keysToCopy: Array<keyof typeof draft> = [
+      'referencia', 'subtipo', 'estado_conservacao', 'tipologia',
+      'morada', 'numero_policia', 'codigo_postal', 'freguesia', 'concelho', 'distrito',
+      'area_util', 'area_bruta', 'area_terreno', 'area_dependente',
+      'quartos', 'quartos_suite', 'wcs', 'piso', 'pisos_imovel',
+      'cozinha_tipo', 'sala_m2', 'ano_construcao', 'ano_remodelacao',
+      'certificado_energetico', 'ce_numero', 'ce_validade',
+      'aquecimento', 'tem_ac', 'agua', 'paineis_solares',
+      'caixilharia', 'vidros_duplos', 'orientacao', 'vista',
+      'tem_condominio', 'condominio_mensal', 'condominio_inclui', 'imi_anual',
+      'preco_actual', 'preco_inicial', 'renda_mensal',
+      'titulo_anuncio', 'descricao_longa', 'destaques', 'publico_alvo',
+      'link_externo', 'ref_idealista', 'ref_imovirtual', 'ref_casasapo', 'ref_kw',
+      'notas_privadas', 'caracteristicas',
+    ];
+    for (const k of keysToCopy) {
+      const v = draft[k];
+      if (v != null && v !== '') payload[k] = v;
+    }
 
     const { data, error } = await supabase
       .from('imoveis')

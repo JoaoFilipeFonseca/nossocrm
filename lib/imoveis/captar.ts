@@ -2,61 +2,171 @@ import 'server-only';
 import { routedGenerate, type AIKeys } from '@/lib/ai/router';
 
 export interface ImovelDraft {
+  // identificação
   referencia: string | null;
+  tipo: string | null;
+  subtipo: string | null;
+  estado: string | null;
+  estado_conservacao: string | null;
+  tipo_negocio: string | null;
+  tipologia: string | null;
+  // localização
   morada: string | null;
+  numero_policia: string | null;
+  codigo_postal: string | null;
   freguesia: string | null;
   concelho: string | null;
   distrito: string | null;
-  tipologia: string | null;
+  // áreas e divisões
   area_util: number | null;
   area_bruta: number | null;
+  area_terreno: number | null;
+  area_dependente: number | null;
+  quartos: number | null;
+  quartos_suite: number | null;
+  wcs: number | null;
+  piso: number | null;
+  pisos_imovel: number | null;
+  cozinha_tipo: string | null;
+  sala_m2: number | null;
+  // anos
   ano_construcao: number | null;
+  ano_remodelacao: number | null;
+  // energia / infra
   certificado_energetico: string | null;
+  ce_numero: string | null;
+  ce_validade: string | null;
+  aquecimento: string | null;
+  tem_ac: boolean | null;
+  agua: string | null;
+  paineis_solares: string | null;
+  caixilharia: string | null;
+  vidros_duplos: boolean | null;
+  orientacao: string | null;
+  vista: string | null;
+  // condomínio / fiscal
+  tem_condominio: boolean | null;
+  condominio_mensal: number | null;
+  condominio_inclui: string | null;
+  imi_anual: number | null;
+  // preços
   preco_actual: number | null;
   preco_inicial: number | null;
-  estado: string | null;
-  tipo_negocio: string | null;
+  renda_mensal: number | null;
+  // marketing
+  titulo_anuncio: string | null;
+  descricao_longa: string | null;
+  destaques: string[];
+  publico_alvo: string[];
+  // links / refs
   link_externo: string | null;
+  ref_idealista: string | null;
+  ref_imovirtual: string | null;
+  ref_casasapo: string | null;
+  ref_kw: string | null;
   notas_privadas: string | null;
+  caracteristicas: Record<string, boolean>;
   confidence: Record<string, number>;
 }
 
-const EXTRACTION_PROMPT = `Extrai os dados de um imóvel a partir do texto fornecido. Devolve APENAS JSON válido (sem markdown, sem code fences), seguindo este schema exacto:
+const EXTRACTION_PROMPT = `És um agente que extrai dados de imóveis do mercado português. Devolve APENAS JSON válido (sem markdown, sem code fences), seguindo o schema abaixo.
+
+REGRAS GLOBAIS:
+- pt-PT formal. Nunca pt-BR.
+- Preços e valores em EUROS, número inteiro (ex: 1650000).
+- Áreas em m² (apenas o número).
+- Boolean true/false ou null se não há informação.
+- Se a fonte não tem o campo, devolve null. Não inventar.
+- Para confidence: 0-100 por campo extraído (100 = explícito, 0-50 = deduzido com baixa confiança).
+
+DEDUÇÕES PERMITIDAS:
+- Freguesia conhecida → concelho (ex: "Foz do Douro" → "Porto", "Cedofeita" → "Porto", "Seroa" → "Paços de Ferreira", "Boavista" → "Porto").
+- Tipologia a partir de "T3 com 6 quartos" → T3, suites separadamente.
+- Se diz "moradia T6" → tipo: "moradia", tipologia: "T6" ou "V6".
+- Se diz "apartamento T2" → tipo: "apartamento", tipologia: "T2".
+
+CAMPOS:
 
 {
-  "referencia": string|null,
+  "referencia": string|null,                              // ref do portal/agência se visível
+  "tipo": "apartamento"|"moradia"|"terreno"|"predio"|"loja"|"armazem"|"escritorio"|"garagem"|"quinta"|null,
+  "subtipo": string|null,                                 // duplex|triplex|isolada|geminada|banda…
+  "estado": "disponivel"|"reservado"|"vendido"|"retirado"|"em_avaliacao"|null,
+  "estado_conservacao": "novo"|"como_novo"|"usado"|"recuperar"|"construcao"|"projecto"|null,
+  "tipo_negocio": "venda"|"arrendamento"|"ambos"|"trespasse"|"permuta"|null,
+  "tipologia": "T0"|"T1"|"T2"|"T3"|"T4"|"T5"|"T5+"|"V3"|"V4"|"V5"|"V5+"|"Loja"|"Armazem"|"Terreno"|null,
   "morada": string|null,
+  "numero_policia": string|null,
+  "codigo_postal": string|null,                           // formato XXXX-XXX
   "freguesia": string|null,
   "concelho": string|null,
   "distrito": string|null,
-  "tipologia": "T0"|"T1"|"T2"|"T3"|"T4"|"T5+"|"Loja"|"Armazem"|"Terreno"|null,
   "area_util": number|null,
   "area_bruta": number|null,
+  "area_terreno": number|null,
+  "area_dependente": number|null,
+  "quartos": number|null,
+  "quartos_suite": number|null,
+  "wcs": number|null,
+  "piso": number|null,
+  "pisos_imovel": number|null,
+  "cozinha_tipo": "equipada"|"semi_equipada"|"vazia"|null,
+  "sala_m2": number|null,
   "ano_construcao": number|null,
+  "ano_remodelacao": number|null,
   "certificado_energetico": "A+"|"A"|"B"|"B-"|"C"|"D"|"E"|"F"|"G"|"isento"|null,
+  "ce_numero": string|null,
+  "ce_validade": string|null,                             // YYYY-MM-DD
+  "aquecimento": string|null,
+  "tem_ac": boolean|null,
+  "agua": string|null,
+  "paineis_solares": string|null,
+  "caixilharia": string|null,
+  "vidros_duplos": boolean|null,
+  "orientacao": "N"|"NE"|"E"|"SE"|"S"|"SO"|"O"|"NO"|null,
+  "vista": string|null,                                   // mar|rio|montanha|cidade|jardim|...
+  "tem_condominio": boolean|null,
+  "condominio_mensal": number|null,
+  "condominio_inclui": string|null,
+  "imi_anual": number|null,
   "preco_actual": number|null,
   "preco_inicial": number|null,
-  "estado": "disponivel"|"reservado"|"vendido"|"retirado"|"em_avaliacao"|null,
-  "tipo_negocio": "venda"|"arrendamento"|"ambos"|null,
-  "link_externo": string|null,
-  "notas_privadas": string|null,
-  "confidence": { "<campo>": 0-100, ... }
+  "renda_mensal": number|null,
+  "titulo_anuncio": string|null,                          // título atractivo, máx 80 chars
+  "descricao_longa": string|null,                         // descrição limpa em pt-PT, sem cabeçalhos repetidos
+  "destaques": string[],                                  // 5-7 bullet points curtos
+  "publico_alvo": string[],                               // ex: ["Famílias numerosas", "Investidores"]
+  "link_externo": string|null,                            // URL do anúncio
+  "ref_idealista": string|null,
+  "ref_imovirtual": string|null,
+  "ref_casasapo": string|null,
+  "ref_kw": string|null,
+  "notas_privadas": string|null,                          // observações úteis ao consultor
+  "caracteristicas": {                                    // booleans (apenas inclui chaves quando verdadeiras OU explicitamente falsas)
+    // chaves possíveis: varanda, terraco, marquise, jardim, quintal, piscina, piscina_interior, piscina_aquecida,
+    // garagem, parking_exterior, arrecadacao, sotao, cave, elevador, lareira, roupeiros_embutidos,
+    // portas_blindadas, alarme, videovigilancia, domotica, aspiracao_central, fibra, sistema_rega,
+    // ginasio, sala_cinema, mobilado, equipado, acessivel_mobilidade
+  },
+  "confidence": { "<campo>": 0-100 }
 }
 
-Regras:
-- Use unicamente pt-PT. Nunca use vocabulário brasileiro.
-- Preços em euros, número inteiro (sem ".", sem "€", sem espaços).
-- Áreas em m² como número (sem "m²").
-- Se a fonte não indica concelho mas indica freguesia conhecida, deduzir concelho (ex: "Cedofeita" → "Porto", "Aldoar" → "Porto", "Matosinhos-Sul" → "Matosinhos").
-- Se a fonte for um link de Idealista/Imovirtual/Casa Sapo, preservar o URL em link_externo.
-- Para confidence, dá um número 0-100 por campo extraído (0 = adivinhei, 100 = explícito no texto).
-- Não inventar dados. Se não há informação, usa null.
-- notas_privadas: 1-2 frases com observações úteis para o consultor (estado de conservação mencionado, urgência do vendedor, condições atípicas). Se não houver nada relevante, null.
-
-Texto fonte:
+Fonte:
 `;
 
-async function fetchUrlText(url: string): Promise<string> {
+async function fetchUrlViaJina(url: string): Promise<string> {
+  const jinaUrl = `https://r.jina.ai/${url}`;
+  const res = await fetch(jinaUrl, {
+    headers: {
+      'Accept': 'text/plain',
+      'X-Return-Format': 'markdown',
+    },
+  });
+  if (!res.ok) throw new Error(`Jina Reader falhou (HTTP ${res.status})`);
+  return await res.text();
+}
+
+async function fetchUrlDirect(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
@@ -65,7 +175,7 @@ async function fetchUrlText(url: string): Promise<string> {
     },
     redirect: 'follow',
   });
-  if (!res.ok) throw new Error(`Falha a buscar URL (HTTP ${res.status})`);
+  if (!res.ok) throw new Error(`Fetch directo falhou (HTTP ${res.status})`);
   const html = await res.text();
   return sanitizeHtml(html);
 }
@@ -83,8 +193,46 @@ function sanitizeHtml(html: string): string {
     .replace(/&#8364;|&euro;/g, '€')
     .replace(/&#\d+;/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 20000);
+    .trim();
+}
+
+/** Tenta Jina primeiro (resolve JS-rendered RE/MAX/C21/KW), fallback fetch directo. */
+async function fetchUrlSmart(url: string): Promise<{ text: string; via: 'jina' | 'direct' }> {
+  try {
+    const text = await fetchUrlViaJina(url);
+    if (text.trim().length > 200) return { text, via: 'jina' };
+  } catch (err) {
+    console.warn('[captar] Jina failed, falling back to direct fetch:', err);
+  }
+  const text = await fetchUrlDirect(url);
+  return { text, via: 'direct' };
+}
+
+function emptyDraft(): ImovelDraft {
+  return {
+    referencia: null, tipo: null, subtipo: null, estado: null, estado_conservacao: null,
+    tipo_negocio: null, tipologia: null, morada: null, numero_policia: null,
+    codigo_postal: null, freguesia: null, concelho: null, distrito: null,
+    area_util: null, area_bruta: null, area_terreno: null, area_dependente: null,
+    quartos: null, quartos_suite: null, wcs: null, piso: null, pisos_imovel: null,
+    cozinha_tipo: null, sala_m2: null,
+    ano_construcao: null, ano_remodelacao: null,
+    certificado_energetico: null, ce_numero: null, ce_validade: null,
+    aquecimento: null, tem_ac: null, agua: null, paineis_solares: null,
+    caixilharia: null, vidros_duplos: null, orientacao: null, vista: null,
+    tem_condominio: null, condominio_mensal: null, condominio_inclui: null, imi_anual: null,
+    preco_actual: null, preco_inicial: null, renda_mensal: null,
+    titulo_anuncio: null, descricao_longa: null, destaques: [], publico_alvo: [],
+    link_externo: null, ref_idealista: null, ref_imovirtual: null,
+    ref_casasapo: null, ref_kw: null, notas_privadas: null,
+    caracteristicas: {}, confidence: {},
+  };
+}
+
+function toNum(v: unknown): number | null {
+  if (v == null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
 function parseAIJson(raw: string): ImovelDraft {
@@ -96,45 +244,77 @@ function parseAIJson(raw: string): ImovelDraft {
   if (firstBrace >= 0 && lastBrace > firstBrace) {
     cleaned = cleaned.slice(firstBrace, lastBrace + 1);
   }
-  const parsed = JSON.parse(cleaned);
+  const p = JSON.parse(cleaned);
+  const base = emptyDraft();
   return {
-    referencia: parsed.referencia ?? null,
-    morada: parsed.morada ?? null,
-    freguesia: parsed.freguesia ?? null,
-    concelho: parsed.concelho ?? null,
-    distrito: parsed.distrito ?? null,
-    tipologia: parsed.tipologia ?? null,
-    area_util: parsed.area_util != null ? Number(parsed.area_util) : null,
-    area_bruta: parsed.area_bruta != null ? Number(parsed.area_bruta) : null,
-    ano_construcao: parsed.ano_construcao != null ? Number(parsed.ano_construcao) : null,
-    certificado_energetico: parsed.certificado_energetico ?? null,
-    preco_actual: parsed.preco_actual != null ? Number(parsed.preco_actual) : null,
-    preco_inicial: parsed.preco_inicial != null ? Number(parsed.preco_inicial) : null,
-    estado: parsed.estado ?? null,
-    tipo_negocio: parsed.tipo_negocio ?? null,
-    link_externo: parsed.link_externo ?? null,
-    notas_privadas: parsed.notas_privadas ?? null,
-    confidence: parsed.confidence ?? {},
+    ...base,
+    referencia: p.referencia ?? null,
+    tipo: p.tipo ?? null,
+    subtipo: p.subtipo ?? null,
+    estado: p.estado ?? null,
+    estado_conservacao: p.estado_conservacao ?? null,
+    tipo_negocio: p.tipo_negocio ?? null,
+    tipologia: p.tipologia ?? null,
+    morada: p.morada ?? null,
+    numero_policia: p.numero_policia ?? null,
+    codigo_postal: p.codigo_postal ?? null,
+    freguesia: p.freguesia ?? null,
+    concelho: p.concelho ?? null,
+    distrito: p.distrito ?? null,
+    area_util: toNum(p.area_util), area_bruta: toNum(p.area_bruta),
+    area_terreno: toNum(p.area_terreno), area_dependente: toNum(p.area_dependente),
+    quartos: toNum(p.quartos), quartos_suite: toNum(p.quartos_suite), wcs: toNum(p.wcs),
+    piso: toNum(p.piso), pisos_imovel: toNum(p.pisos_imovel),
+    cozinha_tipo: p.cozinha_tipo ?? null, sala_m2: toNum(p.sala_m2),
+    ano_construcao: toNum(p.ano_construcao), ano_remodelacao: toNum(p.ano_remodelacao),
+    certificado_energetico: p.certificado_energetico ?? null,
+    ce_numero: p.ce_numero ?? null, ce_validade: p.ce_validade ?? null,
+    aquecimento: p.aquecimento ?? null, tem_ac: p.tem_ac ?? null,
+    agua: p.agua ?? null, paineis_solares: p.paineis_solares ?? null,
+    caixilharia: p.caixilharia ?? null, vidros_duplos: p.vidros_duplos ?? null,
+    orientacao: p.orientacao ?? null, vista: p.vista ?? null,
+    tem_condominio: p.tem_condominio ?? null,
+    condominio_mensal: toNum(p.condominio_mensal),
+    condominio_inclui: p.condominio_inclui ?? null,
+    imi_anual: toNum(p.imi_anual),
+    preco_actual: toNum(p.preco_actual), preco_inicial: toNum(p.preco_inicial),
+    renda_mensal: toNum(p.renda_mensal),
+    titulo_anuncio: p.titulo_anuncio ?? null,
+    descricao_longa: p.descricao_longa ?? null,
+    destaques: Array.isArray(p.destaques) ? p.destaques.filter((s: unknown) => typeof s === 'string') : [],
+    publico_alvo: Array.isArray(p.publico_alvo) ? p.publico_alvo.filter((s: unknown) => typeof s === 'string') : [],
+    link_externo: p.link_externo ?? null,
+    ref_idealista: p.ref_idealista ?? null,
+    ref_imovirtual: p.ref_imovirtual ?? null,
+    ref_casasapo: p.ref_casasapo ?? null,
+    ref_kw: p.ref_kw ?? null,
+    notas_privadas: p.notas_privadas ?? null,
+    caracteristicas: (p.caracteristicas && typeof p.caracteristicas === 'object') ? p.caracteristicas : {},
+    confidence: (p.confidence && typeof p.confidence === 'object') ? p.confidence : {},
   };
 }
 
 export async function extractImovelFromInput(
   input: { kind: 'text' | 'link'; payload: string },
   keys: AIKeys,
-): Promise<{ draft: ImovelDraft; modelUsed: string; sourceLength: number }> {
+): Promise<{ draft: ImovelDraft; modelUsed: string; sourceLength: number; via?: string }> {
   let sourceText: string;
+  let via: string | undefined;
+
   if (input.kind === 'link') {
-    sourceText = await fetchUrlText(input.payload);
-    sourceText = `URL original: ${input.payload}\n\nConteúdo:\n${sourceText}`;
+    const { text, via: how } = await fetchUrlSmart(input.payload);
+    sourceText = `URL original: ${input.payload}\n\nConteúdo:\n${text}`;
+    via = how;
   } else {
     sourceText = input.payload.trim();
   }
 
-  if (sourceText.length < 5) {
-    throw new Error('Conteúdo insuficiente para extrair imóvel.');
-  }
+  if (sourceText.length < 5) throw new Error('Conteúdo insuficiente para extrair imóvel.');
 
-  const fullPrompt = `${EXTRACTION_PROMPT}\n${sourceText}`;
+  // limita tokens — Jina pode devolver muito conteúdo
+  const limited = sourceText.slice(0, 30000);
+
+  const fullPrompt = `${EXTRACTION_PROMPT}\n${limited}`;
   const result = await routedGenerate({
     feature: 'imovel_extract',
     prompt: fullPrompt,
@@ -143,5 +323,11 @@ export async function extractImovelFromInput(
   });
 
   const draft = parseAIJson(result.text);
-  return { draft, modelUsed: result.modelUsed, sourceLength: sourceText.length };
+
+  // garantir link_externo preservado
+  if (input.kind === 'link' && !draft.link_externo) {
+    draft.link_externo = input.payload;
+  }
+
+  return { draft, modelUsed: result.modelUsed, sourceLength: limited.length, via };
 }
