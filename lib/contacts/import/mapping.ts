@@ -58,14 +58,16 @@ export const HEADER_SYNONYMS: Record<ContactField, string[]> = {
   lastName: ['last name', 'lastname', 'apelido', 'sobrenome', 'ultimo nome'],
   email: ['email', 'e-mail', 'e-mail address', 'mail', 'correio'],
   phone: [
-    'phone',
-    'telefone',
+    // PT-first: preferir colunas "Telemóvel" sobre "Telefone" (exports PT
+    // costumam ter ambas, sendo Telefone frequentemente a vazia).
     'telemovel',
     'telemóvel',
-    'whatsapp',
-    'fone',
     'movel',
     'movel pessoal',
+    'whatsapp',
+    'phone',
+    'telefone',
+    'fone',
     'contacto telefonico',
     'numero',
   ],
@@ -107,6 +109,8 @@ export function normalizeHeader(h: string): string {
     .trim()
     .toLowerCase()
     .normalize('NFD')
+    // Escape Unicode explícito (U+0300 a U+036F = combining diacritical marks).
+    // Antes usava literal range que pode falhar consoante encoding/transpilação.
     .replace(/[̀-ͯ]/g, '');
 }
 
