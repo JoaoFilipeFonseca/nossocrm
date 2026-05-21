@@ -33,28 +33,39 @@ export async function GET() {
     }
     const orgId = profile.organization_id;
 
-    // Buscar 3 boards e respectiva stage 'oportunidade' por nome
+    // 2 queries separadas para evitar ambiguidade de FK entre board_stages e boards
+    // (existem multiplos FK entre as duas tabelas, PostgREST não consegue desambiguar via join automático).
+    const { data: boards, error: boardsError } = await supabase
+      .from('boards')
+      .select('id, name')
+      .eq('organization_id', orgId);
+    if (boardsError) {
+      return NextResponse.json({ error: boardsError.message }, { status: 400 });
+    }
+
+    const boardIds = (boards || []).map(b => b.id);
+    if (!boardIds.length) {
+      return NextResponse.json({ error: 'Sem boards na organização.' }, { status: 404 });
+    }
+
     const { data: stages, error: stagesError } = await supabase
       .from('board_stages')
-      .select('id, name, board_id, boards!inner(id, name, organization_id)')
+      .select('id, name, board_id')
       .eq('name', 'oportunidade')
-      .eq('boards.organization_id', orgId);
+      .in('board_id', boardIds);
 
     if (stagesError) {
       return NextResponse.json({ error: stagesError.message }, { status: 400 });
     }
 
-    type StageRow = {
-      id: string;
-      board_id: string;
-      boards: { id: string; name: string } | { id: string; name: string }[];
-    };
+    const boardNameById = new Map<string, string>();
+    for (const b of boards || []) boardNameById.set(b.id, b.name);
 
     const byBoardName: Record<string, { boardId: string; stageId: string }> = {};
-    for (const s of (stages || []) as StageRow[]) {
-      const board = Array.isArray(s.boards) ? s.boards[0] : s.boards;
-      if (!board) continue;
-      byBoardName[board.name] = { boardId: s.board_id, stageId: s.id };
+    for (const s of stages || []) {
+      const name = boardNameById.get(s.board_id);
+      if (!name) continue;
+      byBoardName[name] = { boardId: s.board_id, stageId: s.id };
     }
 
     const proprietarios = byBoardName['Proprietários'] || null;
