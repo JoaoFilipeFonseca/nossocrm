@@ -11,6 +11,12 @@ import {
   normalizeStatus,
   type ContactField,
 } from '@/lib/contacts/import/mapping';
+import {
+  buildCustomFields,
+  parseDateDDMMYYYY,
+  pickDealRouting,
+  type DealRoutingConfig,
+} from '@/lib/contacts/import/extras';
 
 export const maxDuration = 120;
 
@@ -37,6 +43,11 @@ type ParsedRow = {
   status?: string;
   stage?: string;
   notes?: string;
+  // Extras carregados per-linha quando wizard configura
+  originValue?: string;
+  dateValue?: string;
+  // Linha bruta + ref ao header index para deals routing posterior
+  rawRow: string[];
 };
 
 function getCell(row: string[], idx: number | undefined): string | undefined {
@@ -108,6 +119,31 @@ export async function POST(req: Request) {
 
     const sourceLabel = sourceLabelRaw ? String(sourceLabelRaw).trim().slice(0, 80) : null;
 
+    // ── Novos params (importação enriquecida REMAX-style) ─────────────────
+    const originColumn = form.get('originColumn') ? String(form.get('originColumn')).trim() : null;
+    const dateColumn = form.get('dateColumn') ? String(form.get('dateColumn')).trim() : null;
+    const notePrefix = form.get('notePrefix') ? String(form.get('notePrefix')) : null;
+    const forceContactStage = form.get('forceContactStage')
+      ? String(form.get('forceContactStage')).trim().toUpperCase()
+      : null;
+    const createDeals = BooleanStringSchema.parse(String(form.get('createDeals') ?? 'false'));
+
+    let dealConfig: DealRoutingConfig | null = null;
+    const dealConfigRaw = form.get('dealConfig');
+    if (createDeals && dealConfigRaw) {
+      try {
+        dealConfig = JSON.parse(String(dealConfigRaw)) as DealRoutingConfig;
+      } catch {
+        return NextResponse.json({ error: 'Parâmetro dealConfig não é JSON válido.' }, { status: 400 });
+      }
+    }
+    if (createDeals && !dealConfig) {
+      return NextResponse.json(
+        { error: 'createDeals=true requer dealConfig com routing e qualificationColumns.' },
+        { status: 400 }
+      );
+    }
+
     let manualMapping: Record<string, string | null> | null = null;
     if (mappingRaw) {
       try {
@@ -136,6 +172,17 @@ export async function POST(req: Request) {
 
     // Mapping: usar manual se fornecido e válido, senão fallback auto-detect
     const mapping = applyManualMapping(headers, manualMapping) ?? buildHeaderIndex(headers);
+
+    // Header index Map (normalized → position) para resolver originColumn/dateColumn/qualificações
+    const headerIdxMap = new Map<string, number>();
+    headers.forEach((h, i) => headerIdxMap.set(normalizeHeader(h), i));
+    const getByColumnName = (row: string[], colName: string | null | undefined): string | undefined => {
+      if (!colName) return undefined;
+      const idx = headerIdxMap.get(normalizeHeader(colName));
+      if (idx === undefined) return undefined;
+      const v = (row[idx] ?? '').toString().trim();
+      return v || undefined;
+    };
 
     // Parse rows
     const parsedRows: Array<{ rowNumber: number; data: ParsedRow }> = [];
@@ -175,6 +222,9 @@ export async function POST(req: Request) {
           status: normalizeStatus(getCell(r, mapping.status)),
           stage: normalizeStage(getCell(r, mapping.stage)),
           notes: getCell(r, mapping.notes),
+          originValue: getByColumnName(r, originColumn),
+          dateValue: getByColumnName(r, dateColumn),
+          rawRow: r,
         },
       });
     }
@@ -319,6 +369,8 @@ export async function POST(req: Request) {
     let created = 0;
     let updated = 0;
     let skipped = 0;
+    let dealsCreated = 0;
+    const dealsCreatedByBoard: Record<string, number> = {};
 
     // Dedup intra-CSV: chaves já vistas no batch corrente. Garante que se duas
     // linhas do mesmo ficheiro têm o mesmo telemóvel ou email, só a primeira
@@ -326,7 +378,10 @@ export async function POST(req: Request) {
     const seenPhonesInBatch = new Set<string>();
     const seenEmailsInBatch = new Set<string>();
 
-    const insertBatch: Array<{ rowNumber: number; payload: Record<string, unknown> }> = [];
+    type InsertItem = { rowNumber: number; payload: Record<string, unknown>; dealPayload?: Record<string, unknown> };
+    const insertBatch: InsertItem[] = [];
+    const dealsToInsert: Record<string, unknown>[] = [];
+
     const flushInsert = async () => {
       if (!insertBatch.length) return;
       const payloads = insertBatch.map(i => i.payload);
@@ -337,9 +392,22 @@ export async function POST(req: Request) {
         }
       } else {
         created += insertBatch.length;
+        // Empilha deals correspondentes (só para linhas que CRIARAM contacto)
+        for (const item of insertBatch) {
+          if (item.dealPayload) dealsToInsert.push(item.dealPayload);
+        }
       }
       insertBatch.length = 0;
     };
+
+    // Gerar UUID client-side (Node 18+/Edge): permite empilhar deals com FK
+    // já conhecido sem ter de fazer SELECT/RETURNING.
+    const genId = (): string =>
+      (typeof crypto !== 'undefined' && (crypto as Crypto).randomUUID)
+        ? (crypto as Crypto).randomUUID()
+        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}-${Math.random()
+            .toString(36)
+            .slice(2, 10)}`;
 
     for (const p of parsedRows) {
       const rowNumber = p.rowNumber;
@@ -348,19 +416,29 @@ export async function POST(req: Request) {
       const companyName = (p.data.company || '').trim();
       const companyId = companyName ? companyIdByName.get(normalizeHeader(companyName)) : undefined;
 
+      // Per-row enrichments
+      const perRowSource = p.data.originValue || sourceLabel || null;
+      const lastInteractionISO = p.data.dateValue ? parseDateDDMMYYYY(p.data.dateValue) : null;
+      const rawNotes = p.data.notes || '';
+      const notesFinal = notePrefix ? `${notePrefix}${rawNotes}`.trim() : rawNotes || null;
+      const stageFinal = forceContactStage
+        ? normalizeStage(forceContactStage) || p.data.stage || 'LEAD'
+        : p.data.stage || 'LEAD';
+
       const base: Record<string, unknown> = {
         name: p.data.name || '',
         email: p.data.email || null,
         phone: phoneE164 || null,
         role: p.data.role || null,
         client_company_id: companyId || null,
-        notes: p.data.notes || null,
+        notes: notesFinal,
         status: p.data.status || 'ACTIVE',
-        stage: p.data.stage || 'LEAD',
+        stage: stageFinal,
         organization_id: orgId,
         updated_at: new Date().toISOString(),
       };
-      if (sourceLabel) base.source = sourceLabel;
+      if (perRowSource) base.source = perRowSource;
+      if (lastInteractionISO) base.last_interaction = lastInteractionISO;
 
       // Match priority: phone (E.164) > email (telefone é identificador mais único)
       const phoneMatches = dedupOnPhone && phoneE164 ? contactIdsByPhone.get(phoneE164) || [] : [];
@@ -379,11 +457,42 @@ export async function POST(req: Request) {
         }
       }
 
+      // Helper: monta o deal payload se createDeals=true e config presente
+      const buildDealPayloadFor = (contactId: string): Record<string, unknown> | undefined => {
+        if (!createDeals || !dealConfig) return undefined;
+        const routing = pickDealRouting(p.data.rawRow, headerIdxMap, dealConfig);
+        const cf = buildCustomFields(p.data.rawRow, headerIdxMap, dealConfig.extraCustomFieldColumns);
+        if (perRowSource) cf['source_lead'] = perRowSource;
+        if (routing.reference) cf['qualificacao_referencia'] = routing.reference;
+        if (p.data.dateValue) cf['data_criacao_original'] = p.data.dateValue;
+        const tags = Array.from(new Set([...(dealConfig.baseTags || []), routing.qualifTag]));
+        const dealRow: Record<string, unknown> = {
+          title: p.data.name || '(sem nome)',
+          value: 0,
+          probability: 0,
+          status: 'open',
+          priority: 'medium',
+          board_id: routing.boardId,
+          stage_id: routing.stageId,
+          contact_id: contactId,
+          tags,
+          custom_fields: cf,
+          organization_id: orgId,
+          owner_id: user.id,
+          updated_at: new Date().toISOString(),
+        };
+        if (lastInteractionISO) dealRow.created_at = lastInteractionISO;
+        dealsCreatedByBoard[routing.boardId] = (dealsCreatedByBoard[routing.boardId] || 0) + 1;
+        return dealRow;
+      };
+
       if (mode === 'create_only') {
         if (phoneE164) seenPhonesInBatch.add(phoneE164);
         if (email) seenEmailsInBatch.add(email);
-        insertBatch.push({ rowNumber, payload: base });
-        if (insertBatch.length >= 200) await flushInsert();
+        const newId = genId();
+        base.id = newId;
+        insertBatch.push({ rowNumber, payload: base, dealPayload: buildDealPayloadFor(newId) });
+        if (insertBatch.length >= 100) await flushInsert();
         continue;
       }
 
@@ -415,11 +524,31 @@ export async function POST(req: Request) {
       // No match: create
       if (phoneE164) seenPhonesInBatch.add(phoneE164);
       if (email) seenEmailsInBatch.add(email);
-      insertBatch.push({ rowNumber, payload: base });
-      if (insertBatch.length >= 200) await flushInsert();
+      const newId = genId();
+      base.id = newId;
+      insertBatch.push({ rowNumber, payload: base, dealPayload: buildDealPayloadFor(newId) });
+      if (insertBatch.length >= 100) await flushInsert();
     }
 
     await flushInsert();
+
+    // ── Insert deals em chunks (50/50 para limitar payload) ─────────────────
+    if (createDeals && dealsToInsert.length) {
+      const dealChunk = 50;
+      for (let i = 0; i < dealsToInsert.length; i += dealChunk) {
+        const chunk = dealsToInsert.slice(i, i + dealChunk);
+        const { error: dealsError } = await supabase.from('deals').insert(chunk);
+        if (dealsError) {
+          // Acumular um erro genérico — não temos rowNumber aqui
+          errors.push({
+            rowNumber: -1,
+            message: `Erro a criar deals (chunk ${i / dealChunk + 1}): ${dealsError.message}`,
+          });
+        } else {
+          dealsCreated += chunk.length;
+        }
+      }
+    }
 
     return NextResponse.json({
       ok: true,
@@ -436,6 +565,8 @@ export async function POST(req: Request) {
         updated,
         skipped,
         errors: errors.length,
+        dealsCreated,
+        dealsByBoard: dealsCreatedByBoard,
       },
       errors,
       detectedHeaders: headers,
