@@ -180,6 +180,19 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
     if (!file) return;
     setIsLoading(true);
     try {
+      // Lazy-fetch dos deal defaults se ainda não foi carregado (race condition fix)
+      let defaults = dealDefaults;
+      if (createDeals && !defaults) {
+        const res = await fetch('/api/contacts/import/deal-defaults');
+        const data = await res.json();
+        if (data?.ok) {
+          defaults = data as DealDefaultsResponse;
+          setDealDefaults(defaults);
+        } else {
+          throw new Error(`Não consegui carregar routing para criar Oportunidades: ${data?.error || 'sem detalhe'}`);
+        }
+      }
+
       const fd = new FormData();
       fd.append('file', file);
       fd.append('mode', mode);
@@ -195,7 +208,7 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
       if (notePrefix.trim()) fd.append('notePrefix', notePrefix);
       if (forceOportunidade) fd.append('forceContactStage', 'PROSPECT');
 
-      if (createDeals && dealDefaults) {
+      if (createDeals && defaults) {
         fd.append('createDeals', 'true');
         const dealConfig = {
           qualificationColumns: {
@@ -204,7 +217,7 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
             QAP: qapColumn || undefined,
             QAA: qaaColumn || undefined,
           },
-          routing: dealDefaults.routing,
+          routing: defaults.routing,
           extraCustomFieldColumns: extraCustomFieldColumns,
           baseTags: ['antigas_remax'],
         };
