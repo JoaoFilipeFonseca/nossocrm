@@ -26,12 +26,30 @@ type ImportResultTotals = {
   updated: number;
   skipped: number;
   errors: number;
+  dealsCreated?: number;
+  dealsByBoard?: Record<string, number>;
 };
 
 type ImportResult = {
   ok: true;
   totals: ImportResultTotals;
   errors: Array<{ rowNumber: number; message: string }>;
+};
+
+type DealDefaultsResponse = {
+  ok: true;
+  routing: {
+    QV: { boardId: string; stageId: string };
+    QC: { boardId: string; stageId: string };
+    QAP: { boardId: string; stageId: string };
+    QAA: { boardId: string; stageId: string };
+    default: { boardId: string; stageId: string };
+  };
+  boards: {
+    proprietarios: { boardId: string; stageId: string };
+    compradores: { boardId: string; stageId: string };
+    arrendamento: { boardId: string; stageId: string };
+  };
 };
 
 type Step = 'upload' | 'map' | 'confirm' | 'done';
@@ -82,12 +100,51 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
   const [createCompanies, setCreateCompanies] = useState(true);
   const [sourceLabel, setSourceLabel] = useState<string>(todayLabel());
 
+  // ── Mappings extras (per-row source/date + qualificações para criar deals) ──
+  const [originColumn, setOriginColumn] = useState<string | null>(null);
+  const [dateColumn, setDateColumn] = useState<string | null>(null);
+  const [qvColumn, setQvColumn] = useState<string | null>(null);
+  const [qcColumn, setQcColumn] = useState<string | null>(null);
+  const [qapColumn, setQapColumn] = useState<string | null>(null);
+  const [qaaColumn, setQaaColumn] = useState<string | null>(null);
+  const [extraCustomFieldColumns, setExtraCustomFieldColumns] = useState<string[]>([]);
+
+  const [notePrefix, setNotePrefix] = useState<string>('');
+  const [forceOportunidade, setForceOportunidade] = useState<boolean>(false);
+  const [createDeals, setCreateDeals] = useState<boolean>(false);
+  const [dealDefaults, setDealDefaults] = useState<DealDefaultsResponse | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
 
   useEffect(() => {
     if (preview?.suggestedMapping) setMapping(preview.suggestedMapping);
   }, [preview]);
+
+  // Auto-detect extras a partir dos headers do ficheiro
+  useEffect(() => {
+    if (!preview?.headers) return;
+    const has = (needle: string) =>
+      preview.headers.find(h => h.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').includes(needle));
+    setOriginColumn(prev => prev ?? has('origem') ?? null);
+    setDateColumn(prev => prev ?? has('data criacao') ?? has('data criação') ?? null);
+    setQvColumn(prev => prev ?? preview.headers.find(h => h.trim().toUpperCase() === 'QV') ?? null);
+    setQcColumn(prev => prev ?? preview.headers.find(h => h.trim().toUpperCase() === 'QC') ?? null);
+    setQapColumn(prev => prev ?? preview.headers.find(h => h.trim().toUpperCase() === 'QAP') ?? null);
+    setQaaColumn(prev => prev ?? preview.headers.find(h => h.trim().toUpperCase() === 'QAA') ?? null);
+  }, [preview]);
+
+  // Fetch default deal routing config quando user activa createDeals
+  useEffect(() => {
+    if (!createDeals || dealDefaults) return;
+    fetch('/api/contacts/import/deal-defaults')
+      .then(r => r.json())
+      .then(data => {
+        if (data?.ok) setDealDefaults(data as DealDefaultsResponse);
+        else toast?.(`Não consegui carregar routing default: ${data?.error || ''}`, 'error');
+      })
+      .catch(e => toast?.((e as Error).message, 'error'));
+  }, [createDeals, dealDefaults, toast]);
 
   const canProceedFromMap = useMemo(() => {
     // É necessário pelo menos uma forma de identificar o contacto: name | email | phone
@@ -132,6 +189,28 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
       if (sourceLabel.trim()) fd.append('sourceLabel', sourceLabel.trim());
       fd.append('mapping', JSON.stringify(mapping));
 
+      // Extras enriquecimento
+      if (originColumn) fd.append('originColumn', originColumn);
+      if (dateColumn) fd.append('dateColumn', dateColumn);
+      if (notePrefix.trim()) fd.append('notePrefix', notePrefix);
+      if (forceOportunidade) fd.append('forceContactStage', 'PROSPECT');
+
+      if (createDeals && dealDefaults) {
+        fd.append('createDeals', 'true');
+        const dealConfig = {
+          qualificationColumns: {
+            QV: qvColumn || undefined,
+            QC: qcColumn || undefined,
+            QAP: qapColumn || undefined,
+            QAA: qaaColumn || undefined,
+          },
+          routing: dealDefaults.routing,
+          extraCustomFieldColumns: extraCustomFieldColumns,
+          baseTags: ['antigas_remax'],
+        };
+        fd.append('dealConfig', JSON.stringify(dealConfig));
+      }
+
       const res = await fetch('/api/contacts/import', { method: 'POST', body: fd });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
@@ -141,8 +220,9 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
       setResult(r);
       setStep('done');
       const t = r.totals;
+      const dealsInfo = t.dealsCreated ? ` · ${t.dealsCreated} oportunidades` : '';
       toast?.(
-        `Importação concluída: ${t.created} criados, ${t.updated} actualizados, ${t.skipped} ignorados, ${t.errors} erros.`,
+        `Importação concluída: ${t.created} criados, ${t.updated} actualizados, ${t.skipped} ignorados, ${t.errors} erros${dealsInfo}.`,
         t.errors > 0 ? 'warning' : 'success'
       );
       onCompleted?.(r);
@@ -238,6 +318,61 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
                 </select>
               </label>
             ))}
+          </div>
+
+          {/* Mappings extras opcionais — usados para enriquecer source/last_interaction
+              e criar deals automáticos. Renderiza só se o ficheiro parece ter colunas relevantes. */}
+          <div className="rounded-lg border border-violet-200 dark:border-violet-500/30 bg-violet-50/50 dark:bg-violet-500/5 p-3 space-y-3">
+            <div className="text-xs font-bold text-violet-900 dark:text-violet-200">
+              ✨ Mappings extras (opcional) — preserva origem, datas, qualificações
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <ExtraDropdown label="Origem (por linha)" headers={preview.headers} value={originColumn} onChange={setOriginColumn} hint="Ex: 'Portal Imovirtual', 'Site remax.pt' — preenche source de cada contacto" />
+              <ExtraDropdown label="Data Criação" headers={preview.headers} value={dateColumn} onChange={setDateColumn} hint="DD/MM/YYYY → last_interaction" />
+              <ExtraDropdown label="QV — Qualificação Vendedor" headers={preview.headers} value={qvColumn} onChange={setQvColumn} />
+              <ExtraDropdown label="QC — Qualificação Comprador" headers={preview.headers} value={qcColumn} onChange={setQcColumn} />
+              <ExtraDropdown label="QAP — Proprietário Arrendar" headers={preview.headers} value={qapColumn} onChange={setQapColumn} />
+              <ExtraDropdown label="QAA — Arrendatário" headers={preview.headers} value={qaaColumn} onChange={setQaaColumn} />
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-violet-900 dark:text-violet-200 mb-1">
+                Outras colunas para guardar em custom_fields das Oportunidades:
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {preview.headers.map(h => {
+                  const isMapped =
+                    Object.values(mapping).includes(h) ||
+                    h === originColumn ||
+                    h === dateColumn ||
+                    h === qvColumn || h === qcColumn || h === qapColumn || h === qaaColumn;
+                  const isExtra = extraCustomFieldColumns.includes(h);
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => {
+                        setExtraCustomFieldColumns(prev =>
+                          prev.includes(h) ? prev.filter(x => x !== h) : [...prev, h]
+                        );
+                      }}
+                      disabled={isMapped}
+                      className={`px-2 py-0.5 rounded-full text-[11px] font-medium border ${
+                        isMapped
+                          ? 'bg-slate-100 dark:bg-white/5 text-slate-400 border-slate-200 dark:border-white/10 cursor-not-allowed'
+                          : isExtra
+                          ? 'bg-violet-200 dark:bg-violet-500/30 text-violet-900 dark:text-violet-100 border-violet-300 dark:border-violet-400'
+                          : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:bg-violet-100 dark:hover:bg-violet-500/10'
+                      }`}
+                    >
+                      {h}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                Clica num chip para incluir/excluir. Colunas já mapeadas em cima ficam cinzentas.
+              </div>
+            </div>
           </div>
 
           {/* Preview tabela */}
@@ -391,6 +526,72 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
             </label>
           </div>
 
+          {/* ── Bloco enriquecimento: prefixo notas + stage Oportunidade + criar deals ── */}
+          <div className="rounded-xl border border-violet-200 dark:border-violet-500/30 bg-violet-50/50 dark:bg-violet-500/5 p-3 space-y-3">
+            <div className="text-xs font-bold text-violet-900 dark:text-violet-200">
+              ✨ Enriquecer importação (opcional)
+            </div>
+
+            <label className="block space-y-1">
+              <div className="text-xs font-semibold text-violet-900 dark:text-violet-200">
+                Prefixo automático nas notas (ex: "[antiga lead remax] ")
+              </div>
+              <input
+                type="text"
+                value={notePrefix}
+                onChange={e => setNotePrefix(e.target.value)}
+                placeholder="[antiga lead remax] "
+                className="w-full text-sm rounded-lg border border-violet-200 dark:border-violet-500/30 bg-white dark:bg-white/5 px-3 py-1.5"
+              />
+            </label>
+
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={forceOportunidade}
+                onChange={e => setForceOportunidade(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                Forçar todos como <b>Oportunidade</b> (em vez de Lead) — contacts.stage = PROSPECT
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={createDeals}
+                onChange={e => setCreateDeals(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                Criar <b>Oportunidades</b> automaticamente nos boards (1 deal por contacto criado)
+              </span>
+            </label>
+
+            {createDeals && (
+              <div className="rounded-lg border border-violet-200 dark:border-violet-500/30 bg-white dark:bg-black/30 p-2.5 text-xs space-y-1 text-slate-700 dark:text-slate-200">
+                <div className="font-semibold text-violet-900 dark:text-violet-200">Routing automático</div>
+                <div>
+                  • <b>QC</b> preenchido → board <b>Compradores</b> · stage Oportunidade
+                </div>
+                <div>
+                  • <b>QV</b> ou <b>QAP</b> preenchido → board <b>Proprietários</b> · stage Oportunidade
+                </div>
+                <div>
+                  • <b>QAA</b> preenchido → board <b>Arrendamento</b> · stage Oportunidade
+                </div>
+                <div>
+                  • Não qualificado (todas vazias) → board <b>Compradores</b> · stage Oportunidade
+                </div>
+                <div className="text-slate-500 dark:text-slate-400 pt-1">
+                  Priority: QC › QV › QAP › QAA › default. Tag <code>antigas_remax</code> + tag da qualificação em todos.
+                </div>
+                {!dealDefaults && <div className="text-amber-700 dark:text-amber-300 italic">A carregar configuração de boards…</div>}
+              </div>
+            )}
+          </div>
+
           <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
             Vou processar <b>{preview.totalRows.toLocaleString('pt-PT')}</b> linha(s) do ficheiro{' '}
             <b>{preview.filename}</b>. Esta acção grava na base de dados.
@@ -434,6 +635,21 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
             <Stat label="Erros" value={result.totals.errors} tone={result.totals.errors > 0 ? 'negative' : 'neutral'} />
           </div>
 
+          {typeof result.totals.dealsCreated === 'number' && result.totals.dealsCreated > 0 && (
+            <div className="rounded-lg border border-violet-200 dark:border-violet-500/30 bg-violet-50/50 dark:bg-violet-500/10 p-3 text-xs text-violet-900 dark:text-violet-200">
+              <div className="font-bold mb-1">✨ {result.totals.dealsCreated} Oportunidades criadas</div>
+              {result.totals.dealsByBoard && (
+                <div className="flex flex-wrap gap-3">
+                  {Object.entries(result.totals.dealsByBoard).map(([boardId, count]) => (
+                    <div key={boardId}>
+                      board <code className="text-[10px]">{boardId.slice(0, 8)}</code>: <b>{count}</b>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {result.errors.length > 0 && (
             <div className="rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50/70 dark:bg-red-500/10 p-3 max-h-48 overflow-y-auto text-xs space-y-1">
               {result.errors.slice(0, 50).map((e, i) => (
@@ -464,6 +680,34 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
         </div>
       )}
     </div>
+  );
+}
+
+function ExtraDropdown(props: {
+  label: string;
+  headers: string[];
+  value: string | null;
+  onChange: (v: string | null) => void;
+  hint?: string;
+}) {
+  const { label, headers, value, onChange, hint } = props;
+  return (
+    <label className="flex flex-col gap-0.5 text-sm">
+      <span className="text-xs font-semibold text-violet-900 dark:text-violet-200">{label}</span>
+      <select
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value || null)}
+        className="text-sm rounded-lg border border-violet-200 dark:border-violet-500/30 bg-white dark:bg-white/5 px-2 py-1"
+      >
+        <option value="">— ignorar —</option>
+        {headers.map(h => (
+          <option key={h} value={h}>
+            {h}
+          </option>
+        ))}
+      </select>
+      {hint && <span className="text-[11px] text-slate-500 dark:text-slate-400">{hint}</span>}
+    </label>
   );
 }
 
