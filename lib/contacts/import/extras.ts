@@ -115,3 +115,29 @@ export function buildCustomFields(
   }
   return out;
 }
+
+/**
+ * Detecta padrões de referência de imóvel em texto livre (notes/observações).
+ *
+ * Exports de portais imobiliários PT incorporam o ID interno do anúncio nas
+ * mensagens dos leads. Exemplos comuns:
+ *  - RE/MAX: "124851227-13 Olá, tenho interesse..." (formato `agenteId-imovelId`)
+ *  - ERA / Century21: "REF: ABC-12345"
+ *  - Idealista: "Anúncio 24351789"
+ *
+ * Devolve a primeira referência detectada ou null. Preserva no
+ * deal.custom_fields.imovel_referencia_externa para futura sincronização
+ * com a tabela `imoveis`.
+ */
+export function extractImovelReferencia(text: string | null | undefined): string | null {
+  const s = String(text ?? '');
+  if (!s) return null;
+  // Padrão RE/MAX: 8-10 dígitos seguidos de hífen e 1-4 dígitos
+  // Match ao início da string ou após espaço/início de linha para evitar capturar IDs aleatórios
+  const remax = /(?:^|\s)(\d{8,10}-\d{1,4})/.exec(s);
+  if (remax) return remax[1];
+  // Padrão ERA/RE/MAX genérico: REF:/Ref:/REF seguido de código
+  const ref = /\b(?:REF|Ref|ref)\s*:?\s*([A-Z0-9-]{4,20})/.exec(s);
+  if (ref) return ref[1];
+  return null;
+}

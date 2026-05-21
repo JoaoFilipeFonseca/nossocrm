@@ -13,6 +13,7 @@ import {
 } from '@/lib/contacts/import/mapping';
 import {
   buildCustomFields,
+  extractImovelReferencia,
   parseDateDDMMYYYY,
   pickDealRouting,
   type DealRoutingConfig,
@@ -465,6 +466,10 @@ export async function POST(req: Request) {
         if (perRowSource) cf['source_lead'] = perRowSource;
         if (routing.reference) cf['qualificacao_referencia'] = routing.reference;
         if (p.data.dateValue) cf['data_criacao_original'] = p.data.dateValue;
+        // Extrair referência de imóvel do texto das observações (ex: '124851227-13')
+        // para futura ligação ao registo na tabela imoveis
+        const imovelRef = extractImovelReferencia(p.data.notes);
+        if (imovelRef) cf['imovel_referencia_externa'] = imovelRef;
         const tags = Array.from(new Set([...(dealConfig.baseTags || []), routing.qualifTag]));
         const dealRow: Record<string, unknown> = {
           title: p.data.name || '(sem nome)',
