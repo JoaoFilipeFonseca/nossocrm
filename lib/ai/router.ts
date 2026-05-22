@@ -9,6 +9,7 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { generateText, type LanguageModel } from 'ai';
+import { buildCachedSystem, flattenSystem, logCacheStats, type CachedBlock } from './cache';
 
 export type AIFeature =
     | 'chat'              // Pilot chat with tools — fast iteration
@@ -76,7 +77,18 @@ function isRetryableError(err: any): boolean {
 
 interface RouterCallOptions {
     feature: AIFeature;
+    /**
+     * Mensagem do utilizador (dados dinâmicos do deal/contacto/imóvel).
+     * Para activar prompt caching, passa também `system` separado.
+     * Se `system` não for passado, este `prompt` é usado como prompt único (legacy).
+     */
     prompt: string;
+    /**
+     * Prompt específico da feature (estático). Quando passado, vai como system
+     * com cache_control ephemeral, junto com o GLOBAL_RULES_BLOCK partilhado.
+     * Para Gemini é concatenado (implicit caching trata o resto).
+     */
+    system?: string;
     keys: AIKeys;
     temperature?: number;
     maxTokens?: number;
@@ -108,13 +120,38 @@ export async function routedGenerate(opts: RouterCallOptions): Promise<RouterCal
             continue;
         }
         try {
-            const { text } = await generateText({
-                model,
-                prompt: opts.prompt,
-                temperature: opts.temperature ?? 0.7,
-            });
+            // Prompt caching: quando `system` é passado, separa em blocks cached (Anthropic)
+            // ou concatena (Gemini — beneficia de implicit caching sem código).
+            let result;
+            if (opts.system) {
+                const cachedBlocks: CachedBlock[] = buildCachedSystem(opts.system);
+                if (cfg.provider === 'anthropic') {
+                    result = await generateText({
+                        model,
+                        system: cachedBlocks as never,
+                        prompt: opts.prompt,
+                        temperature: opts.temperature ?? 0.7,
+                    });
+                } else {
+                    // Gemini: usa string flat (implicit caching activo por defeito em 2.5+)
+                    result = await generateText({
+                        model,
+                        system: flattenSystem(cachedBlocks),
+                        prompt: opts.prompt,
+                        temperature: opts.temperature ?? 0.7,
+                    });
+                }
+            } else {
+                // Legacy path (sem cache) — backward compatible
+                result = await generateText({
+                    model,
+                    prompt: opts.prompt,
+                    temperature: opts.temperature ?? 0.7,
+                });
+            }
+            logCacheStats(`${opts.feature} ${cfg.provider}/${cfg.model}`, result);
             return {
-                text,
+                text: result.text,
                 modelUsed: `${cfg.provider}/${cfg.model}`,
                 fallbackUsed: !isPrimary,
             };
