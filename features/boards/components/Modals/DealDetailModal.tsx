@@ -604,7 +604,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     className="text-lg text-primary-600 dark:text-primary-400 font-mono font-bold cursor-pointer hover:underline decoration-dashed underline-offset-4"
                     title="Clique para editar valor"
                   >
-                    ${deal.value.toLocaleString()}
+                    {deal.value.toLocaleString('pt-PT')} €
                   </p>
                 )}
               </div>
@@ -1192,7 +1192,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                           <option value="">Selecione um item...</option>
                           {products.map(p => (
                             <option key={p.id} value={p.id}>
-                              {p.name} - ${p.price}
+                              {p.name} — {p.price} €
                             </option>
                           ))}
                         </select>
@@ -1298,10 +1298,10 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                                   {item.quantity}
                                 </td>
                                 <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
-                                  ${item.price.toLocaleString()}
+                                  {item.price.toLocaleString('pt-PT')} €
                                 </td>
                                 <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">
-                                  ${(item.price * item.quantity).toLocaleString()}
+                                  {(item.price * item.quantity).toLocaleString('pt-PT')} €
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <button
@@ -1324,7 +1324,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                               Total do Pedido
                             </td>
                             <td className="px-4 py-3 text-right font-bold text-primary-600 dark:text-primary-400 text-lg">
-                              ${deal.value.toLocaleString()}
+                              {deal.value.toLocaleString('pt-PT')} €
                             </td>
                             <td></td>
                           </tr>
