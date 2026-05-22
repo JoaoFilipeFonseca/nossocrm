@@ -221,15 +221,16 @@ export function MessageComposerModal({
 
     // Auto-gerar draft inicial via IA quando o modal abre sem initialMessage
     // e há contexto rico (cockpitSnapshot). Substitui templates hardcoded pt-BR.
+    // NOTA: deps intencionalmente MÍNIMAS (isOpen, channel) — não incluir
+    // isGeneratingInitial/isRewriting (causa race: setState dispara cleanup que cancela
+    // a própria chamada antes da resposta chegar). Guard via generatedForKeyRef.
     useEffect(() => {
         if (!isOpen) return;
-        if (isGeneratingInitial || isRewriting) return;
 
         const hasInitial = typeof initialMessage === 'string' && initialMessage.trim().length > 0;
         const hasContext = Boolean(aiContext?.cockpitSnapshot);
         if (hasInitial || !hasContext) return;
 
-        // Evita re-gerar se reabrir o mesmo modal/contexto
         const key = `${channel}:${(aiContext as any)?.cockpitSnapshot?.deal?.id ?? 'no-deal'}`;
         if (generatedForKeyRef.current === key) return;
         generatedForKeyRef.current = key;
@@ -260,8 +261,6 @@ export function MessageComposerModal({
                 }
             } catch (err) {
                 if (cancelled) return;
-                // Fallback silencioso: deixa textarea vazia com mensagem leve.
-                // O utilizador pode escrever manualmente ou clicar "Reescrever com IA".
                 if (isConsentError(err)) {
                     setRewriteError('IA não configurada — escreva manualmente ou configure em Definições.');
                 } else if (isRateLimitError(err)) {
@@ -275,7 +274,8 @@ export function MessageComposerModal({
         })();
 
         return () => { cancelled = true; };
-    }, [isOpen, channel, initialMessage, aiContext, isGeneratingInitial, isRewriting]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, channel]);
 
     const canOpen = useMemo(() => {
         if (channel === 'WHATSAPP') return Boolean(phone);
