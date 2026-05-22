@@ -21,6 +21,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 import { getResolvedPrompt } from '@/lib/ai/prompts/server';
 import { renderPromptTemplate } from '@/lib/ai/prompts/render';
+import { buildCachedSystem, flattenSystem, logCacheStats } from '@/lib/ai/cache';
 import { isAIFeatureEnabled } from '@/lib/ai/features/server';
 
 export const maxDuration = 60;
@@ -141,6 +142,113 @@ function safeContextText(v: unknown, maxBytes = 80_000): string {
   } catch {
     return '';
   }
+}
+
+// Remove rótulos internos do CRM ([Calculadora], [Proprietários], "Deal - ", etc.) antes de enviar ao LLM
+function stripInternalLabels(text: string): string {
+  if (!text) return '';
+  return String(text)
+    .replace(/\s*\[(?:Calculadora|Comparadores|Vendedores|Proprietarios|Propriet[áa]rios|Compradores|Arrendamento|Parceiros|Pipeline|Quiz|FSBO|Lead)\]\s*/gi, ' ')
+    .replace(/^Deal\s*-\s*/i, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function fmtDateRel(iso: string | null | undefined): string {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    const dateStr = d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+    if (days === 0) return `hoje (${dateStr})`;
+    if (days === 1) return `ontem (${dateStr})`;
+    if (days < 30) return `há ${days} dias (${dateStr})`;
+    return dateStr;
+  } catch { return String(iso); }
+}
+
+// Constrói user message ESTRUTURADO (secções) em vez de JSON blob.
+// LLM consegue extrair factos concretos sem ter que parsear JSON inline.
+function buildRewriteUserMessage(args: {
+  channelLabel: string;
+  subject: string;
+  message: string;
+  snapshot: any;
+  nba: any;
+}): string {
+  const { channelLabel, subject, message, snapshot, nba } = args;
+  const lines: string[] = [];
+
+  lines.push(`== CANAL ==\n${channelLabel}`);
+
+  if (subject || message) {
+    lines.push('\n== RASCUNHO ACTUAL (a melhorar) ==');
+    if (subject) lines.push(`Assunto: ${subject}`);
+    if (message) lines.push(`Mensagem:\n${message}`);
+  } else {
+    lines.push('\n== RASCUNHO ACTUAL ==\n[sem rascunho — gera mensagem nova do zero]');
+  }
+
+  const deal = snapshot?.deal;
+  if (deal) {
+    const title = stripInternalLabels(deal.title || '');
+    const valorFmt = typeof deal.value === 'number' && deal.value > 0
+      ? `${deal.value.toLocaleString('pt-PT')} €`
+      : '';
+    lines.push('\n== DEAL ==');
+    if (title) lines.push(`- Assunto: ${title}`);
+    if (snapshot?.stage?.label) lines.push(`- Fase do funil: ${snapshot.stage.label}`);
+    if (snapshot?.board?.name) lines.push(`- Pipeline: ${snapshot.board.name}`);
+    if (valorFmt) lines.push(`- Valor: ${valorFmt}`);
+    if (snapshot?.cockpitSignals?.daysInStage != null) lines.push(`- Dias nesta fase: ${snapshot.cockpitSignals.daysInStage}`);
+    if (snapshot?.cockpitSignals?.healthScore != null) lines.push(`- Health score: ${snapshot.cockpitSignals.healthScore}/100`);
+  }
+
+  const c = snapshot?.contact;
+  if (c) {
+    lines.push('\n== CONTACTO ==');
+    if (c.name) lines.push(`- Nome: ${c.name}`);
+    if (c.email) lines.push(`- Email: ${c.email}`);
+    if (c.source) lines.push(`- Fonte do lead: ${c.source}`);
+    if (c.lastInteraction) lines.push(`- Última interacção registada: ${fmtDateRel(c.lastInteraction)}`);
+    if (c.notes) lines.push(`- Notas do contacto: ${String(c.notes).slice(0, 500)}`);
+  }
+
+  const acts = snapshot?.lists?.activities?.preview;
+  if (Array.isArray(acts) && acts.length > 0) {
+    lines.push('\n== HISTÓRICO RECENTE (até 5 últimas actividades) ==');
+    acts.slice(0, 5).forEach((a: any, i: number) => {
+      const t = stripInternalLabels(a.title || a.description || a.type || '');
+      lines.push(`${i + 1}. [${fmtDateRel(a.date)}] ${a.type || ''} ${t}`.trim());
+    });
+  }
+
+  const notes = snapshot?.lists?.notes?.preview;
+  if (Array.isArray(notes) && notes.length > 0) {
+    lines.push('\n== NOTAS RELEVANTES (até 3 últimas) ==');
+    notes.slice(0, 3).forEach((n: any, i: number) => {
+      const txt = String(n.content || '').slice(0, 300);
+      lines.push(`${i + 1}. [${fmtDateRel(n.created_at)}] ${txt}`);
+    });
+  }
+
+  if (nba) {
+    const action = nba.action || nba.title;
+    const reason = nba.reason;
+    if (action) {
+      lines.push('\n== PRÓXIMA ACÇÃO SUGERIDA (hint, não copiar literal) ==');
+      lines.push(`- Acção: ${action}`);
+      if (reason) lines.push(`- Razão: ${reason}`);
+    }
+  }
+
+  lines.push(`\n== INSTRUÇÃO ==\n${
+    subject || message
+      ? `Melhora a mensagem acima para ${channelLabel}, mantendo o conteúdo essencial mas aplicando o estilo profissional pt-PT formal do João Fonseca conforme as regras do system. Usa os dados do deal e do histórico para personalizar com factos concretos.`
+      : `Cria uma mensagem nova para ${channelLabel} usando os dados acima. Aplica o estilo profissional pt-PT formal do João Fonseca conforme as regras do system. Personaliza com 1-2 factos concretos do deal ou do histórico.`
+  }`);
+
+  return lines.join('\n');
 }
 
 function json<T>(body: T, status = 200): Response {
@@ -296,49 +404,31 @@ export async function POST(req: Request) {
         const { text: safeMessage } = sanitizeIncomingMessage(String(currentMessage || ''), { org_id: profile.organization_id });
         const { text: safeSubject } = sanitizeIncomingMessage(String(currentSubject || ''), { org_id: profile.organization_id });
 
-        const snapshotText = safeContextText(cockpitSnapshot);
-        const nbaText = safeContextText(nextBestAction);
+        // System: prompt v1 da BD (rewrite_message_draft) + GLOBAL_RULES_BLOCK, ambos cached
+        const resolved = await getResolvedPrompt(supabase as any, profile.organization_id as any, 'rewrite_message_draft');
+        const featurePrompt = resolved?.content || '';
+        const cachedBlocks = buildCachedSystem(featurePrompt);
+        // Provider aqui é sempre Google (linha 236) — flatten para Gemini (implicit caching)
+        const systemFlat = flattenSystem(cachedBlocks);
+
+        // User: dados estruturados por secções (NÃO blob JSON cru)
+        const userMessage = buildRewriteUserMessage({
+          channelLabel,
+          subject: safeSubject,
+          message: safeMessage,
+          snapshot: cockpitSnapshot,
+          nba: nextBestAction,
+        });
 
         const result = await generateText({
           model,
-          system: SECURITY_PREAMBLE,
+          system: systemFlat,
           maxRetries: 3,
           output: Output.object({ schema: RewriteMessageDraftSchema }),
-          prompt: `Você é um vendedor sênior e copywriter.
-Sua tarefa é REESCREVER (melhorar) uma mensagem para enviar ao cliente.
-
-CANAL: ${channelLabel}
-
-RASCUNHO ATUAL:
-- subject (se houver): ${safeSubject}
-- message: ${safeMessage}
-
-PRÓXIMA AÇÃO (sugestão/NBA):
-${nbaText || '[não fornecida]'}
-
-CONTEXTO COMPLETO (cockpitSnapshot):
-${snapshotText || '[não fornecido]'}
-
-REGRAS:
-1) Português europeu (pt-PT) formal. Banir Oi, Voce, te, rapidinha, Abs. Strip rotulos [Pipeline] do contexto. Cada mensagem da valor ao cliente. Continuidade obrigatoria se houver historico, natural e humano. Evite jargão e evite rótulos tipo "Contexto:"/"Sobre:".
-2) Use o contexto para personalizar (nome, deal, etapa, próximos passos), mas NÃO invente fatos.
-3) Para WHATSAPP: curto, direto e MUITO legível no WhatsApp. Use quebras de linha (parágrafos) e, quando houver opções, use lista com marcadores no formato "- item" (hífen + espaço). Evite parágrafos longos. 3–10 linhas.
-4) Para EMAIL: devolva subject + body (message = body). Aplique boas práticas de email de vendas/CRM:
-   - Assunto curto e específico (<= 80), sem ALL CAPS e sem "RE:" falso.
-   - Corpo SEMPRE bem escaneável: parágrafos curtos (1–2 frases), com linhas em branco entre blocos.
-   - Estrutura sugerida (adapte ao contexto):
-     a) Saudação breve (use o nome se tiver certeza).
-     b) 1 frase de contexto (por que está falando agora).
-     c) 1–2 bullets com valor/objetivo ou próximos passos (use "- ").
-     d) CTA claro e simples (uma pergunta) e, se houver opções de agenda, liste em bullets ("- segunda 10h", "- terça 15h").
-     e) Fechamento curto (ex.: "Obrigado!"), sem assinatura com dados pessoais.
-   - Evite bloco único de texto: NÃO devolva tudo em um parágrafo.
-   - Tamanho: 6–16 linhas no total (incluindo linhas em branco).
-5) Não inclua placeholders (tipo "[nome]") e não inclua assinatura com dados pessoais.
-
-Retorne APENAS no formato do schema (subject opcional, message obrigatório).`,
+          prompt: userMessage,
         });
 
+        logCacheStats(`rewriteMessageDraft channel=${channelLabel} provider=google`, result);
         logAIAction(supabase, profile.organization_id, 'rewriteMessageDraft', modelId, result);
         return json<AIActionResponse>({ result: result.output });
       }

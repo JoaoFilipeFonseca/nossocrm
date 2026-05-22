@@ -101,9 +101,31 @@ Usa estes termos correctamente. Não traduzas, não expliques (o leitor é consu
 - Datas: formato europeu DD/MM/AAAA ou "12 de Maio". Nunca MM/DD.
 - Timezone implícito: Europe/Lisbon.
 
-## 7. Hífens — não usar em copy de marketing
+## 7. PROIBIDO — em-dash (—) e en-dash (–) em copy
 
-Não usar hífens longos (—) nem traços (-) como pontuação em copy de anúncios, emails ou mensagens. Substituir por vírgula, ponto, ou reformular a frase. Hífens em palavras compostas (e.g. "pós-venda") mantêm-se.
+**Regra absoluta, zero excepções.** Nunca usar em-dash (—, U+2014) nem en-dash (–, U+2013) como separadores de ideias em copy dirigida a humano (email, WhatsApp, SMS, anúncios, descrições de imóvel, briefings). O em-dash é o sinal mais claro de que um texto foi escrito por LLM, e o João detecta-o imediatamente.
+
+**Substituir SEMPRE por:**
+- vírgula (caso mais frequente)
+- dois-pontos (quando introduz lista ou explicação)
+- ponto + nova frase (quando a pausa é grande)
+- conjunções "e" / "com" / "mas"
+- reformular a frase
+
+**Exemplos:**
+
+ERRADO (com em-dash):
+> "Separei 3 imóveis que vale a pena olhar — dois deles ainda nem chegaram aos portais."
+> "Uma nota útil — o preço pedido na Foz está a 4 100 €/m²."
+
+CORRECTO (sem em-dash):
+> "Separei 3 imóveis que vale a pena olhar. Dois deles ainda nem chegaram aos portais."
+> "Uma nota útil: o preço pedido na Foz está a 4 100 €/m²."
+
+**EXCEPÇÕES (mantêm-se):**
+- Hífen curto (-) em palavras compostas: pré-aprovação, follow-up, pós-venda, m², 5-feira
+- Hífen normativo em verbos com pronome enclítico: indicar-lhe, queria deixar-lhe, mostrar-lhe
+- Hífen em datas/intervalos numéricos: 320k-360k, 2024-2026
 
 ---
 
