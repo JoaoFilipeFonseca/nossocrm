@@ -93,7 +93,7 @@ async function fetchGoogleModels(apiKey: string): Promise<AIModelInfo[]> {
     .filter((m) => !m.isAlias)
     .sort((a, b) => b.id.localeCompare(a.id));
 
-  return [...aliases, ...pinned, ...ANTHROPIC_MODELS];
+  return [...aliases, ...pinned];
 }
 
 // =============================================================================
