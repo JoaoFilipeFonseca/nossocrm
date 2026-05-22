@@ -45,7 +45,8 @@ import {
   CheckSquare,
   Home,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Target
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -313,7 +314,8 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
             { to: '/inbox', icon: Inbox, label: 'Inbox', prefetch: 'inbox' as const, badge: undefined },
             { to: '/messaging', icon: MessageSquare, label: 'Mensagens', prefetch: undefined, badge: unreadMessagesCount },
             { to: '/dashboard', icon: LayoutDashboard, label: 'Visão Geral', prefetch: 'dashboard' as const, badge: undefined },
-            { to: '/matches', icon: Inbox, label: 'Matches', prefetch: undefined, badge: undefined },
+            { to: '/cruzamentos', icon: Target, label: 'Cruzamentos', prefetch: undefined, badge: undefined },
+            { to: '/matches', icon: Inbox, label: 'Inbox Bruto', prefetch: undefined, badge: undefined },
       { to: '/ai/workflows/angariacao', icon: Sparkles, label: 'Angariação IA', prefetch: undefined, badge: undefined },
             { to: '/boards', icon: KanbanSquare, label: 'Boards', prefetch: 'boards' as const, badge: undefined },
             { to: '/contacts', icon: Users, label: 'Contactos', prefetch: 'contacts' as const, badge: undefined },
