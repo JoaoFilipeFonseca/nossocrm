@@ -15,7 +15,7 @@ import {
   Target,
 } from 'lucide-react';
 
-export type PrimaryNavId = 'inbox' | 'messaging' | 'matches' | 'boards' | 'contacts' | 'imoveis' | 'activities' | 'more';
+export type PrimaryNavId = 'inbox' | 'messaging' | 'cruzamentos' | 'matches' | 'boards' | 'contacts' | 'imoveis' | 'activities' | 'more';
 
 export interface PrimaryNavItem {
   id: PrimaryNavId;
@@ -28,7 +28,8 @@ export interface PrimaryNavItem {
 export const PRIMARY_NAV: PrimaryNavItem[] = [
   { id: 'inbox', label: 'Inbox', href: '/inbox', icon: Inbox },
   { id: 'messaging', label: 'Mensagens', href: '/messaging', icon: MessageSquare },
-  { id: 'matches', href: '/matches', label: 'Matches', icon: Inbox },
+  { id: 'cruzamentos', label: 'Cruzamentos', href: '/cruzamentos', icon: Target },
+  { id: 'matches', href: '/matches', label: 'Inbox Bruto', icon: Inbox },
   { id: 'boards', label: 'Boards', href: '/boards', icon: KanbanSquare },
   { id: 'contacts', label: 'Contactos', href: '/contacts', icon: Users },
   { id: 'imoveis', label: 'Imóveis', href: '/imoveis', icon: Home },
@@ -36,7 +37,7 @@ export const PRIMARY_NAV: PrimaryNavItem[] = [
   { id: 'more', label: 'Mais', icon: MoreHorizontal },
 ];
 
-export type SecondaryNavId = 'dashboard' | 'reports' | 'cruzamentos' | 'automation_logs' | 'settings' | 'profile';
+export type SecondaryNavId = 'dashboard' | 'reports' | 'automation_logs' | 'settings' | 'profile';
 
 export interface SecondaryNavItem {
   id: SecondaryNavId;
@@ -49,7 +50,6 @@ export interface SecondaryNavItem {
 export const SECONDARY_NAV: SecondaryNavItem[] = [
   { id: 'dashboard', label: 'Visão Geral', href: '/dashboard', icon: LayoutDashboard },
   { id: 'reports', label: 'Relatórios', href: '/reports', icon: BarChart3 },
-  { id: 'cruzamentos', label: 'Cruzamentos', href: '/cruzamentos', icon: Target },
   { id: 'automation_logs', label: 'Logs Automações', href: '/settings/automation-logs', icon: ScrollText },
   { id: 'settings', label: 'Configurações', href: '/settings', icon: Settings },
   { id: 'profile', label: 'Perfil', href: '/profile', icon: User },
