@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
             created_at: c.dateAdded || new Date().toISOString(),
             updated_at: c.dateUpdated || c.dateAdded || new Date().toISOString(),
             status: 'lead',
-            stage: 'lead_new'
+            stage: 'LEAD'
           };
           const { data: ins, error: insErr } = await (supabase as any).from('contacts').insert(contactRow).select('id').single();
           if (insErr) { summary.errors.push('insert contact: ' + insErr.message); continue; }

@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         created_at: c.dateAdded || new Date().toISOString(),
         updated_at: c.dateUpdated || c.dateAdded || new Date().toISOString(),
         status: 'lead',
-        stage: 'lead_new'
+        stage: 'LEAD'
       };
     });
 

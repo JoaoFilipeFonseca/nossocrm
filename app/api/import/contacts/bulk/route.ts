@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       created_at: c.created_at || new Date().toISOString(),
       updated_at: c.updated_at || new Date().toISOString(),
       status: c.status || 'lead',
-      stage: c.stage || 'lead_new'
+      stage: c.stage || 'LEAD'
     }));
 
     // batch insert in chunks of 250
