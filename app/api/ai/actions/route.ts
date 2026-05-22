@@ -439,6 +439,9 @@ export async function POST(req: Request) {
         let providerUsed: string = 'google';
 
         try {
+          // Timeout 12s: Gemini Flash com snapshot rico + Output.object schema demora 8-12s tipicamente.
+          // Timeout só dispara fallback Anthropic em casos de travamento real (>12s). UX 8-10s aceitável.
+          // Para baixar para <5s, opções no CAPTURE.md: streaming, pre-generation, race verdadeira.
           result = await withTimeout(
             generateText({
               model,
@@ -447,7 +450,7 @@ export async function POST(req: Request) {
               output: Output.object({ schema: RewriteMessageDraftSchema }),
               prompt: userMessage,
             }),
-            3500,
+            12000,
             'gemini'
           );
         } catch (err: any) {

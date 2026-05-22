@@ -45,11 +45,36 @@
   - Telegram bot comandos `/preparar email [nome]`
 - **Estimativa:** 5-6 sessões.
 
-### M-002 · Streaming UX (melhoria de percepção)
-- Hoje: utilizador vê spinner 3-5s, depois texto inteiro aparece.
-- Melhor UX: stream chunk-by-chunk com `streamText` em vez de `generateText` → primeiro char aparece em 500ms, completa em 3-5s. Sensação de instantâneo.
-- **Trade-off:** stream não suporta `output: Output.object({schema})` directamente — precisa parse-as-you-go ou voltar a `text` puro + parse JSON manual.
-- Sessão dedicada.
+### M-002 · UX latência IA — 3 caminhos discutidos 22/05 noite (NÃO ATACAR isolado, escolher 1 em Plan-First)
+
+**Diagnóstico final 22/05:** copy profissional + Output.object schema + snapshot rico = 8-12s
+reais é fisiologicamente difícil baixar abaixo de 5s. Output a ~50 tok/s para 250 tok já são 5s.
+
+**3 opções para Plan-First dedicado (escolher 1 ou combinar):**
+
+**Opção A — Streaming**
+- `streamText` em vez de `generateText`. Primeiro chunk em ~1s, completa em ~8s.
+- Sensação de instantâneo (mesmo com latência real igual).
+- Trade-off: perde `Output.object({schema})` directa. Soluções:
+  1. Voltar a texto livre + parser regex/JSON manual para extrair subject + body
+  2. Stream + parse JSON incremental (lib `partial-json`)
+  3. 2 calls separadas: 1ª subject (rápida), 2ª body (streaming)
+- Estimativa: 1 sessão.
+
+**Opção B — Pre-generation em background**
+- Ao abrir um deal no Foco (ou hover de DealCard), dispara pre-fetch silencioso.
+- Cache em memória browser (ou Supabase realtime) com TTL 5min.
+- Quando utilizador clica "Preparar email", draft está pronto → instantâneo.
+- Trade-off: custo IA por cada deal aberto mesmo sem usar (~$0.001/abertura). Solução: limitar a "deals priorizados no Inbox" + invalidar ao mudar.
+- Estimativa: 2 sessões.
+
+**Opção C — Race verdadeira Gemini ‖ Claude**
+- `Promise.race([gemini, anthropic])` ambas iniciadas simultaneamente. Devolve primeira.
+- Latência = min(Gemini, Anthropic) ≈ 4-6s típico.
+- Custo: 2x sempre (~$0.0009/call vs $0.0001 actual). 100 mensagens/dia = ~$0.08/dia.
+- Estimativa: 1 commit ~15min.
+
+**Recomendação:** B (pre-generation) é a melhor UX — instantâneo. A (streaming) é melhor compromisso esforço/benefício. C é o mais simples e barato em desenvolvimento.
 
 ### M-003 · Reduzir snapshot na origem (não só no consumer)
 - Hoje, o snapshot tem 25 activities + 50 notes + 50 files + 50 scripts (`features/inbox/components/FocusContextPanel.tsx:538-580`).
