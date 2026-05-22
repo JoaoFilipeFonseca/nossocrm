@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, ExternalLink, Mail, MessageCircle, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { rewriteMessageDraft, type RewriteMessageDraftInput } from '@/lib/ai/actionsClient';
@@ -188,8 +188,12 @@ export function MessageComposerModal({
     const [message, setMessage] = useState('');
     const [copied, setCopied] = useState<'subject' | 'message' | 'contact' | null>(null);
     const [isRewriting, setIsRewriting] = useState(false);
+    const [isGeneratingInitial, setIsGeneratingInitial] = useState(false);
     const [rewriteError, setRewriteError] = useState<string | null>(null);
     const [aiBadge, setAiBadge] = useState(false);
+    // Marca esta "abertura" do modal — usada para evitar geração IA duplicada.
+    // Reset ao fechar/reabrir, mas estável durante uma abertura.
+    const generatedForKeyRef = useRef<string | null>(null);
 
     const phone = useMemo(() => formatPhoneForWhatsApp(contactPhone), [contactPhone]);
     const contactValue = useMemo(() => {
@@ -199,7 +203,12 @@ export function MessageComposerModal({
     const title = channel === 'WHATSAPP' ? 'Preparar WhatsApp' : 'Preparar email';
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen) {
+            // Reset marker quando fecha — próxima abertura volta a poder gerar
+            generatedForKeyRef.current = null;
+            setIsGeneratingInitial(false);
+            return;
+        }
 
         setCopied(null);
         setRewriteError(null);
@@ -209,6 +218,64 @@ export function MessageComposerModal({
         const nextMsg = typeof initialMessage === 'string' ? initialMessage : '';
         setMessage(channel === 'WHATSAPP' ? formatForWhatsApp(nextMsg) : formatForEmail(nextMsg));
     }, [isOpen, initialSubject, initialMessage, channel]);
+
+    // Auto-gerar draft inicial via IA quando o modal abre sem initialMessage
+    // e há contexto rico (cockpitSnapshot). Substitui templates hardcoded pt-BR.
+    useEffect(() => {
+        if (!isOpen) return;
+        if (isGeneratingInitial || isRewriting) return;
+
+        const hasInitial = typeof initialMessage === 'string' && initialMessage.trim().length > 0;
+        const hasContext = Boolean(aiContext?.cockpitSnapshot);
+        if (hasInitial || !hasContext) return;
+
+        // Evita re-gerar se reabrir o mesmo modal/contexto
+        const key = `${channel}:${(aiContext as any)?.cockpitSnapshot?.deal?.id ?? 'no-deal'}`;
+        if (generatedForKeyRef.current === key) return;
+        generatedForKeyRef.current = key;
+
+        const payload: RewriteMessageDraftInput = {
+            channel,
+            currentSubject: '',
+            currentMessage: '',
+            nextBestAction: aiContext?.nextBestAction,
+            cockpitSnapshot: aiContext?.cockpitSnapshot,
+        };
+
+        let cancelled = false;
+        setIsGeneratingInitial(true);
+        setRewriteError(null);
+
+        (async () => {
+            try {
+                const result = await rewriteMessageDraft(payload);
+                if (cancelled) return;
+                if (channel === 'EMAIL' && typeof result.subject === 'string') {
+                    setSubject(result.subject);
+                }
+                if (typeof result.message === 'string' && result.message.trim()) {
+                    const next = channel === 'WHATSAPP' ? formatForWhatsApp(result.message) : formatForEmail(result.message);
+                    setMessage(next);
+                    setAiBadge(true);
+                }
+            } catch (err) {
+                if (cancelled) return;
+                // Fallback silencioso: deixa textarea vazia com mensagem leve.
+                // O utilizador pode escrever manualmente ou clicar "Reescrever com IA".
+                if (isConsentError(err)) {
+                    setRewriteError('IA não configurada — escreva manualmente ou configure em Definições.');
+                } else if (isRateLimitError(err)) {
+                    setRewriteError('IA em limite de uso — escreva manualmente ou tente daqui a uns segundos.');
+                } else {
+                    setRewriteError('Não foi possível gerar automaticamente. Escreva o rascunho aqui ou clique em "Reescrever com IA".');
+                }
+            } finally {
+                if (!cancelled) setIsGeneratingInitial(false);
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, [isOpen, channel, initialMessage, aiContext, isGeneratingInitial, isRewriting]);
 
     const canOpen = useMemo(() => {
         if (channel === 'WHATSAPP') return Boolean(phone);
@@ -385,19 +452,34 @@ export function MessageComposerModal({
                 )}
 
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
                         Mensagem
+                        {isGeneratingInitial && (
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/20">
+                                <Loader2 size={11} className="animate-spin" />
+                                A gerar mensagem profissional…
+                            </span>
+                        )}
+                        {aiBadge && !isGeneratingInitial && !isRewriting && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/20">
+                                <Sparkles size={11} />
+                                Gerado por IA
+                            </span>
+                        )}
                     </label>
                     <textarea
                         id="message-composer-textarea"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         rows={12}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white text-sm focus:outline-none focus-visible-ring resize-y min-h-80 max-h-[60vh]"
+                            disabled={isGeneratingInitial}
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white text-sm focus:outline-none focus-visible-ring resize-y min-h-80 max-h-[60vh] disabled:opacity-60 disabled:cursor-wait"
                         placeholder={
-                            channel === 'WHATSAPP'
-                                ? 'Ex: Olá, espero que esteja tudo bem. Quando lhe der jeito, podemos falar?'
-                                : 'Ex: Olá, espero que esteja tudo bem. Seguem os próximos passos...'
+                            isGeneratingInitial
+                                ? 'A gerar mensagem profissional pt-PT formal com os dados do deal…'
+                                : channel === 'WHATSAPP'
+                                ? 'Ex: Olá, espero que esteja tudo bem. Quando lhe for oportuno, podemos falar?'
+                                : 'Ex: Caro [Nome], na sequência da nossa conversa, queria deixar-lhe…'
                         }
                     />
                     <div className="flex items-center justify-between">
@@ -422,7 +504,7 @@ export function MessageComposerModal({
                         <button
                             type="button"
                             onClick={handleRewriteWithAI}
-                            disabled={isRewriting}
+                            disabled={isRewriting || isGeneratingInitial}
                             className="px-3 py-2 rounded-lg text-sm border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Reescrever com IA usando o contexto do cockpit"
                         >
@@ -444,7 +526,7 @@ export function MessageComposerModal({
                     <button
                         type="button"
                         onClick={handleOpen}
-                        disabled={!canOpen}
+                        disabled={!canOpen || isGeneratingInitial}
                         className={
                             channel === 'WHATSAPP'
                                 ? 'px-4 py-2 rounded-lg text-sm font-semibold bg-green-500 hover:bg-green-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2'
