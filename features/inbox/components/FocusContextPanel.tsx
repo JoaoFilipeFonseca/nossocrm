@@ -30,7 +30,9 @@ import {
     Trash2,
     Loader2,
     RefreshCw,
-    Building
+    Building,
+    PanelRightClose,
+    PanelRightOpen
 } from 'lucide-react';
 import { Deal, Activity, Contact, Board } from '@/types';
 import { useAIDealAnalysis, deriveHealthFromProbability } from '../hooks/useAIDealAnalysis';
@@ -120,6 +122,15 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
 }) => {
     const [showContactInfo, setShowContactInfo] = useState(false);
     const [activeTab, setActiveTab] = useState('chat');
+    // Collapse do painel direito (Workspace) — persistido em localStorage para a próxima sessão
+    const [workspaceCollapsed, setWorkspaceCollapsed] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return false;
+        try { return localStorage.getItem('foco_workspace_collapsed') === '1'; } catch { return false; }
+    });
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try { localStorage.setItem('foco_workspace_collapsed', workspaceCollapsed ? '1' : '0'); } catch {}
+    }, [workspaceCollapsed]);
     const [note, setNote] = useState('');
     const [copiedScript, setCopiedScript] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -752,7 +763,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                 <div className="flex-1 flex min-h-0 overflow-hidden">
 
                     {/* LEFT: Contact */}
-                    <aside className="w-[400px] shrink-0 border-r border-white/5 flex flex-col">
+                    <aside className="w-[360px] shrink-0 border-r border-white/5 flex flex-col">
 
                         <div className="p-6 border-b border-white/5">
                             <div className="flex items-center justify-between mb-3">
@@ -1160,6 +1171,15 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                     <button className="p-1.5 hover:bg-white/5 rounded text-slate-500 hover:text-white transition-colors">
                                         <Search size={14} />
                                     </button>
+                                    <div className="w-px h-4 bg-white/5 mx-1" />
+                                    <button
+                                        onClick={() => setWorkspaceCollapsed(v => !v)}
+                                        className="p-1.5 hover:bg-white/5 rounded text-slate-500 hover:text-white transition-colors"
+                                        title={workspaceCollapsed ? 'Mostrar painel Chat IA / Notas' : 'Esconder painel Chat IA / Notas (ganha mais espaço para actividades)'}
+                                        aria-label={workspaceCollapsed ? 'Mostrar painel direito' : 'Esconder painel direito'}
+                                    >
+                                        {workspaceCollapsed ? <PanelRightOpen size={14} /> : <PanelRightClose size={14} />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -1377,8 +1397,8 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                             </div>
                         </div>
 
-                        {/* COL 2: Workspace (Fixed Width) */}
-                        <div className="w-[400px] flex flex-col min-h-0 bg-slate-900/20 border-l border-white/5 relative">
+                        {/* COL 2: Workspace (Fixed Width, collapsible) */}
+                        <div className={`${workspaceCollapsed ? 'w-0 overflow-hidden border-l-0' : 'w-[360px]'} flex flex-col min-h-0 bg-slate-900/20 border-l border-white/5 relative transition-[width] duration-200 ease-out`}>
                             {/* Workspace Tabs */}
                             <div className="shrink-0 flex items-center px-4 h-14 border-b border-white/5 gap-4">
                                 {['chat', 'notas', 'scripts', 'files'].map((tab) => (
