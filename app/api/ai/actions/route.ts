@@ -13,6 +13,7 @@
 // -> 200 { result?: any, error?: string, consentType?: string, retryAfter?: number }
 
 import { generateText, Output } from 'ai';
+import { createAnthropic } from '@ai-sdk/anthropic';
 import { getModel, type AIProvider } from '@/lib/ai/config';
 import { SECURITY_PREAMBLE } from '@/lib/ai/agent/agent.service';
 import { sanitizeIncomingMessage } from '@/lib/ai/agent/input-filter';
@@ -23,6 +24,15 @@ import { getResolvedPrompt } from '@/lib/ai/prompts/server';
 import { renderPromptTemplate } from '@/lib/ai/prompts/render';
 import { buildCachedSystem, flattenSystem, logCacheStats } from '@/lib/ai/cache';
 import { isAIFeatureEnabled } from '@/lib/ai/features/server';
+
+// Wrapper de timeout para Promise.race com early-give-up.
+// Se a promessa não resolver dentro de `ms`, rejeita para activar fallback.
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`${label}_TIMEOUT_${ms}ms`)), ms)),
+  ]);
+}
 
 export const maxDuration = 60;
 
@@ -211,23 +221,24 @@ function buildRewriteUserMessage(args: {
     if (c.email) lines.push(`- Email: ${c.email}`);
     if (c.source) lines.push(`- Fonte do lead: ${c.source}`);
     if (c.lastInteraction) lines.push(`- Última interacção registada: ${fmtDateRel(c.lastInteraction)}`);
-    if (c.notes) lines.push(`- Notas do contacto: ${String(c.notes).slice(0, 500)}`);
+    if (c.notes) lines.push(`- Notas do contacto: ${String(c.notes).slice(0, 250)}`);
   }
 
   const acts = snapshot?.lists?.activities?.preview;
   if (Array.isArray(acts) && acts.length > 0) {
-    lines.push('\n== HISTÓRICO RECENTE (até 5 últimas actividades) ==');
+    lines.push('\n== HISTÓRICO RECENTE (últimas 5) ==');
     acts.slice(0, 5).forEach((a: any, i: number) => {
-      const t = stripInternalLabels(a.title || a.description || a.type || '');
+      const raw = stripInternalLabels(a.title || a.description || a.type || '');
+      const t = raw.slice(0, 150);
       lines.push(`${i + 1}. [${fmtDateRel(a.date)}] ${a.type || ''} ${t}`.trim());
     });
   }
 
   const notes = snapshot?.lists?.notes?.preview;
   if (Array.isArray(notes) && notes.length > 0) {
-    lines.push('\n== NOTAS RELEVANTES (até 3 últimas) ==');
+    lines.push('\n== NOTAS RELEVANTES (últimas 3) ==');
     notes.slice(0, 3).forEach((n: any, i: number) => {
-      const txt = String(n.content || '').slice(0, 300);
+      const txt = String(n.content || '').slice(0, 200);
       lines.push(`${i + 1}. [${fmtDateRel(n.created_at)}] ${txt}`);
     });
   }
@@ -302,7 +313,7 @@ export async function POST(req: Request) {
 
   const { data: orgSettings, error: orgError } = await supabase
     .from('organization_settings')
-    .select('ai_enabled, ai_model, ai_google_key')
+    .select('ai_enabled, ai_model, ai_google_key, ai_anthropic_key')
     .eq('organization_id', profile.organization_id)
     .single();
 
@@ -404,14 +415,13 @@ export async function POST(req: Request) {
         const { text: safeMessage } = sanitizeIncomingMessage(String(currentMessage || ''), { org_id: profile.organization_id });
         const { text: safeSubject } = sanitizeIncomingMessage(String(currentSubject || ''), { org_id: profile.organization_id });
 
-        // System: prompt v1 da BD (rewrite_message_draft) + GLOBAL_RULES_BLOCK, ambos cached
+        // System: prompt v3 da BD (rewrite_message_draft) + GLOBAL_RULES_BLOCK
         const resolved = await getResolvedPrompt(supabase as any, profile.organization_id as any, 'rewrite_message_draft');
         const featurePrompt = resolved?.content || '';
         const cachedBlocks = buildCachedSystem(featurePrompt);
-        // Provider aqui é sempre Google (linha 236) — flatten para Gemini (implicit caching)
-        const systemFlat = flattenSystem(cachedBlocks);
+        const systemFlat = flattenSystem(cachedBlocks);  // Para Gemini (implicit caching)
 
-        // User: dados estruturados por secções (NÃO blob JSON cru)
+        // User: dados estruturados truncados (max ~3KB)
         const userMessage = buildRewriteUserMessage({
           channelLabel,
           subject: safeSubject,
@@ -420,16 +430,52 @@ export async function POST(req: Request) {
           nba: nextBestAction,
         });
 
-        const result = await generateText({
-          model,
-          system: systemFlat,
-          maxRetries: 3,
-          output: Output.object({ schema: RewriteMessageDraftSchema }),
-          prompt: userMessage,
-        });
+        // Estratégia UX 3-5s: tentar Gemini com timeout 3.5s, fallback Anthropic Haiku com cache real.
+        // Razão: Gemini Flash é mais barato mas pode demorar em snapshots grandes; Claude Haiku é
+        // consistentemente rápido (~2s) e com cacheControl ephemeral aproveita 90% off em chamadas repetidas.
+        const anthropicKey = (orgSettings as any)?.ai_anthropic_key;
+        const startedAt = Date.now();
+        let result: any;
+        let providerUsed: string = 'google';
 
-        logCacheStats(`rewriteMessageDraft channel=${channelLabel} provider=google`, result);
-        logAIAction(supabase, profile.organization_id, 'rewriteMessageDraft', modelId, result);
+        try {
+          result = await withTimeout(
+            generateText({
+              model,
+              system: systemFlat,
+              maxRetries: 1,
+              output: Output.object({ schema: RewriteMessageDraftSchema }),
+              prompt: userMessage,
+            }),
+            3500,
+            'gemini'
+          );
+        } catch (err: any) {
+          const elapsed = Date.now() - startedAt;
+          console.warn(`[rewriteMessageDraft] Gemini falhou após ${elapsed}ms (${err?.message}). Fallback Anthropic.`);
+
+          if (!anthropicKey) {
+            // Sem Claude configurado, propaga falha original
+            throw err;
+          }
+
+          const anthropicProvider = createAnthropic({ apiKey: anthropicKey });
+          const claudeModel = anthropicProvider('claude-haiku-4-5-20251001');
+
+          result = await generateText({
+            model: claudeModel,
+            // Anthropic: passa cachedBlocks (CachedBlock[] com cacheControl ephemeral)
+            system: cachedBlocks as never,
+            maxRetries: 1,
+            output: Output.object({ schema: RewriteMessageDraftSchema }),
+            prompt: userMessage,
+          });
+          providerUsed = 'anthropic-haiku';
+        }
+
+        const totalMs = Date.now() - startedAt;
+        logCacheStats(`rewriteMessageDraft channel=${channelLabel} provider=${providerUsed} totalMs=${totalMs}`, result);
+        logAIAction(supabase, profile.organization_id, 'rewriteMessageDraft', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.output });
       }
 
