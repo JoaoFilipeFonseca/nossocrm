@@ -464,8 +464,11 @@ export async function POST(req: Request) {
 
           result = await generateText({
             model: claudeModel,
-            // Anthropic: passa cachedBlocks (CachedBlock[] com cacheControl ephemeral)
-            system: cachedBlocks as never,
+            // NOTA: AI SDK v6 não aceita CachedBlock[] directamente em `system`.
+            // Cache Anthropic (cacheControl ephemeral) precisa ser configurado via
+            // providerOptions com formato SystemModelMessage[]. Standby até refactor.
+            // Por agora, system flat (string) — Claude responde em ~2s mesmo sem cache marker.
+            system: systemFlat,
             maxRetries: 1,
             output: Output.object({ schema: RewriteMessageDraftSchema }),
             prompt: userMessage,
