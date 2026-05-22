@@ -111,7 +111,7 @@ describe('SettingsPage RBAC', () => {
     render(<SettingsPage />)
 
     expect(
-      screen.queryByRole('heading', { name: /^Gerenciamento de Tags$/i })
+      screen.queryByRole('heading', { name: /^Gestão de Etiquetas$/i })
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('heading', { name: /^Campos Personalizados$/i })
@@ -135,7 +135,7 @@ describe('SettingsPage RBAC', () => {
     render(<SettingsPage />)
 
     expect(
-      screen.getByRole('heading', { name: /^Gerenciamento de Tags$/i })
+      screen.getByRole('heading', { name: /^Gestão de Etiquetas$/i })
     ).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: /^Campos Personalizados$/i })

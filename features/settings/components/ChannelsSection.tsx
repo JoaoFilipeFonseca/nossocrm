@@ -137,7 +137,7 @@ const WEBHOOK_CONFIGS: Record<string, {
       { label: 'Ao enviar (Delivery)', description: 'Confirma que a mensagem enviada pelo CRM foi entregue ao WhatsApp' },
       { label: 'Ao conectar', description: 'Avisa quando o WhatsApp reconecta' },
       { label: 'Ao desconectar (Disconnected)', description: 'Avisa se o WhatsApp cair ou perder conexão' },
-      { label: 'Presença do chat', description: 'Mostra "online" e "digitando..." na tela de mensagens' },
+      { label: 'Presença do chat', description: 'Mostra "online" e "a escrever..." no ecrã de mensagens' },
     ],
     toggles: [
       'Ative "Notificar as enviadas por mim também" — senão mensagens enviadas pelo telemóvel não aparecem no CRM',
@@ -669,7 +669,7 @@ function EmptyChannelsState({ onAdd }: { onAdd: () => void }) {
       </h3>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto">
         Configure canais de comunicação para receber e enviar mensagens
-        diretamente pelo CRM.
+        directamente pelo CRM.
       </p>
       <button
         onClick={onAdd}

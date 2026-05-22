@@ -487,21 +487,21 @@ export const AIConfigSection: React.FC = () => {
                             <div className="p-3 bg-amber-50/50 dark:bg-amber-900/10 space-y-3 animate-in slide-in-from-top-2 duration-200">
                                 <div className="space-y-2 text-sm text-amber-900 dark:text-amber-100">
                                     <p className="font-medium">
-                                        Ao salvar sua chave de API, você autoriza:
+                                        Ao guardar a sua chave de API, autoriza:
                                     </p>
                                     <ul className="list-disc list-inside space-y-1 text-amber-800 dark:text-amber-200 ml-2">
                                         <li>O processamento dos seus <strong>negócios</strong> (deals) pela IA</li>
-                                        <li>O processamento dos seus <strong>contatos</strong> pela IA</li>
-                                        <li>O processamento das suas <strong>atividades</strong> pela IA</li>
-                                        <li>Geração de sugestões e textos pelo provedor configurado</li>
+                                        <li>O processamento dos seus <strong>contactos</strong> pela IA</li>
+                                        <li>O processamento das suas <strong>actividades</strong> pela IA</li>
+                                        <li>Geração de sugestões e textos pelo fornecedor configurado</li>
                                     </ul>
                                 </div>
 
                                 <div className="pt-2 border-t border-amber-200 dark:border-amber-500/20">
                                     <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
-                                        <strong>Base legal:</strong> Consentimento do titular (Art. 7º, I e Art. 11, I da LGPD).
-                                        Seus dados são enviados diretamente ao Google Gemini.
-                                        Nós não armazenamos ou intermediamos essas comunicações.
+                                        <strong>Base legal:</strong> Consentimento do titular (Art. 6.º n.º 1 al. a) do RGPD).
+                                        Os seus dados são enviados directamente ao Google Gemini.
+                                        Nós não armazenamos nem intermediamos estas comunicações.
                                     </p>
                                 </div>
 

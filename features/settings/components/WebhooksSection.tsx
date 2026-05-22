@@ -456,7 +456,7 @@ export const WebhooksSection: React.FC = () => {
 
       <div className="mb-5 flex items-center justify-between gap-3">
         <div className="text-xs text-slate-500 dark:text-slate-400">
-          Dica: se você está integrando com Hotmart/n8n/Make, use o guia rápido.
+          Dica: se está a integrar com Hotmart/n8n/Make, use o guia rápido.
         </div>
         <button
           onClick={() => openQuickStart('inbound')}
@@ -665,9 +665,9 @@ export const WebhooksSection: React.FC = () => {
         <div className="space-y-5">
           <div className="flex items-start justify-between gap-3">
             <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              Conecte em <b>minutos</b>: gere URL/Secret, configure no seu provedor e faça um teste.
+              Ligue em <b>minutos</b>: gere URL/Secret, configure no seu fornecedor e faça um teste.
               <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Você pode usar <code className="font-mono">X-Webhook-Secret</code> <span className="mx-1">ou</span>{' '}
+                Pode usar <code className="font-mono">X-Webhook-Secret</code> <span className="mx-1">ou</span>{' '}
                 <code className="font-mono">Authorization: Bearer</code>.
               </div>
             </div>
@@ -858,7 +858,7 @@ export const WebhooksSection: React.FC = () => {
               {inboundStep === 2 ? (
         <div className="space-y-4">
                   <div className="text-sm text-slate-700 dark:text-slate-200">
-                    Copie a <b>URL</b> e o <b>Secret</b> e cole no seu provedor (Hotmart / n8n / Make).
+                    Copie o <b>URL</b> e o <b>Secret</b> e cole no seu fornecedor (Hotmart / n8n / Make).
                   </div>
 
                   <div className="p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3">
@@ -941,7 +941,7 @@ export const WebhooksSection: React.FC = () => {
 
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="text-xs font-bold text-slate-600 dark:text-slate-300">Seu provedor</div>
+                      <div className="text-xs font-bold text-slate-600 dark:text-slate-300">O seu fornecedor</div>
                       <div className="inline-flex rounded-xl bg-white dark:bg-white/10 p-1 border border-slate-200 dark:border-white/10">
                         {(
                           [
@@ -1051,7 +1051,7 @@ export const WebhooksSection: React.FC = () => {
                         </div>
                       ) : (
                         <div className="text-xs text-slate-500 dark:text-slate-400">
-                          Dica: se o seu provedor estiver configurado, você também pode mandar um lead real e ver os
+                          Dica: se o seu fornecedor estiver configurado, também pode mandar um lead real e ver os
                           eventos aqui.
                         </div>
                       )}

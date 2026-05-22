@@ -51,7 +51,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
         <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Página Inicial</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Escolha qual tela deve abrir quando você iniciar o CRM.
+            Escolha qual ecrã deve abrir ao iniciar o CRM.
           </p>
           <SelectField
             label="Página Inicial"
@@ -61,7 +61,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
               { value: '/inbox-list', label: 'Inbox (Lista)' },
               { value: '/inbox-focus', label: 'Inbox (Foco)' },
               { value: '/boards', label: 'Boards (Kanban)' },
-              { value: '/contacts', label: 'Contatos' },
+              { value: '/contacts', label: 'Contactos' },
               { value: '/activities', label: 'Atividades' },
               { value: '/reports', label: 'Relatórios' },
             ]}
@@ -214,7 +214,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
     ...(profile?.role === 'admin' ? [{ id: 'integrations' as SettingsTab, name: 'Integrações', icon: Plug }] : []),
     { id: 'ai' as SettingsTab, name: 'Central de I.A', icon: Sparkles },
     { id: 'data' as SettingsTab, name: 'Dados', icon: Database },
-    ...(profile?.role === 'admin' ? [{ id: 'users' as SettingsTab, name: 'Equipe', icon: Users }] : []),
+    ...(profile?.role === 'admin' ? [{ id: 'users' as SettingsTab, name: 'Equipa', icon: Users }] : []),
   ];
 
   const renderContent = () => {

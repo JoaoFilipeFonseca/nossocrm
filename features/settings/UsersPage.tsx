@@ -280,7 +280,7 @@ export const UsersPage: React.FC = () => {
                 <div className="flex items-start justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
-                            Sua Equipe
+                            A sua Equipa
                         </h1>
                         <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">
                             {users.length} {users.length === 1 ? 'membro' : 'membros'} • {admins.length} admin{admins.length !== 1 && 's'}, {vendedores.length} vendedor{vendedores.length !== 1 && 'es'}
@@ -329,7 +329,7 @@ export const UsersPage: React.FC = () => {
                                         </h3>
                                         {isCurrentUser && (
                                             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
-                                                você
+                                                é o seu utilizador
                                             </span>
                                         )}
                                         {user.status === 'pending' && (

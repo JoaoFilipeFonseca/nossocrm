@@ -26,7 +26,7 @@ export const AICenterSettings: React.FC = () => {
           Central de I.A
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">
-          Configure o provedor/modelo e gerencie os prompts usados no sistema.
+          Configure o fornecedor/modelo e faça a gestão dos prompts usados no sistema.
         </p>
       </div>
 

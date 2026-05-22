@@ -22,7 +22,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({ title, icon: I
             <Icon className="h-5 w-5" /> {title}
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Gerencie suas configurações de {title.toLowerCase()}.
+            Faça a gestão das configurações de {title.toLowerCase()}.
           </p>
         </div>
       </div>

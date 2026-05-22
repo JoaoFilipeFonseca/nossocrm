@@ -37,9 +37,9 @@ export const TagsManager: React.FC<TagsManagerProps> = ({
   onRemoveTag
 }) => {
   return (
-    <SettingsSection title="Gerenciamento de Tags" icon={Tag}>
+    <SettingsSection title="Gestão de Etiquetas" icon={Tag}>
       <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
-        Crie tags para categorizar seus negócios. Elas aparecerão como opções ao criar ou editar negócios no Pipeline.
+        Crie etiquetas para categorizar os seus negócios. Aparecerão como opções ao criar ou editar negócios no Pipeline.
       </p>
 
       <div className="p-4 rounded-xl border bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5 mb-6">

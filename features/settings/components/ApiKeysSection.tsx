@@ -414,9 +414,9 @@ export const ApiKeysSection: React.FC = () => {
   return (
     <SettingsSection title="API (Integrações)" icon={Key}>
       <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
-        Aqui você conecta n8n/Make sem precisar “entender API”. Escolha o que quer automatizar, copie o que precisa e teste.
+        Aqui liga n8n/Make sem precisar “entender API”. Escolha o que quer automatizar, copie o que precisa e teste.
         <br />
-        A documentação técnica (OpenAPI/Swagger) fica disponível, mas só quando você quiser.
+        A documentação técnica (OpenAPI/Swagger) fica disponível, mas só quando quiser.
       </p>
 
       <div className="grid grid-cols-1 gap-4">
@@ -504,22 +504,22 @@ export const ApiKeysSection: React.FC = () => {
 
         <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/30 p-4">
           <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">
-            Passo 1 — O que você quer automatizar?
+            Passo 1 — O que quer automatizar?
           </div>
           <select
             value={action}
             onChange={(e) => setAction(e.target.value as any)}
             className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
-            <option value="create_lead">Criar/Atualizar Lead (Contato)</option>
+            <option value="create_lead">Criar/Actualizar Lead (Contacto)</option>
             <option value="create_deal">Criar Negócio (Deal)</option>
             <option value="move_stage">Mover etapa do Deal</option>
-            <option value="create_activity">Criar Atividade (nota/tarefa)</option>
+            <option value="create_activity">Criar Actividade (nota/tarefa)</option>
           </select>
 
           <div className="mt-3 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span>Você escolhe o objetivo. O sistema monta o comando final com seus dados.</span>
+            <span>Escolhe o objectivo. O sistema monta o comando final com os seus dados.</span>
           </div>
         </div>
 
@@ -528,7 +528,7 @@ export const ApiKeysSection: React.FC = () => {
             Passo 2 — Configure (dinâmico)
           </div>
           <div className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-            Aqui entra o “mágico”: você escolhe e a gente já preenche o comando final.
+            Aqui entra o “mágico”: escolhe e o sistema preenche o comando final.
           </div>
 
           {action === 'create_lead' && (
@@ -779,7 +779,7 @@ export const ApiKeysSection: React.FC = () => {
           Consulta técnica — OpenAPI
         </div>
         <div className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-          Se você (ou o time técnico) precisar, aqui está o OpenAPI para importar em Swagger/Postman e gerar integrações.
+          Se (ou a equipa técnica) precisar, aqui está o OpenAPI para importar em Swagger/Postman e gerar integrações.
         </div>
         <div className="flex flex-wrap gap-2">
           <button

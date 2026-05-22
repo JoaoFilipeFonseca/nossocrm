@@ -332,7 +332,7 @@ function SelectStep({ onSelect }: SelectStepProps) {
           Escolha o canal
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Selecione o tipo de canal e o provedor que deseja configurar.
+          Seleccione o tipo de canal e o fornecedor que deseja configurar.
         </p>
       </div>
 
@@ -457,7 +457,7 @@ function CredentialsStep({
       <div className="text-center py-8">
         <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Configuração não encontrada para este provedor.
+          Configuração não encontrada para este fornecedor.
         </p>
       </div>
     );
@@ -766,8 +766,8 @@ function TestStep({
       {provider === 'z-api' && (
         <div className="p-4 rounded-xl bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
           <p className="text-xs text-yellow-700 dark:text-yellow-300">
-            <strong>Nota:</strong> Para Z-API, você precisará escanear o QR Code no
-            painel da Z-API para completar a conexão. O teste aqui apenas verifica
+            <strong>Nota:</strong> Para Z-API, terá de digitalizar o QR Code no
+            painel da Z-API para completar a ligação. O teste aqui apenas verifica
             se as credenciais estão válidas.
           </p>
         </div>

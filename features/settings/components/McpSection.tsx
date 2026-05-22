@@ -277,7 +277,7 @@ export const McpSection: React.FC = () => {
               </div>
               <div className="mt-3 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-white/70 dark:bg-black/20 p-3">
                 <div className="text-xs text-slate-700 dark:text-slate-200 mb-2">
-                  O que você precisa:
+                  O que precisa:
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button

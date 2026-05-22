@@ -147,8 +147,8 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
           Configure seu AI Agent
         </h2>
         <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
-          Escolha como você quer que o agente responda automaticamente aos seus leads.
-          Você pode mudar a qualquer momento.
+          Escolha como quer que o agente responda automaticamente aos seus leads.
+          Pode mudar a qualquer momento.
         </p>
       </div>
 

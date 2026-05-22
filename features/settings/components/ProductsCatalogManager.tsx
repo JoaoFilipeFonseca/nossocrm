@@ -173,7 +173,7 @@ export const ProductsCatalogManager: React.FC = () => {
               <Package className="h-5 w-5" /> Produtos/Serviços
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Catálogo base da empresa. No deal você ainda pode adicionar itens personalizados quando precisar adaptar ao cliente.
+              Catálogo base da empresa. No negócio ainda pode adicionar itens personalizados quando precisar de adaptar ao cliente.
             </p>
           </div>
         </div>

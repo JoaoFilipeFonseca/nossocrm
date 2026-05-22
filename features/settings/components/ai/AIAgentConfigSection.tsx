@@ -298,7 +298,7 @@ function HITLConfigSection() {
       {!isAutonomous && (
         <div className="mt-2 pt-2 border-t border-amber-200 dark:border-amber-500/20">
           <p className="text-xs text-amber-700 dark:text-amber-300">
-            💡 No modo supervisionado, você verá notificações no <strong>Inbox</strong> quando a IA sugerir avanços.
+            💡 No modo supervisionado, verá notificações no <strong>Inbox</strong> quando a IA sugerir avanços.
             Avanços com &gt;85% de confiança ainda são automáticos.
           </p>
         </div>
