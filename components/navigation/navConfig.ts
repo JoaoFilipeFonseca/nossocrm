@@ -29,7 +29,7 @@ export const PRIMARY_NAV: PrimaryNavItem[] = [
   { id: 'inbox', label: 'Inbox', href: '/inbox', icon: Inbox },
   { id: 'messaging', label: 'Mensagens', href: '/messaging', icon: MessageSquare },
   { id: 'cruzamentos', label: 'Cruzamentos', href: '/cruzamentos', icon: Target },
-  { id: 'matches', href: '/matches', label: 'Inbox Bruto', icon: Inbox },
+  { id: 'matches', href: '/matches', label: 'Matches', icon: Inbox },
   { id: 'boards', label: 'Boards', href: '/boards', icon: KanbanSquare },
   { id: 'contacts', label: 'Contactos', href: '/contacts', icon: Users },
   { id: 'imoveis', label: 'Imóveis', href: '/imoveis', icon: Home },

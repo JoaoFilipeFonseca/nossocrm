@@ -43,7 +43,7 @@ export const FunnelChart: React.FC<FunnelChartProps> = ({ data }) => {
         <YAxis
           dataKey="name"
           type="category"
-          width={100}
+          width={140}
           tick={{ fill: 'var(--chart-text)', fontSize: 12, fontWeight: 500 }}
           axisLine={false}
           tickLine={false}
