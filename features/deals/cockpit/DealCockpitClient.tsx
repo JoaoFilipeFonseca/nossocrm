@@ -446,137 +446,11 @@ function TabButton({
   );
 }
 
-function normalizeReason(raw?: string) {
-  if (typeof raw !== 'string') return '';
-  return raw.replace(/\s*-\s*Sugerido por IA\s*$/i, '').trim();
-}
-
-function formatSlot(d: Date) {
-  const day = d.toLocaleDateString('pt-PT', { weekday: 'short' });
-  const time = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-  return `${day} ${time}`;
-}
-
-function proposeTwoSlots() {
-  const a = new Date();
-  a.setDate(a.getDate() + 1);
-  a.setHours(10, 0, 0, 0);
-
-  const b = new Date();
-  b.setDate(b.getDate() + 2);
-  b.setHours(15, 0, 0, 0);
-
-  return { a, b };
-}
-
-function buildSuggestedWhatsAppMessage(opts: {
-  contact?: Contact;
-  deal?: DealView;
-  actionType: string;
-  action: string;
-  reason?: string;
-}) {
-  const { contact, deal, actionType, action, reason } = opts;
-
-  const firstName = contact?.name?.split(' ')[0] || '';
-  const greeting = firstName ? `Olá ${firstName}, espero que esteja tudo bem.` : 'Olá, espero que esteja tudo bem.';
-  const r = normalizeReason(reason);
-  const dealTitle = deal?.title?.trim();
-  const dealCtx = dealTitle ? ` sobre ${dealTitle}` : '';
-
-  const { a, b } = proposeTwoSlots();
-  const reasonSentence = r ? `\n\nDecidi contactar porque ${r.charAt(0).toLowerCase()}${r.slice(1)}.` : '';
-
-  if (actionType === 'MEETING') {
-    return (
-      `${greeting}` +
-      `\n\nQueria marcar um papo rápido (15 min)${dealCtx} pra alinharmos os próximos passos.` +
-      `${reasonSentence}` +
-      `\n\nVocê consegue ${formatSlot(a)} ou ${formatSlot(b)}? Se preferir, me diga um horário bom pra você.`
-    );
-  }
-
-  if (actionType === 'CALL') {
-    return (
-      `${greeting}` +
-      `\n\nPodemos fazer uma breve conversa${dealCtx}?` +
-      `${reasonSentence}` +
-      `\n\nTem preferência por ${formatSlot(a)} ou ${formatSlot(b)}?`
-    );
-  }
-
-  if (actionType === 'TASK') {
-    return (
-      `${greeting}` +
-      `\n\nSó pra alinharmos${dealCtx}: ${action.trim()}.` +
-      `${reasonSentence}` +
-      `\n\nPode me confirmar quando conseguir?`
-    );
-  }
-
-  const cleanAction = action?.trim();
-  const actionLine = cleanAction ? `\n\n${cleanAction}${dealTitle ? ` (${dealTitle})` : ''}.` : '';
-  return `${greeting}${actionLine}${reasonSentence}`;
-}
-
-function buildSuggestedEmailBody(opts: {
-  contact?: Contact;
-  deal?: DealView;
-  actionType: string;
-  action: string;
-  reason?: string;
-}) {
-  const { contact, deal, actionType, action, reason } = opts;
-
-  const firstName = contact?.name?.split(' ')[0] || '';
-  const greeting = firstName ? `Olá ${firstName},` : 'Olá,';
-  const r = normalizeReason(reason);
-  const dealTitle = deal?.title?.trim();
-  const { a, b } = proposeTwoSlots();
-
-  const reasonSentence = r ? `\n\nMotivo: ${r}.` : '';
-  const dealSentence = dealTitle ? `\n\nAssunto: ${dealTitle}.` : '';
-
-  if (actionType === 'MEETING') {
-    return (
-      `${greeting}` +
-      `\n\nQueria marcar uma conversa rápida (15 min) para alinharmos próximos passos.` +
-      `${dealSentence}` +
-      `${reasonSentence}` +
-      `\n\nVocê teria disponibilidade em ${formatSlot(a)} ou ${formatSlot(b)}?` +
-      `\n\nAbs,`
-    );
-  }
-
-  if (actionType === 'CALL') {
-    return (
-      `${greeting}` +
-      `\n\nPodemos falar rapidamente por telefone?` +
-      `${dealSentence}` +
-      `${reasonSentence}` +
-      `\n\nSugestões de horário: ${formatSlot(a)} ou ${formatSlot(b)}.` +
-      `\n\nAbs,`
-    );
-  }
-
-  if (actionType === 'TASK') {
-    return (
-      `${greeting}` +
-      `\n\n${action.trim()}.` +
-      `${dealSentence}` +
-      `${reasonSentence}` +
-      `\n\nAbs,`
-    );
-  }
-
-  return (
-    `${greeting}` +
-    `\n\n${action.trim()}.` +
-    `${dealSentence}` +
-    `${reasonSentence}` +
-    `\n\nAbs,`
-  );
-}
+// NOTA 22/05/2026: templates pt-BR (normalizeReason, formatSlot, proposeTwoSlots, buildSuggestedWhatsAppMessage,
+// buildSuggestedEmailBody) removidos. Tinham Você/pra você/rapidinha/Abs e sugeriam Domingos.
+// Draft inicial passa a ser gerado por IA (prompt v2 rewrite_message_draft) directamente
+// no MessageComposerModal ao abrir, quando initialMessage é vazia.
+// Ver memory plano_copy_ia_em_todo_o_lado.md e feedback_nunca_domingos.md.
 
 /**
  * Componente React `DealCockpitClient`.
@@ -1295,17 +1169,10 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
     }
 
     if (actionType === 'WHATSAPP') {
+      // initialMessage vazio → MessageComposerModal dispara IA on-open (prompt v2)
       openMessageComposer(
         'WHATSAPP',
-        {
-          message: buildSuggestedWhatsAppMessage({
-            contact: selectedContact ?? undefined,
-            deal: selectedDeal,
-            actionType: 'TASK',
-            action,
-            reason,
-          }),
-        },
+        { message: '' },
         {
           source: 'generated',
           origin: 'nextBestAction',
@@ -1319,16 +1186,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
     if (actionType === 'EMAIL') {
       openMessageComposer(
         'EMAIL',
-        {
-          subject: action,
-          message: buildSuggestedEmailBody({
-            contact: selectedContact ?? undefined,
-            deal: selectedDeal,
-            actionType: 'TASK',
-            action,
-            reason,
-          }),
-        },
+        { subject: '', message: '' },
         {
           source: 'generated',
           origin: 'nextBestAction',
@@ -1648,15 +1506,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                     onClick={() =>
                       openMessageComposer(
                         'WHATSAPP',
-                        {
-                          message: buildSuggestedWhatsAppMessage({
-                            contact: contact ?? undefined,
-                            deal,
-                            actionType: nextBestAction.actionType,
-                            action: nextBestAction.action,
-                            reason: nextBestAction.reason,
-                          }),
-                        },
+                        { message: '' },
                         {
                           source: 'generated',
                           origin: 'nextBestAction',
@@ -1678,16 +1528,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                     onClick={() =>
                       openMessageComposer(
                         'EMAIL',
-                        {
-                          subject: `Sobre ${deal.title}`,
-                          message: buildSuggestedEmailBody({
-                            contact: contact ?? undefined,
-                            deal,
-                            actionType: nextBestAction.actionType,
-                            action: nextBestAction.action,
-                            reason: nextBestAction.reason,
-                          }),
-                        },
+                        { subject: '', message: '' },
                         {
                           source: 'generated',
                           origin: 'nextBestAction',

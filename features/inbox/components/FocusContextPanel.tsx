@@ -243,130 +243,10 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
         setIsMessageModalOpen(true);
     };
 
-    const normalizeReason = (raw?: string) => {
-        if (typeof raw !== 'string') return '';
-        return raw.replace(/\s*-\s*Sugerido por IA\s*$/i, '').trim();
-    };
-
-    const formatSlot = (d: Date) => {
-        const day = d.toLocaleDateString('pt-PT', { weekday: 'short' });
-        const time = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-        return `${day} ${time}`;
-    };
-
-    const proposeTwoSlots = () => {
-        const a = new Date();
-        a.setDate(a.getDate() + 1);
-        a.setHours(10, 0, 0, 0);
-
-        const b = new Date();
-        b.setDate(b.getDate() + 2);
-        b.setHours(15, 0, 0, 0);
-
-        return { a, b };
-    };
-
-    const buildSuggestedWhatsAppMessage = (
-        actionType: string,
-        action: string,
-        reason?: string
-    ) => {
-        const firstName = contact?.name?.split(' ')[0] || '';
-        const greeting = firstName ? `Oi ${firstName}, tudo bem?` : 'Oi, tudo bem?';
-        const r = normalizeReason(reason);
-        const dealTitle = deal?.title?.trim();
-
-        const { a, b } = proposeTwoSlots();
-        const dealCtx = dealTitle ? ` sobre ${dealTitle}` : '';
-        const reasonSentence = r ? `\n\nPensei nisso porque ${r.charAt(0).toLowerCase()}${r.slice(1)}.` : '';
-
-        // Quando a “ação” é algo como “Agendar reunião”, a intenção real no WhatsApp é pedir disponibilidade.
-        if (actionType === 'MEETING') {
-            return (
-                `${greeting}` +
-                `\n\nQueria marcar um papo rápido (15 min)${dealCtx} pra alinharmos os próximos passos.` +
-                `${reasonSentence}` +
-                `\n\nVocê consegue ${formatSlot(a)} ou ${formatSlot(b)}? Se preferir, me diga um horário bom pra você.`
-            );
-        }
-
-        if (actionType === 'CALL') {
-            return (
-                `${greeting}` +
-                `\n\nPodemos fazer uma ligação rapidinha${dealCtx}?` +
-                `${reasonSentence}` +
-                `\n\nVocê prefere ${formatSlot(a)} ou ${formatSlot(b)}?`
-            );
-        }
-
-        if (actionType === 'TASK') {
-            return (
-                `${greeting}` +
-                `\n\nSó pra alinharmos${dealCtx}: ${action.trim()}.` +
-                `${reasonSentence}` +
-                `\n\nPode me confirmar quando conseguir?`
-            );
-        }
-
-        // Default (inclui quando a própria sugestão já é WHATSAPP/EMAIL, ou não veio estruturada)
-        const cleanAction = action?.trim();
-        const actionLine = cleanAction ? `\n\n${cleanAction}${dealTitle ? ` (${dealTitle})` : ''}.` : '';
-        return `${greeting}${actionLine}${reasonSentence}`;
-    };
-
-    const buildSuggestedEmailBody = (
-        actionType: string,
-        action: string,
-        reason?: string
-    ) => {
-        const firstName = contact?.name?.split(' ')[0] || '';
-        const greeting = firstName ? `Olá ${firstName},` : 'Olá,';
-        const r = normalizeReason(reason);
-        const dealTitle = deal?.title?.trim();
-        const { a, b } = proposeTwoSlots();
-        const reasonSentence = r ? `\n\nMotivo: ${r}.` : '';
-        const dealSentence = dealTitle ? `\n\nAssunto: ${dealTitle}.` : '';
-
-        if (actionType === 'MEETING') {
-            return (
-                `${greeting}` +
-                `\n\nQueria marcar uma conversa rápida (15 min) para alinharmos próximos passos.` +
-                `${dealSentence}` +
-                `${reasonSentence}` +
-                `\n\nVocê teria disponibilidade em ${formatSlot(a)} ou ${formatSlot(b)}?` +
-                `\n\nAbs,`
-            );
-        }
-
-        if (actionType === 'CALL') {
-            return (
-                `${greeting}` +
-                `\n\nPodemos falar rapidamente por telefone?` +
-                `${dealSentence}` +
-                `${reasonSentence}` +
-                `\n\nSugestões de horário: ${formatSlot(a)} ou ${formatSlot(b)}.` +
-                `\n\nAbs,`
-            );
-        }
-
-        if (actionType === 'TASK') {
-            return (
-                `${greeting}` +
-                `\n\n${action.trim()}.` +
-                `${dealSentence}` +
-                `${reasonSentence}` +
-                `\n\nAbs,`
-            );
-        }
-
-        return (
-            `${greeting}` +
-            `\n\n${action.trim()}.` +
-            `${dealSentence}` +
-            `${reasonSentence}` +
-            `\n\nAbs,`
-        );
-    };
+    // NOTA 22/05/2026: templates pt-BR removidos (Oi/Você/rapidinha/Abs).
+    // Draft inicial passa a ser gerado por IA (prompt v2 rewrite_message_draft)
+    // directamente no MessageComposerModal ao abrir, quando initialMessage é vazia.
+    // Ver memory plano_copy_ia_em_todo_o_lado.md.
 
     // Contact handlers
     const handleWhatsApp = (prefill?: { message?: string }) => {
@@ -674,15 +554,14 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
         const actionType = overrideActionType || suggestedType;
 
         if (actionType === 'WHATSAPP') {
-            handleWhatsApp({ message: buildSuggestedWhatsAppMessage(suggestedType, action, reason) });
+            // initialMessage vazia → MessageComposerModal dispara IA on-open (prompt v2)
+            handleWhatsApp({ message: '' });
             return;
         }
 
         if (actionType === 'EMAIL') {
-            handleEmail({
-                subject: action,
-                message: buildSuggestedEmailBody(suggestedType, action, reason),
-            });
+            // subject também vazio → IA gera assunto + corpo profissional pt-PT formal
+            handleEmail({ subject: '', message: '' });
             return;
         }
 
@@ -1436,23 +1315,14 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                 {/* Quick Actions - Agendamento */}
                                 <div className="flex flex-wrap gap-2 mb-3">
                                     <button
-                                        onClick={() =>
-                                            handleWhatsApp({
-                                                message: buildSuggestedWhatsAppMessage('TASK', `Queria falar sobre ${deal.title}`),
-                                            })
-                                        }
+                                        onClick={() => handleWhatsApp({ message: '' })}
                                         disabled={!contact?.phone}
                                         className="px-3 py-1.5 hover:bg-green-500/10 text-slate-500 hover:text-green-400 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium rounded-md transition-colors flex items-center gap-2 group"
                                     >
                                         <MessageCircle size={14} className="group-hover:text-green-400 transition-colors" /> WhatsApp
                                     </button>
                                     <button
-                                        onClick={() =>
-                                            handleEmail({
-                                                subject: `Sobre ${deal.title}`,
-                                                message: buildSuggestedEmailBody('TASK', `Queria falar sobre ${deal.title}`),
-                                            })
-                                        }
+                                        onClick={() => handleEmail({ subject: '', message: '' })}
                                         disabled={!contact?.email}
                                         className="px-3 py-1.5 hover:bg-cyan-500/10 text-slate-500 hover:text-cyan-400 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-medium rounded-md transition-colors flex items-center gap-2 group"
                                     >
