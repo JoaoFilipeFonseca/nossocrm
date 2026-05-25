@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
-import { processCall } from '@/lib/ai/calls/processCall';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -46,25 +45,23 @@ export async function POST(req: Request) {
   const recordedAt = (form.get('recorded_at') as string | null) || null;
 
   if (!(file instanceof File)) return json({ error: 'audio file required' }, 400);
-  if (file.size > MAX_BYTES) return json({ error: 'Audio too large (>100MB)' }, 413);
+  if (file.size > MAX_BYTES) return json({ error: 'Áudio demasiado grande (>100MB)' }, 413);
 
   const mime = (file.type || 'audio/mpeg').toLowerCase();
   if (!ALLOWED_MIMES.has(mime)) {
-    return json({ error: `Mime ${mime} not allowed. Use m4a, mp3, wav, ogg, webm, aac, flac.` }, 415);
+    return json({ error: `Formato ${mime} não aceite. Use m4a, mp3, wav, ogg, webm, aac, flac.` }, 415);
   }
 
-  // Fetch org Google key
-  const { data: orgSettings, error: settingsError } = await supabase
+  // Quick sanity: org has Google key (avoid uploading áudio para depois falhar)
+  const { data: orgSettings } = await supabase
     .from('organization_settings')
     .select('ai_google_key, ai_enabled')
     .eq('organization_id', profile.organization_id)
     .maybeSingle();
+  if (!orgSettings?.ai_enabled) return json({ error: 'IA desactivada na organização' }, 403);
+  if (!orgSettings?.ai_google_key) return json({ error: 'Chave Google IA não configurada' }, 400);
 
-  if (settingsError) return json({ error: settingsError.message }, 500);
-  if (!orgSettings?.ai_enabled) return json({ error: 'AI disabled' }, 403);
-  if (!orgSettings?.ai_google_key) return json({ error: 'Google AI key not configured' }, 400);
-
-  // Upload audio to Storage
+  // Upload áudio para Storage
   const ext = file.name?.split('.').pop()?.toLowerCase() || mime.split('/')[1] || 'm4a';
   const audioPath = `${profile.organization_id}/${crypto.randomUUID()}.${ext}`;
   const audioBuffer = new Uint8Array(await file.arrayBuffer());
@@ -73,7 +70,7 @@ export async function POST(req: Request) {
     .from('call-recordings')
     .upload(audioPath, audioBuffer, { contentType: mime, upsert: false });
 
-  if (uploadError) return json({ error: `Upload failed: ${uploadError.message}` }, 500);
+  if (uploadError) return json({ error: `Upload falhou: ${uploadError.message}` }, 500);
 
   // Insert pending row
   const { data: inserted, error: insertError } = await supabase
@@ -93,61 +90,31 @@ export async function POST(req: Request) {
     .single();
 
   if (insertError || !inserted) {
-    return json({ error: insertError?.message || 'Insert failed' }, 500);
+    return json({ error: insertError?.message || 'Insert falhou' }, 500);
   }
 
   const callId = inserted.id;
 
-  // Process synchronously (limited to ~50s within Vercel 60s window)
-  try {
-    const result = await processCall(
-      { audioBuffer, audioMime: mime },
-      orgSettings.ai_google_key,
-    );
-
-    await supabase
-      .from('call_recordings')
-      .update({
-        status: 'processed',
-        transcript: result.transcript,
-        summary: result.summary,
-        key_points: result.key_points,
-        next_actions: result.next_actions,
-        decisions: result.decisions,
-        mentions: result.mentions,
-        sentiment: result.sentiment,
-        ai_model: result.ai_model,
-        ai_duration_ms: result.ai_duration_ms,
-        processed_at: new Date().toISOString(),
-      })
-      .eq('id', callId);
-
-    // Create deal_activity if deal_id present
-    if (dealId) {
-      const title = `📞 Chamada processada por IA`;
-      const desc = result.summary || result.transcript.slice(0, 280);
-      await supabase.from('deal_activities').insert({
-        deal_id: dealId,
-        organization_id: profile.organization_id,
-        type: 'CALL',
-        description: `${title}\n\n${desc}`,
-        metadata: {
-          call_recording_id: callId,
-          sentiment: result.sentiment,
-          next_actions_count: result.next_actions.length,
-        },
-      });
-    }
-
-    return json({ id: callId, status: 'processed', summary: result.summary }, 201);
-  } catch (err: any) {
-    await supabase
-      .from('call_recordings')
-      .update({
-        status: 'failed',
-        error_message: String(err?.message || err).slice(0, 500),
-      })
-      .eq('id', callId);
-    return json({ id: callId, status: 'failed', error: String(err?.message || err) }, 500);
+  // Fire-and-forget: dispara Edge Function `process-call` (Deno, sem limite 60s).
+  // Cliente faz polling em /api/calls/[id] a cada 4s até ver status=processed.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  if (supabaseUrl && serviceRoleKey) {
+    const edgeUrl = `${supabaseUrl.replace(/\/$/, '')}/functions/v1/process-call`;
+    // Não esperar — só dispara
+    fetch(edgeUrl, {
+      method: 'POST',
+      headers: {
+        'authorization': `Bearer ${serviceRoleKey}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ call_id: callId }),
+    }).catch((err) => {
+      console.error('[calls/upload] falhou disparar edge function process-call:', err);
+    });
+  } else {
+    console.warn('[calls/upload] SUPABASE_URL ou SERVICE_ROLE_KEY em falta, edge function não disparada');
   }
+
+  return json({ id: callId, status: 'transcribing' }, 202);
 }

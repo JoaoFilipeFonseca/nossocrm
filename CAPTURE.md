@@ -8,6 +8,13 @@
 
 ## 🐛 Bugs UI activos
 
+### B-007 · Sweep PT-PT alargado — substituir "deal" por "negócio" em todo o UI visível
+- **Quando:** 25/05/2026 noite, ao testar chamadas A.1.
+- **Sintoma:** O João é português e o produto é Foco Imo (CRM imobiliário PT). Sempre que aparece "deal" em texto visível é dissonante.
+- **Já feito hoje:** "Negocio:" → "Negócio:", "Reuniao -" → "Reunião com" no DealDetailModal calendar handler. Componente CallUploadModal/CallDetailPage já criados em PT-PT.
+- **Falta:** sweep em todo o repo de strings UI visíveis: DealDetailModal labels, DealCockpit, FocusContextPanel, board headers, toasts, mensagens de erro genéricas, etc. NÃO mexer em identificadores de código (deal_id, DealCard.tsx etc) — só em copy.
+- **Estimativa:** 1 sessão dedicada com grep "deal", revisão manual e PT-PT correcto.
+
 ### B-006 · DealCard painel esquerdo (Detalhes + Tags) com excesso de espaçamento — força scroll horizontal/vertical
 - **Quando:** 25/05/2026 noite, ao abrir Sonia Rodrigo no /boards.
 - **Sintoma:** secções DETALHES (Prioridade, Criado em, Probabilidade), TAGS, Adicionar Tag ocupam mais espaço vertical do que o necessário. Painel direito ("CONTACTO PRINCIPAL", botões executar como, KPIs) fica cortado por baixo — utilizador tem de scrollar barra horizontal/vertical para ver email/telefone. No telemóvel é pior.
