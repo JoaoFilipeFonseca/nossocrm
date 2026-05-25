@@ -168,7 +168,8 @@ export const VoiceCaptureFAB: React.FC = () => {
         <button
           onClick={() => { setOpen(true); setTimeout(startRecording, 200); }}
           aria-label="Ditar para o CRM"
-          className="fixed z-40 bottom-20 md:bottom-6 right-4 md:right-6 h-14 w-14 rounded-full bg-rose-500 hover:bg-rose-600 text-white shadow-xl flex items-center justify-center transition-transform active:scale-95"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}
+          className="fixed z-40 md:!bottom-6 right-4 md:right-6 h-14 w-14 rounded-full bg-rose-500 hover:bg-rose-600 text-white shadow-xl flex items-center justify-center transition-transform active:scale-95"
         >
           <Mic className="h-6 w-6" />
         </button>
