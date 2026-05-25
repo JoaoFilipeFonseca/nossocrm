@@ -443,10 +443,15 @@ export async function POST(req: Request) {
       case 'generateEmailDraft': {
         const { deal } = data as any;
         const resolved = await getResolvedPrompt(supabase as any, profile.organization_id as any, 'task_deals_email_draft');
+        // B-004: template BD espera {{deal}}, {{contact}}, {{context}} — não {{dealTitle}}/{{contactName}}.
+        // Mapear callsite vars → template vars. Para contexto rico usar /api/ai/actions/stream (rewriteMessageDraft).
+        const contactStr = deal?.contactName
+          ? `${deal.contactName}${deal?.companyName ? ` (empresa: ${deal.companyName})` : ''}`
+          : 'Cliente';
         const prompt = renderPromptTemplate(resolved?.content || '', {
-          contactName: deal?.contactName || 'Cliente',
-          companyName: deal?.companyName || 'Empresa',
-          dealTitle: deal?.title || '',
+          deal: deal?.title || '',
+          contact: contactStr,
+          context: '[contexto rico não disponível neste endpoint — para draft com histórico+activities+notes usa rewriteMessageDraft no Inbox→Foco]',
         });
         const { result, providerUsed } = await runWithFallback({
           geminiModel: model,
