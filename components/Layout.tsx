@@ -46,7 +46,8 @@ import {
   Home,
   PanelLeftClose,
   PanelLeftOpen,
-  Target
+  Target,
+  Archive
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -81,6 +82,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/activities': 'Atividades',
   '/decisions': 'Decisões',
   '/reports': 'Relatórios',
+  '/criativos': 'Criativos',
   '/settings': 'Configurações',
   '/profile': 'Perfil',
   '/ai': 'Assistente IA',
@@ -322,6 +324,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
             { to: '/imoveis', icon: Home, label: 'Imóveis', prefetch: undefined, badge: undefined },
             { to: '/activities', icon: CheckSquare, label: 'Atividades', prefetch: 'activities' as const, badge: undefined },
             { to: '/reports', icon: BarChart3, label: 'Relatórios', prefetch: 'reports' as const, badge: undefined },
+            { to: '/criativos', icon: Archive, label: 'Criativos', prefetch: undefined, badge: undefined },
             { to: '/settings', icon: Settings, label: 'Configurações', prefetch: 'settings' as const, badge: undefined },
           ].map((item) => {
             if (sidebarCollapsed) {
