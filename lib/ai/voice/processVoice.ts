@@ -96,24 +96,28 @@ export async function createEntityFromVoice(
   const intent = extraction.intent;
 
   if (intent === 'task' || intent === 'note') {
-    // Tenta ligar a um contacto/deal existente
+    // Tenta ligar a um contacto/deal existente (matching accent-insensitive)
     const term = extraction.contact_name?.trim();
     if (!term) {
       return { kind: 'unmatched', summary: extraction.summary, reason: 'Nenhum contacto identificado' };
     }
-    const firstWord = term.split(/\s+/)[0];
-    const { data: contacts } = await supabase
-      .from('contacts')
-      .select('id, name')
-      .eq('organization_id', orgId)
-      .ilike('name', `%${firstWord}%`)
-      .limit(5);
+    // Tenta primeiro o nome completo, fallback para primeiro nome
+    let { data: contacts } = await supabase.rpc('search_contacts_unaccent', {
+      p_org_id: orgId, p_term: term, p_limit: 5,
+    });
+    if (!contacts || contacts.length === 0) {
+      const firstWord = term.split(/\s+/)[0];
+      const r = await supabase.rpc('search_contacts_unaccent', {
+        p_org_id: orgId, p_term: firstWord, p_limit: 5,
+      });
+      contacts = r.data;
+    }
 
     if (!contacts || contacts.length === 0) {
       return { kind: 'unmatched', summary: extraction.summary, reason: `Contacto "${term}" não encontrado` };
     }
-    const exact = contacts.find((c: any) => c.name?.toLowerCase() === term.toLowerCase());
-    const chosen = exact || contacts[0];
+    // RPC já ordena por match exacto primeiro
+    const chosen = contacts[0];
     const { data: deals } = await supabase
       .from('deals')
       .select('id')
