@@ -64,6 +64,7 @@ import { useUnreadCount } from '@/lib/query/hooks/useConversationsQuery';
 import { UIChat } from './ai/UIChat';
 
 import { NotificationPopover } from './notifications/NotificationPopover';
+import { VoiceCaptureFAB } from '@/features/voice/VoiceCaptureFAB';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 /**
@@ -569,6 +570,9 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
       <div className="fixed top-2 right-2 z-50 md:hidden text-[10px] font-mono text-slate-500 bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded-md backdrop-blur-sm border border-slate-200 dark:border-slate-700">{process.env.NEXT_PUBLIC_BUILD_TAG || 'dev'}</div>
       <BottomNav onOpenMore={() => setIsMoreOpen(true)} />
       <MoreMenuSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} />
+
+      {/* Voice capture FAB — sempre visível em qualquer página protegida */}
+      <VoiceCaptureFAB />
     </div>
   );
 };
