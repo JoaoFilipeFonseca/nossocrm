@@ -9,7 +9,28 @@ const repoRoot = configDir.includes('/.claude/worktrees/')
   ? path.resolve(configDir, '../../../')
   : configDir;
 
+// Versão humana do build: YYMMDD_HHmm (Lisboa).
+// Injectada em build time para sidebar/mobile mostrarem "260522_2156" em vez de "v5b5108b".
+function buildVersionTag(): string {
+  try {
+    const now = new Date();
+    // Forçar Lisboa (Europe/Lisbon)
+    const fmt = new Intl.DateTimeFormat('pt-PT', {
+      timeZone: 'Europe/Lisbon',
+      year: '2-digit', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    });
+    const parts = fmt.formatToParts(now).reduce((acc: any, p) => { acc[p.type] = p.value; return acc; }, {});
+    return `${parts.year}${parts.month}${parts.day}_${parts.hour}${parts.minute}`;
+  } catch {
+    return 'dev';
+  }
+}
+
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_BUILD_TAG: buildVersionTag(),
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co' },

@@ -293,7 +293,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
             </div>
             <div className={`flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
               <span className="text-xl font-bold font-display tracking-tight text-slate-900 dark:text-white whitespace-nowrap overflow-hidden">Foco Imo</span>
-              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 whitespace-nowrap leading-tight">v{(process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'dev').substring(0, 7)}</span>
+              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 whitespace-nowrap leading-tight">{process.env.NEXT_PUBLIC_BUILD_TAG || 'dev'}</span>
             </div>
           </div>
 
@@ -563,7 +563,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
       </div>
 
       {/* Mobile app shell */}
-      <div className="fixed top-2 right-2 z-50 md:hidden text-[10px] font-mono text-slate-500 bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded-md backdrop-blur-sm border border-slate-200 dark:border-slate-700">v{(process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'dev').substring(0, 7)}</div>
+      <div className="fixed top-2 right-2 z-50 md:hidden text-[10px] font-mono text-slate-500 bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded-md backdrop-blur-sm border border-slate-200 dark:border-slate-700">{process.env.NEXT_PUBLIC_BUILD_TAG || 'dev'}</div>
       <BottomNav onOpenMore={() => setIsMoreOpen(true)} />
       <MoreMenuSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} />
     </div>
