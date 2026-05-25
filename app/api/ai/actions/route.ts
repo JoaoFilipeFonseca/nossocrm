@@ -34,6 +34,61 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   ]);
 }
 
+/**
+ * Helper unificado para chamadas IA: Gemini com timeout + fallback Anthropic Haiku.
+ *
+ * Substitui ~9 cópias de `generateText({ model, ... })` boilerplate por chamada única.
+ * Robustez transversal: nenhum endpoint fica stuck >12s, fallback automático em erros 5xx/timeout.
+ *
+ * @param geminiModel Modelo Gemini já configurado (de getModel)
+ * @param anthropicKey Chave Anthropic se disponível (null = sem fallback)
+ * @param system System prompt (string) — incluí GLOBAL_RULES_BLOCK quando relevante via buildCachedSystem+flattenSystem
+ * @param prompt User message
+ * @param outputSchema Schema opcional Zod para Output.object (gera output estruturado)
+ * @param label Para logs (identifica o endpoint)
+ * @param geminiTimeoutMs Default 12s
+ */
+async function runWithFallback(opts: {
+  geminiModel: ReturnType<typeof getModel>;
+  anthropicKey?: string | null;
+  system: string;
+  prompt: string;
+  outputSchema?: z.ZodSchema<any>;
+  label: string;
+  geminiTimeoutMs?: number;
+}): Promise<{ result: any; providerUsed: string; totalMs: number }> {
+  const { geminiModel, anthropicKey, system, prompt, outputSchema, label } = opts;
+  const timeoutMs = opts.geminiTimeoutMs ?? 12000;
+  const startedAt = Date.now();
+  const baseArgs: any = { system, prompt, maxRetries: 1 };
+  if (outputSchema) baseArgs.output = Output.object({ schema: outputSchema });
+
+  let result: any;
+  let providerUsed = 'google';
+
+  try {
+    result = await withTimeout(
+      generateText({ model: geminiModel, ...baseArgs }),
+      timeoutMs,
+      `${label}-gemini`
+    );
+  } catch (err: any) {
+    const elapsed = Date.now() - startedAt;
+    console.warn(`[${label}] Gemini falhou após ${elapsed}ms (${err?.message}). Fallback Anthropic.`);
+
+    if (!anthropicKey) throw err;
+
+    const anthropicProvider = createAnthropic({ apiKey: anthropicKey });
+    const claudeModel = anthropicProvider('claude-haiku-4-5-20251001');
+    result = await generateText({ model: claudeModel, ...baseArgs });
+    providerUsed = 'anthropic-haiku';
+  }
+
+  const totalMs = Date.now() - startedAt;
+  logCacheStats(`${label} provider=${providerUsed} totalMs=${totalMs}`, result);
+  return { result, providerUsed, totalMs };
+}
+
 export const maxDuration = 60;
 
 type AIActionResponse<T = unknown> = {
@@ -373,14 +428,15 @@ export async function POST(req: Request) {
           stageLabel: stageLabel || deal?.status || '',
           probability: deal?.probability || 50,
         });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
-          output: Output.object({ schema: AnalyzeLeadSchema }),
           prompt,
+          outputSchema: AnalyzeLeadSchema,
+          label: 'analyzeLead',
         });
-        logAIAction(supabase, profile.organization_id, 'analyzeLead', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'analyzeLead', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.output });
       }
 
@@ -392,13 +448,14 @@ export async function POST(req: Request) {
           companyName: deal?.companyName || 'Empresa',
           dealTitle: deal?.title || '',
         });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
           prompt,
+          label: 'generateEmailDraft',
         });
-        logAIAction(supabase, profile.organization_id, 'generateEmailDraft', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'generateEmailDraft', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.text });
       }
 
@@ -430,73 +487,32 @@ export async function POST(req: Request) {
           nba: nextBestAction,
         });
 
-        // Estratégia UX 3-5s: tentar Gemini com timeout 3.5s, fallback Anthropic Haiku com cache real.
-        // Razão: Gemini Flash é mais barato mas pode demorar em snapshots grandes; Claude Haiku é
-        // consistentemente rápido (~2s) e com cacheControl ephemeral aproveita 90% off em chamadas repetidas.
-        const anthropicKey = (orgSettings as any)?.ai_anthropic_key;
-        const startedAt = Date.now();
-        let result: any;
-        let providerUsed: string = 'google';
-
-        try {
-          // Timeout 12s: Gemini Flash com snapshot rico + Output.object schema demora 8-12s tipicamente.
-          // Timeout só dispara fallback Anthropic em casos de travamento real (>12s). UX 8-10s aceitável.
-          // Para baixar para <5s, opções no CAPTURE.md: streaming, pre-generation, race verdadeira.
-          result = await withTimeout(
-            generateText({
-              model,
-              system: systemFlat,
-              maxRetries: 1,
-              output: Output.object({ schema: RewriteMessageDraftSchema }),
-              prompt: userMessage,
-            }),
-            12000,
-            'gemini'
-          );
-        } catch (err: any) {
-          const elapsed = Date.now() - startedAt;
-          console.warn(`[rewriteMessageDraft] Gemini falhou após ${elapsed}ms (${err?.message}). Fallback Anthropic.`);
-
-          if (!anthropicKey) {
-            // Sem Claude configurado, propaga falha original
-            throw err;
-          }
-
-          const anthropicProvider = createAnthropic({ apiKey: anthropicKey });
-          const claudeModel = anthropicProvider('claude-haiku-4-5-20251001');
-
-          result = await generateText({
-            model: claudeModel,
-            // NOTA: AI SDK v6 não aceita CachedBlock[] directamente em `system`.
-            // Cache Anthropic (cacheControl ephemeral) precisa ser configurado via
-            // providerOptions com formato SystemModelMessage[]. Standby até refactor.
-            // Por agora, system flat (string) — Claude responde em ~2s mesmo sem cache marker.
-            system: systemFlat,
-            maxRetries: 1,
-            output: Output.object({ schema: RewriteMessageDraftSchema }),
-            prompt: userMessage,
-          });
-          providerUsed = 'anthropic-haiku';
-        }
-
-        const totalMs = Date.now() - startedAt;
-        logCacheStats(`rewriteMessageDraft channel=${channelLabel} provider=${providerUsed} totalMs=${totalMs}`, result);
+        // Usa helper unificado: Gemini com timeout 12s + fallback Anthropic Haiku.
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
+          system: systemFlat,
+          prompt: userMessage,
+          outputSchema: RewriteMessageDraftSchema,
+          label: `rewriteMessageDraft channel=${channelLabel}`,
+        });
         logAIAction(supabase, profile.organization_id, 'rewriteMessageDraft', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.output });
       }
 
       case 'generateRescueMessage': {
         const { deal, channel } = data as any;
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
           prompt: `Gere uma mensagem de resgate/follow-up para reativar um deal parado.
 DEAL: ${deal?.title} (${deal?.contactName || ''})
 CANAL: ${channel}
-Responda em português do Portugal.`,
+Responda em português europeu (pt-PT) formal.`,
+          label: 'generateRescueMessage',
         });
-        logAIAction(supabase, profile.organization_id, 'generateRescueMessage', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'generateRescueMessage', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.text });
       }
 
@@ -519,15 +535,15 @@ Responda em português do Portugal.`,
           description: safeDescription,
           lifecycleJson: JSON.stringify(lifecycleList),
         });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
-          output: Output.object({ schema: BoardStructureSchema }),
           prompt,
+          outputSchema: BoardStructureSchema,
+          label: 'generateBoardStructure',
         });
-
-        logAIAction(supabase, profile.organization_id, 'generateBoardStructure', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'generateBoardStructure', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.output });
       }
 
@@ -537,14 +553,15 @@ Responda em português do Portugal.`,
         const prompt = renderPromptTemplate(resolved?.content || '', {
           boardName: boardData?.boardName || '',
         });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
-          output: Output.object({ schema: BoardStrategySchema }),
           prompt,
+          outputSchema: BoardStrategySchema,
+          label: 'generateBoardStrategy',
         });
-        logAIAction(supabase, profile.organization_id, 'generateBoardStrategy', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'generateBoardStrategy', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.output });
       }
 
@@ -561,14 +578,15 @@ Responda em português do Portugal.`,
           boardContext,
           historyContext,
         });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
-          output: Output.object({ schema: RefineBoardSchema }),
           prompt,
+          outputSchema: RefineBoardSchema,
+          label: 'refineBoardWithAI',
         });
-        logAIAction(supabase, profile.organization_id, 'refineBoardWithAI', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'refineBoardWithAI', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.output });
       }
 
@@ -579,56 +597,60 @@ Responda em português do Portugal.`,
           objection,
           dealTitle: deal?.title || '',
         });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
-          output: Output.object({ schema: ObjectionResponseSchema }),
           prompt,
+          outputSchema: ObjectionResponseSchema,
+          label: 'generateObjectionResponse',
         });
-        logAIAction(supabase, profile.organization_id, 'generateObjectionResponse', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'generateObjectionResponse', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.output });
       }
 
       case 'parseNaturalLanguageAction': {
         const { text } = data as any;
         const { text: safeText } = sanitizeIncomingMessage(String(text || ''), { org_id: profile.organization_id });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
-          output: Output.object({ schema: ParsedActionSchema }),
           prompt: `Parse para CRM Action: "${safeText}".\nCampos: title, type (CALL/MEETING/EMAIL/TASK), date, contactName, companyName, confidence.`,
+          outputSchema: ParsedActionSchema,
+          label: 'parseNaturalLanguageAction',
         });
-        logAIAction(supabase, profile.organization_id, 'parseNaturalLanguageAction', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'parseNaturalLanguageAction', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.output });
       }
 
       case 'chatWithCRM': {
         const { message, context } = data as any;
         const { text: safeMsg } = sanitizeIncomingMessage(String(message || ''), { org_id: profile.organization_id });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
           prompt: `Assistente CRM.
 Contexto: ${JSON.stringify(context)}
-Usuário: ${safeMsg}
-Responda em português.`,
+Utilizador: ${safeMsg}
+Responda em português europeu (pt-PT) formal.`,
+          label: 'chatWithCRM',
         });
-        logAIAction(supabase, profile.organization_id, 'chatWithCRM', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'chatWithCRM', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.text });
       }
 
       case 'generateBirthdayMessage': {
         const { contactName, age } = data as any;
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
-          prompt: `Parabéns para ${contactName} (${age || ''} anos). Curto e profissional.`,
+          prompt: `Parabéns para ${contactName} (${age || ''} anos). Curto, profissional, pt-PT formal.`,
+          label: 'generateBirthdayMessage',
         });
-        logAIAction(supabase, profile.organization_id, 'generateBirthdayMessage', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'generateBirthdayMessage', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.text });
       }
 
@@ -637,26 +659,28 @@ Responda em português.`,
         const prompt = renderPromptTemplate(resolved?.content || '', {
           dataJson: JSON.stringify(data),
         });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
           prompt,
+          label: 'generateDailyBriefing',
         });
-        logAIAction(supabase, profile.organization_id, 'generateDailyBriefing', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'generateDailyBriefing', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.text });
       }
 
       case 'chatWithBoardAgent': {
         const { message, boardContext } = data as any;
         const { text: safeMsg } = sanitizeIncomingMessage(String(message || ''), { org_id: profile.organization_id });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
           prompt: `Persona: ${boardContext?.agentName}. Contexto: ${JSON.stringify(boardContext)}. Msg: ${safeMsg}`,
+          label: 'chatWithBoardAgent',
         });
-        logAIAction(supabase, profile.organization_id, 'chatWithBoardAgent', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'chatWithBoardAgent', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: result.text });
       }
 
@@ -668,13 +692,14 @@ Responda em português.`,
           dealTitle: deal?.title || '',
           context: context || '',
         });
-        const result = await generateText({
-          model,
+        const { result, providerUsed } = await runWithFallback({
+          geminiModel: model,
+          anthropicKey: (orgSettings as any)?.ai_anthropic_key,
           system: SECURITY_PREAMBLE,
-          maxRetries: 3,
           prompt,
+          label: 'generateSalesScript',
         });
-        logAIAction(supabase, profile.organization_id, 'generateSalesScript', modelId, result);
+        logAIAction(supabase, profile.organization_id, 'generateSalesScript', `${modelId}|${providerUsed}`, result);
         return json<AIActionResponse>({ result: { script: result.text, scriptType, generatedFor: deal?.title } });
       }
 
