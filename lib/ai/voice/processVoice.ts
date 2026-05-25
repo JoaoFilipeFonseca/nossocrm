@@ -21,7 +21,7 @@ const VoiceExtractionSchema = z.object({
   contact_email: z.string().optional().default(''),
   task_title: z.string().optional().default(''),
   task_due_at: z.string().optional().default(''),
-  task_channel: z.enum(['CALL', 'WHATSAPP', 'EMAIL', 'MEETING', 'TASK', '']).optional().default(''),
+  task_channel: z.enum(['CALL', 'WHATSAPP', 'EMAIL', 'MEETING', 'TASK']).optional(),
   property_description: z.string().optional().default(''),
   property_budget: z.string().optional().default(''),
   note_content: z.string().optional().default(''),
