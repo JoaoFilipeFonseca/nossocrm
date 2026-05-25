@@ -1,6 +1,7 @@
 'use client';
 
 import { callAIProxy, isConsentError, isRateLimitError } from '@/lib/supabase/ai-proxy';
+import { sanitizeCopy, sanitizeCopyObject } from '@/lib/ai/sanitize';
 import type { Deal, DealView, LifecycleStage } from '@/types';
 import type { ParsedAction } from '@/types/aiActions';
 
@@ -308,7 +309,8 @@ export async function rewriteMessageDraft(
   input: RewriteMessageDraftInput,
   _config?: AIConfigLegacy
 ): Promise<RewriteMessageDraftResult> {
-  return await callAIProxy<RewriteMessageDraftResult>('rewriteMessageDraft', input);
+  const result = await callAIProxy<RewriteMessageDraftResult>('rewriteMessageDraft', input);
+  return sanitizeCopyObject(result);
 }
 
 /**
@@ -372,16 +374,16 @@ export async function rewriteMessageDraftStream(
  */
 export function parseRewriteStreamText(text: string, channel: 'EMAIL' | 'WHATSAPP'): { subject: string; message: string } {
   if (channel === 'WHATSAPP') {
-    return { subject: '', message: text.trim() };
+    return { subject: '', message: sanitizeCopy(text.trim()) };
   }
   // EMAIL: procurar "ASSUNTO: <linha>\n\n<corpo>"
   const match = text.match(/^\s*ASSUNTO:\s*(.*?)(?:\r?\n\r?\n([\s\S]*))?$/i);
   if (match) {
     return {
-      subject: (match[1] || '').trim(),
-      message: (match[2] || '').trim(),
+      subject: sanitizeCopy((match[1] || '').trim()),
+      message: sanitizeCopy((match[2] || '').trim()),
     };
   }
   // Fallback: LLM não respeitou formato, devolve tudo como mensagem
-  return { subject: '', message: text.trim() };
+  return { subject: '', message: sanitizeCopy(text.trim()) };
 }

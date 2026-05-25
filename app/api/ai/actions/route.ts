@@ -24,6 +24,7 @@ import { getResolvedPrompt } from '@/lib/ai/prompts/server';
 import { renderPromptTemplate } from '@/lib/ai/prompts/render';
 import { buildCachedSystem, flattenSystem, logCacheStats } from '@/lib/ai/cache';
 import { isAIFeatureEnabled } from '@/lib/ai/features/server';
+import { sanitizeCopy, sanitizeCopyObject } from '@/lib/ai/sanitize';
 
 // Wrapper de timeout para Promise.race com early-give-up.
 // Se a promessa não resolver dentro de `ms`, rejeita para activar fallback.
@@ -82,6 +83,17 @@ async function runWithFallback(opts: {
     const claudeModel = anthropicProvider('claude-haiku-4-5-20251001');
     result = await generateText({ model: claudeModel, ...baseArgs });
     providerUsed = 'anthropic-haiku';
+  }
+
+  // Sanitização determinística: garante zero em-dash/en-dash em todos
+  // os outputs IA dirigidos a humano, mesmo se o LLM ignorar o prompt.
+  if (result && typeof result === 'object') {
+    if (typeof result.text === 'string') {
+      result.text = sanitizeCopy(result.text);
+    }
+    if (result.object && typeof result.object === 'object') {
+      result.object = sanitizeCopyObject(result.object as Record<string, unknown>);
+    }
   }
 
   const totalMs = Date.now() - startedAt;

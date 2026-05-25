@@ -8,6 +8,13 @@
 
 ## 🐛 Bugs UI activos
 
+### B-006 · DealCard painel esquerdo (Detalhes + Tags) com excesso de espaçamento — força scroll horizontal/vertical
+- **Quando:** 25/05/2026 noite, ao abrir Sonia Rodrigo no /boards.
+- **Sintoma:** secções DETALHES (Prioridade, Criado em, Probabilidade), TAGS, Adicionar Tag ocupam mais espaço vertical do que o necessário. Painel direito ("CONTACTO PRINCIPAL", botões executar como, KPIs) fica cortado por baixo — utilizador tem de scrollar barra horizontal/vertical para ver email/telefone. No telemóvel é pior.
+- **Files a inspeccionar:** `features/boards/components/Modals/DealDetailModal.tsx` (painel esquerdo), eventual sub-componente Detalhes.
+- **Fix esperado:** compactar padding/gap entre rows (Prioridade/Criado/Probabilidade podem ser 1 linha cada com label + valor inline), reduzir altura do "Adicionar Tag" (input + chip), ou tornar Detalhes colapsível com summary. Mobile: stack vertical, esconder Detalhes por defeito.
+- **Capturado:** 25/05/2026 noite, "perco tempo a mexer na barra".
+
 ### B-001 · Painel direito (Chat IA / Notas / Scripts / Ficheiros) come o espaço da área central no Inbox→Foco
 - **Quando:** durante sessões de Claude Code (provavelmente sempre, mas é nessa altura que o João nota).
 - **Sintoma:** painel direito ocupa ~30% da largura; área de actividades + composer fica espremida; texto "Nenhuma atividade" cai por baixo do botão WhatsApp/Email/Ag.Ligação.
