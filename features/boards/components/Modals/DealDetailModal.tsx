@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useId, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dealsService } from '@/lib/supabase';
 import { sanitizeCopy } from '@/lib/ai/sanitize';
+import { CallUploadModal } from '@/features/calls/CallUploadModal';
 import {
   useContacts,
   useActivities,
@@ -245,6 +246,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
 
   const updateContactMutation = useUpdateContact();
   const [execLoading, setExecLoading] = useState<'wa' | 'email' | null>(null);
+  const [callModalOpen, setCallModalOpen] = useState(false);
 
   const execActionWhatsApp = async () => {
     const d: any = deal;
@@ -1103,8 +1105,17 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       <button type="button" title="Agendar reunião (Google Calendar)" onClick={() => { const lines = ['Negocio: ' + (deal.title || '')]; if (deal.contactName) lines.push('Contacto: ' + deal.contactName); if (deal.contactEmail) lines.push('Email: ' + deal.contactEmail); if ((deal as any).contactPhone) lines.push('Telefone: ' + (deal as any).contactPhone); const url = 'https://calendar.google.com/calendar/u/0/r/eventedit?text=' + encodeURIComponent('Reuniao - ' + (deal.title || 'Foco Imo')) + '&details=' + encodeURIComponent(lines.join('\n')); window.open(url, '_blank', 'noopener,noreferrer'); recordTouchpoint('MEETING', 'Agendamento iniciado (Google Calendar)'); }} className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-600 dark:text-purple-400 transition" aria-label="Agendar">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                       </button>
+                      <button type="button" onClick={() => setCallModalOpen(true)} title="Adicionar chamada gravada (IA transcreve e analisa)" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-600 dark:text-rose-400 transition" aria-label="Adicionar chamada">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                      </button>
                     </div>
                     </div>
+                    <CallUploadModal
+                      isOpen={callModalOpen}
+                      onClose={() => setCallModalOpen(false)}
+                      dealId={deal.id}
+                      contactId={(deal as any).contactId ?? null}
+                    />
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-3 text-center">
