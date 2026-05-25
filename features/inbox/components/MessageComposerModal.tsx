@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, ExternalLink, Mail, MessageCircle, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { rewriteMessageDraft, rewriteMessageDraftStream, parseRewriteStreamText, type RewriteMessageDraftInput } from '@/lib/ai/actionsClient';
+import { archiveCreative } from '@/lib/criativos/archiveCreative';
 import { isConsentError, isRateLimitError } from '@/lib/supabase/ai-proxy';
 import { toWhatsAppPhone } from '@/lib/phone';
 
@@ -300,12 +301,32 @@ export function MessageComposerModal({
     };
 
     const handleOpen = () => {
+        const snapshot = (aiContext as any)?.cockpitSnapshot;
+        const dealId: string | null = snapshot?.deal?.id ?? null;
+        const contactId: string | null = snapshot?.contact?.id ?? null;
+        const tags = aiBadge ? ['auto'] : ['manual'];
+
         if (channel === 'WHATSAPP') {
             if (!phone) return;
             const formatted = formatForWhatsApp(message);
             // Keep textarea consistent with what will be sent.
             if (formatted && formatted !== message) setMessage(formatted);
             window.open(buildWhatsAppUrl(phone, formatted), '_blank');
+            archiveCreative({
+                type: 'whatsapp',
+                channel: 'whatsapp',
+                title: contactName ? `WhatsApp para ${contactName}` : 'WhatsApp enviado',
+                content: formatted,
+                deal_id: dealId,
+                contact_id: contactId,
+                prompt_key: aiBadge ? 'rewrite_message_draft' : null,
+                source: aiBadge ? 'auto_generator' : 'manual',
+                ai_provider: aiBadge ? 'google' : null,
+                ai_model: aiBadge ? 'gemini-2.5-flash' : null,
+                status: 'sent',
+                tags,
+                edited_by_human: !aiBadge,
+            });
             onExecuted?.({ channel, message: formatted });
             return;
         }
@@ -314,6 +335,22 @@ export function MessageComposerModal({
         const formatted = formatForEmail(message);
         if (formatted && formatted !== message) setMessage(formatted);
         window.open(buildMailtoUrl(contactEmail, subject, formatted), '_blank');
+        archiveCreative({
+            type: 'email',
+            channel: 'gmail',
+            title: contactName ? `Email para ${contactName}` : 'Email enviado',
+            subject,
+            content: formatted,
+            deal_id: dealId,
+            contact_id: contactId,
+            prompt_key: aiBadge ? 'rewrite_message_draft' : null,
+            source: aiBadge ? 'auto_generator' : 'manual',
+            ai_provider: aiBadge ? 'google' : null,
+            ai_model: aiBadge ? 'gemini-2.5-flash' : null,
+            status: 'sent',
+            tags,
+            edited_by_human: !aiBadge,
+        } as any);
         onExecuted?.({ channel, subject, message: formatted });
     };
 

@@ -34,6 +34,7 @@ const CreateSchema = z.object({
   tags: z.array(z.string()).default([]),
   is_template: z.boolean().default(false),
   is_favorite: z.boolean().default(false),
+  edited_by_human: z.boolean().default(false),
 }).strict();
 
 async function resolveProfile() {
