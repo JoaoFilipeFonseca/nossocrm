@@ -123,7 +123,10 @@ export async function createEntityFromVoice(
       .select('id')
       .eq('organization_id', orgId)
       .eq('contact_id', chosen.id)
-      .is('archived_at', null)
+      .is('deleted_at', null)
+      .eq('is_won', false)
+      .eq('is_lost', false)
+      .order('updated_at', { ascending: false })
       .limit(1);
 
     const dealId = deals?.[0]?.id || null;
