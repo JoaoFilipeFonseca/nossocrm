@@ -24,10 +24,12 @@
 - **Foi corrigido em commit `5b5108b`** — `isGeneratingInitial` e `isRewriting` removidos das deps do useEffect. Causou spinner infinito.
 - **Lição transversal:** **NUNCA pôr state que o próprio effect altera nas deps**. Pattern a evitar em todos os useEffect futuros.
 
-### B-004 · Bug template→callsite mismatch nos prompts BD
-- O `task_deals_email_draft` (v2 inserido 17/5) tem variáveis `{{deal}}/{{contact}}/{{context}}` mas callsite passa `contactName/companyName/dealTitle` → variáveis ficam vazias no render.
-- **Outros endpoints podem ter o mesmo bug**. Auditar todos os `getResolvedPrompt(...) + renderPromptTemplate(...)` para confirmar match de chaves.
-- Esta sessão NÃO corrigiu — só refactor `rewriteMessageDraft` para não depender de placeholders.
+### B-004 · ✅ RESOLVIDO 25/05 — mismatch variáveis prompts BD vs callsites
+- Auditados 4 prompts active na BD vs 8 callsites de renderPromptTemplate.
+- 2 bugs reais corrigidos (commit `f123f8f`):
+  - `task_deals_email_draft` v2: callsite passava `{contactName, companyName, dealTitle}` mas template esperava `{deal, contact, context}` → callsite refactor para mapear.
+  - `task_inbox_daily_briefing` v2: callsite passava `{dataJson}` mas template esperava 4 vars separadas → UPDATE BD para usar `{{dataJson}}` + LLM parser.
+- 2 prompts OK: `rewrite_message_draft` v3 (sem placeholders, user msg estruturado) e `task_inbox_sales_script` v2 (vars batem certo).
 
 ---
 
@@ -104,6 +106,33 @@ reais é fisiologicamente difícil baixar abaixo de 5s. Output a ~50 tok/s para 
 - **Modelos "Antigravity Agent Preview" + "Nano Banana Pro"** no selector → filtrar em `GOOGLE_EXCLUDED_PATTERNS`
 
 ---
+
+## M-006 · Reduzir tempo até 1ª chunk no streaming (Fase A.1 follow-up)
+
+**Estado após fix anti-buffer (commit `f7c6d98`, validado live `260525_1049`):**
+Streaming REAL funciona — textarea cresce em chunks visíveis: `88c → 277c → 497c → 948c → 1093c (completo)`. Total ~8s desde click.
+
+**Pendente:** 1ª chunk demora **6.6s** a aparecer (Gemini "pensa" antes de enviar tokens). Objectivo da Fase A.1 era 1s.
+
+**Caminhos para encurtar (Plan-First futuro):**
+1. **Pre-warm**: ao abrir card no Foco, fire-and-forget warm-up call ao endpoint (sem usar resultado). Próxima call efectiva fica em ~1-2s (cache TCP + Vercel function warm).
+2. **2 calls separadas**: 1ª gera só SUBJECT (rápida, ~1s) e renderiza. 2ª stream body em paralelo. Utilizador vê primeiro o assunto, depois corpo.
+3. **Modelo mais simples para draft**: Gemini Flash Lite (~50% mais rápido) só para gerar subject, Flash 2.5 para corpo via stream.
+4. **Pre-generation background** (M-002 opção B do CAPTURE original): ao entrar no Foco, draft já está pronto quando utilizador abre modal.
+
+Combinar 1+4 dá UX "instantâneo real" (200ms). Custo: ~$0.001/abertura mesmo sem usar.
+
+---
+
+## ✅ PUSHS RESOLVIDOS 25/05/2026
+
+Todos os commits pushed e em produção. GCM autorizado via browser. Próximos pushes são automáticos. PAT antigo da memory **fica obsoleto** — não usar.
+
+## B-005 · SW cache atrapalha ver nova versão
+
+Após deploy, primeira visita continua a servir versão antiga via Service Worker cache. Sintoma: sidebar continua a mostrar build tag anterior. Workaround: hard refresh (Ctrl+Shift+R) OR Application → SW → Unregister.
+
+**Fix futuro:** SW auto-update agressivo — implementar listener `controllerchange` no client + force `skipWaiting()` no SW para activar nova versão imediato após install. Sessão dedicada ~30min.
 
 ## ✅ Resolvidos esta sessão (22/05 noite)
 
