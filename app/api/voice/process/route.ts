@@ -37,7 +37,9 @@ export async function POST(req: Request) {
   if (!(file instanceof File)) return json({ error: 'audio file required' }, 400);
   if (file.size > MAX_BYTES) return json({ error: 'Áudio demasiado grande (>25MB para voice input rápido)' }, 413);
 
-  const mime = (file.type || 'audio/webm').toLowerCase();
+  // Normalizar mime: tirar parâmetros tipo ";codecs=opus" para validar e gravar
+  const rawMime = (file.type || 'audio/webm').toLowerCase();
+  const mime = rawMime.split(';')[0].trim();
   if (!ALLOWED_MIMES.has(mime)) {
     return json({ error: `Formato ${mime} não aceite` }, 415);
   }
