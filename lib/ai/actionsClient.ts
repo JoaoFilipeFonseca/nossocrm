@@ -310,3 +310,78 @@ export async function rewriteMessageDraft(
 ): Promise<RewriteMessageDraftResult> {
   return await callAIProxy<RewriteMessageDraftResult>('rewriteMessageDraft', input);
 }
+
+/**
+ * Versão STREAMING — texto chega chunk-by-chunk para UX percebida "instantânea".
+ * Usa endpoint /api/ai/actions/stream que devolve text/plain stream.
+ *
+ * Convenção do output (parser tolerante no callback):
+ *   EMAIL    → "ASSUNTO: <linha>\n\n<corpo>"
+ *   WHATSAPP → corpo directo (sem ASSUNTO)
+ *
+ * @param onChunk Chamado a cada chunk recebido. Receives raw chunk + acumulado completo.
+ * @param signal AbortSignal para cancelar quando user fecha modal.
+ * @returns Acumulado final + provider usado (via header x-provider-used).
+ */
+export async function rewriteMessageDraftStream(
+  input: RewriteMessageDraftInput,
+  options: {
+    onChunk: (chunk: string, accumulated: string) => void;
+    signal?: AbortSignal;
+  }
+): Promise<{ fullText: string; providerUsed: string }> {
+  const res = await fetch('/api/ai/actions/stream', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action: 'rewriteMessageDraft', data: input }),
+    signal: options.signal,
+  });
+
+  if (!res.ok || !res.body) {
+    throw new Error(`Stream request falhou: ${res.status}`);
+  }
+
+  const providerUsed = res.headers.get('x-provider-used') || 'unknown';
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let accumulated = '';
+  let firstChunkSeen = false;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    if (!chunk) continue;
+
+    // Detectar erro no início (convenção: "ERROR: <msg>")
+    if (!firstChunkSeen && chunk.startsWith('ERROR: ')) {
+      throw new Error(chunk.replace(/^ERROR:\s*/, '').trim());
+    }
+    firstChunkSeen = true;
+
+    accumulated += chunk;
+    options.onChunk(chunk, accumulated);
+  }
+
+  return { fullText: accumulated, providerUsed };
+}
+
+/**
+ * Parser tolerante do output stream: separa ASSUNTO do corpo.
+ * Funciona com texto parcial (durante streaming) ou completo.
+ */
+export function parseRewriteStreamText(text: string, channel: 'EMAIL' | 'WHATSAPP'): { subject: string; message: string } {
+  if (channel === 'WHATSAPP') {
+    return { subject: '', message: text.trim() };
+  }
+  // EMAIL: procurar "ASSUNTO: <linha>\n\n<corpo>"
+  const match = text.match(/^\s*ASSUNTO:\s*(.*?)(?:\r?\n\r?\n([\s\S]*))?$/i);
+  if (match) {
+    return {
+      subject: (match[1] || '').trim(),
+      message: (match[2] || '').trim(),
+    };
+  }
+  // Fallback: LLM não respeitou formato, devolve tudo como mensagem
+  return { subject: '', message: text.trim() };
+}

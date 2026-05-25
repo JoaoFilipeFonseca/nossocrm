@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, ExternalLink, Mail, MessageCircle, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { rewriteMessageDraft, type RewriteMessageDraftInput } from '@/lib/ai/actionsClient';
+import { rewriteMessageDraft, rewriteMessageDraftStream, parseRewriteStreamText, type RewriteMessageDraftInput } from '@/lib/ai/actionsClient';
 import { isConsentError, isRateLimitError } from '@/lib/supabase/ai-proxy';
 import { toWhatsAppPhone } from '@/lib/phone';
 
@@ -219,11 +219,9 @@ export function MessageComposerModal({
         setMessage(channel === 'WHATSAPP' ? formatForWhatsApp(nextMsg) : formatForEmail(nextMsg));
     }, [isOpen, initialSubject, initialMessage, channel]);
 
-    // Auto-gerar draft inicial via IA quando o modal abre sem initialMessage
-    // e há contexto rico (cockpitSnapshot). Substitui templates hardcoded pt-BR.
-    // NOTA: deps intencionalmente MÍNIMAS (isOpen, channel) — não incluir
-    // isGeneratingInitial/isRewriting (causa race: setState dispara cleanup que cancela
-    // a própria chamada antes da resposta chegar). Guard via generatedForKeyRef.
+    // Auto-gerar draft inicial via IA STREAMING quando o modal abre sem initialMessage
+    // e há contexto rico (cockpitSnapshot). UX: 1ª palavra em ~1s, completa em ~8s.
+    // Parser tolerante extrai ASSUNTO + corpo em tempo real.
     useEffect(() => {
         if (!isOpen) return;
 
@@ -243,37 +241,40 @@ export function MessageComposerModal({
             cockpitSnapshot: aiContext?.cockpitSnapshot,
         };
 
-        let cancelled = false;
+        const abort = new AbortController();
         setIsGeneratingInitial(true);
         setRewriteError(null);
+        // Limpar campos para acumular do stream
+        setSubject('');
+        setMessage('');
 
         (async () => {
             try {
-                const result = await rewriteMessageDraft(payload);
-                if (cancelled) return;
-                if (channel === 'EMAIL' && typeof result.subject === 'string') {
-                    setSubject(result.subject);
-                }
-                if (typeof result.message === 'string' && result.message.trim()) {
-                    const next = channel === 'WHATSAPP' ? formatForWhatsApp(result.message) : formatForEmail(result.message);
-                    setMessage(next);
-                    setAiBadge(true);
-                }
-            } catch (err) {
-                if (cancelled) return;
+                await rewriteMessageDraftStream(payload, {
+                    signal: abort.signal,
+                    onChunk: (_chunk, accumulated) => {
+                        // Parser tolerante a cada chunk — actualiza subject+message em tempo real
+                        const { subject: s, message: m } = parseRewriteStreamText(accumulated, channel);
+                        if (channel === 'EMAIL' && s) setSubject(s);
+                        if (m) setMessage(m);
+                    },
+                });
+                setAiBadge(true);
+            } catch (err: any) {
+                if (err?.name === 'AbortError') return; // utilizador fechou modal
                 if (isConsentError(err)) {
                     setRewriteError('IA não configurada — escreva manualmente ou configure em Definições.');
                 } else if (isRateLimitError(err)) {
                     setRewriteError('IA em limite de uso — escreva manualmente ou tente daqui a uns segundos.');
                 } else {
-                    setRewriteError('Não foi possível gerar automaticamente. Escreva o rascunho aqui ou clique em "Reescrever com IA".');
+                    setRewriteError(err?.message || 'Não foi possível gerar automaticamente. Escreva o rascunho aqui ou clique em "Reescrever com IA".');
                 }
             } finally {
-                if (!cancelled) setIsGeneratingInitial(false);
+                setIsGeneratingInitial(false);
             }
         })();
 
-        return () => { cancelled = true; };
+        return () => { abort.abort(); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, channel]);
 
