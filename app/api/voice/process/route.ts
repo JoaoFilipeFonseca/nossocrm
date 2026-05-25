@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
-import { createStaticAdminClient } from '@/lib/supabase/staticAdminClient';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
+import { processVoice, createEntityFromVoice } from '@/lib/ai/voice/processVoice';
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
 function json<T>(body: T, status = 200): Response {
@@ -16,7 +16,7 @@ const ALLOWED_MIMES = new Set([
   'audio/mpeg','audio/mp4','audio/m4a','audio/x-m4a',
   'audio/wav','audio/x-wav','audio/webm','audio/ogg','audio/aac',
 ]);
-const MAX_BYTES = 25 * 1024 * 1024; // 25MB (voice input curto)
+const MAX_BYTES = 25 * 1024 * 1024;
 
 export async function POST(req: Request) {
   if (!isAllowedOrigin(req)) return json({ error: 'Forbidden' }, 403);
@@ -36,9 +36,8 @@ export async function POST(req: Request) {
   const contextHint = (form.get('context_hint') as string | null) || null;
 
   if (!(file instanceof File)) return json({ error: 'audio file required' }, 400);
-  if (file.size > MAX_BYTES) return json({ error: 'Áudio demasiado grande (>25MB para voice input rápido)' }, 413);
+  if (file.size > MAX_BYTES) return json({ error: 'Áudio demasiado grande (>25MB para voice input)' }, 413);
 
-  // Normalizar mime: tirar parâmetros tipo ";codecs=opus" para validar e gravar
   const rawMime = (file.type || 'audio/webm').toLowerCase();
   const mime = rawMime.split(';')[0].trim();
   if (!ALLOWED_MIMES.has(mime)) {
@@ -72,14 +71,45 @@ export async function POST(req: Request) {
 
   if (insErr || !inserted) return json({ error: insErr?.message || 'Insert falhou' }, 500);
 
-  // Dispara Edge Function (fire-and-forget) via admin client — gere auth automaticamente
-  try {
-    const admin = createStaticAdminClient();
-    admin.functions.invoke('process-voice', { body: { capture_id: inserted.id } })
-      .catch((err) => console.error('[voice/process] invoke falhou:', err));
-  } catch (e) {
-    console.error('[voice/process] admin client falhou:', e);
-  }
+  const captureId = inserted.id;
 
-  return json({ id: inserted.id, status: 'processing' }, 202);
+  // Processamento SÍNCRONO — Gemini direct (até ~30s para audio curto). Cabe nos 60s do Vercel.
+  try {
+    const extraction = await processVoice({
+      audioBuffer: bytes,
+      audioMime: mime,
+      contextHint,
+      googleApiKey: org.ai_google_key,
+    });
+
+    const entity = await createEntityFromVoice(supabase, profile.organization_id, extraction);
+
+    await supabase.from('voice_captures').update({
+      status: 'done',
+      transcript: extraction.transcript,
+      intent: extraction.intent,
+      intent_confidence: extraction.intent_confidence,
+      extracted_data: extraction,
+      entity_created: entity,
+      ai_model: 'gemini-2.5-flash',
+      ai_duration_ms: extraction.ai_duration_ms,
+      processed_at: new Date().toISOString(),
+    }).eq('id', captureId);
+
+    return json({
+      id: captureId,
+      status: 'done',
+      intent: extraction.intent,
+      summary: extraction.summary,
+      transcript: extraction.transcript,
+      entity_created: entity,
+    }, 200);
+  } catch (err: any) {
+    const errMsg = String(err?.message || err).slice(0, 500);
+    await supabase.from('voice_captures').update({
+      status: 'failed',
+      error_message: errMsg,
+    }).eq('id', captureId);
+    return json({ id: captureId, status: 'failed', error: errMsg }, 500);
+  }
 }

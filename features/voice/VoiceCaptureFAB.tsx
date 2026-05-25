@@ -104,13 +104,26 @@ export const VoiceCaptureFAB: React.FC = () => {
     const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('webm') ? 'webm' : 'audio';
     form.append('audio', blob, `voice-${Date.now()}.${ext}`);
     if (pathname) form.append('context_hint', `rota actual: ${pathname}`);
+    setStage('processing');
     try {
       const res = await fetch('/api/voice/process', { method: 'POST', body: form });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setError(data?.error || `Erro ${res.status}`); setStage('error'); return; }
       setCaptureId(data.id);
-      setStage('processing');
-      pollProcessing(data.id);
+      // Resposta síncrona — resultado já vem completo
+      if (data.status === 'done') {
+        setResult({
+          intent: data.intent,
+          summary: data.summary,
+          transcript: data.transcript,
+          entity_created: data.entity_created,
+          error_message: null,
+        });
+        setStage('done');
+      } else {
+        // Fallback: polling para casos onde processamento ficou async
+        pollProcessing(data.id);
+      }
     } catch (e: any) {
       setError(e?.message || 'Falhou'); setStage('error');
     }
