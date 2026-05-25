@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createStaticAdminClient } from '@/lib/supabase/staticAdminClient';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 
 export const maxDuration = 30;
@@ -71,16 +72,13 @@ export async function POST(req: Request) {
 
   if (insErr || !inserted) return json({ error: insErr?.message || 'Insert falhou' }, 500);
 
-  // Fire edge function
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
-  if (supabaseUrl && serviceRoleKey) {
-    const edgeUrl = `${supabaseUrl.replace(/\/$/, '')}/functions/v1/process-voice`;
-    fetch(edgeUrl, {
-      method: 'POST',
-      headers: { 'authorization': `Bearer ${serviceRoleKey}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ capture_id: inserted.id }),
-    }).catch((err) => console.error('[voice/process] disparo falhou:', err));
+  // Dispara Edge Function (fire-and-forget) via admin client — gere auth automaticamente
+  try {
+    const admin = createStaticAdminClient();
+    admin.functions.invoke('process-voice', { body: { capture_id: inserted.id } })
+      .catch((err) => console.error('[voice/process] invoke falhou:', err));
+  } catch (e) {
+    console.error('[voice/process] admin client falhou:', e);
   }
 
   return json({ id: inserted.id, status: 'processing' }, 202);

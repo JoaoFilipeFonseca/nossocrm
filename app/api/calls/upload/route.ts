@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createStaticAdminClient } from '@/lib/supabase/staticAdminClient';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 
 export const maxDuration = 60;
@@ -97,25 +98,14 @@ export async function POST(req: Request) {
 
   const callId = inserted.id;
 
-  // Fire-and-forget: dispara Edge Function `process-call` (Deno, sem limite 60s).
-  // Cliente faz polling em /api/calls/[id] a cada 4s até ver status=processed.
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
-  if (supabaseUrl && serviceRoleKey) {
-    const edgeUrl = `${supabaseUrl.replace(/\/$/, '')}/functions/v1/process-call`;
-    // Não esperar — só dispara
-    fetch(edgeUrl, {
-      method: 'POST',
-      headers: {
-        'authorization': `Bearer ${serviceRoleKey}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({ call_id: callId }),
-    }).catch((err) => {
-      console.error('[calls/upload] falhou disparar edge function process-call:', err);
-    });
-  } else {
-    console.warn('[calls/upload] SUPABASE_URL ou SERVICE_ROLE_KEY em falta, edge function não disparada');
+  // Dispara Edge Function `process-call` (Deno, sem limite 60s). Cliente faz
+  // polling em /api/calls/[id] a cada 4s até ver status=processed.
+  try {
+    const admin = createStaticAdminClient();
+    admin.functions.invoke('process-call', { body: { call_id: callId } })
+      .catch((err) => console.error('[calls/upload] invoke falhou:', err));
+  } catch (e) {
+    console.error('[calls/upload] admin client falhou:', e);
   }
 
   return json({ id: callId, status: 'transcribing' }, 202);
