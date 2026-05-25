@@ -20,6 +20,11 @@ import { buildCachedSystem, flattenSystem } from '@/lib/ai/cache';
 import { isAIFeatureEnabled } from '@/lib/ai/features/server';
 
 export const maxDuration = 60;
+// Critico para streaming real: Vercel/Next.js pode bufferizar chunks se Node.js runtime
+// + headers incorrectos. force-dynamic desactiva caching, X-Accel-Buffering:no desactiva
+// proxy buffering. Mantemos Node runtime (não edge) porque precisa de Supabase server client
+// que usa Node-only APIs (cookies).
+export const dynamic = 'force-dynamic';
 
 /**
  * Constrói user message estruturado e truncado (igual ao do /api/ai/actions, com 5/3 limits).
@@ -235,7 +240,10 @@ export async function POST(req: Request) {
   return result.toTextStreamResponse({
     headers: {
       'x-provider-used': providerUsed,
-      'cache-control': 'no-cache',
+      'cache-control': 'no-cache, no-transform',
+      'x-accel-buffering': 'no',  // desactiva buffering em proxies (Vercel/nginx)
+      'content-encoding': 'identity',  // evita compressão que bufferiza
+      'transfer-encoding': 'chunked',
     },
   });
 }
