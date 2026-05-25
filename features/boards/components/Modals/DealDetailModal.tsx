@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useId, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dealsService } from '@/lib/supabase';
+import { sanitizeCopy } from '@/lib/ai/sanitize';
 import {
   useContacts,
   useActivities,
@@ -257,7 +258,8 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
         body: JSON.stringify({ deal: { title: d.title }, scriptType: 'whatsapp' }),
       });
       const data: any = await res.json();
-      const text: string = (data && (data.script || data.text)) || '';
+      const raw: string = (data && (data.script || data.text)) || '';
+      const text = sanitizeCopy(raw);
       const url = 'https://wa.me/' + phone + (text ? '?text=' + encodeURIComponent(text) : '');
       window.open(url, '_blank', 'noopener,noreferrer');
       recordTouchpoint('TASK', 'WhatsApp preparado pela IA', text || undefined);
@@ -281,7 +283,8 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
         body: JSON.stringify({ deal: { title: d.title } }),
       });
       const data: any = await res.json();
-      const body: string = (data && (data.text || data.email)) || '';
+      const raw: string = (data && (data.text || data.email)) || '';
+      const body = sanitizeCopy(raw);
       window.location.href = 'mailto:' + email + (body ? '?body=' + encodeURIComponent(body) : '');
       recordTouchpoint('EMAIL', 'Email preparado pela IA', body || undefined);
     } catch (e) {

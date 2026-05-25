@@ -85,16 +85,9 @@ async function runWithFallback(opts: {
     providerUsed = 'anthropic-haiku';
   }
 
-  // Sanitização determinística: garante zero em-dash/en-dash em todos
-  // os outputs IA dirigidos a humano, mesmo se o LLM ignorar o prompt.
-  if (result && typeof result === 'object') {
-    if (typeof result.text === 'string') {
-      result.text = sanitizeCopy(result.text);
-    }
-    if (result.object && typeof result.object === 'object') {
-      result.object = sanitizeCopyObject(result.object as Record<string, unknown>);
-    }
-  }
+  // Sanitização em-dash corre nos callsites cliente (parseRewriteStreamText,
+  // rewriteMessageDraft, execActionWhatsApp, etc.). NÃO sanitizar aqui — o
+  // AI SDK retorna result.text como getter readonly e mutar lança em runtime.
 
   const totalMs = Date.now() - startedAt;
   logCacheStats(`${label} provider=${providerUsed} totalMs=${totalMs}`, result);
