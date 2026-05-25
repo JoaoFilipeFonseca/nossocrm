@@ -13,14 +13,15 @@ import { BusinessUnitsSection } from './components/BusinessUnitsSection';
 import { DataStorageSettings } from './components/DataStorageSettings';
 import { ProductsCatalogManager } from './components/ProductsCatalogManager';
 import { AICenterSettings } from './AICenterSettings';
+import { MarcaSettings } from './marca/MarcaSettings';
 
 import { UsersPage } from './UsersPage';
 import { useAuth } from '@/context/AuthContext';
-import { Settings as SettingsIcon, Users, Database, Sparkles, Plug, Package, Building2 } from 'lucide-react';
+import { Settings as SettingsIcon, Users, Database, Sparkles, Plug, Package, Building2, Award } from 'lucide-react';
 import { SelectField } from '@/components/ui/FormField';
 import { Button } from '@/components/ui/button';
 
-type SettingsTab = 'general' | 'products' | 'business-units' | 'integrations' | 'ai' | 'data' | 'users';
+type SettingsTab = 'general' | 'products' | 'business-units' | 'integrations' | 'ai' | 'marca' | 'data' | 'users';
 
 interface GeneralSettingsProps {
   hash?: string;
@@ -198,6 +199,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
       setActiveTab('business-units');
     } else if (pathname?.includes('/settings/integracoes')) {
       setActiveTab('integrations');
+    } else if (pathname?.includes('/settings/marca')) {
+      setActiveTab('marca');
     } else if (pathname?.includes('/settings/data')) {
       setActiveTab('data');
     } else if (pathname?.includes('/settings/users')) {
@@ -213,6 +216,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
     ...(profile?.role === 'admin' ? [{ id: 'business-units' as SettingsTab, name: 'Unidades', icon: Building2 }] : []),
     ...(profile?.role === 'admin' ? [{ id: 'integrations' as SettingsTab, name: 'Integrações', icon: Plug }] : []),
     { id: 'ai' as SettingsTab, name: 'Central de I.A', icon: Sparkles },
+    ...(profile?.role === 'admin' ? [{ id: 'marca' as SettingsTab, name: 'Marca', icon: Award }] : []),
     { id: 'data' as SettingsTab, name: 'Dados', icon: Database },
     ...(profile?.role === 'admin' ? [{ id: 'users' as SettingsTab, name: 'Equipa', icon: Users }] : []),
   ];
@@ -231,6 +235,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
         return <IntegrationsSettings />;
       case 'ai':
         return <AICenterSettings />;
+      case 'marca':
+        return <MarcaSettings />;
       case 'data':
         return <DataStorageSettings />;
       case 'users':
