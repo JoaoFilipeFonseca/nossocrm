@@ -164,6 +164,106 @@ const ATOMS: Record<string, AtomExecFn> = {
     const resumeAt = new Date(Date.now() + seconds * 1000).toISOString();
     return { _suspend: true, _resumeAt: resumeAt, waited_seconds: seconds };
   },
+
+  "action.modify_contact": async (ctx) => {
+    const contactId = String(ctx.config.contact_id ?? "");
+    if (!contactId) throw new Error('contact_id em falta. Usa "{{ contact.id }}".');
+    const patch: Record<string, unknown> = {};
+    if (typeof ctx.config.stage === "string" && ctx.config.stage) patch.stage = ctx.config.stage;
+    if (typeof ctx.config.status === "string" && ctx.config.status) patch.status = ctx.config.status;
+    if (typeof ctx.config.notes === "string") patch.notes = ctx.config.notes;
+    if (typeof ctx.config.append_notes === "string" && ctx.config.append_notes) {
+      const { data: row } = await ctx.supabase.from("contacts").select("notes").eq("id", contactId).eq("organization_id", ctx.organizationId).maybeSingle();
+      const existing = (row?.notes as string | null) ?? "";
+      patch.notes = existing ? `${existing}\n${ctx.config.append_notes}` : String(ctx.config.append_notes);
+    }
+    if (Object.keys(patch).length === 0) throw new Error("nenhum campo para actualizar");
+    const { data, error } = await ctx.supabase.from("contacts").update(patch).eq("id", contactId).eq("organization_id", ctx.organizationId).select("id").maybeSingle();
+    if (error) throw new Error(`supabase: ${error.message}`);
+    if (!data) throw new Error("contacto não encontrado nesta organização");
+    return { contact_id: contactId, updated_fields: Object.keys(patch) };
+  },
+
+  "action.modify_deal": async (ctx) => {
+    const dealId = String(ctx.config.deal_id ?? "");
+    if (!dealId) throw new Error('deal_id em falta. Usa "{{ deal.id }}".');
+    const patch: Record<string, unknown> = {};
+    if (typeof ctx.config.status === "string" && ctx.config.status) patch.status = ctx.config.status;
+    if (typeof ctx.config.priority === "string" && ctx.config.priority) patch.priority = ctx.config.priority;
+    if (ctx.config.value !== undefined && ctx.config.value !== null && ctx.config.value !== "") {
+      const v = Number(ctx.config.value);
+      if (!Number.isFinite(v)) throw new Error("value tem de ser número");
+      patch.value = v;
+    }
+    if (Array.isArray(ctx.config.tags)) patch.tags = (ctx.config.tags as unknown[]).map(String);
+    if (typeof ctx.config.append_tag === "string" && ctx.config.append_tag) {
+      const { data: row } = await ctx.supabase.from("deals").select("tags").eq("id", dealId).eq("organization_id", ctx.organizationId).maybeSingle();
+      const existing = Array.isArray(row?.tags) ? (row.tags as string[]) : [];
+      const tag = String(ctx.config.append_tag);
+      patch.tags = existing.includes(tag) ? existing : [...existing, tag];
+    }
+    if (Object.keys(patch).length === 0) throw new Error("nenhum campo para actualizar");
+    const { data, error } = await ctx.supabase.from("deals").update(patch).eq("id", dealId).eq("organization_id", ctx.organizationId).select("id").maybeSingle();
+    if (error) throw new Error(`supabase: ${error.message}`);
+    if (!data) throw new Error("deal não encontrado nesta organização");
+    return { deal_id: dealId, updated_fields: Object.keys(patch) };
+  },
+
+  "action.create_task": async (ctx) => {
+    const title = String(ctx.config.title ?? "").trim();
+    if (!title) throw new Error("title é obrigatório");
+    let date: string;
+    if (typeof ctx.config.due_at === "string" && ctx.config.due_at) {
+      date = new Date(ctx.config.due_at).toISOString();
+    } else {
+      const hours = Number(ctx.config.due_in_hours ?? 24);
+      date = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+    }
+    const payload: Record<string, unknown> = {
+      organization_id: ctx.organizationId,
+      title,
+      description: typeof ctx.config.description === "string" ? ctx.config.description : null,
+      type: typeof ctx.config.type === "string" && ctx.config.type ? ctx.config.type : "follow_up",
+      date,
+      completed: false,
+    };
+    const cid = String(ctx.config.contact_id ?? "");
+    const did = String(ctx.config.deal_id ?? "");
+    if (cid) payload.contact_id = cid;
+    if (did) payload.deal_id = did;
+    if (!cid && !did) throw new Error('preciso de contact_id ou deal_id (usa "{{ contact.id }}" / "{{ deal.id }}")');
+    const { data, error } = await ctx.supabase.from("activities").insert(payload).select("id").single();
+    if (error) throw new Error(`supabase: ${error.message}`);
+    return { activity_id: data.id, date };
+  },
+
+  "logic.condition": async (ctx) => {
+    const op = String(ctx.config.operator ?? "eq");
+    const left = ctx.config.left;
+    const right = ctx.config.right;
+    const cmp = (l: unknown, o: string, r: unknown): boolean => {
+      switch (o) {
+        case "eq": return String(l ?? "") === String(r ?? "");
+        case "neq": return String(l ?? "") !== String(r ?? "");
+        case "gt": return Number(l) > Number(r);
+        case "gte": return Number(l) >= Number(r);
+        case "lt": return Number(l) < Number(r);
+        case "lte": return Number(l) <= Number(r);
+        case "contains": return String(l ?? "").toLowerCase().includes(String(r ?? "").toLowerCase());
+        case "starts_with": return String(l ?? "").toLowerCase().startsWith(String(r ?? "").toLowerCase());
+        case "ends_with": return String(l ?? "").toLowerCase().endsWith(String(r ?? "").toLowerCase());
+        case "in": {
+          const arr = Array.isArray(r) ? (r as unknown[]).map((x) => String(x)) : String(r ?? "").split(",").map((s) => s.trim());
+          return arr.includes(String(l ?? ""));
+        }
+        case "is_empty": return l === null || l === undefined || String(l).trim() === "";
+        case "is_not_empty": return !(l === null || l === undefined || String(l).trim() === "");
+        default: throw new Error(`operador desconhecido: ${o}`);
+      }
+    };
+    const result = cmp(left, op, right);
+    return { result, _branch_taken: result ? "true" : "false" };
+  },
 };
 
 // ----------------------------------------------------------------------------
@@ -174,10 +274,18 @@ function findStartNode(def: AutomationDefinition): AutomationNode | null {
   return def.nodes.find((n) => !targets.has(n.id)) ?? null;
 }
 
-function nextNode(def: AutomationDefinition, currentId: string): AutomationNode | null {
-  const edge = def.edges.find((e) => e.source === currentId);
-  if (!edge) return null;
-  return def.nodes.find((n) => n.id === edge.target) ?? null;
+function nextNode(def: AutomationDefinition, currentId: string, branch?: string): AutomationNode | null {
+  // Se o nó anterior produziu um branch (ex: logic.condition -> "true"|"false"),
+  // procura primeiro uma edge com sourceHandle igual a esse branch.
+  if (branch) {
+    const branched = def.edges.find((e) => e.source === currentId && e.sourceHandle === branch);
+    if (branched) return def.nodes.find((n) => n.id === branched.target) ?? null;
+  }
+  // Fallback: primeira edge sem sourceHandle, ou qualquer edge.
+  const fallback = def.edges.find((e) => e.source === currentId && !e.sourceHandle)
+    ?? def.edges.find((e) => e.source === currentId);
+  if (!fallback) return null;
+  return def.nodes.find((n) => n.id === fallback.target) ?? null;
 }
 
 // ----------------------------------------------------------------------------
@@ -259,7 +367,8 @@ Deno.serve(async (req) => {
     contactId = exec.contact_id as string | null;
     dealId = exec.deal_id as string | null;
     imovelId = exec.imovel_id as string | null;
-    startNode = exec.resume_node_id ? nextNode(automation.definition, exec.resume_node_id) : findStartNode(automation.definition);
+    const lastBranch = (variables[exec.resume_node_id ?? ""] as { output?: { _branch_taken?: string } } | undefined)?.output?._branch_taken;
+    startNode = exec.resume_node_id ? nextNode(automation.definition, exec.resume_node_id, lastBranch) : findStartNode(automation.definition);
 
     await supabase.from("automation_executions").update({ status: "running", resume_at: null }).eq("id", executionId);
   } else {
@@ -387,7 +496,8 @@ Deno.serve(async (req) => {
       errorMessage = errMsg; errorNodeId = node.id; break;
     }
 
-    current = nextNode(automation.definition, node.id);
+    const lastOut = variables[node.id]?.output as { _branch_taken?: string } | undefined;
+    current = nextNode(automation.definition, node.id, lastOut?._branch_taken);
   }
 
   // ----- Final -----
