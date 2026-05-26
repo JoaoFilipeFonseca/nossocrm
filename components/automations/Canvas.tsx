@@ -19,12 +19,14 @@ import {
   Controls,
   MiniMap,
   Position,
+  addEdge,
   applyNodeChanges,
   applyEdgeChanges,
   type Node,
   type Edge,
   type NodeChange,
   type EdgeChange,
+  type Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { getAtomMeta, ATOM_CATALOG } from '@/lib/automation-engine/catalog';
@@ -146,8 +148,8 @@ export function Canvas({ automationId, definition, className }: CanvasProps) {
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
-    if (changes.some((c) => c.type === 'position' && c.dragging === false)) {
-      // só salva quando o drag termina, não durante o movimento
+    // Salva ao terminar drag OU quando um nó é removido
+    if (changes.some((c) => (c.type === 'position' && c.dragging === false) || c.type === 'remove')) {
       scheduleSave();
     }
   }, [scheduleSave]);
@@ -155,6 +157,19 @@ export function Canvas({ automationId, definition, className }: CanvasProps) {
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
     setEdges((eds) => applyEdgeChanges(changes, eds));
     if (changes.some((c) => c.type === 'remove')) scheduleSave();
+  }, [scheduleSave]);
+
+  const onConnect = useCallback((connection: Connection) => {
+    setEdges((eds) => {
+      const id = `e-${connection.source}-${connection.target}-${Date.now()}`;
+      return addEdge({
+        ...connection,
+        id,
+        animated: true,
+        style: { stroke: '#94a3b8' },
+      }, eds);
+    });
+    scheduleSave();
   }, [scheduleSave]);
 
   // Cleanup timer
@@ -180,11 +195,13 @@ export function Canvas({ automationId, definition, className }: CanvasProps) {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         nodesDraggable
-        nodesConnectable={false}
+        nodesConnectable
         elementsSelectable
+        deleteKeyCode={['Backspace', 'Delete']}
         proOptions={{ hideAttribution: true }}
       >
         <Background gap={20} size={1} color="#e2e8f0" />
