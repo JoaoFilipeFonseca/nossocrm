@@ -276,6 +276,15 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
           <div className={`text-[10px] rounded px-2 py-1 border ${statusBadge.color}`}>{statusBadge.text}</div>
         ) : null}
       </div>
+      {nodes.length === 0 ? (
+        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+          <div className="text-center text-slate-500 bg-white/90 border border-dashed border-slate-300 rounded-lg px-6 py-5 max-w-sm">
+            <div className="text-2xl mb-1">👈</div>
+            <div className="text-sm font-medium text-slate-700">Canvas vazio</div>
+            <div className="text-xs mt-1">Arrasta um átomo da palette à esquerda para começar.</div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
