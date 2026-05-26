@@ -114,7 +114,11 @@ Deno.serve(async (req) => {
   }
 
   const auth = req.headers.get("authorization") ?? "";
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const serviceKey =
+    Deno.env.get("CRM_SUPABASE_SECRET_KEY") ??
+    Deno.env.get("CRM_SUPABASE_SERVICE_ROLE_KEY") ??
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
+    "";
   if (!serviceKey || auth !== `Bearer ${serviceKey}`) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -130,10 +134,9 @@ Deno.serve(async (req) => {
     return new Response("Missing automation_id or organization_id", { status: 400 });
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    serviceKey,
-  );
+  const supabaseUrl =
+    Deno.env.get("CRM_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
+  const supabase = createClient(supabaseUrl, serviceKey);
 
   // 1. Carrega automação
   const { data: automation, error: autoErr } = await supabase

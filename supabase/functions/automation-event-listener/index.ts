@@ -112,8 +112,13 @@ Deno.serve(async (req) => {
     return new Response("Method Not Allowed", { status: 405 });
   }
 
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceKey =
+    Deno.env.get("CRM_SUPABASE_SECRET_KEY") ??
+    Deno.env.get("CRM_SUPABASE_SERVICE_ROLE_KEY") ??
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
+    "";
+  const supabaseUrl =
+    Deno.env.get("CRM_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
   if (!serviceKey || !supabaseUrl) {
     return new Response("Server misconfigured", { status: 500 });
   }
