@@ -4,6 +4,7 @@ import { getAutomation, statusLabel, statusChipClass } from '@/lib/automations/s
 import { createClient } from '@/lib/supabase/server';
 import BuilderActions from './actions';
 import { Canvas } from '@/components/automations/Canvas';
+import { Palette } from '@/components/automations/Palette';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Builder de Automação | Foco Imo' };
@@ -78,11 +79,16 @@ export default async function AutomacaoBuilderPage({ params }: { params: Promise
         <div className="lg:col-span-2 space-y-6">
           <section className="rounded-lg border border-slate-200 bg-white p-5">
             <h2 className="text-sm font-semibold text-slate-700 mb-3">Fluxo visual</h2>
-            <Canvas
-              automationId={automation.id}
-              definition={automation.definition as { nodes: never[]; edges: never[] }}
-              className="h-[500px] border border-slate-200 rounded-md overflow-hidden bg-slate-50"
-            />
+            <div className="flex border border-slate-200 rounded-md overflow-hidden bg-slate-50 h-[500px]">
+              <Palette />
+              <div className="flex-1 min-w-0">
+                <Canvas
+                  automationId={automation.id}
+                  definition={automation.definition as { nodes: never[]; edges: never[] }}
+                  className="h-full bg-slate-50"
+                />
+              </div>
+            </div>
             <details className="mt-3">
               <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700">Ver JSON cru</summary>
               <pre className="mt-2 text-xs bg-slate-50 border border-slate-200 rounded p-3 overflow-auto max-h-96">{JSON.stringify(automation.definition, null, 2)}</pre>
@@ -137,8 +143,8 @@ export default async function AutomacaoBuilderPage({ params }: { params: Promise
           </section>
 
           <section className="rounded-lg border border-violet-200 bg-violet-50 p-4 text-xs text-violet-900">
-            <strong className="block mb-1">Sprint 2.1 (canvas)</strong>
-            Já podes ver e mover o fluxo. Save automático ao mover, ligar nós e palette de drag-and-drop entram nos próximos commits.
+            <strong className="block mb-1">Sprint 2.2 (palette)</strong>
+            Arrasta um átomo da palette esquerda para o canvas. Liga nós com clique-arrastar entre os pontos. Tudo guardado automaticamente.
           </section>
         </aside>
       </div>

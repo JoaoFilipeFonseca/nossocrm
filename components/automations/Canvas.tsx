@@ -1,20 +1,20 @@
 'use client';
 
 /**
- * Canvas — render React Flow editável de uma automation.definition
+ * Canvas — render React Flow editável de uma automation.definition.
  *
- * Sprint 2.1, commit 2: drag persiste via PATCH com debounce.
+ * Sprint 2.1: drag persiste via PATCH com debounce, ligações editáveis, delete key.
+ * Sprint 2.2: aceita drop de átomos da Palette (commit 2).
  *
- * Recebe automationId e definition inicial. Mantém estado local de nodes/edges,
- * actualiza via onNodesChange/onEdgesChange (drag, selecção), e após 800ms
- * sem mais mudanças chama PATCH /api/automations/[id] com a nova definition.
- *
- * Mostra indicador "guardado / a guardar..." no top-left.
+ * Estrutura: <Canvas> exporta um wrapper com <ReactFlowProvider> à volta do
+ * <CanvasInner> que pode então usar useReactFlow() para converter coords do
+ * evento de drop em coordenadas do canvas (screenToFlowPosition).
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   Controls,
   MiniMap,
@@ -22,6 +22,7 @@ import {
   addEdge,
   applyNodeChanges,
   applyEdgeChanges,
+  useReactFlow,
   type Node,
   type Edge,
   type NodeChange,
@@ -71,21 +72,25 @@ function categoryColor(atomId: string): string {
   return 'border-slate-300 bg-white';
 }
 
+function nodeLabel(atomId: string) {
+  const { icon, name } = atomLabel(atomId);
+  return (
+    <div className="flex flex-col items-center gap-0.5 text-[11px] leading-tight">
+      <span className="text-base">{icon}</span>
+      <span className="font-medium text-slate-900">{name}</span>
+      <span className="text-[10px] text-slate-500 font-mono">{atomId}</span>
+    </div>
+  );
+}
+
 function makeRFNode(input: AutomationNodeIn, fallbackIndex: number): Node<RFNodeData> {
-  const { icon, name } = atomLabel(input.atom);
   return {
     id: input.id,
     position: input.position ?? { x: fallbackIndex * 250, y: 0 },
     data: {
       atom: input.atom,
       config: input.config ?? {},
-      label: (
-        <div className="flex flex-col items-center gap-0.5 text-[11px] leading-tight">
-          <span className="text-base">{icon}</span>
-          <span className="font-medium text-slate-900">{name}</span>
-          <span className="text-[10px] text-slate-500 font-mono">{input.atom}</span>
-        </div>
-      ),
+      label: nodeLabel(input.atom),
     } as unknown as RFNodeData,
     className: `rounded-md border-2 px-3 py-2 shadow-sm ${categoryColor(input.atom)}`,
     type: 'default',
@@ -98,9 +103,37 @@ function makeRFEdge(e: AutomationEdgeIn): Edge {
   return { id: e.id, source: e.source, target: e.target, animated: true, style: { stroke: '#94a3b8' } };
 }
 
+// Constroi config default a partir do configSchema (JSON Schema simplificado).
+// Para já: array → [], object → {}, string → '', integer → minimum ?? 0.
+function defaultConfigFor(atomId: string): Record<string, unknown> {
+  const meta = getAtomMeta(atomId);
+  if (!meta) return {};
+  const schema = meta.configSchema as { properties?: Record<string, { type?: string; minimum?: number; enum?: unknown[] }>; required?: string[] };
+  const props = schema.properties ?? {};
+  const required = new Set(schema.required ?? []);
+  const out: Record<string, unknown> = {};
+  for (const key of required) {
+    const def = props[key];
+    if (!def) continue;
+    switch (def.type) {
+      case 'array': out[key] = []; break;
+      case 'object': out[key] = {}; break;
+      case 'integer':
+      case 'number': out[key] = def.minimum ?? 0; break;
+      case 'string': out[key] = def.enum && def.enum.length ? def.enum[0] : ''; break;
+      default: out[key] = null;
+    }
+  }
+  return out;
+}
+
+function newNodeId(): string {
+  return `n-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export function Canvas({ automationId, definition, className }: CanvasProps) {
+function CanvasInner({ automationId, definition, className }: CanvasProps) {
   const initialNodes = useMemo(() => (definition.nodes ?? []).map((n, i) => makeRFNode(n, i)), [definition]);
   const initialEdges = useMemo(() => (definition.edges ?? []).map((e) => makeRFEdge(e)), [definition]);
 
@@ -109,8 +142,9 @@ export function Canvas({ automationId, definition, className }: CanvasProps) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAt = useRef<number>(Date.now());
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const { screenToFlowPosition } = useReactFlow();
 
-  // Serializa estado React Flow de volta para automation definition format
   const toDefinition = useCallback(() => {
     return {
       nodes: nodes.map((n) => ({
@@ -136,7 +170,6 @@ export function Canvas({ automationId, definition, className }: CanvasProps) {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         lastSavedAt.current = Date.now();
         setSaveStatus('saved');
-        // após 2s sem nova edição, volta a 'idle'
         setTimeout(() => {
           if (Date.now() - lastSavedAt.current >= 1900) setSaveStatus('idle');
         }, 2000);
@@ -148,7 +181,6 @@ export function Canvas({ automationId, definition, className }: CanvasProps) {
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
-    // Salva ao terminar drag OU quando um nó é removido
     if (changes.some((c) => (c.type === 'position' && c.dragging === false) || c.type === 'remove')) {
       scheduleSave();
     }
@@ -172,7 +204,35 @@ export function Canvas({ automationId, definition, className }: CanvasProps) {
     scheduleSave();
   }, [scheduleSave]);
 
-  // Cleanup timer
+  const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const atomId = event.dataTransfer.getData('application/reactflow');
+    if (!atomId) return;
+    if (!getAtomMeta(atomId)) return;
+
+    const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    const newNode: Node<RFNodeData> = {
+      id: newNodeId(),
+      position,
+      data: {
+        atom: atomId,
+        config: defaultConfigFor(atomId),
+        label: nodeLabel(atomId),
+      } as unknown as RFNodeData,
+      className: `rounded-md border-2 px-3 py-2 shadow-sm ${categoryColor(atomId)}`,
+      type: 'default',
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    };
+    setNodes((nds) => nds.concat(newNode));
+    scheduleSave();
+  }, [screenToFlowPosition, scheduleSave]);
+
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -189,7 +249,7 @@ export function Canvas({ automationId, definition, className }: CanvasProps) {
   })();
 
   return (
-    <div className={`relative ${className ?? 'h-[500px]'}`}>
+    <div ref={wrapperRef} className={`relative ${className ?? 'h-[500px]'}`} onDragOver={onDragOver} onDrop={onDrop}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -217,5 +277,13 @@ export function Canvas({ automationId, definition, className }: CanvasProps) {
         ) : null}
       </div>
     </div>
+  );
+}
+
+export function Canvas(props: CanvasProps) {
+  return (
+    <ReactFlowProvider>
+      <CanvasInner {...props} />
+    </ReactFlowProvider>
   );
 }
