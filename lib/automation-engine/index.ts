@@ -9,3 +9,4 @@
 export * from './types';
 export * from './event-bus';
 export * from './registry';
+export * from './template';
