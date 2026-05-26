@@ -8,6 +8,13 @@
 
 ## 🐛 Bugs UI activos
 
+### B-008 · Adaptar `/settings/automation-logs` ao novo schema `automation_executions`
+- **Quando:** 26/05/2026, Sprint 0 da Máquina de Automações (commit 2).
+- **Contexto:** O Sprint 0 fez `DROP TABLE IF EXISTS automation_executions CASCADE` da tabela legacy (placeholder do Bloco 1 #127, 0 rows) e recriou-a com schema novo (`status`, `variables`, `resume_at`, `is_test`, `automation_version`...). A página `/settings/automation-logs` continua a consumir o schema antigo.
+- **Impacto actual:** página passa a mostrar lista vazia (sem crash). O CRM em produção mantém-se funcional.
+- **Falta:** adaptar a query e UI da página ao novo schema, e idealmente fundir com a vista de execuções da máquina de automações (cockpit unificado).
+- **Estimativa:** 1 sessão, parte do Sprint 7 (Observabilidade) do plano de automações em `docs/automation-engine/07-sprint-plan.md`.
+
 ### B-007 · Sweep PT-PT alargado — substituir "deal" por "negócio" em todo o UI visível
 - **Quando:** 25/05/2026 noite, ao testar chamadas A.1.
 - **Sintoma:** O João é português e o produto é Foco Imo (CRM imobiliário PT). Sempre que aparece "deal" em texto visível é dissonante.
