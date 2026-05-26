@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getAutomation, statusLabel, statusChipClass } from '@/lib/automations/server';
 import { createClient } from '@/lib/supabase/server';
 import BuilderActions from './actions';
+import { Canvas } from '@/components/automations/Canvas';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Builder de Automação | Foco Imo' };
@@ -76,9 +77,12 @@ export default async function AutomacaoBuilderPage({ params }: { params: Promise
         {/* Coluna principal */}
         <div className="lg:col-span-2 space-y-6">
           <section className="rounded-lg border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-700 mb-3">Definição (JSON)</h2>
-            <p className="text-xs text-slate-500 mb-3">O canvas drag-and-drop entra no Sprint 2.1. Por agora, vê e edita via /api/automations.</p>
-            <pre className="text-xs bg-slate-50 border border-slate-200 rounded p-3 overflow-auto max-h-96">{JSON.stringify(automation.definition, null, 2)}</pre>
+            <h2 className="text-sm font-semibold text-slate-700 mb-3">Fluxo visual</h2>
+            <Canvas definition={automation.definition as { nodes: never[]; edges: never[] }} className="h-[500px] border border-slate-200 rounded-md overflow-hidden bg-slate-50" />
+            <details className="mt-3">
+              <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700">Ver JSON cru</summary>
+              <pre className="mt-2 text-xs bg-slate-50 border border-slate-200 rounded p-3 overflow-auto max-h-96">{JSON.stringify(automation.definition, null, 2)}</pre>
+            </details>
           </section>
 
           <section className="rounded-lg border border-slate-200 bg-white p-5">
@@ -129,8 +133,8 @@ export default async function AutomacaoBuilderPage({ params }: { params: Promise
           </section>
 
           <section className="rounded-lg border border-violet-200 bg-violet-50 p-4 text-xs text-violet-900">
-            <strong className="block mb-1">Em construção</strong>
-            O canvas drag-and-drop e o painel de configuração visual chegam no Sprint 2.1. Por agora podes activar e disparar via os botões acima.
+            <strong className="block mb-1">Sprint 2.1 (canvas)</strong>
+            Já podes ver e mover o fluxo. Save automático ao mover, ligar nós e palette de drag-and-drop entram nos próximos commits.
           </section>
         </aside>
       </div>
