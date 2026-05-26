@@ -71,7 +71,13 @@ export default async function AutomacaoBuilderPage({ params }: { params: Promise
             </div>
           </div>
         </div>
-        <BuilderActions automationId={automation.id} status={automation.status} />
+        <BuilderActions
+          automationId={automation.id}
+          status={automation.status}
+          initialName={automation.name}
+          initialIcon={automation.icon ?? '⚡'}
+          initialDescription={automation.description ?? null}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
