@@ -1,32 +1,32 @@
 /**
  * automation-event-listener — processa eventos pendentes e despoleta automações
  *
- * Sprint 1.0, commit 3 de 5.
+ * Sprint 1.0, commits 3+4 de 5.
  *
- * Estratégia (versão mínima viável):
- *   1. Lê N eventos não processados de automation_events (ORDER BY occurred_at).
- *   2. Para cada evento, encontra automações activas cujo trigger casa:
- *      automations.status='active' AND automation_triggers.trigger_type='event'
- *      AND config->'events' contém o event_type.
- *   3. Para cada match, invoca automation-execute com { automation_id,
- *      organization_id, trigger_event }.
- *   4. Marca o evento processed=true (mesmo que não haja match, para não
- *      reprocessar). Mantém histórico em automation_events.
+ * Auth (duas vias aceites):
+ *   - Authorization Bearer === SUPABASE_SERVICE_ROLE_KEY (invocação manual)
+ *   - X-Cron-Secret === get_automation_cron_secret() (chamada pelo pg_cron)
  *
- * É invocado pelo cron pg_cron a cada minuto (commit 4) ou manualmente via
- * HTTP para testes.
+ * verify_jwt=false na configuração porque o pg_cron não tem JWT para
+ * apresentar. A validação dura é feita aqui no corpo da função.
  *
- * Auth: header Authorization Bearer === SUPABASE_SERVICE_ROLE_KEY.
- *
- * Performance Sprint 1.0:
- *   - Processa lotes de 50 eventos por invocação.
- *   - Chama automation-execute em paralelo (Promise.all) mas com limite.
- *   - Não persiste falhas de invocação por agora (Sprint 1.3 add retry).
+ * O cron secret é lido via RPC get_automation_cron_secret (service_role only)
+ * e cacheado em memória entre invocações (warm starts).
  */
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const BATCH_SIZE = 50;
 const PARALLEL_LIMIT = 5;
+
+let cachedCronSecret: string | null = null;
+
+async function loadCronSecret(supabase: SupabaseClient): Promise<string | null> {
+  if (cachedCronSecret) return cachedCronSecret;
+  const { data, error } = await supabase.rpc("get_automation_cron_secret");
+  if (error || !data) return null;
+  cachedCronSecret = data as string;
+  return cachedCronSecret;
+}
 
 interface AutomationEventRow {
   id: string;
@@ -41,7 +41,7 @@ interface TriggerMatch {
 }
 
 async function findMatchingAutomations(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   orgId: string,
   eventType: string,
 ): Promise<TriggerMatch[]> {
@@ -112,16 +112,30 @@ Deno.serve(async (req) => {
     return new Response("Method Not Allowed", { status: 405 });
   }
 
-  const auth = req.headers.get("authorization") ?? "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if (!serviceKey || auth !== `Bearer ${serviceKey}`) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  if (!serviceKey || !supabaseUrl) {
+    return new Response("Server misconfigured", { status: 500 });
+  }
+
+  const auth = req.headers.get("authorization") ?? "";
+  const headerCronSecret = req.headers.get("x-cron-secret") ?? "";
+
+  const supabase = createClient(supabaseUrl, serviceKey);
+
+  const isService = auth === `Bearer ${serviceKey}`;
+  let isCron = false;
+  if (!isService && headerCronSecret) {
+    const expected = await loadCronSecret(supabase);
+    if (expected && headerCronSecret === expected) {
+      isCron = true;
+    }
+  }
+
+  if (!isService && !isCron) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  const supabase = createClient(supabaseUrl, serviceKey);
-
-  // 1. Eventos não processados
   const { data: events, error: evErr } = await supabase
     .from("automation_events")
     .select("id, organization_id, event_type, payload")
@@ -144,7 +158,6 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 2. Para cada evento, encontra automações + invoca
   let totalMatches = 0;
   let totalInvocations = 0;
   const invocationPromises: Promise<unknown>[] = [];
@@ -164,10 +177,8 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Executa em paralelo com limite
   await runInChunks(invocationPromises, PARALLEL_LIMIT, (p) => p);
 
-  // 3. Marca todos os eventos como processed
   const eventIds = eventRows.map((e) => e.id);
   await supabase
     .from("automation_events")
