@@ -1,33 +1,21 @@
 /**
  * automation-execute — executor de uma automação
  *
- * Sprint 1.0, commit 2 de 5.
+ * Sprint 1.2 v4. Acrescenta:
+ *  - LiquidJS resolveConfig antes de invocar cada átomo
+ *  - atom logic.wait_fixed (devolve _suspend:true + _resumeAt)
+ *  - tratamento de _suspend: persiste estado, insere automation_schedules
+ *    e devolve status='waiting'
+ *  - modo resume: body { execution_id, organization_id } carrega execução
+ *    existente, retoma a partir do nó seguinte ao resume_node_id, mantém
+ *    variables acumuladas
  *
- * Recebe { automation_id, trigger_event, organization_id } e:
- *   1. Lê a automação em automations.definition.
- *   2. Insere linha em automation_executions (status='running').
- *   3. Percorre nós a partir do trigger, executando cada um.
- *   4. Para cada nó, insere em automation_node_executions com input/output.
- *   5. Marca a execução completed/failed no fim.
- *
- * Sprint 1.0 só suporta fluxos lineares (1 saída por nó). Branching e
- * loops entram no Sprint 4 (logic.condition, logic.switch, logic.loop).
- *
- * Átomos suportados nesta versão (inline):
- *   - trigger.event
- *   - action.log
- *
- * Sprint 1.3 substitui o registry inline por auto-discovery a partir
- * de /lib/automation-engine/plugins (via partilha de código Deno-Next).
- *
- * Autenticação: aceita apenas chamadas com header Authorization Bearer
- * igual ao SUPABASE_SERVICE_ROLE_KEY. Não há acesso público.
+ * Sprint 1.0+1.1 mantém: trigger.event, action.log, action.http_request,
+ * action.send_telegram.
  */
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { Liquid } from "npm:liquidjs@10";
 
-// ----------------------------------------------------------------------------
-// Tipos mínimos (Deno-side, espelham lib/automation-engine/types.ts)
-// ----------------------------------------------------------------------------
 type AtomOutput = Record<string, unknown>;
 
 interface NodeExecContext {
@@ -62,14 +50,49 @@ interface AutomationDefinition {
 }
 
 interface ExecuteRequest {
-  automation_id: string;
-  organization_id: string;
+  // Modo normal
+  automation_id?: string;
   trigger_event?: { type: string; payload: unknown };
   is_test?: boolean;
+  // Modo resume
+  execution_id?: string;
+  // Comum
+  organization_id: string;
 }
 
 // ----------------------------------------------------------------------------
-// Registry inline de átomos (Sprint 1.0)
+// LiquidJS
+// ----------------------------------------------------------------------------
+const liquid = new Liquid({ cache: true, strictVariables: false, strictFilters: false });
+liquid.registerFilter("money", (v: unknown): string => {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!isFinite(n)) return String(v ?? "");
+  return n.toLocaleString("pt-PT", { style: "currency", currency: "EUR" });
+});
+
+async function resolveValue(value: unknown, vars: Record<string, unknown>): Promise<unknown> {
+  if (typeof value === "string") {
+    try { return await liquid.parseAndRender(value, vars); } catch { return value; }
+  }
+  if (Array.isArray(value)) return Promise.all(value.map((v) => resolveValue(v, vars)));
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = await resolveValue(v, vars);
+    }
+    return out;
+  }
+  return value;
+}
+
+async function resolveConfig(config: Record<string, unknown>, vars: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(config)) out[k] = await resolveValue(v, vars);
+  return out;
+}
+
+// ----------------------------------------------------------------------------
+// Átomos inline
 // ----------------------------------------------------------------------------
 type AtomExecFn = (ctx: NodeExecContext) => Promise<AtomOutput>;
 
@@ -97,8 +120,7 @@ const ATOMS: Record<string, AtomExecFn> = {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const res = await fetch(url, {
-        method,
-        headers,
+        method, headers,
         body: method === "GET" || method === "DELETE" ? undefined : body,
         signal: controller.signal,
       });
@@ -128,128 +150,166 @@ const ATOMS: Record<string, AtomExecFn> = {
     const payload: Record<string, unknown> = { chat_id: chatId, text };
     if (parseMode !== "none") payload.parse_mode = parseMode;
     const res = await fetch(`https://api.telegram.org/bot${settings.telegram_crm_bot_token}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
     const json = await res.json().catch(() => ({})) as { ok?: boolean; result?: { message_id?: number }; description?: string };
     if (!res.ok || !json.ok) throw new Error(`Telegram API erro ${res.status}: ${json.description ?? "unknown"}`);
     return { ok: true, message_id: json.result?.message_id ?? 0, sent_at: new Date().toISOString() };
   },
+
+  "logic.wait_fixed": async (ctx) => {
+    const seconds = Number(ctx.config.seconds ?? 0);
+    if (seconds < 1) return { waited_seconds: 0 };
+    const resumeAt = new Date(Date.now() + seconds * 1000).toISOString();
+    return { _suspend: true, _resumeAt: resumeAt, waited_seconds: seconds };
+  },
 };
 
 // ----------------------------------------------------------------------------
-// Util: encontra nó trigger e segue edges em sequência
+// Helpers de grafo
 // ----------------------------------------------------------------------------
 function findStartNode(def: AutomationDefinition): AutomationNode | null {
-  // Trigger = nó sem edges incoming. Versão Sprint 1.0 simplificada.
   const targets = new Set(def.edges.map((e) => e.target));
   return def.nodes.find((n) => !targets.has(n.id)) ?? null;
 }
 
-function nextNode(
-  def: AutomationDefinition,
-  currentId: string,
-): AutomationNode | null {
+function nextNode(def: AutomationDefinition, currentId: string): AutomationNode | null {
   const edge = def.edges.find((e) => e.source === currentId);
   if (!edge) return null;
   return def.nodes.find((n) => n.id === edge.target) ?? null;
 }
 
 // ----------------------------------------------------------------------------
-// Handler principal
+// Helpers de variáveis
+// ----------------------------------------------------------------------------
+async function loadContactDealImovel(
+  supabase: SupabaseClient,
+  contactId: string | null,
+  dealId: string | null,
+  imovelId: string | null,
+): Promise<{ contact: unknown; deal: unknown; imovel: unknown }> {
+  const [contact, deal, imovel] = await Promise.all([
+    contactId ? supabase.from("contacts").select("*").eq("id", contactId).maybeSingle().then((r) => r.data) : Promise.resolve(null),
+    dealId ? supabase.from("deals").select("*").eq("id", dealId).maybeSingle().then((r) => r.data) : Promise.resolve(null),
+    imovelId ? supabase.from("imoveis").select("*").eq("id", imovelId).maybeSingle().then((r) => r.data) : Promise.resolve(null),
+  ]);
+  return { contact, deal, imovel };
+}
+
+function buildVariables(
+  base: { contact: unknown; deal: unknown; imovel: unknown },
+  triggerEvent: { type: string; payload: unknown } | undefined,
+  accumulated: Record<string, { output: unknown }>,
+): Record<string, unknown> {
+  return {
+    contact: base.contact ?? {},
+    deal: base.deal ?? {},
+    imovel: base.imovel ?? {},
+    trigger: triggerEvent ?? {},
+    ...accumulated,
+  };
+}
+
+// ----------------------------------------------------------------------------
+// Handler
 // ----------------------------------------------------------------------------
 Deno.serve(async (req) => {
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
-  }
+  if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
 
   const auth = req.headers.get("authorization") ?? "";
-  const serviceKey =
-    Deno.env.get("CRM_SUPABASE_SECRET_KEY") ??
-    Deno.env.get("CRM_SUPABASE_SERVICE_ROLE_KEY") ??
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
-    "";
-  if (!serviceKey || auth !== `Bearer ${serviceKey}`) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  const serviceKey = Deno.env.get("CRM_SUPABASE_SECRET_KEY") ?? Deno.env.get("CRM_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  if (!serviceKey || auth !== `Bearer ${serviceKey}`) return new Response("Unauthorized", { status: 401 });
 
   let body: ExecuteRequest;
-  try {
-    body = await req.json();
-  } catch {
-    return new Response("Invalid JSON", { status: 400 });
-  }
+  try { body = await req.json(); } catch { return new Response("Invalid JSON", { status: 400 }); }
+  if (!body.organization_id) return new Response("Missing organization_id", { status: 400 });
+  if (!body.automation_id && !body.execution_id) return new Response("Missing automation_id or execution_id", { status: 400 });
 
-  if (!body.automation_id || !body.organization_id) {
-    return new Response("Missing automation_id or organization_id", { status: 400 });
-  }
-
-  const supabaseUrl =
-    Deno.env.get("CRM_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseUrl = Deno.env.get("CRM_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
   const supabase = createClient(supabaseUrl, serviceKey);
 
-  // 1. Carrega automação
-  const { data: automation, error: autoErr } = await supabase
-    .from("automations")
-    .select("id, definition, version, organization_id, status")
-    .eq("id", body.automation_id)
-    .single();
+  // ----- Resolve execution + automation -----
+  let executionId: string;
+  let automation: { id: string; definition: AutomationDefinition; version: number; organization_id: string };
+  let variables: Record<string, { output: unknown }> = {};
+  let triggerEvent: { type: string; payload: unknown } | undefined;
+  let startNode: AutomationNode | null;
+  let contactId: string | null = null;
+  let dealId: string | null = null;
+  let imovelId: string | null = null;
 
-  if (autoErr || !automation) {
-    return new Response(JSON.stringify({ error: "automation not found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+  if (body.execution_id) {
+    // ----- Modo resume -----
+    const { data: exec, error: eErr } = await supabase
+      .from("automation_executions")
+      .select("id, organization_id, automation_id, variables, resume_node_id, trigger_event, contact_id, deal_id, imovel_id")
+      .eq("id", body.execution_id)
+      .single();
+    if (eErr || !exec) return new Response(JSON.stringify({ error: "execution not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
+    if (exec.organization_id !== body.organization_id) return new Response(JSON.stringify({ error: "org mismatch" }), { status: 403, headers: { "Content-Type": "application/json" } });
 
-  if (automation.organization_id !== body.organization_id) {
-    return new Response(JSON.stringify({ error: "org mismatch" }), {
-      status: 403,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+    const { data: auto, error: aErr } = await supabase.from("automations").select("id, definition, version, organization_id").eq("id", exec.automation_id).single();
+    if (aErr || !auto) return new Response(JSON.stringify({ error: "automation not found for execution" }), { status: 404, headers: { "Content-Type": "application/json" } });
 
-  const definition = automation.definition as AutomationDefinition;
-  const startNode = findStartNode(definition);
-  if (!startNode) {
-    return new Response(JSON.stringify({ error: "no trigger node" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+    executionId = exec.id;
+    automation = auto as typeof automation;
+    variables = (exec.variables as typeof variables) ?? {};
+    triggerEvent = (exec.trigger_event as typeof triggerEvent) ?? undefined;
+    contactId = exec.contact_id as string | null;
+    dealId = exec.deal_id as string | null;
+    imovelId = exec.imovel_id as string | null;
+    startNode = exec.resume_node_id ? nextNode(automation.definition, exec.resume_node_id) : findStartNode(automation.definition);
 
-  // 2. Cria automation_executions
-  const { data: execution, error: execErr } = await supabase
-    .from("automation_executions")
-    .insert({
+    await supabase.from("automation_executions").update({ status: "running", resume_at: null }).eq("id", executionId);
+  } else {
+    // ----- Modo normal: cria execução -----
+    const { data: auto, error: aErr } = await supabase.from("automations").select("id, definition, version, organization_id, status").eq("id", body.automation_id!).single();
+    if (aErr || !auto) return new Response(JSON.stringify({ error: "automation not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
+    if (auto.organization_id !== body.organization_id) return new Response(JSON.stringify({ error: "org mismatch" }), { status: 403, headers: { "Content-Type": "application/json" } });
+
+    automation = auto as typeof automation;
+    triggerEvent = body.trigger_event;
+    // Tenta extrair contact/deal/imovel id do trigger payload (convenção: payload tem chave id)
+    const payload = (body.trigger_event?.payload ?? {}) as Record<string, unknown>;
+    if (typeof payload.id === "string") {
+      // Tipos de evento naming. Heurística simples: contact.* -> contact_id, deal.* -> deal_id, imovel.* -> imovel_id
+      const evtType = body.trigger_event?.type ?? "";
+      if (evtType.startsWith("contact.")) contactId = payload.id;
+      else if (evtType.startsWith("deal.")) dealId = payload.id;
+      else if (evtType.startsWith("imovel.")) imovelId = payload.id;
+    }
+
+    startNode = findStartNode(automation.definition);
+    if (!startNode) return new Response(JSON.stringify({ error: "no trigger node" }), { status: 400, headers: { "Content-Type": "application/json" } });
+
+    const { data: execution, error: execErr } = await supabase.from("automation_executions").insert({
       automation_id: automation.id,
       organization_id: automation.organization_id,
       automation_version: automation.version,
       status: "running",
       trigger_event: body.trigger_event ?? null,
       trigger_type: body.trigger_event?.type ?? "manual",
+      contact_id: contactId,
+      deal_id: dealId,
+      imovel_id: imovelId,
       is_test: body.is_test ?? false,
-    })
-    .select("id")
-    .single();
-
-  if (execErr || !execution) {
-    return new Response(JSON.stringify({ error: "failed to create execution", details: execErr }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    }).select("id").single();
+    if (execErr || !execution) return new Response(JSON.stringify({ error: "failed to create execution", details: execErr }), { status: 500, headers: { "Content-Type": "application/json" } });
+    executionId = execution.id as string;
   }
 
-  const executionId = execution.id as string;
-  const variables: Record<string, { output: unknown }> = {};
-  const startedAt = Date.now();
+  // ----- Carrega contact/deal/imovel para o template context -----
+  const baseRefs = await loadContactDealImovel(supabase, contactId, dealId, imovelId);
 
-  // 3. Percorre nós
+  // ----- Loop de execução -----
+  const startedAt = Date.now();
   let current: AutomationNode | null = startNode;
   let errorMessage: string | null = null;
   let errorNodeId: string | null = null;
-  const safetyLimit = 50; // protecção contra loops infinitos antes do Sprint 4
+  let suspended = false;
+  let resumeAt: string | null = null;
+  const safetyLimit = 50;
   let count = 0;
 
   while (current && count < safetyLimit) {
@@ -261,54 +321,34 @@ Deno.serve(async (req) => {
     if (!atomFn) {
       const errMsg = `unknown atom: ${node.atom}`;
       await supabase.from("automation_node_executions").insert({
-        execution_id: executionId,
-        organization_id: automation.organization_id,
-        node_id: node.id,
-        atom_id: node.atom,
-        status: "failed",
-        input: { config: node.config },
-        error: errMsg,
-        completed_at: new Date().toISOString(),
-        duration_ms: Date.now() - nodeStart,
+        execution_id: executionId, organization_id: automation.organization_id, node_id: node.id, atom_id: node.atom,
+        status: "failed", input: { config: node.config }, error: errMsg, completed_at: new Date().toISOString(), duration_ms: Date.now() - nodeStart,
       });
-      errorMessage = errMsg;
-      errorNodeId = node.id;
-      break;
+      errorMessage = errMsg; errorNodeId = node.id; break;
     }
 
-    // Insere row pending antes da execução (para Realtime mostrar)
-    const { data: nodeExec } = await supabase
-      .from("automation_node_executions")
-      .insert({
-        execution_id: executionId,
-        organization_id: automation.organization_id,
-        node_id: node.id,
-        atom_id: node.atom,
-        status: "running",
-        input: { config: node.config },
-      })
-      .select("id")
-      .single();
+    // Resolve config via LiquidJS antes de passar ao átomo
+    const vars = buildVariables(baseRefs, triggerEvent, variables);
+    let resolvedConfig: Record<string, unknown>;
+    try {
+      resolvedConfig = await resolveConfig(node.config, vars);
+    } catch (e) {
+      resolvedConfig = node.config;
+      console.error("resolveConfig falhou:", e);
+    }
+
+    const { data: nodeExec } = await supabase.from("automation_node_executions").insert({
+      execution_id: executionId, organization_id: automation.organization_id, node_id: node.id, atom_id: node.atom,
+      status: "running", input: { config: resolvedConfig },
+    }).select("id").single();
 
     const ctx: NodeExecContext = {
-      supabase,
-      executionId,
-      automationId: automation.id,
-      organizationId: automation.organization_id,
-      nodeId: node.id,
-      config: node.config,
-      variables,
-      triggerEvent: body.trigger_event,
+      supabase, executionId, automationId: automation.id, organizationId: automation.organization_id, nodeId: node.id,
+      config: resolvedConfig, variables, triggerEvent,
       log: async (level: string, message: string) => {
-        // Log entra como linha extra em node_executions com atom_id 'system.log'.
         await supabase.from("automation_node_executions").insert({
-          execution_id: executionId,
-          organization_id: automation.organization_id,
-          node_id: `${node.id}.log`,
-          atom_id: "system.log",
-          status: "completed",
-          output: { level, message },
-          completed_at: new Date().toISOString(),
+          execution_id: executionId, organization_id: automation.organization_id, node_id: `${node.id}.log`, atom_id: "system.log",
+          status: "completed", output: { level, message }, completed_at: new Date().toISOString(),
         });
       },
     };
@@ -318,61 +358,54 @@ Deno.serve(async (req) => {
       variables[node.id] = { output };
 
       if (nodeExec?.id) {
-        await supabase
-          .from("automation_node_executions")
-          .update({
-            status: "completed",
-            output,
-            completed_at: new Date().toISOString(),
-            duration_ms: Date.now() - nodeStart,
-          })
-          .eq("id", nodeExec.id);
+        await supabase.from("automation_node_executions").update({
+          status: "completed", output, completed_at: new Date().toISOString(), duration_ms: Date.now() - nodeStart,
+        }).eq("id", nodeExec.id);
+      }
+
+      // Detecta _suspend
+      const out = output as { _suspend?: boolean; _resumeAt?: string };
+      if (out?._suspend === true && out._resumeAt) {
+        suspended = true;
+        resumeAt = out._resumeAt;
+        await supabase.from("automation_executions").update({
+          status: "waiting", current_node_id: node.id, resume_node_id: node.id, resume_at: resumeAt, variables,
+        }).eq("id", executionId);
+        await supabase.from("automation_schedules").insert({
+          execution_id: executionId, organization_id: automation.organization_id, scheduled_for: resumeAt,
+          resume_node_id: node.id, status: "pending",
+        });
+        break;
       }
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
       if (nodeExec?.id) {
-        await supabase
-          .from("automation_node_executions")
-          .update({
-            status: "failed",
-            error: errMsg,
-            completed_at: new Date().toISOString(),
-            duration_ms: Date.now() - nodeStart,
-          })
-          .eq("id", nodeExec.id);
+        await supabase.from("automation_node_executions").update({
+          status: "failed", error: errMsg, completed_at: new Date().toISOString(), duration_ms: Date.now() - nodeStart,
+        }).eq("id", nodeExec.id);
       }
-      errorMessage = errMsg;
-      errorNodeId = node.id;
-      break;
+      errorMessage = errMsg; errorNodeId = node.id; break;
     }
 
-    current = nextNode(definition, node.id);
+    current = nextNode(automation.definition, node.id);
   }
 
-  // 4. Marca execução final
+  // ----- Final -----
   const durationMs = Date.now() - startedAt;
+
+  if (suspended) {
+    return new Response(JSON.stringify({
+      execution_id: executionId, status: "waiting", resume_at: resumeAt, nodes_executed: count,
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }
+
   const finalStatus = errorMessage ? "failed" : "completed";
+  await supabase.from("automation_executions").update({
+    status: finalStatus, completed_at: new Date().toISOString(), duration_ms: durationMs,
+    variables, error_message: errorMessage, error_node_id: errorNodeId,
+  }).eq("id", executionId);
 
-  await supabase
-    .from("automation_executions")
-    .update({
-      status: finalStatus,
-      completed_at: new Date().toISOString(),
-      duration_ms: durationMs,
-      variables,
-      error_message: errorMessage,
-      error_node_id: errorNodeId,
-    })
-    .eq("id", executionId);
-
-  return new Response(
-    JSON.stringify({
-      execution_id: executionId,
-      status: finalStatus,
-      duration_ms: durationMs,
-      nodes_executed: count,
-      error: errorMessage,
-    }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
-  );
+  return new Response(JSON.stringify({
+    execution_id: executionId, status: finalStatus, duration_ms: durationMs, nodes_executed: count, error: errorMessage,
+  }), { status: 200, headers: { "Content-Type": "application/json" } });
 });

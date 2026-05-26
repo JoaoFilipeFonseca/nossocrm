@@ -18,6 +18,7 @@ import { triggerEvent } from './plugins/triggers/event';
 import { actionLog } from './plugins/actions/log';
 import { actionHttpRequest } from './plugins/actions/http-request';
 import { actionSendTelegram } from './plugins/actions/send-telegram';
+import { logicWaitFixed } from './plugins/logic/wait-fixed';
 
 const atoms = new Map<string, AtomDefinition>();
 
@@ -42,3 +43,4 @@ registerAtom(triggerEvent);
 registerAtom(actionLog);
 registerAtom(actionHttpRequest);
 registerAtom(actionSendTelegram);
+registerAtom(logicWaitFixed);
