@@ -47,6 +47,39 @@
 
 ---
 
+## 💡 Ideias capturadas mid-conversa (não atacar agora, candidatas a sessão)
+
+### M-010 · Imóvel angariado parado → alerta IA com nova estratégia
+- **Quando:** 25/05/2026 noite.
+- **Pedido João:** "ter um imóvel angariado algum tempo que não vendo, receber alerta de nova estratégia".
+- **Conceito:** cron diário verifica `imoveis` com `estado=disponivel` há >X dias sem activity de tipo VISITA/CONTACTO. Dispara entrada no Inbox (ou notificação) com sugestões IA accionáveis: baixar preço Y%, mudar copy de portais, fotografar à hora azul, captar lead em outro canal, retirar e relançar com nova story, partilhar em rede de colegas, etc.
+- **Inputs IA:** histórico do imóvel (preço inicial, vezes alterado, nº visitas, feedback de visitas), comparáveis recentes da zona, eventos de mercado (raw_intel intent=evento_mercado), Brand Kit do João.
+- **Output:** 3-5 estratégias rankeadas por probabilidade de impacto + estimativa de esforço + 1 botão "Adoptar esta" que cria as activities/tarefas necessárias.
+
+### M-011 · "Como abordar FSBOs" quando IA detecta intent=fsbo_tip
+- **Quando:** 25/05/2026 noite.
+- **Pedido João:** "como abordar FSBOs quando eu digo que são".
+- **Conceito:** quando um `raw_intel` ou voice capture é classificado com `intent=fsbo_tip` (FSBO = proprietário sem mediadora), IA propõe imediatamente sequência de abordagem optimizada:
+  - Script de 1º contacto WhatsApp (3 variantes, tons diferentes)
+  - Email de follow-up se não responde em 48h
+  - Visita-pretexto ao imóvel sem pressão de mandato
+  - Argumentos para converter FSBO em angariação (estatísticas: tempo médio venda FSBO vs mediadora, preço final realizado, etc.)
+  - Material a entregar (pasta diferenciadora, estudo CMA da zona, etc.)
+- **Filosofia:** alinhado com "entrego primeiro, sou recompensado depois" — primeiro contacto é genuinamente útil mesmo que ele nunca contrate.
+
+### M-012 · Checklist por mudança de estágio no pipeline (não esquecer nada)
+- **Quando:** 25/05/2026 noite.
+- **Pedido João:** "sempre que mudo de estado no pipeline ter caixas check box de o que deve conter, se documentos, ou ações para passar ao próximos passo".
+- **Conceito:** cada transição de stage (ex: `Oportunidade → Angariação`, `Em avaliação → CPCV`, `CPCV → Escritura`) abre modal com checklist customizável por board+stage:
+  - Documentos obrigatórios (caderneta predial, CC, NIF, comprovativo financiamento, etc.)
+  - Acções a confirmar (visita feita, proposta enviada, CPCV redigido, fundos confirmados, etc.)
+  - Validações automáticas (ficheiros existem em `imovel-documentos` bucket, `deal.value` preenchido, etc.)
+- **Configuração:** tabela `stage_checklists` (organization_id, board_id, stage_id, items jsonb[]). Tab no `/settings` para editar checklists por pipeline.
+- **Comportamento:** se o utilizador tentar mudar de stage sem completar items, modal bloqueador com botão "Avançar mesmo assim" (audit log) ou "Completar primeiro".
+- **Valor:** evitar erros operacionais (CPCV sem caderneta, escritura sem certificado energético, etc.). Reduz fricção mental "o que tinha de fazer aqui mesmo?".
+
+---
+
 ## 🎯 Melhorias prioritárias diferidas
 
 ### M-001 · Propagar pipeline copy IA a TODO o lado (memory plano_copy_ia_em_todo_o_lado)
