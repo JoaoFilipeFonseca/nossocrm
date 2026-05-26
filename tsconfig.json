@@ -48,6 +48,7 @@
     "**/vitest.config.*",
     "**/lib/**/test/**",
     "supabase/functions/**",
+    "docs/**",
     ".next/types/validator.ts"
   ]
 }
