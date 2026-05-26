@@ -85,6 +85,57 @@ const ATOMS: Record<string, AtomExecFn> = {
     await ctx.log(level, message);
     return { message, level, logged_at: new Date().toISOString() };
   },
+
+  "action.http_request": async (ctx) => {
+    const method = String(ctx.config.method ?? "GET").toUpperCase();
+    const url = String(ctx.config.url ?? "");
+    if (!url) throw new Error("url é obrigatório");
+    const headers = (ctx.config.headers as Record<string, string> | undefined) ?? {};
+    const body = ctx.config.body as string | undefined;
+    const timeoutMs = Number(ctx.config.timeout_ms ?? 10000);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        method,
+        headers,
+        body: method === "GET" || method === "DELETE" ? undefined : body,
+        signal: controller.signal,
+      });
+      const text = await res.text();
+      const responseHeaders: Record<string, string> = {};
+      res.headers.forEach((v, k) => { responseHeaders[k] = v; });
+      return { status: res.status, ok: res.ok, body: text, response_headers: responseHeaders };
+    } finally {
+      clearTimeout(timer);
+    }
+  },
+
+  "action.send_telegram": async (ctx) => {
+    const text = String(ctx.config.text ?? "");
+    if (!text) throw new Error("text é obrigatório");
+    const { data: settings, error: sErr } = await ctx.supabase
+      .from("organization_settings")
+      .select("telegram_crm_bot_token, telegram_crm_chat_id")
+      .eq("organization_id", ctx.organizationId)
+      .single();
+    if (sErr || !settings?.telegram_crm_bot_token) {
+      throw new Error("telegram_crm_bot_token em falta em organization_settings");
+    }
+    const chatId = String(ctx.config.chat_id ?? settings.telegram_crm_chat_id ?? "");
+    if (!chatId) throw new Error("telegram_crm_chat_id em falta");
+    const parseMode = String(ctx.config.parse_mode ?? "HTML");
+    const payload: Record<string, unknown> = { chat_id: chatId, text };
+    if (parseMode !== "none") payload.parse_mode = parseMode;
+    const res = await fetch(`https://api.telegram.org/bot${settings.telegram_crm_bot_token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => ({})) as { ok?: boolean; result?: { message_id?: number }; description?: string };
+    if (!res.ok || !json.ok) throw new Error(`Telegram API erro ${res.status}: ${json.description ?? "unknown"}`);
+    return { ok: true, message_id: json.result?.message_id ?? 0, sent_at: new Date().toISOString() };
+  },
 };
 
 // ----------------------------------------------------------------------------

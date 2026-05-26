@@ -16,6 +16,8 @@
 import type { AtomDefinition } from './types';
 import { triggerEvent } from './plugins/triggers/event';
 import { actionLog } from './plugins/actions/log';
+import { actionHttpRequest } from './plugins/actions/http-request';
+import { actionSendTelegram } from './plugins/actions/send-telegram';
 
 const atoms = new Map<string, AtomDefinition>();
 
@@ -35,6 +37,8 @@ export function clearAtomsForTest(): void {
   atoms.clear();
 }
 
-// Registo inicial (hardcoded, Sprint 1.0)
+// Registo inicial (hardcoded, Sprint 1.0+1.1)
 registerAtom(triggerEvent);
 registerAtom(actionLog);
+registerAtom(actionHttpRequest);
+registerAtom(actionSendTelegram);
