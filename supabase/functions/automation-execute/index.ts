@@ -252,7 +252,7 @@ const ATOMS: Record<string, AtomExecFn> = {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 60000);
     try {
-      const res = await fetch(`${appBase}/api/automations/run-ai`, {
+      const res = await fetch(`${appBase}/api/ai/automation-run`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
         body: JSON.stringify(body),

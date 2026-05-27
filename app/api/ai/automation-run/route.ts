@@ -1,7 +1,7 @@
 /**
- * POST /api/automations/run-ai
+ * POST /api/ai/automation-run
  *
- * Sprint 4.2, commit 1.
+ * Sprint 4.2, commit 1 (movido de /api/automations/run-ai por conflito com [id]).
  *
  * Endpoint interno usado pelo átomo `action.run_ai` da Máquina de Automações.
  * Reusa o `routedGenerate` (Gemini + fallback Anthropic) com as keys do servidor.
