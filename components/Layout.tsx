@@ -48,7 +48,8 @@ import {
   PanelLeftOpen,
   Target,
   Archive,
-  Zap
+  Zap,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -328,6 +329,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
             { to: '/reports', icon: BarChart3, label: 'Relatórios', prefetch: 'reports' as const, badge: undefined },
             { to: '/criativos', icon: Archive, label: 'Criativos', prefetch: undefined, badge: undefined },
             { to: '/automacoes', icon: Zap, label: 'Automações', prefetch: undefined, badge: undefined },
+            ...(profile?.role === 'admin' ? [{ to: '/admin/saude', icon: Activity, label: 'Saúde', prefetch: undefined, badge: undefined }] : []),
             { to: '/settings', icon: Settings, label: 'Configurações', prefetch: 'settings' as const, badge: undefined },
           ].map((item) => {
             if (sidebarCollapsed) {
