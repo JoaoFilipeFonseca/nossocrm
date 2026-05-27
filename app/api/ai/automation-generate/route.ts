@@ -16,6 +16,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { routedGenerate, type AIKeys } from '@/lib/ai/router';
 import { AUTOMATION_GENERATOR_SYSTEM } from '@/lib/automation-engine/generator-prompt';
 import { ATOM_CATALOG } from '@/lib/automation-engine/catalog';
@@ -72,22 +73,36 @@ function validate(auto: GeneratedAutomation): { ok: true } | { ok: false; error:
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
-  if (authErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Dual auth: sessão Supabase (browser, normal) OU Bearer service_role (smoke/sistema)
+  let organizationId: string | null = null;
+  const auth = req.headers.get('authorization') ?? '';
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.CRM_SUPABASE_SERVICE_ROLE_KEY ?? '';
+  const isService = serviceKey && auth === `Bearer ${serviceKey}`;
 
-  const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).maybeSingle();
-  const organizationId = profile?.organization_id;
-  if (!organizationId) return NextResponse.json({ error: 'Sem organização' }, { status: 400 });
-
-  let body: { description?: string; refine?: string };
+  let body: { description?: string; refine?: string; organization_id?: string };
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
+
+  if (isService) {
+    if (typeof body.organization_id !== 'string' || !body.organization_id) {
+      return NextResponse.json({ error: 'service_role auth requer organization_id no body' }, { status: 400 });
+    }
+    organizationId = body.organization_id;
+  } else {
+    const supabase = await createClient();
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).maybeSingle();
+    organizationId = profile?.organization_id ?? null;
+    if (!organizationId) return NextResponse.json({ error: 'Sem organização' }, { status: 400 });
+  }
 
   const description = typeof body.description === 'string' ? body.description.trim() : '';
   if (!description) return NextResponse.json({ error: 'description é obrigatório' }, { status: 400 });
 
-  // Lê keys da org
-  const { data: orgSettings } = await supabase
+  // Lê keys da org via admin client (funciona em ambos modos auth)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.CRM_SUPABASE_URL ?? '';
+  const admin = createSupabaseClient(supabaseUrl, serviceKey);
+  const { data: orgSettings } = await admin
     .from('organization_settings')
     .select('ai_google_key, ai_anthropic_key')
     .eq('organization_id', organizationId)
