@@ -237,6 +237,34 @@ const ATOMS: Record<string, AtomExecFn> = {
     return { activity_id: data.id, date };
   },
 
+  "action.run_ai": async (ctx) => {
+    const prompt = String(ctx.config.prompt ?? "").trim();
+    if (!prompt) throw new Error("prompt é obrigatório");
+    const appBase = Deno.env.get("CRM_APP_BASE_URL") ?? "https://crm-joao.vercel.app";
+    const serviceKey = Deno.env.get("CRM_SUPABASE_SECRET_KEY") ?? Deno.env.get("CRM_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    if (!serviceKey) throw new Error("service_role key em falta no Edge Function env");
+
+    const body: Record<string, unknown> = { prompt };
+    if (typeof ctx.config.system === "string" && ctx.config.system) body.system = ctx.config.system;
+    if (typeof ctx.config.feature === "string" && ctx.config.feature) body.feature = ctx.config.feature;
+    if (typeof ctx.config.temperature === "number") body.temperature = ctx.config.temperature;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60000);
+    try {
+      const res = await fetch(`${appBase}/api/automations/run-ai`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      const data = await res.json().catch(() => ({})) as { text?: string; model_used?: string; fallback_used?: boolean; error?: string };
+      if (!res.ok) throw new Error(`run_ai HTTP ${res.status}: ${data.error ?? "unknown"}`);
+      if (!data.text) throw new Error("run_ai sem texto");
+      return { text: data.text, model_used: data.model_used ?? "?", fallback_used: data.fallback_used ?? false };
+    } finally { clearTimeout(timer); }
+  },
+
   "logic.condition": async (ctx) => {
     const op = String(ctx.config.operator ?? "eq");
     const left = ctx.config.left;

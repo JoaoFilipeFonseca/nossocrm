@@ -142,6 +142,23 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
     },
   },
   {
+    id: 'action.run_ai',
+    category: 'action',
+    name: 'Correr IA',
+    icon: '🧠',
+    description: 'Corre prompt IA (Gemini + fallback Anthropic). Output em {{ este_passo.output.text }}.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        prompt: { type: 'string' },
+        system: { type: 'string' },
+        feature: { type: 'string', enum: ['generic', 'email_draft', 'whatsapp_draft', 'workflow_desc', 'workflow_icp', 'workflow_swot', 'workflow_pitch', 'deal_coach', 'imovel_extract', 'briefing'] },
+        temperature: { type: 'number', minimum: 0 },
+      },
+      required: ['prompt'],
+    },
+  },
+  {
     id: 'logic.wait_fixed',
     category: 'logic',
     name: 'Esperar tempo fixo',

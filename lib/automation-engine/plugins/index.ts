@@ -12,6 +12,7 @@ export { actionSendTelegram } from './actions/send-telegram';
 export { actionModifyContact } from './actions/modify-contact';
 export { actionModifyDeal } from './actions/modify-deal';
 export { actionCreateTask } from './actions/create-task';
+export { actionRunAi } from './actions/run-ai';
 
 export { logicWaitFixed } from './logic/wait-fixed';
 export { logicCondition } from './logic/condition';
