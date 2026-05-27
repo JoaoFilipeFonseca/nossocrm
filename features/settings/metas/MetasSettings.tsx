@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Save, Target, Calendar, Info } from 'lucide-react';
+import { Save, Target, Calendar, Info, Scissors } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type Goal = {
@@ -87,6 +87,28 @@ export const MetasSettings: React.FC = () => {
   const distributeEqual = () => {
     const per = Math.round((draft.annual_target_eur || 0) / 12);
     setDraft((d) => ({ ...d, monthly_target_eur: Array.from({ length: 12 }, () => per) }));
+  };
+
+  // Auto-distribui pelos 12 meses ao mudar a meta anual,
+  // SÓ se os meses ainda estão todos a zero (não sobrescreve edições manuais).
+  const setAnnualTarget = (value: number) => {
+    setDraft((d) => {
+      const safeValue = Number.isFinite(value) ? Math.max(0, value) : 0;
+      const allMonthsZero = d.monthly_target_eur.every((v) => !v || v === 0);
+      const nextMonthly = allMonthsZero
+        ? Array.from({ length: 12 }, () => Math.round(safeValue / 12))
+        : d.monthly_target_eur;
+      return { ...d, annual_target_eur: safeValue, monthly_target_eur: nextMonthly };
+    });
+  };
+
+  // "Cortar o elefante às fatias": derivados motivadores
+  const annual = draft.annual_target_eur || 0;
+  const slices = {
+    perMonth: annual / 12,
+    perWeek: annual / 52,
+    perWorkDay: annual / 252, // ~21 dias úteis × 12 meses
+    perDayCalendar: annual / 365,
   };
 
   const clearMonthly = () => {
@@ -186,8 +208,9 @@ export const MetasSettings: React.FC = () => {
               min={0}
               step={100}
               disabled={!isAdmin}
-              value={draft.annual_target_eur || 0}
-              onChange={(e) => setDraft((d) => ({ ...d, annual_target_eur: Number(e.target.value) || 0 }))}
+              placeholder="Ex: 120000"
+              value={draft.annual_target_eur ? draft.annual_target_eur : ''}
+              onChange={(e) => setAnnualTarget(Number(e.target.value))}
               className="w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white disabled:opacity-60"
             />
           </label>
@@ -204,6 +227,38 @@ export const MetasSettings: React.FC = () => {
           )}
         </div>
 
+        {/* Elefante às fatias — quebra motivadora */}
+        {annual > 0 && (
+          <div className="mb-5 p-4 rounded-xl bg-primary-50 dark:bg-primary-500/5 border border-primary-200 dark:border-primary-500/20">
+            <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-primary-700 dark:text-primary-300">
+              <Scissors className="h-4 w-4" />
+              O elefante às fatias
+              <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">
+                (assim assusta menos)
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-white/10">
+                <div className="text-xs text-slate-500 dark:text-slate-400">Por mês</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">{formatEur(slices.perMonth)} €</div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-white/10">
+                <div className="text-xs text-slate-500 dark:text-slate-400">Por semana</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">{formatEur(slices.perWeek)} €</div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-white/10">
+                <div className="text-xs text-slate-500 dark:text-slate-400">Por dia útil</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">{formatEur(slices.perWorkDay)} €</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">~21 dias × 12</div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-white/10">
+                <div className="text-xs text-slate-500 dark:text-slate-400">Por dia (ano todo)</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">{formatEur(slices.perDayCalendar)} €</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Grelha de meses */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
           {MESES.map((mes, idx) => (
@@ -214,7 +269,8 @@ export const MetasSettings: React.FC = () => {
                 min={0}
                 step={100}
                 disabled={!isAdmin}
-                value={draft.monthly_target_eur[idx] || 0}
+                placeholder="0"
+                value={draft.monthly_target_eur[idx] ? draft.monthly_target_eur[idx] : ''}
                 onChange={(e) => setMonth(idx, Number(e.target.value))}
                 className="w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white disabled:opacity-60"
               />
