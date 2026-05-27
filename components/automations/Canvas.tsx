@@ -166,10 +166,19 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [fullscreen, setFullscreen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAt = useRef<number>(Date.now());
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
+
+  // ESC sai do fullscreen
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFullscreen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fullscreen]);
 
   const toDefinition = useCallback(() => {
     return {
@@ -288,8 +297,29 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
     }
   })();
 
+  const hasNodesNoEdges = nodes.length >= 2 && edges.length === 0;
+
   return (
-    <div ref={wrapperRef} className={`relative ${className ?? 'h-[500px]'}`} onDragOver={onDragOver} onDrop={onDrop}>
+    <div
+      ref={wrapperRef}
+      className={fullscreen
+        ? 'fixed inset-0 z-50 bg-white'
+        : `relative ${className ?? 'h-[500px]'}`}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      {/* CSS scoped: aumenta handles default React Flow para serem mais visiveis */}
+      <style jsx global>{`
+        .react-flow__handle {
+          width: 12px !important;
+          height: 12px !important;
+          background: #94a3b8 !important;
+          border: 2px solid #fff !important;
+        }
+        .react-flow__handle:hover {
+          background: #6366f1 !important;
+        }
+      `}</style>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -317,6 +347,24 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
           <div className={`text-[10px] rounded px-2 py-1 border ${statusBadge.color}`}>{statusBadge.text}</div>
         ) : null}
       </div>
+
+      <button
+        type="button"
+        onClick={() => setFullscreen((v) => !v)}
+        className="absolute top-2 right-2 z-10 text-[11px] bg-white/95 rounded-md px-2.5 py-1 border border-slate-200 shadow-sm hover:bg-slate-50"
+        title={fullscreen ? 'Sair do ecrã cheio (ESC)' : 'Ecrã cheio'}
+      >
+        {fullscreen ? '✕ Sair' : '⛶ Ecrã cheio'}
+      </button>
+
+      {hasNodesNoEdges ? (
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-10 max-w-md text-center bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 shadow">
+          <div className="text-xs font-medium text-amber-900">Os nós ainda não estão ligados</div>
+          <div className="text-[11px] text-amber-700 mt-0.5">
+            Passa o rato em cima de um nó. Aparece um pontinho à direita: arrasta-o até ao pontinho da esquerda do próximo nó.
+          </div>
+        </div>
+      ) : null}
       {nodes.length === 0 ? (
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
           <div className="text-center text-slate-500 bg-white/90 border border-dashed border-slate-300 rounded-lg px-6 py-5 max-w-sm">
