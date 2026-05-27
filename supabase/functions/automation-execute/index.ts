@@ -244,7 +244,7 @@ const ATOMS: Record<string, AtomExecFn> = {
     const serviceKey = Deno.env.get("CRM_SUPABASE_SECRET_KEY") ?? Deno.env.get("CRM_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     if (!serviceKey) throw new Error("service_role key em falta no Edge Function env");
 
-    const body: Record<string, unknown> = { prompt };
+    const body: Record<string, unknown> = { prompt, organization_id: ctx.organizationId };
     if (typeof ctx.config.system === "string" && ctx.config.system) body.system = ctx.config.system;
     if (typeof ctx.config.feature === "string" && ctx.config.feature) body.feature = ctx.config.feature;
     if (typeof ctx.config.temperature === "number") body.temperature = ctx.config.temperature;
