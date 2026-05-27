@@ -52,7 +52,7 @@ export default async function AutomacaoBuilderPage({ params }: { params: Promise
   const edges = automation.definition.edges ?? [];
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="p-6 max-w-[1600px] mx-auto">
       <div className="mb-4">
         <Link href="/automacoes" className="text-sm text-slate-500 hover:text-slate-900">← Automações</Link>
       </div>
@@ -80,12 +80,17 @@ export default async function AutomacaoBuilderPage({ params }: { params: Promise
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Coluna principal */}
-        <div className="lg:col-span-2 space-y-6">
-          <section className="rounded-lg border border-slate-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-slate-700 mb-3">Fluxo visual</h2>
-            <div className="flex border border-slate-200 rounded-md overflow-hidden bg-slate-50 h-[500px]">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        {/* Coluna principal — canvas ocupa 3/4 em XL */}
+        <div className="xl:col-span-3 space-y-6">
+          <section className="rounded-lg border border-slate-200 bg-white p-3">
+            <div className="flex items-center justify-between px-2 py-1 mb-2">
+              <h2 className="text-sm font-semibold text-slate-700">Fluxo visual</h2>
+              <p className="text-[11px] text-slate-500">
+                Arrasta átomos da palette · puxa do ponto direito de um nó para o esquerdo do seguinte para ligar
+              </p>
+            </div>
+            <div className="flex border border-slate-200 rounded-md overflow-hidden bg-slate-50 h-[720px]">
               <Palette />
               <div className="flex-1 min-w-0">
                 <Canvas
@@ -132,7 +137,7 @@ export default async function AutomacaoBuilderPage({ params }: { params: Promise
         </div>
 
         {/* Sidebar info */}
-        <aside className="space-y-4">
+        <aside className="xl:col-span-1 space-y-4">
           <section className="rounded-lg border border-slate-200 bg-white p-5 text-sm">
             <h2 className="font-semibold text-slate-700 mb-2">Detalhes</h2>
             <dl className="space-y-1.5 text-slate-600">
