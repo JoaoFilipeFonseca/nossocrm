@@ -13,6 +13,13 @@ import {
   Info,
   Calendar,
   ArrowRight,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Users,
+  MapPin,
+  MessageCircle,
+  Mail,
 } from 'lucide-react';
 
 type Semaphore = 'red' | 'amber' | 'green' | 'unknown';
@@ -152,6 +159,34 @@ type ChqBreakdownDay = {
 
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
+type ChqTodayItem = {
+  id: string;
+  type: 'call' | 'meeting' | 'visit' | 'whatsapp' | 'email';
+  created_at: string;
+  deal_id: string | null;
+  contact_id: string | null;
+  description: string | null;
+  via: string | null;
+  deal_title: string | null;
+  contact_name: string | null;
+};
+
+const TYPE_ICON: Record<ChqTodayItem['type'], React.ComponentType<{ size?: number; className?: string }>> = {
+  call: Phone,
+  meeting: Users,
+  visit: MapPin,
+  whatsapp: MessageCircle,
+  email: Mail,
+};
+
+const TYPE_LABEL: Record<ChqTodayItem['type'], string> = {
+  call: 'Chamada',
+  meeting: 'Reunião',
+  visit: 'Visita',
+  whatsapp: 'WhatsApp',
+  email: 'Email',
+};
+
 export const HonestMetricsTab: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number>(currentYear);
@@ -159,6 +194,41 @@ export const HonestMetricsTab: React.FC = () => {
   const [breakdown, setBreakdown] = useState<ChqBreakdownDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTodayList, setShowTodayList] = useState(false);
+  const [todayItems, setTodayItems] = useState<ChqTodayItem[]>([]);
+  const [todayLoading, setTodayLoading] = useState(false);
+
+  const loadTodayItems = () => {
+    setTodayLoading(true);
+    fetch('/api/dashboard/chq-today', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => setTodayItems(Array.isArray(j.items) ? j.items : []))
+      .catch(() => setTodayItems([]))
+      .finally(() => setTodayLoading(false));
+  };
+
+  const deleteToday = (id: string) => {
+    setTodayItems((items) => items.filter((i) => i.id !== id));
+    fetch(`/api/dashboard/chq-today?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      .then(() => {
+        // refresh contagem global
+        if (data) {
+          fetch(`/api/dashboard/honest-metrics?year=${year}`, { cache: 'no-store' })
+            .then((r) => r.json())
+            .then((j) => { if (j.metrics) setData(j.metrics); })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  };
+
+  const toggleTodayList = () => {
+    setShowTodayList((v) => {
+      const next = !v;
+      if (next) loadTodayItems();
+      return next;
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -353,11 +423,54 @@ export const HonestMetricsTab: React.FC = () => {
                 );
               })}
             </div>
-            <div className="mt-3 text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-3">
+            <div className="mt-3 text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-3 flex-wrap">
               <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-primary-500"></span> Hoje</span>
               <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-primary-300 dark:bg-primary-500/40"></span> Outros dias</span>
               <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-slate-200 dark:bg-white/10"></span> Sem CHQ</span>
+              <button
+                type="button"
+                onClick={toggleTodayList}
+                className="ml-auto inline-flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:underline"
+              >
+                {showTodayList ? 'Esconder lista de hoje' : 'Ver lista de hoje'}
+                {showTodayList ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              </button>
             </div>
+
+            {showTodayList && (
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5">
+                {todayLoading ? (
+                  <p className="text-xs text-slate-400">A carregar...</p>
+                ) : todayItems.length === 0 ? (
+                  <p className="text-xs text-slate-400">Ainda nenhuma CHQ registada hoje. Liga, escreve, regista.</p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {todayItems.map((it) => {
+                      const Ico = TYPE_ICON[it.type];
+                      const label = it.deal_title || it.contact_name || 'Sem alvo';
+                      const time = new Date(it.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+                      return (
+                        <li key={it.id} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 group">
+                          <span className="text-slate-400 dark:text-slate-500 w-12">{time}</span>
+                          <Ico size={12} className="text-primary-500 flex-shrink-0" />
+                          <span className="font-medium text-slate-800 dark:text-slate-200 w-20 truncate">{TYPE_LABEL[it.type]}</span>
+                          <span className="truncate flex-1" title={label}>{label}</span>
+                          {it.via && <span className="text-[10px] text-slate-400 dark:text-slate-500 hidden md:inline">via {it.via}</span>}
+                          <button
+                            type="button"
+                            onClick={() => deleteToday(it.id)}
+                            className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition-opacity"
+                            title="Apagar (engano)"
+                          >
+                            <X size={12} />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         );
       })()}
