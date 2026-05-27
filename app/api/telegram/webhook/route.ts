@@ -59,6 +59,7 @@ async function tgSendMenu(token: string, chatId: string) {
         [{ text: '🔍 Procura cliente', callback_data: 'mode:procura' }, { text: '📸 Só foto', callback_data: 'mode:foto' }],
         [{ text: '📌 Imóvel activo', callback_data: 'cmd:activo' }, { text: '🧹 Esquecer activo', callback_data: 'cmd:novo' }],
         [{ text: '📋 Últimos 5', callback_data: 'cmd:ultimos' }, { text: '📊 Briefing', callback_data: 'cmd:briefing' }],
+        [{ text: '📈 Os meus números', callback_data: 'cmd:numeros' }],
         [{ text: '⛔ Parar', callback_data: 'cmd:parar' }],
       ],
     },
@@ -202,6 +203,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  // Sprint 20 c1: /numeros — métricas honestas no chat
+  if (lower === '/numeros' || lower === '/n' || lower === '/metricas') {
+    return await handleNumeros(token, chatId, supabase, org);
+  }
+
   const keys: AIKeys = { google: org.ai_google_key ?? undefined, anthropic: org.ai_anthropic_key ?? undefined };
   if (!keys.google && !keys.anthropic) {
     await sendTelegramMessage(token, chatId, '❌ Sem chave de IA. /settings/ai no CRM.');
@@ -337,6 +343,7 @@ async function handleCallback(
   if (data === 'cmd:activo') return await handleActivo(token, chatId, supabase, org);
   if (data === 'cmd:ultimos') return await handleUltimos(token, chatId, supabase, org);
   if (data === 'cmd:briefing') return await handleBriefing(token, chatId, supabase, org);
+  if (data === 'cmd:numeros') return await handleNumeros(token, chatId, supabase, org);
   if (data === 'cmd:novo') {
     await clearBusy(supabase, org, { telegram_active_imovel_id: null, telegram_pending_action: null, telegram_mode: null });
     await sendTelegramMessage(token, chatId, '🧹 Limpo.');
@@ -372,6 +379,43 @@ async function handleUltimos(token: string, chatId: string, supabase: ReturnType
     return `${idx + 1}. ${tip}<b>${escapeHtml(String(label))}</b>${concelho}${preco}${estado}\n   <a href="${APP_URL}/imoveis/${rec.id}">Abrir ↗</a>`;
   });
   await sendTelegramMessage(token, chatId, `📋 <b>Últimos 5 imóveis</b>\n\n${lines.join('\n\n')}`);
+  return NextResponse.json({ ok: true });
+}
+
+async function handleNumeros(token: string, chatId: string, supabase: ReturnType<typeof createStaticAdminClient>, org: OrgRow) {
+  const { data: metrics, error: mErr } = await supabase.rpc('compute_honest_metrics_for_org', {
+    p_org: org.organization_id,
+    p_owner: null,
+    p_year: null,
+  });
+  if (mErr || !metrics) {
+    await sendTelegramMessage(token, chatId, `❌ Erro a obter métricas: ${mErr?.message || 'sem dados'}`);
+    return NextResponse.json({ ok: false }, { status: 200 });
+  }
+  const m = metrics as {
+    chq: { today: number; week: number; month: number };
+    meetings_visits_week: number;
+    open_proposals: { count: number; total_value_eur: number };
+    weighted_pipeline_eur: number;
+    goal: { year: number; annual_target_eur: number; ytd_target_eur: number; ytd_realized_eur: number; pct: number | null; semaphore: string };
+  };
+  const fmt = (n: number) => Math.round(n).toLocaleString('pt-PT');
+  const semIcon = m.goal.semaphore === 'green' ? '🟢' : m.goal.semaphore === 'amber' ? '🟡' : m.goal.semaphore === 'red' ? '🔴' : '⚪️';
+  const pctStr = m.goal.pct !== null && Number.isFinite(m.goal.pct) ? `${m.goal.pct.toFixed(1)}%` : '—';
+  const lines = [
+    `📊 <b>Os teus números (${m.goal.year})</b>`,
+    ``,
+    `👋 <b>CHQ</b>`,
+    `Hoje: ${m.chq.today} · Semana: ${m.chq.week} · Mês: ${m.chq.month}`,
+    ``,
+    `🤝 <b>Reuniões+Visitas (semana):</b> ${m.meetings_visits_week}`,
+    `📝 <b>Propostas abertas:</b> ${m.open_proposals.count} (${fmt(m.open_proposals.total_value_eur)} €)`,
+    `💰 <b>Receita ponderada:</b> ${fmt(m.weighted_pipeline_eur)} €`,
+    ``,
+    `${semIcon} <b>Meta:</b> ${fmt(m.goal.ytd_realized_eur)} / ${fmt(m.goal.ytd_target_eur)} € YTD · ${pctStr}`,
+    `🎯 Meta anual: ${fmt(m.goal.annual_target_eur)} €`,
+  ];
+  await sendTelegramMessage(token, chatId, lines.join('\n'));
   return NextResponse.json({ ok: true });
 }
 
