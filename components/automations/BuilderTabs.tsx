@@ -1,19 +1,20 @@
 'use client';
 
 /**
- * BuilderTabs — toggle Visual ↔ Linhas no builder de uma automação.
+ * BuilderTabs — toggle 3-way Escreve ↔ Linhas ↔ Visual.
  *
- * Sprint 4.0, commit 2.
+ * Sprint 9: adiciona modo Escreve (linguagem natural → IA gera automação).
+ * Sprint 4.0: modo Linhas (passo-a-passo com SchemaForm).
+ * Sprint 2.x: modo Visual (canvas React Flow + palette + branching).
  *
- * Estado local cliente. Default = Linhas (mais acessível para consultor
- * sem skills técnicas, alinhado com norte estratégico). Botão troca entre
- * as duas vistas. Ambas escrevem para a mesma BD via PATCH.
+ * Default = Escreve (norte estratégico: consultor sem skills técnicas).
  */
 
 import { useState } from 'react';
 import { Canvas } from './Canvas';
 import { Palette } from './Palette';
 import { LinearBuilder } from './LinearBuilder';
+import { WriteBuilder } from './WriteBuilder';
 
 interface Definition {
   nodes: never[];
@@ -25,10 +26,10 @@ export interface BuilderTabsProps {
   definition: Definition;
 }
 
-type Mode = 'linear' | 'visual';
+type Mode = 'write' | 'linear' | 'visual';
 
 export function BuilderTabs({ automationId, definition }: BuilderTabsProps) {
-  const [mode, setMode] = useState<Mode>('linear');
+  const [mode, setMode] = useState<Mode>('write');
 
   return (
     <div>
@@ -36,11 +37,18 @@ export function BuilderTabs({ automationId, definition }: BuilderTabsProps) {
         <div className="inline-flex rounded-md border border-slate-200 bg-white shadow-sm">
           <button
             type="button"
-            onClick={() => setMode('linear')}
+            onClick={() => setMode('write')}
             className={`px-4 py-1.5 text-sm font-medium rounded-l-md transition ${
-              mode === 'linear'
-                ? 'bg-violet-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50'
+              mode === 'write' ? 'bg-violet-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            ✨ Escreve
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('linear')}
+            className={`px-4 py-1.5 text-sm font-medium border-l border-slate-200 transition ${
+              mode === 'linear' ? 'bg-violet-600 text-white' : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
             ☰ Linhas
@@ -49,22 +57,24 @@ export function BuilderTabs({ automationId, definition }: BuilderTabsProps) {
             type="button"
             onClick={() => setMode('visual')}
             className={`px-4 py-1.5 text-sm font-medium rounded-r-md border-l border-slate-200 transition ${
-              mode === 'visual'
-                ? 'bg-violet-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50'
+              mode === 'visual' ? 'bg-violet-600 text-white' : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
             🔀 Visual
           </button>
         </div>
         <p className="text-[11px] text-slate-500">
-          {mode === 'linear'
-            ? 'Constrói passo a passo. Mais simples.'
-            : 'Arrasta da palette e liga os nós. Suporta ramificações.'}
+          {mode === 'write'
+            ? 'Descreve em português, a IA gera. Mais simples.'
+            : mode === 'linear'
+              ? 'Constrói passo a passo. Form inline.'
+              : 'Arrasta da palette e liga os nós. Para ramificações.'}
         </p>
       </div>
 
-      {mode === 'linear' ? (
+      {mode === 'write' ? (
+        <WriteBuilder automationId={automationId} />
+      ) : mode === 'linear' ? (
         <div className="rounded-lg border border-slate-200 bg-slate-50/30 p-4">
           <LinearBuilder automationId={automationId} definition={definition} />
         </div>
