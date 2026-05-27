@@ -21,7 +21,10 @@ const ACTIONS: Action[] = [
 ];
 
 interface LogCHQQuickProps {
-  dealId: string;
+  /** Use dealId quando o CHQ pertence a um deal específico (kanban, deal detail). */
+  dealId?: string;
+  /** Use contactId quando o CHQ não tem deal associado (ContactsList). */
+  contactId?: string;
   /** Sobrepor o botão trigger por defeito (opcional). */
   trigger?: React.ReactNode;
   onLogged?: (type: ChqType) => void;
@@ -33,7 +36,7 @@ interface LogCHQQuickProps {
  * Click rápido = grava sem descrição. Long-press / clique no "+" textarea =
  * permite adicionar nota antes de gravar.
  */
-export const LogCHQQuick: React.FC<LogCHQQuickProps> = ({ dealId, trigger, onLogged }) => {
+export const LogCHQQuick: React.FC<LogCHQQuickProps> = ({ dealId, contactId, trigger, onLogged }) => {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showNoteFor, setShowNoteFor] = useState<ChqType | null>(null);
@@ -57,9 +60,16 @@ export const LogCHQQuick: React.FC<LogCHQQuickProps> = ({ dealId, trigger, onLog
   }, [open]);
 
   const submit = async (type: ChqType, description?: string) => {
+    if (!dealId && !contactId) {
+      addToast('Falta deal ou contacto associado.', 'error');
+      return;
+    }
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/deals/${encodeURIComponent(dealId)}/activities`, {
+      const url = dealId
+        ? `/api/deals/${encodeURIComponent(dealId)}/activities`
+        : `/api/contacts/${encodeURIComponent(contactId!)}/activities`;
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ type, description: description?.trim() || null }),

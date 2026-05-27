@@ -3,6 +3,7 @@ import { Building2, Mail, Phone, Plus, Calendar, Pencil, Trash2, Globe, MoreHori
 import { Contact, Company, ContactSortableColumn } from '@/types';
 import { StageBadge } from './ContactsStageTabs';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { LogCHQQuick } from '@/features/boards/components/Kanban/LogCHQQuick';
 
 // Performance: reuse Intl formatters (they are relatively expensive to instantiate).
 const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
@@ -331,21 +332,25 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                            <button
-                                                onClick={() => openEditModal(contact)}
-                                                className="p-1.5 text-slate-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
-                                                aria-label={`Editar ${contact.name}`}
-                                            >
-                                                <Pencil size={16} aria-hidden="true" />
-                                            </button>
-                                            <button
-                                                onClick={() => setDeleteId(contact.id)}
-                                                className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-400 hover:text-red-500 transition-colors"
-                                                aria-label={`Excluir ${contact.name}`}
-                                            >
-                                                <Trash2 size={16} aria-hidden="true" />
-                                            </button>
+                                        <div className="flex justify-end items-center gap-1">
+                                            {/* Sprint 13 c2: LogCHQQuick sempre visível, registar CHQ ao contacto */}
+                                            <LogCHQQuick contactId={contact.id} />
+                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                <button
+                                                    onClick={() => openEditModal(contact)}
+                                                    className="p-1.5 text-slate-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
+                                                    aria-label={`Editar ${contact.name}`}
+                                                >
+                                                    <Pencil size={16} aria-hidden="true" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setDeleteId(contact.id)}
+                                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-400 hover:text-red-500 transition-colors"
+                                                    aria-label={`Excluir ${contact.name}`}
+                                                >
+                                                    <Trash2 size={16} aria-hidden="true" />
+                                                </button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

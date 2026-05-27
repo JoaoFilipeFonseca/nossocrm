@@ -1,15 +1,12 @@
 /**
- * POST /api/deals/[id]/activities
+ * POST /api/contacts/[id]/activities
  *
- * Sprint 11 c1 — Atom logging humano (CHQ).
+ * Sprint 13 c2 — CHQ associada a contacto sem deal específico.
+ * Schema deal_activities permite agora deal_id NULL desde que contact_id seja
+ * preenchido (constraint deal_activities_deal_or_contact_chk).
  *
- * Cria uma row em `deal_activities` com type ∈ {call,meeting,visit,whatsapp,email}.
- * Estes são os tipos que a RPC `compute_honest_metrics` conta como Conversa
- * Humana Qualificada. Sem este endpoint o CHQ na subaba Honestos mostra
- * apenas contactos novos.
- *
- * Auth: sessão Supabase. RLS valida org (política "Users can insert own org
- * deal activities" já existe).
+ * Auth: sessão Supabase. RLS de deal_activities valida org. Verificação
+ * adicional: contact pertence à org do user.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -32,7 +29,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   try {
-    const { id: dealId } = await params;
+    const { id: contactId } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -60,29 +57,28 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    // Verificar que o deal pertence à org do user (defesa em profundidade — RLS
-    // também protege, mas isto dá-nos erro 404 mais claro).
-    const { data: deal, error: dealError } = await supabase
-      .from('deals')
+    const { data: contact, error: contactError } = await supabase
+      .from('contacts')
       .select('id, organization_id')
-      .eq('id', dealId)
+      .eq('id', contactId)
       .maybeSingle();
-    if (dealError) {
-      return NextResponse.json({ error: dealError.message }, { status: 500 });
+    if (contactError) {
+      return NextResponse.json({ error: contactError.message }, { status: 500 });
     }
-    if (!deal || deal.organization_id !== profile.organization_id) {
-      return NextResponse.json({ error: 'Deal not found' }, { status: 404 });
+    if (!contact || contact.organization_id !== profile.organization_id) {
+      return NextResponse.json({ error: 'Contact not found' }, { status: 404 });
     }
 
     const payload = {
-      deal_id: dealId,
+      deal_id: null,
+      contact_id: contactId,
       organization_id: profile.organization_id,
       owner_id: user.id,
       type: parsed.data.type,
       description: parsed.data.description ?? null,
       metadata: {
         ...(parsed.data.metadata ?? {}),
-        via: parsed.data.metadata?.via || 'log-chq-quick',
+        via: parsed.data.metadata?.via || 'log-chq-quick-contact',
         logged_by: user.id,
       },
     };
