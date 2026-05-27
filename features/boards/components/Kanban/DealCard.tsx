@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { DealView } from '@/types';
 import { Building2, Hourglass, Trophy, XCircle } from 'lucide-react';
 import { ActivityStatusIcon } from './ActivityStatusIcon';
+import { LogCHQQuick } from './LogCHQQuick';
 import { priorityAriaLabelPtBr } from '@/lib/utils/priority';
 
 interface DealCardProps {
@@ -272,7 +273,8 @@ const DealCardComponent: React.FC<DealCardProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-0.5">
+          {!isClosed && <LogCHQQuick dealId={deal.id} />}
           <ActivityStatusIcon
             status={activityStatus}
             type={deal.nextActivity?.type}
