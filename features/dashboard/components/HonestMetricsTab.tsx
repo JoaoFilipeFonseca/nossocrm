@@ -140,12 +140,37 @@ const MetricCard: React.FC<MetricCardProps> = ({ icon: Icon, title, value, subti
   );
 };
 
+type ChqBreakdownDay = {
+  date: string;
+  day_of_week: number;
+  is_today: boolean;
+  count: number;
+  activities: number;
+  new_contacts: number;
+};
+
+const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+
 export const HonestMetricsTab: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number>(currentYear);
   const [data, setData] = useState<HonestMetrics | null>(null);
+  const [breakdown, setBreakdown] = useState<ChqBreakdownDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/dashboard/chq-breakdown?days=7', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        if (!cancelled && Array.isArray(j.breakdown)) setBreakdown(j.breakdown);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [year]);
 
   useEffect(() => {
     let cancelled = false;
@@ -265,6 +290,60 @@ export const HonestMetricsTab: React.FC = () => {
           tooltip="Σ (valor × probabilidade/100) dos deals abertos."
         />
       </div>
+
+      {/* Sprint 16 c1: CHQ por dia (últimos 7 dias) */}
+      {breakdown.length > 0 && (() => {
+        const maxCount = Math.max(1, ...breakdown.map((b) => b.count));
+        const weekTotal = breakdown.reduce((acc, b) => acc + b.count, 0);
+        const weekAvg = weekTotal / breakdown.length;
+        return (
+          <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <Phone className="h-4 w-4 text-primary-500" />
+                CHQ esta semana
+              </h3>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Total <strong className="text-slate-900 dark:text-white">{weekTotal}</strong> · Média/dia{' '}
+                <strong className="text-slate-900 dark:text-white">{weekAvg.toFixed(1)}</strong>
+              </div>
+            </div>
+            <div className="flex items-end justify-between gap-2 h-32">
+              {breakdown.map((b) => {
+                const heightPct = (b.count / maxCount) * 100;
+                const barColor = b.is_today
+                  ? 'bg-primary-500'
+                  : b.count === 0
+                    ? 'bg-slate-200 dark:bg-white/10'
+                    : 'bg-primary-300 dark:bg-primary-500/40';
+                const dayLabel = WEEKDAY_LABELS[(b.day_of_week - 1) % 7];
+                return (
+                  <div key={b.date} className="flex-1 flex flex-col items-center gap-1 min-w-0">
+                    <div className="text-xs font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
+                      {b.count}
+                    </div>
+                    <div className="w-full flex items-end h-20">
+                      <div
+                        className={`w-full rounded-t-md ${barColor} transition-all`}
+                        style={{ height: `${Math.max(4, heightPct)}%` }}
+                        title={`${b.date}: ${b.count} CHQ (${b.activities} activities + ${b.new_contacts} contactos novos)`}
+                      />
+                    </div>
+                    <div className={`text-[10px] ${b.is_today ? 'text-primary-600 dark:text-primary-400 font-bold' : 'text-slate-400'}`}>
+                      {dayLabel}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-3 text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-3">
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-primary-500"></span> Hoje</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-primary-300 dark:bg-primary-500/40"></span> Outros dias</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-slate-200 dark:bg-white/10"></span> Sem CHQ</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Gap meta com semáforo */}
       <div className={`rounded-2xl border p-5 ${semColors.bg} ${semColors.border}`}>
