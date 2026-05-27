@@ -16,6 +16,7 @@ type Props = {
 export const CallUploadModal: React.FC<Props> = ({ isOpen, onClose, dealId, contactId, onProcessed }) => {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const recordRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [stage, setStage] = useState<'idle' | 'uploading' | 'transcribing' | 'done' | 'error'>('idle');
@@ -79,10 +80,21 @@ export const CallUploadModal: React.FC<Props> = ({ isOpen, onClose, dealId, cont
 
         <div className="p-4 space-y-4">
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Carregue a gravação (voice memo do telemóvel) e a IA vai transcrever, resumir e extrair próximas acções automaticamente.
+            Grave directamente no telemóvel ou carregue uma voice memo. A IA transcreve, resume e extrai próximas acções automaticamente.
           </p>
 
-          <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-6 text-center hover:border-primary-400 transition-colors">
+          <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-4 sm:p-6 text-center hover:border-primary-400 transition-colors">
+            {/* Input gravador nativo: capture forca iOS/Android a abrir app de voz */}
+            <input
+              ref={recordRef}
+              type="file"
+              accept="audio/*"
+              capture
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+              disabled={uploading}
+            />
+            {/* Input upload normal (voice memo ja existente, etc) */}
             <input
               ref={fileRef}
               type="file"
@@ -92,21 +104,32 @@ export const CallUploadModal: React.FC<Props> = ({ isOpen, onClose, dealId, cont
               disabled={uploading}
             />
             {!file ? (
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="w-full flex flex-col items-center gap-2 text-slate-600 dark:text-slate-300"
-              >
-                <Upload className="h-8 w-8 text-slate-400" />
-                <span className="text-sm">Carregar ficheiro áudio</span>
-                <span className="text-xs text-slate-400">m4a, mp3, wav, ogg, webm (até 100 MB)</span>
-              </button>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => recordRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-500 text-white rounded-xl py-3 px-4 font-semibold transition-colors"
+                >
+                  <Mic className="h-5 w-5" />
+                  Gravar chamada agora
+                </button>
+                <span className="text-xs text-slate-400">No telemóvel abre o gravador nativo. No browser desktop pede ficheiro.</span>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-300 hover:text-primary-500 py-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  ou carregar ficheiro existente
+                </button>
+                <span className="text-[11px] text-slate-400">m4a, mp3, wav, ogg, webm (até 100 MB)</span>
+              </div>
             ) : (
               <div className="space-y-2">
                 <div className="text-sm font-medium text-slate-900 dark:text-white truncate">{file.name}</div>
                 <div className="text-xs text-slate-500">{sizeMB} MB · {file.type || 'audio'}</div>
                 <button
-                  onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = ''; }}
+                  onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = ''; if (recordRef.current) recordRef.current.value = ''; }}
                   disabled={uploading}
                   className="text-xs text-slate-500 hover:text-rose-500 underline-offset-2 hover:underline"
                 >
