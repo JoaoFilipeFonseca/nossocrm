@@ -170,7 +170,7 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAt = useRef<number>(Date.now());
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, getNodes, getEdges, setNodes: rfSetNodes, setEdges: rfSetEdges } = useReactFlow();
 
   // ESC sai do fullscreen
   useEffect(() => {
@@ -256,6 +256,20 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
+
+  const deleteSelected = useCallback(() => {
+    const selectedNodes = getNodes().filter((n) => n.selected);
+    const selectedEdges = getEdges().filter((e) => e.selected);
+    if (selectedNodes.length === 0 && selectedEdges.length === 0) {
+      // sem selecção: avisa
+      alert('Clica primeiro num nó ou ligação para o seleccionar (fica com borda mais escura), depois carrega aqui ou em Delete/Backspace.');
+      return;
+    }
+    const nodeIds = new Set(selectedNodes.map((n) => n.id));
+    rfSetNodes((nds) => nds.filter((n) => !n.selected));
+    rfSetEdges((eds) => eds.filter((e) => !e.selected && !nodeIds.has(e.source) && !nodeIds.has(e.target)));
+    scheduleSave();
+  }, [getNodes, getEdges, rfSetNodes, rfSetEdges, scheduleSave]);
 
   const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -348,14 +362,24 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
         ) : null}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setFullscreen((v) => !v)}
-        className="absolute top-2 right-2 z-10 text-[11px] bg-white/95 rounded-md px-2.5 py-1 border border-slate-200 shadow-sm hover:bg-slate-50"
-        title={fullscreen ? 'Sair do ecrã cheio (ESC)' : 'Ecrã cheio'}
-      >
-        {fullscreen ? '✕ Sair' : '⛶ Ecrã cheio'}
-      </button>
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={deleteSelected}
+          className="text-[11px] bg-white/95 rounded-md px-2.5 py-1 border border-red-200 text-red-700 shadow-sm hover:bg-red-50"
+          title="Apaga o nó ou ligação seleccionada (também funciona com Delete / Backspace)"
+        >
+          🗑 Apagar selecção
+        </button>
+        <button
+          type="button"
+          onClick={() => setFullscreen((v) => !v)}
+          className="text-[11px] bg-white/95 rounded-md px-2.5 py-1 border border-slate-200 shadow-sm hover:bg-slate-50"
+          title={fullscreen ? 'Sair do ecrã cheio (ESC)' : 'Ecrã cheio'}
+        >
+          {fullscreen ? '✕ Sair' : '⛶ Ecrã cheio'}
+        </button>
+      </div>
 
       {hasNodesNoEdges ? (
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-10 max-w-md text-center bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 shadow">

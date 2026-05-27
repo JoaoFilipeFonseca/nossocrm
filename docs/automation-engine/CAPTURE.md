@@ -119,6 +119,71 @@ A maior parte destes precisa de `trigger.cron` (Sprint 4.3) + `action.run_ai` (4
 
 ---
 
+## Sprint 8 — ACM (Análise Comparativa de Mercado) integrada no CRM
+
+**Pedido literal do João (27 Mai 2026):**
+> "Fazer ACM, deve estar no CRM e o cliente para quem o fiz registado... depois o modo como deve ser feito, dou link se for Fotocasa, coloco informação Idealista e Confidencial Imobiliário, estou a dizer depois temos que montar o plano sério e fiável, ter campo para 5 a 10 links de comparáveis para leres tudo fazeres a tua análise"
+
+**Conceito:** ferramenta no CRM (não só ferramenta autónoma como /avaliar) que produz uma ACM séria, fiável, ligada a um contacto/imóvel/deal.
+
+**Fluxo proposto:**
+1. Botão "Nova ACM" em ficha de imóvel, contacto ou deal (FK ao registo)
+2. Inputs do consultor:
+   - Imóvel-alvo: morada, tipologia, área, andar, características (ou puxa de `imoveis` se já existe)
+   - 5-10 URLs de comparáveis (Idealista, Fotocasa, Imovirtual, Casa Sapo)
+   - Dados Confidencial Imobiliário (preço médio/m² da zona, opcional CSV upload)
+   - Notas livres do consultor (contexto local, motivações, especificidades)
+3. Backend:
+   - Para cada URL, scrape via Apify (RAG-web-browser) ou fetch + parser HTML simples
+   - Extrai: preço, área, €/m², características, fotos URL, dias no mercado
+   - Normaliza unidades, detecta outliers, agrupa por similitude
+4. IA (Gemini/Claude via lib/ai/router.ts):
+   - Lê todos os comparáveis + dados confidencial + notas
+   - Devolve análise estruturada: range de preço sugerido (low/mid/high com justificação), comparáveis ordenados por similitude, factores de ajuste, recomendação de estratégia (puxar preço, baixar, esperar)
+5. Output:
+   - PDF profissional com Brand Kit do João (logo, cores, AMI, contactos)
+   - Versão online partilhável com cliente (URL único)
+   - Guarda em `crm_acms` (tabela nova) ligado a `contact_id` / `imovel_id` / `deal_id`
+   - Adiciona timeline event "ACM produzida" no lead_eventos
+6. Histórico:
+   - Página `/clientes/[id]/acms` lista ACMs feitas para esse cliente
+   - Re-correr análise (snapshot + diff)
+
+**Esquema BD novo:**
+```sql
+crm_acms (
+  id uuid primary key,
+  organization_id uuid references organizations,
+  created_by uuid references profiles,
+  contact_id uuid references contacts,
+  imovel_id uuid references imoveis,
+  deal_id uuid references deals,
+  target_address text,
+  target_specs jsonb,
+  comparable_urls text[],
+  comparable_data jsonb, -- raspagem normalizada
+  confidencial_data jsonb,
+  consultant_notes text,
+  ai_analysis jsonb, -- estrutura completa do output IA
+  price_range_low numeric,
+  price_range_mid numeric,
+  price_range_high numeric,
+  shareable_token text unique,
+  pdf_url text,
+  created_at timestamptz default now()
+)
+```
+
+**Multi-tenant:** RLS por organization_id desde o dia 1 (regra do projecto).
+
+**Por que importa:** uma ACM séria diferencia o consultor da concorrência. Hoje o João faz isto manualmente ou no Excel. Automatizado + ligado ao CRM = poupa horas e melhora qualidade da angariação.
+
+**Estimativa:** 5-7 commits, ~3 sessões. Maior peso é o scraper robusto + o prompt IA fiável.
+
+**Dependência:** `action.run_ai` (Sprint 4.2) é pré-requisito do passo IA. Sprint 8 só faz sentido depois de 4.2.
+
+---
+
 ## Item B-008 (já existente)
 
 `/settings/automation-logs` desalinhado do novo schema. Listar execuções e nodes a partir de `automation_executions` + `automation_node_executions`. Sprint operacional, sem urgência.
