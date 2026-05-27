@@ -299,6 +299,12 @@ async function handleCallback(
   org: OrgRow,
 ) {
   const data = cb.data ?? '';
+
+  // Sprint 4.1 — human_approval: <approved|rejected|edited>:<token>
+  if (data.startsWith('approved:') || data.startsWith('rejected:') || data.startsWith('edited:')) {
+    return await handleHumanApprovalCallback(cb, data, token, chatId, supabase);
+  }
+
   await tgAnswerCallback(token, cb.id);
 
   if (data.startsWith('mode:')) {
@@ -724,4 +730,93 @@ function formatPreco(v: number): string {
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// --- SPRINT 4.1: HUMAN APPROVAL CALLBACK ---
+
+async function handleHumanApprovalCallback(
+  cb: TelegramCallbackQuery,
+  data: string,
+  token: string,
+  chatId: string,
+  supabase: ReturnType<typeof createStaticAdminClient>,
+) {
+  const [decision, approvalToken] = data.split(':');
+  if (!decision || !approvalToken || !['approved', 'rejected', 'edited'].includes(decision)) {
+    await tgAnswerCallback(token, cb.id, 'Acção inválida');
+    return NextResponse.json({ ok: true });
+  }
+
+  // Procura execution suspensa
+  const { data: exec } = await supabase
+    .from('automation_executions')
+    .select('id, organization_id, variables, resume_node_id')
+    .eq('pending_approval_token', approvalToken)
+    .eq('status', 'waiting')
+    .maybeSingle();
+
+  if (!exec) {
+    await tgAnswerCallback(token, cb.id, 'Já processado ou expirado');
+    return NextResponse.json({ ok: true });
+  }
+
+  // Grava decisão nas variables (executor vai ler no resume)
+  const variables = (exec.variables ?? {}) as Record<string, { output: Record<string, unknown> }>;
+  const nodeId = exec.resume_node_id ?? '';
+  const prev = variables[nodeId]?.output ?? {};
+  // deno-lint-ignore no-explicit-any
+  const fromAny = cb.from as any;
+  variables[nodeId] = {
+    output: {
+      ...prev,
+      _branch_taken: decision,
+      _human_approval: {
+        decision,
+        decided_at: new Date().toISOString(),
+        by: fromAny?.username ?? fromAny?.first_name ?? `user:${cb.from.id}`,
+      },
+    },
+  };
+
+  // Limpa token + marca resume imediato
+  await supabase.from('automation_executions').update({
+    pending_approval_token: null,
+    resume_at: new Date().toISOString(),
+    variables,
+    status: 'waiting',
+  }).eq('id', exec.id);
+
+  // Cancela schedule antigo + insere novo para resume imediato
+  await supabase.from('automation_schedules').update({ status: 'cancelled' })
+    .eq('execution_id', exec.id).eq('status', 'pending');
+  await supabase.from('automation_schedules').insert({
+    execution_id: exec.id,
+    organization_id: exec.organization_id,
+    scheduled_for: new Date().toISOString(),
+    resume_node_id: nodeId,
+    status: 'pending',
+  });
+
+  // Acknowledge + edita mensagem
+  const label = decision === 'approved' ? '✅ Aprovado' : decision === 'rejected' ? '❌ Rejeitado' : '✎ Marcado para editar';
+  await tgAnswerCallback(token, cb.id, label);
+
+  if (cb.message) {
+    const originalText = (cb.message as { text?: string }).text ?? '';
+    const who = fromAny?.username ?? fromAny?.first_name ?? `user:${cb.from.id}`;
+    const newText = `${originalText}\n\n<b>${label}</b> por ${who} a ${new Date().toLocaleString('pt-PT')}`;
+    await fetch(`${TELEGRAM_API}/bot${token}/editMessageText`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: cb.message.chat.id,
+        message_id: (cb.message as { message_id?: number }).message_id,
+        text: newText,
+        parse_mode: 'HTML',
+        reply_markup: { inline_keyboard: [] },
+      }),
+    }).catch(() => {});
+  }
+
+  return NextResponse.json({ ok: true, automation_human_approval: { execution_id: exec.id, decision } });
 }

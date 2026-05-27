@@ -27,18 +27,18 @@ interface TelegramUpdate {
   };
 }
 
+let cachedCronSecret: string | null = null;
+// deno-lint-ignore no-explicit-any
+async function loadCronSecret(supabase: any): Promise<string | null> {
+  if (cachedCronSecret) return cachedCronSecret;
+  const { data, error } = await supabase.rpc("get_automation_cron_secret");
+  if (error || !data) return null;
+  cachedCronSecret = data as string;
+  return cachedCronSecret;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("OK", { status: 200 });
-
-  // Validação do secret na URL (?secret=...)
-  const url = new URL(req.url);
-  const expectedSecret = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") ?? "";
-  const providedSecret = url.searchParams.get("secret") ?? req.headers.get("x-telegram-bot-api-secret-token") ?? "";
-  if (!expectedSecret || providedSecret !== expectedSecret) {
-    // Não devolve 401 — Telegram interpreta como falha e faz retry. Devolve 200 silencioso.
-    console.warn("[telegram-callback] secret mismatch", providedSecret.slice(0, 4));
-    return new Response("ok", { status: 200 });
-  }
 
   const supabaseUrl = Deno.env.get("CRM_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL") ?? "";
   const serviceKey = Deno.env.get("CRM_SUPABASE_SECRET_KEY") ?? Deno.env.get("CRM_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -47,6 +47,16 @@ Deno.serve(async (req) => {
     return new Response("ok", { status: 200 });
   }
   const supabase = createClient(supabaseUrl, serviceKey);
+
+  // Validação do secret: aceita via ?secret=... ou X-Telegram-Bot-Api-Secret-Token header.
+  // Secret partilhado é o automation_cron_secret (mesmo usado pelos crons).
+  const url = new URL(req.url);
+  const expectedSecret = await loadCronSecret(supabase);
+  const providedSecret = url.searchParams.get("secret") ?? req.headers.get("x-telegram-bot-api-secret-token") ?? "";
+  if (!expectedSecret || providedSecret !== expectedSecret) {
+    console.warn("[telegram-callback] secret mismatch");
+    return new Response("ok", { status: 200 });
+  }
 
   let update: TelegramUpdate;
   try { update = await req.json(); } catch { return new Response("ok", { status: 200 }); }

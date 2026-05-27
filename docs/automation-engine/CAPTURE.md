@@ -119,6 +119,42 @@ A maior parte destes precisa de `trigger.cron` (Sprint 4.3) + `action.run_ai` (4
 
 ---
 
+## Sprint 9 — Modo "Conversa com IA" (gerador linguagem natural → automação)
+
+**Pedido literal do João (27 Mai 2026 noite):**
+> "E se eu em vez do que estás a criar pudesse escrever 'automação: após leads entrar enviar mensagem após 3 minutos saudação e agradecimentos, passado 2 dias voltar a enviar mensagem, email e lembrar para ligar'... ou escolher: telefone e à frente acção, email e à frente o que faz, se abre ou não acções para cada caso. Conseguimos assim? Pode ser uma terceira opção ainda mais simples."
+
+**Conceito:** terceiro modo de construir automações, mais acessível que Linhas. 3 variantes consideradas:
+
+### A — Modo "Escreve" (recomendado, possível agora)
+- Textarea grande: "Escreve a tua automação em português normal"
+- Botão "Gerar automação"
+- Backend: usa `action.run_ai` (já existe) com prompt instruído sobre os 11 átomos disponíveis + schema
+- IA devolve JSON com `nodes` + `edges`
+- Pré-visualização no canvas Visual antes de gravar
+- Botão "Aceitar" → grava `definition` na BD; "Refinar" → adicionar instruções e re-gerar
+- **Pré-requisitos prontos:** run_ai ✅, schema atómico documentado ✅
+- **Estimativa:** 3-4 commits ~2h
+- **Trabalho técnico:** definir o prompt sistema (lista dos átomos, configSchemas, exemplos de boas automações), validador do JSON gerado contra schemas, integração com BuilderTabs como nova tab "✨ Escreve".
+
+### B — Tabela canal × acção (mais simples que receita)
+Linhas com dropdowns por coluna:
+| Canal | Acção | Quando | Se | Então |
+|---|---|---|---|---|
+| Telegram | Saudação | 3 min após trigger | — | — |
+| WhatsApp | Lembrete | 2 dias depois | não abriu | ligar |
+
+Menos flexível que Linhas, mais rápido para casos comuns. Por trás constrói os mesmos nodes/edges.
+
+### C — Templates parametrizados
+Receitas pré-construídas (saudação 3min + follow-up 2d, re-engagement 14d, etc.) onde o consultor preenche só os parâmetros (mensagem, tempos). Já tens 4 templates no wizard `/automacoes/nova`. Expandir para 20+ cobrindo casos reais imobiliário.
+
+**Recomendação:** Variante A (modo Escreve). Encaixa perfeitamente com o norte estratégico "consultor escreve em português e a IA monta". É o produto que diferencia o Foco Imo de n8n/Zapier.
+
+**Ordem natural após 4.1 fechar:** Sprint 9.A directo.
+
+---
+
 ## Sprint 8 — ACM (Análise Comparativa de Mercado) integrada no CRM
 
 **Pedido literal do João (27 Mai 2026):**
