@@ -123,9 +123,18 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
     const [showContactInfo, setShowContactInfo] = useState(false);
     const [activeTab, setActiveTab] = useState('chat');
     // Collapse do painel direito (Workspace) — persistido em localStorage para a próxima sessão
+    // Sprint 12 c2 — B-001: default colapsado em viewports < lg (1024px) para
+    // não esmagar as actividades. Utilizador escolhe expandir e localStorage
+    // memoriza a preferência (não força a cada sessão).
     const [workspaceCollapsed, setWorkspaceCollapsed] = useState<boolean>(() => {
-        if (typeof window === 'undefined') return false;
-        try { return localStorage.getItem('foco_workspace_collapsed') === '1'; } catch { return false; }
+        if (typeof window === 'undefined') return true;
+        try {
+            const stored = localStorage.getItem('foco_workspace_collapsed');
+            if (stored !== null) return stored === '1';
+            return window.innerWidth < 1024;
+        } catch {
+            return true;
+        }
     });
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -1398,7 +1407,10 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                         </div>
 
                         {/* COL 2: Workspace (Fixed Width, collapsible) */}
-                        <div className={`${workspaceCollapsed ? 'w-0 overflow-hidden border-l-0' : 'w-[360px]'} flex flex-col min-h-0 bg-slate-900/20 border-l border-white/5 relative transition-[width] duration-200 ease-out`}>
+                        <div className={`${workspaceCollapsed
+                            ? 'w-0 overflow-hidden border-l-0'
+                            : 'fixed inset-y-0 right-0 z-30 w-full max-w-md shadow-2xl md:static md:max-w-none md:w-[300px] xl:w-[360px]'
+                            } flex flex-col min-h-0 bg-slate-900/95 md:bg-slate-900/20 border-l border-white/5 relative md:transition-[width] md:duration-200 md:ease-out`}>
                             {/* Workspace Tabs */}
                             <div className="shrink-0 flex items-center px-4 h-14 border-b border-white/5 gap-4">
                                 {['chat', 'notas', 'scripts', 'files'].map((tab) => (
