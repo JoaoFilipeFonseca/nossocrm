@@ -16,3 +16,4 @@ export { actionRunAi } from './actions/run-ai';
 
 export { logicWaitFixed } from './logic/wait-fixed';
 export { logicCondition } from './logic/condition';
+export { logicHumanApproval } from './logic/human-approval';

@@ -265,6 +265,55 @@ const ATOMS: Record<string, AtomExecFn> = {
     } finally { clearTimeout(timer); }
   },
 
+  "logic.human_approval": async (ctx) => {
+    const message = String(ctx.config.message ?? "").trim();
+    if (!message) throw new Error("message é obrigatório");
+    const approveLabel = String(ctx.config.approve_label ?? "✅ Aprovar");
+    const rejectLabel = String(ctx.config.reject_label ?? "❌ Rejeitar");
+    const editLabel = typeof ctx.config.edit_label === "string" && ctx.config.edit_label ? String(ctx.config.edit_label) : null;
+    const timeoutHours = Number(ctx.config.timeout_hours ?? 24);
+
+    const { data: settings } = await ctx.supabase
+      .from("organization_settings")
+      .select("telegram_crm_bot_token, telegram_crm_chat_id")
+      .eq("organization_id", ctx.organizationId)
+      .single();
+    if (!settings?.telegram_crm_bot_token || !settings?.telegram_crm_chat_id) {
+      throw new Error("telegram_crm_bot_token/chat_id em falta em organization_settings");
+    }
+
+    // Token único para esta aprovação
+    const token = crypto.randomUUID().replace(/-/g, "");
+    const inlineKeyboard: Array<Array<{ text: string; callback_data: string }>> = [[
+      { text: approveLabel, callback_data: `approved:${token}` },
+      { text: rejectLabel, callback_data: `rejected:${token}` },
+    ]];
+    if (editLabel) inlineKeyboard.push([{ text: editLabel, callback_data: `edited:${token}` }]);
+
+    const res = await fetch(`https://api.telegram.org/bot${settings.telegram_crm_bot_token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: settings.telegram_crm_chat_id,
+        text: `🙋 <b>Aprovação pedida</b>\n\n${message}`,
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: inlineKeyboard },
+      }),
+    });
+    const json = await res.json().catch(() => ({})) as { ok?: boolean; result?: { message_id?: number }; description?: string };
+    if (!res.ok || !json.ok) throw new Error(`Telegram erro: ${json.description ?? res.status}`);
+
+    const resumeAt = new Date(Date.now() + timeoutHours * 3600 * 1000).toISOString();
+    return {
+      _suspend: true,
+      _resumeAt: resumeAt,
+      _approval_token: token,
+      _branch_taken: "timeout", // valor inicial; sobreposto se humano decidir antes do timeout
+      message_id: json.result?.message_id ?? 0,
+      sent_at: new Date().toISOString(),
+    };
+  },
+
   "logic.condition": async (ctx) => {
     const op = String(ctx.config.operator ?? "eq");
     const left = ctx.config.left;
@@ -501,13 +550,15 @@ Deno.serve(async (req) => {
       }
 
       // Detecta _suspend
-      const out = output as { _suspend?: boolean; _resumeAt?: string };
+      const out = output as { _suspend?: boolean; _resumeAt?: string; _approval_token?: string };
       if (out?._suspend === true && out._resumeAt) {
         suspended = true;
         resumeAt = out._resumeAt;
-        await supabase.from("automation_executions").update({
+        const execUpdate: Record<string, unknown> = {
           status: "waiting", current_node_id: node.id, resume_node_id: node.id, resume_at: resumeAt, variables,
-        }).eq("id", executionId);
+        };
+        if (out._approval_token) execUpdate.pending_approval_token = out._approval_token;
+        await supabase.from("automation_executions").update(execUpdate).eq("id", executionId);
         await supabase.from("automation_schedules").insert({
           execution_id: executionId, organization_id: automation.organization_id, scheduled_for: resumeAt,
           resume_node_id: node.id, status: "pending",

@@ -173,6 +173,24 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
     },
   },
   {
+    id: 'logic.human_approval',
+    category: 'logic',
+    name: 'Aprovação humana',
+    icon: '🙋',
+    description: 'Pede decisão no Telegram. Bifurca em approved/rejected/edited.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        approve_label: { type: 'string' },
+        reject_label: { type: 'string' },
+        edit_label: { type: 'string' },
+        timeout_hours: { type: 'integer', minimum: 1 },
+      },
+      required: ['message'],
+    },
+  },
+  {
     id: 'logic.condition',
     category: 'logic',
     name: 'Se / Então',
