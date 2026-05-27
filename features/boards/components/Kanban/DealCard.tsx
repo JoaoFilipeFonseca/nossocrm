@@ -4,6 +4,7 @@ import { DealView } from '@/types';
 import { Building2, Hourglass, Trophy, XCircle } from 'lucide-react';
 import { ActivityStatusIcon } from './ActivityStatusIcon';
 import { LogCHQQuick } from './LogCHQQuick';
+import { daysInStage, stageAgeBucket } from '@/features/boards/utils';
 import { priorityAriaLabelPtBr } from '@/lib/utils/priority';
 
 interface DealCardProps {
@@ -226,6 +227,27 @@ const DealCardComponent: React.FC<DealCardProps> = ({
             ⏸ AUTO PAUSADAS
           </span>
         )}
+        {/* Sprint 14 c1: badge "Xd na fase" — só em deals abertos */}
+        {!isClosed && (() => {
+          const days = daysInStage(deal);
+          if (days < 1) return null;
+          const bucket = stageAgeBucket(days);
+          const colorClass = bucket === 'cold'
+            ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-700/50'
+            : bucket === 'warm'
+              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700/50'
+              : bucket === 'fresh'
+                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700/50'
+                : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/5';
+          return (
+            <span
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${colorClass}`}
+              title={`Está nesta fase há ${days} dia${days === 1 ? '' : 's'}`}
+            >
+              {days}d
+            </span>
+          );
+        })()}
         {/* Regular tags */}
         {deal.tags.slice(0, isClosed ? 1 : 2).map((tag, index) => (
           <span
