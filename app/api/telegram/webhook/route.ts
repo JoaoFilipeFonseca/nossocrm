@@ -59,7 +59,7 @@ async function tgSendMenu(token: string, chatId: string) {
         [{ text: '🔍 Procura cliente', callback_data: 'mode:procura' }, { text: '📸 Só foto', callback_data: 'mode:foto' }],
         [{ text: '📌 Imóvel activo', callback_data: 'cmd:activo' }, { text: '🧹 Esquecer activo', callback_data: 'cmd:novo' }],
         [{ text: '📋 Últimos 5', callback_data: 'cmd:ultimos' }, { text: '📊 Briefing', callback_data: 'cmd:briefing' }],
-        [{ text: '📈 Os meus números', callback_data: 'cmd:numeros' }],
+        [{ text: '📈 Os meus números', callback_data: 'cmd:numeros' }, { text: '✅ Registar CHQ', callback_data: 'cmd:chq' }],
         [{ text: '⛔ Parar', callback_data: 'cmd:parar' }],
       ],
     },
@@ -208,6 +208,11 @@ export async function POST(request: NextRequest) {
     return await handleNumeros(token, chatId, supabase, org);
   }
 
+  // Sprint 21 c1: /chq — registar CHQ rápido via Telegram
+  if (lower === '/chq' || lower.startsWith('/chq ')) {
+    return await handleChqStart(token, chatId, supabase, org);
+  }
+
   const keys: AIKeys = { google: org.ai_google_key ?? undefined, anthropic: org.ai_anthropic_key ?? undefined };
   if (!keys.google && !keys.anthropic) {
     await sendTelegramMessage(token, chatId, '❌ Sem chave de IA. /settings/ai no CRM.');
@@ -344,6 +349,15 @@ async function handleCallback(
   if (data === 'cmd:ultimos') return await handleUltimos(token, chatId, supabase, org);
   if (data === 'cmd:briefing') return await handleBriefing(token, chatId, supabase, org);
   if (data === 'cmd:numeros') return await handleNumeros(token, chatId, supabase, org);
+  if (data === 'cmd:chq') return await handleChqStart(token, chatId, supabase, org);
+  if (data.startsWith('chq:deal:')) {
+    const dealId = data.slice('chq:deal:'.length);
+    return await handleChqPickType(token, chatId, supabase, org, dealId);
+  }
+  if (data.startsWith('chq:do:')) {
+    const [dealId, type] = data.slice('chq:do:'.length).split('|');
+    return await handleChqRecord(token, chatId, supabase, org, dealId, type);
+  }
   if (data === 'cmd:novo') {
     await clearBusy(supabase, org, { telegram_active_imovel_id: null, telegram_pending_action: null, telegram_mode: null });
     await sendTelegramMessage(token, chatId, '🧹 Limpo.');
@@ -380,6 +394,128 @@ async function handleUltimos(token: string, chatId: string, supabase: ReturnType
   });
   await sendTelegramMessage(token, chatId, `📋 <b>Últimos 5 imóveis</b>\n\n${lines.join('\n\n')}`);
   return NextResponse.json({ ok: true });
+}
+
+async function handleChqStart(token: string, chatId: string, supabase: ReturnType<typeof createStaticAdminClient>, org: OrgRow) {
+  // Lista 8 deals abertos mais recentes da org
+  const { data: deals } = await supabase
+    .from('deals')
+    .select('id, title, value, updated_at')
+    .eq('organization_id', org.organization_id)
+    .is('deleted_at', null)
+    .eq('is_won', false)
+    .eq('is_lost', false)
+    .order('updated_at', { ascending: false })
+    .limit(8);
+
+  if (!deals || deals.length === 0) {
+    await sendTelegramMessage(token, chatId, '❌ Sem deals abertos. Cria um deal primeiro no CRM.');
+    return NextResponse.json({ ok: true });
+  }
+
+  const keyboard = deals.map((d) => [{
+    text: `${(d.title || 'Sem título').slice(0, 40)}${d.value ? ` · ${Math.round(d.value).toLocaleString('pt-PT')}€` : ''}`,
+    callback_data: `chq:deal:${d.id}`,
+  }]);
+  keyboard.push([{ text: '⛔ Cancelar', callback_data: 'cmd:cancelar' }]);
+
+  await fetch(`${TELEGRAM_API}/bot${(await getToken(supabase, org))}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: '📊 <b>Registar CHQ</b>\nQual deal?',
+      parse_mode: 'HTML',
+      reply_markup: { inline_keyboard: keyboard },
+    }),
+  });
+  return NextResponse.json({ ok: true });
+}
+
+async function handleChqPickType(token: string, chatId: string, supabase: ReturnType<typeof createStaticAdminClient>, org: OrgRow, dealId: string) {
+  const { data: deal } = await supabase
+    .from('deals')
+    .select('id, title, organization_id')
+    .eq('id', dealId)
+    .eq('organization_id', org.organization_id)
+    .maybeSingle();
+
+  if (!deal) {
+    await sendTelegramMessage(token, chatId, '❌ Deal não encontrado.');
+    return NextResponse.json({ ok: true });
+  }
+
+  const types: Array<[string, string]> = [
+    ['📞 Chamada', 'call'],
+    ['🤝 Reunião', 'meeting'],
+    ['📍 Visita', 'visit'],
+    ['💬 WhatsApp', 'whatsapp'],
+    ['✉️ Email', 'email'],
+  ];
+  const keyboard = types.map(([label, t]) => [{ text: label, callback_data: `chq:do:${dealId}|${t}` }]);
+  keyboard.push([{ text: '⛔ Cancelar', callback_data: 'cmd:cancelar' }]);
+
+  const botToken = await getToken(supabase, org);
+  await fetch(`${TELEGRAM_API}/bot${botToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: `📊 <b>${(deal.title || 'Sem título').slice(0, 60)}</b>\nQue tipo de CHQ?`,
+      parse_mode: 'HTML',
+      reply_markup: { inline_keyboard: keyboard },
+    }),
+  });
+  return NextResponse.json({ ok: true });
+}
+
+async function handleChqRecord(token: string, chatId: string, supabase: ReturnType<typeof createStaticAdminClient>, org: OrgRow, dealId: string, type: string) {
+  const allowed = ['call', 'meeting', 'visit', 'whatsapp', 'email'];
+  if (!allowed.includes(type)) {
+    await sendTelegramMessage(token, chatId, '❌ Tipo inválido.');
+    return NextResponse.json({ ok: false });
+  }
+
+  const { data: deal } = await supabase
+    .from('deals')
+    .select('id, title, organization_id, owner_id')
+    .eq('id', dealId)
+    .eq('organization_id', org.organization_id)
+    .maybeSingle();
+
+  if (!deal) {
+    await sendTelegramMessage(token, chatId, '❌ Deal não encontrado.');
+    return NextResponse.json({ ok: true });
+  }
+
+  const { error: insErr } = await supabase
+    .from('deal_activities')
+    .insert({
+      deal_id: dealId,
+      organization_id: org.organization_id,
+      owner_id: deal.owner_id ?? null,
+      type,
+      metadata: { via: 'telegram-/chq', logged_at: new Date().toISOString() },
+    });
+
+  if (insErr) {
+    await sendTelegramMessage(token, chatId, `❌ Erro a gravar: ${insErr.message}`);
+    return NextResponse.json({ ok: false });
+  }
+
+  const typeLabel = { call: 'Chamada', meeting: 'Reunião', visit: 'Visita', whatsapp: 'WhatsApp', email: 'Email' }[type as 'call'];
+  await sendTelegramMessage(token, chatId, `✅ <b>${typeLabel}</b> registada em "${(deal.title || 'deal').slice(0, 60)}".\n\n/numeros para ver o impacto · /chq para registar outra.`);
+  return NextResponse.json({ ok: true });
+}
+
+async function getToken(supabase: ReturnType<typeof createStaticAdminClient>, org: OrgRow): Promise<string> {
+  // org já trazia o token quando foi carregado no início; reler para garantir
+  const { data } = await supabase
+    .from('organization_settings')
+    .select('telegram_crm_bot_token')
+    .eq('organization_id', org.organization_id)
+    .single();
+  return (data as { telegram_crm_bot_token?: string } | null)?.telegram_crm_bot_token || '';
 }
 
 async function handleNumeros(token: string, chatId: string, supabase: ReturnType<typeof createStaticAdminClient>, org: OrgRow) {
