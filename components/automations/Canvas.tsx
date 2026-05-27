@@ -31,6 +31,11 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { getAtomMeta, ATOM_CATALOG } from '@/lib/automation-engine/catalog';
+import { ConditionNode } from './nodes/ConditionNode';
+
+const NODE_TYPES = {
+  'logic.condition': ConditionNode,
+} as const;
 
 interface AutomationNodeIn {
   id: string;
@@ -44,6 +49,8 @@ interface AutomationEdgeIn {
   id: string;
   source: string;
   target: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
 }
 
 export interface CanvasProps {
@@ -83,24 +90,43 @@ function nodeLabel(atomId: string) {
   );
 }
 
+function nodeTypeFor(atomId: string): string {
+  if (atomId === 'logic.condition') return 'logic.condition';
+  return 'default';
+}
+
 function makeRFNode(input: AutomationNodeIn, fallbackIndex: number): Node<RFNodeData> {
+  const isCustom = nodeTypeFor(input.atom) !== 'default';
   return {
     id: input.id,
     position: input.position ?? { x: fallbackIndex * 250, y: 0 },
     data: {
       atom: input.atom,
       config: input.config ?? {},
-      label: nodeLabel(input.atom),
+      label: isCustom ? undefined : nodeLabel(input.atom),
     } as unknown as RFNodeData,
-    className: `rounded-md border-2 px-3 py-2 shadow-sm ${categoryColor(input.atom)}`,
-    type: 'default',
+    className: isCustom ? undefined : `rounded-md border-2 px-3 py-2 shadow-sm ${categoryColor(input.atom)}`,
+    type: nodeTypeFor(input.atom),
     sourcePosition: Position.Right,
     targetPosition: Position.Left,
   };
 }
 
 function makeRFEdge(e: AutomationEdgeIn): Edge {
-  return { id: e.id, source: e.source, target: e.target, animated: true, style: { stroke: '#94a3b8' } };
+  const stroke = e.sourceHandle === 'true' ? '#10b981' : e.sourceHandle === 'false' ? '#ef4444' : '#94a3b8';
+  return {
+    id: e.id,
+    source: e.source,
+    target: e.target,
+    sourceHandle: e.sourceHandle ?? undefined,
+    targetHandle: e.targetHandle ?? undefined,
+    label: e.sourceHandle === 'true' ? 'Sim' : e.sourceHandle === 'false' ? 'Não' : undefined,
+    labelStyle: { fontSize: 10, fontWeight: 700, fill: stroke },
+    labelBgStyle: { fill: '#ffffff' },
+    labelBgPadding: [2, 4],
+    animated: true,
+    style: { stroke, strokeWidth: e.sourceHandle ? 2 : 1.5 },
+  };
 }
 
 // Constroi config default a partir do configSchema (JSON Schema simplificado).
@@ -153,7 +179,13 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
         position: n.position,
         config: (n.data as RFNodeData)?.config ?? {},
       })),
-      edges: edges.map((e) => ({ id: e.id, source: e.source, target: e.target })),
+      edges: edges.map((e) => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        ...(e.sourceHandle ? { sourceHandle: e.sourceHandle } : {}),
+        ...(e.targetHandle ? { targetHandle: e.targetHandle } : {}),
+      })),
     };
   }, [nodes, edges]);
 
@@ -193,12 +225,19 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
 
   const onConnect = useCallback((connection: Connection) => {
     setEdges((eds) => {
-      const id = `e-${connection.source}-${connection.target}-${Date.now()}`;
+      const id = `e-${connection.source}-${connection.target}-${connection.sourceHandle ?? 'def'}-${Date.now()}`;
+      const handle = connection.sourceHandle;
+      const stroke = handle === 'true' ? '#10b981' : handle === 'false' ? '#ef4444' : '#94a3b8';
+      const label = handle === 'true' ? 'Sim' : handle === 'false' ? 'Não' : undefined;
       return addEdge({
         ...connection,
         id,
         animated: true,
-        style: { stroke: '#94a3b8' },
+        label,
+        labelStyle: { fontSize: 10, fontWeight: 700, fill: stroke },
+        labelBgStyle: { fill: '#ffffff' },
+        labelBgPadding: [2, 4],
+        style: { stroke, strokeWidth: handle ? 2 : 1.5 },
       }, eds);
     });
     scheduleSave();
@@ -216,16 +255,17 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
     if (!getAtomMeta(atomId)) return;
 
     const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    const isCustom = nodeTypeFor(atomId) !== 'default';
     const newNode: Node<RFNodeData> = {
       id: newNodeId(),
       position,
       data: {
         atom: atomId,
         config: defaultConfigFor(atomId),
-        label: nodeLabel(atomId),
+        label: isCustom ? undefined : nodeLabel(atomId),
       } as unknown as RFNodeData,
-      className: `rounded-md border-2 px-3 py-2 shadow-sm ${categoryColor(atomId)}`,
-      type: 'default',
+      className: isCustom ? undefined : `rounded-md border-2 px-3 py-2 shadow-sm ${categoryColor(atomId)}`,
+      type: nodeTypeFor(atomId),
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
     };
@@ -253,6 +293,7 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={NODE_TYPES}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
