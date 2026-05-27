@@ -281,12 +281,65 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-xs">
-                                                <Mail size={12} /> {contact.email || '---'}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-xs">
-                                                <Phone size={12} /> {contact.phone || '---'}
-                                            </div>
+                                            {/* Sprint 17 c1: email + telefone clicáveis com auto-CHQ */}
+                                            {contact.email ? (
+                                                <a
+                                                    href={`mailto:${contact.email}`}
+                                                    onClick={() => {
+                                                        fetch(`/api/contacts/${contact.id}/activities`, {
+                                                            method: 'POST',
+                                                            headers: { 'content-type': 'application/json' },
+                                                            body: JSON.stringify({ type: 'email', metadata: { via: 'contacts-list-shortcut' } }),
+                                                        }).catch(() => {});
+                                                    }}
+                                                    className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-xs hover:text-primary-500 transition-colors"
+                                                    title="Abrir email + registar CHQ"
+                                                >
+                                                    <Mail size={12} /> {contact.email}
+                                                </a>
+                                            ) : (
+                                                <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-xs">
+                                                    <Mail size={12} /> ---
+                                                </div>
+                                            )}
+                                            {contact.phone ? (
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <a
+                                                        href={`tel:${contact.phone}`}
+                                                        onClick={() => {
+                                                            fetch(`/api/contacts/${contact.id}/activities`, {
+                                                                method: 'POST',
+                                                                headers: { 'content-type': 'application/json' },
+                                                                body: JSON.stringify({ type: 'call', metadata: { via: 'contacts-list-shortcut' } }),
+                                                            }).catch(() => {});
+                                                        }}
+                                                        className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary-500 transition-colors flex-1 min-w-0"
+                                                        title="Ligar + registar CHQ"
+                                                    >
+                                                        <Phone size={12} /> <span className="truncate">{contact.phone}</span>
+                                                    </a>
+                                                    <a
+                                                        href={`https://wa.me/${contact.phone.replace(/[^0-9]/g, '')}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={() => {
+                                                            fetch(`/api/contacts/${contact.id}/activities`, {
+                                                                method: 'POST',
+                                                                headers: { 'content-type': 'application/json' },
+                                                                body: JSON.stringify({ type: 'whatsapp', metadata: { via: 'contacts-list-shortcut' } }),
+                                                            }).catch(() => {});
+                                                        }}
+                                                        className="text-green-500 hover:text-green-600 flex-shrink-0"
+                                                        title="WhatsApp + registar CHQ"
+                                                    >
+                                                        <span className="text-[10px] font-bold border border-green-500 rounded px-1 py-0.5">WA</span>
+                                                    </a>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-xs">
+                                                    <Phone size={12} /> ---
+                                                </div>
+                                            )}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
