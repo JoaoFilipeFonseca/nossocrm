@@ -10,6 +10,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { AIProvider } from '@/context/AIContext'
 import Layout from '@/components/Layout'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { CHQFloatingButton } from '@/components/CHQFloatingButton'
 
 export default function ProtectedShell({
     children,
@@ -67,6 +68,7 @@ export default function ProtectedShell({
                         <AIProvider>
                             <TooltipProvider delayDuration={200}>
                                 {shouldUseAppShell ? <Layout>{children}</Layout> : children}
+                                {shouldUseAppShell && <CHQFloatingButton />}
                             </TooltipProvider>
                         </AIProvider>
                     </AuthProvider>
