@@ -64,6 +64,7 @@ const MessageComposerModal = dynamic(
 );
 import { callAIProxy } from '@/lib/supabase/ai-proxy';
 import type { ScriptCategory } from '@/lib/supabase/quickScripts';
+import { LogCHQQuick } from '@/features/boards/components/Kanban/LogCHQQuick';
 
 // Performance: reuse Intl formatter instances.
 const PT_BR_SHORT_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
@@ -268,12 +269,29 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
     // directamente no MessageComposerModal ao abrir, quando initialMessage é vazia.
     // Ver memory plano_copy_ia_em_todo_o_lado.md.
 
+    // Sprint 13 c1: regista CHQ em deal_activities silenciosamente sempre que
+    // o utilizador usa um touchpoint humano. Conta para as Métricas Honestas.
+    const logCHQ = (type: 'call' | 'meeting' | 'visit' | 'whatsapp' | 'email', description?: string) => {
+        if (!deal?.id) return;
+        fetch(`/api/deals/${encodeURIComponent(deal.id)}/activities`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                type,
+                description: description || null,
+                metadata: { via: 'focus-context-panel' },
+            }),
+        }).catch((e: unknown) => console.warn('[logCHQ]', e));
+    };
+
     // Contact handlers
     const handleWhatsApp = (prefill?: { message?: string }) => {
+        logCHQ('whatsapp');
         openMessageComposer('WHATSAPP', { message: prefill?.message });
     };
 
     const handleEmail = (prefill?: { subject?: string; message?: string }) => {
+        logCHQ('email');
         openMessageComposer('EMAIL', {
             subject: prefill?.subject,
             message: prefill?.message,
@@ -1357,6 +1375,11 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                     >
                                         <Mail size={14} className="group-hover:text-cyan-400 transition-colors" /> Email
                                     </button>
+                                    <span className="w-px h-6 bg-slate-800 self-center" />
+                                    {/* Sprint 13 c1: registar CHQ retrospectivo (chamada/visita/reunião já feita) */}
+                                    <div className="flex items-center">
+                                        <LogCHQQuick dealId={deal.id} />
+                                    </div>
                                     <span className="w-px h-6 bg-slate-800 self-center" />
                                     <button
                                         onClick={() => handleQuickAction('CALL')}
