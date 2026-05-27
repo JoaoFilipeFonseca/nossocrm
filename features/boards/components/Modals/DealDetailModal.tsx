@@ -846,63 +846,53 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 dark:border-white/5">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Detalhes</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-500">Prioridade</span>
-                      <span className="text-slate-900 dark:text-white">
-                        {formatPriorityPtBr(deal.priority)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-500">Criado em</span>
-                      <span className="text-slate-900 dark:text-white">
-                        {PT_BR_DATE_FORMATTER.format(new Date(deal.createdAt))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-500">Probabilidade</span>
-                      <span className="text-slate-900 dark:text-white">{deal.probability}%</span>
-                    </div>
+                {/* Sprint 12 c1: Detalhes compactos em 1 linha (3 chips inline). Antes ocupava 3 rows verticais. */}
+                <div className="pt-3 border-t border-slate-100 dark:border-white/5">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs">
+                    <span className="inline-flex items-center gap-1 text-slate-500">
+                      <span className="uppercase tracking-wide text-[10px] text-slate-400">Prio</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{formatPriorityPtBr(deal.priority)}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-slate-500">
+                      <span className="uppercase tracking-wide text-[10px] text-slate-400">Criado</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{PT_BR_DATE_FORMATTER.format(new Date(deal.createdAt))}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-slate-500">
+                      <span className="uppercase tracking-wide text-[10px] text-slate-400">Prob</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{deal.probability}%</span>
+                    </span>
                   </div>
                 </div>
 
-                {/* TAGS */}
-                <div className="pt-4 border-t border-slate-100 dark:border-white/5">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
-                    <TagIcon size={14} /> Tags
-                  </h3>
-
-                  <div className="flex flex-wrap gap-2">
-                    {(deal.tags || []).length === 0 ? (
-                      <p className="text-xs text-slate-500 italic">Sem tags.</p>
-                    ) : (
-                      (deal.tags || []).map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => removeDealTag(tag)}
-                            className="ml-0.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400"
-                            aria-label={`Remover tag ${tag}`}
-                            title="Remover tag"
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ))
-                    )}
+                {/* Sprint 12 c1: Tags compactas — label inline + input mais pequeno */}
+                <div className="pt-3 border-t border-slate-100 dark:border-white/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TagIcon size={12} className="text-slate-400" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Tags</span>
                   </div>
 
-                  <div className="mt-3">
-                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
-                      Adicionar tag
-                    </label>
-                    <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {(deal.tags || []).map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => removeDealTag(tag)}
+                          className="ml-0.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400"
+                          aria-label={`Remover tag ${tag}`}
+                          title="Remover tag"
+                        >
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-2">
+                    <div className="flex gap-1.5">
                       <input
                         type="text"
                         value={tagQuery}
@@ -913,19 +903,19 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                             addDealTag(tagQuery);
                           }
                         }}
-                        placeholder="Ex: VIP, Urgente, Q4..."
-                        className="min-w-0 flex-1 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
+                        placeholder="+ tag (Enter)"
+                        className="min-w-0 flex-1 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-md px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-primary-500 dark:text-white"
                         aria-label="Adicionar tag"
                       />
                       <button
                         type="button"
                         onClick={() => addDealTag(tagQuery)}
                         disabled={!normalizeTag(tagQuery)}
-                        className="shrink-0 h-10 w-10 inline-flex items-center justify-center rounded-lg bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
+                        className="shrink-0 h-7 w-7 inline-flex items-center justify-center rounded-md bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
                         aria-label="Adicionar tag"
                         title="Adicionar tag"
                       >
-                        <Plus size={18} aria-hidden="true" />
+                        <Plus size={14} aria-hidden="true" />
                       </button>
                     </div>
 
