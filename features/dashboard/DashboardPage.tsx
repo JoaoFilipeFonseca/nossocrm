@@ -17,6 +17,7 @@ import { useDashboardMetrics, PeriodFilter, COMPARISON_LABELS } from './hooks/us
 import { PeriodFilterSelect } from '@/components/filters/PeriodFilterSelect';
 import { LazyFunnelChart, ChartWrapper } from '@/components/charts';
 import { SkeletonStatCard } from '@/components/ui/Skeleton';
+import { HonestMetricsTab } from './components/HonestMetricsTab';
 
 
 /**
@@ -45,6 +46,7 @@ const DashboardPage: React.FC = () => {
   const [period, setPeriod] = useState<PeriodFilter>('this_month');
   const [showPipelineAlerts, setShowPipelineAlerts] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState<string>('');
+  const [view, setView] = useState<'current' | 'honest'>('current');
 
   // Inicializar board selecionado
   useEffect(() => {
@@ -147,6 +149,41 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Toggle Visão Actual / Honestos (Sprint 10) */}
+      <div className="flex items-center gap-1 p-1 rounded-lg bg-slate-100 dark:bg-white/5 w-fit shrink-0">
+        <button
+          type="button"
+          onClick={() => setView('current')}
+          className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+            view === 'current'
+              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          Visão Actual
+        </button>
+        <button
+          type="button"
+          onClick={() => setView('honest')}
+          className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${
+            view === 'honest'
+              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <Target size={14} />
+          Honestos
+        </button>
+      </div>
+
+      {view === 'honest' && (
+        <div className="flex-1 overflow-auto">
+          <HonestMetricsTab />
+        </div>
+      )}
+
+      {view === 'current' && (
+      <>
       {/* KPI Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
@@ -345,6 +382,9 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      </>
+      )}
 
       {/* Pipeline Alerts Modal */}
       <PipelineAlertsModal
