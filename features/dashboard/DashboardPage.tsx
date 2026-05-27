@@ -149,6 +149,30 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Sprint 14 c2: banner deals frios — só aparece se há accao urgente */}
+      {(stagnantDealsCount > 0 || riskyCount > 0) && (
+        <button
+          type="button"
+          onClick={() => setShowPipelineAlerts(true)}
+          className="shrink-0 w-full rounded-xl bg-gradient-to-r from-rose-50 to-amber-50 dark:from-rose-500/10 dark:to-amber-500/10 border border-rose-200 dark:border-rose-500/30 p-3 flex items-center gap-3 text-left hover:from-rose-100 hover:to-amber-100 dark:hover:from-rose-500/15 dark:hover:to-amber-500/15 transition-colors"
+        >
+          <AlertTriangle className="h-5 w-5 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-rose-700 dark:text-rose-200">
+              {stagnantDealsCount > 0 && riskyCount > 0
+                ? `${stagnantDealsCount} ${stagnantDealsCount === 1 ? 'deal estagnado' : 'deals estagnados'} · ${riskyCount} em risco`
+                : stagnantDealsCount > 0
+                  ? `${stagnantDealsCount} ${stagnantDealsCount === 1 ? 'deal estagnado' : 'deals estagnados'} (>10d sem mudança)`
+                  : `${riskyCount} ${riskyCount === 1 ? 'deal em risco' : 'deals em risco'}`}
+            </div>
+            <div className="text-xs text-rose-600/80 dark:text-rose-300/80">
+              Clica para ver a lista e agir agora. {stagnantDealsValue > 0 && `Valor: ${Math.round(stagnantDealsValue).toLocaleString('pt-PT')} €.`}
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-rose-600 dark:text-rose-300">Ver →</span>
+        </button>
+      )}
+
       {/* Toggle Visão Actual / Honestos (Sprint 10) */}
       <div className="flex items-center gap-1 p-1 rounded-lg bg-slate-100 dark:bg-white/5 w-fit shrink-0">
         <button
