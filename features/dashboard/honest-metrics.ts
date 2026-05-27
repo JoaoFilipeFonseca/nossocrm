@@ -63,6 +63,7 @@ export type HonestMetrics = {
   year: number;
   windows: HonestMetricsWindows;
   chq: ChqBreakdown;
+  daily_chq_target: number;
   meetings_visits_week: number;
   open_proposals: OpenProposals;
   weighted_pipeline_eur: number;

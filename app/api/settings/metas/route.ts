@@ -14,6 +14,7 @@ const GoalSchema = z
     year: z.number().int().min(2024).max(2100),
     annual_target_eur: z.number().min(0).max(999_999_999),
     monthly_target_eur: z.array(z.number().min(0).max(999_999_999)).length(12),
+    daily_chq_target: z.number().int().min(0).max(100).optional(),
     notes: z.string().max(1000).nullable().optional(),
   })
   .strict();
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
 
   let query = supabase
     .from('org_revenue_goals')
-    .select('id, year, annual_target_eur, monthly_target_eur, notes, updated_at')
+    .select('id, year, annual_target_eur, monthly_target_eur, daily_chq_target, notes, updated_at')
     .eq('organization_id', profile!.organization_id)
     .order('year', { ascending: false });
 
@@ -76,6 +77,7 @@ export async function PUT(req: Request) {
     year: parsed.data.year,
     annual_target_eur: parsed.data.annual_target_eur,
     monthly_target_eur: parsed.data.monthly_target_eur,
+    daily_chq_target: parsed.data.daily_chq_target ?? 0,
     notes: parsed.data.notes ?? null,
   };
 

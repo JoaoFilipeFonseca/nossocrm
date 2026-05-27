@@ -9,6 +9,7 @@ type Goal = {
   year: number;
   annual_target_eur: number;
   monthly_target_eur: number[];
+  daily_chq_target: number;
   notes: string | null;
   updated_at?: string;
 };
@@ -22,6 +23,7 @@ function makeEmptyGoal(year: number): Goal {
     year,
     annual_target_eur: 0,
     monthly_target_eur: emptyMonthly(),
+    daily_chq_target: 0,
     notes: '',
   };
 }
@@ -126,6 +128,7 @@ export const MetasSettings: React.FC = () => {
           year: draft.year,
           annual_target_eur: Number(draft.annual_target_eur) || 0,
           monthly_target_eur: draft.monthly_target_eur.map((v) => Number(v) || 0),
+          daily_chq_target: Number(draft.daily_chq_target) || 0,
           notes: draft.notes ?? null,
         }),
       });
@@ -212,6 +215,22 @@ export const MetasSettings: React.FC = () => {
               value={draft.annual_target_eur ? draft.annual_target_eur : ''}
               onChange={(e) => setAnnualTarget(Number(e.target.value))}
               className="w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white disabled:opacity-60"
+            />
+          </label>
+
+          <label className="block min-w-[150px]">
+            <span className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Meta CHQ/dia útil</span>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              disabled={!isAdmin}
+              placeholder="Ex: 8"
+              value={draft.daily_chq_target ? draft.daily_chq_target : ''}
+              onChange={(e) => setDraft((d) => ({ ...d, daily_chq_target: Math.max(0, Math.min(100, Number(e.target.value) || 0)) }))}
+              className="w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white disabled:opacity-60"
+              title="Quantas Conversas Humanas Qualificadas queres fazer por dia útil"
             />
           </label>
 

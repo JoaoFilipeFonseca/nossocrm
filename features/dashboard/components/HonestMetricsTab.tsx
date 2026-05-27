@@ -34,6 +34,7 @@ type HonestMetrics = {
     month: number;
     types_counted: string[];
   };
+  daily_chq_target: number;
   meetings_visits_week: number;
   open_proposals: {
     count: number;
@@ -263,13 +264,29 @@ export const HonestMetricsTab: React.FC = () => {
 
       {/* Top row: 4 cards principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          icon={Phone}
-          title="CHQ hoje"
-          value={data.chq.today}
-          subtitle={`Semana ${data.chq.week} · Mês ${data.chq.month}`}
-          tooltip="Conversas Humanas Qualificadas: activities tipo call/meeting/visit/whatsapp/email + contactos novos com telefone ou email."
-        />
+        {(() => {
+          const target = data.daily_chq_target || 0;
+          const today = data.chq.today;
+          const pct = target > 0 ? (today / target) * 100 : null;
+          const variant = pct === null
+            ? 'default' as const
+            : pct >= 100 ? 'green' as const
+            : pct >= 60 ? 'amber' as const
+            : 'red' as const;
+          const subtitle = target > 0
+            ? `Meta diária ${target} · ${pct?.toFixed(0)}% · Semana ${data.chq.week} · Mês ${data.chq.month}`
+            : `Semana ${data.chq.week} · Mês ${data.chq.month}`;
+          return (
+            <MetricCard
+              icon={Phone}
+              title="CHQ hoje"
+              value={today}
+              subtitle={subtitle}
+              variant={variant}
+              tooltip="Conversas Humanas Qualificadas: activities tipo call/meeting/visit/whatsapp/email + contactos novos com telefone ou email. Semáforo vs meta diária definida em /settings/metas."
+            />
+          );
+        })()}
         <MetricCard
           icon={Briefcase}
           title="Reuniões + visitas (semana)"
