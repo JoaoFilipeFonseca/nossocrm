@@ -14,14 +14,15 @@ import { DataStorageSettings } from './components/DataStorageSettings';
 import { ProductsCatalogManager } from './components/ProductsCatalogManager';
 import { AICenterSettings } from './AICenterSettings';
 import { MarcaSettings } from './marca/MarcaSettings';
+import { MetasSettings } from './metas/MetasSettings';
 
 import { UsersPage } from './UsersPage';
 import { useAuth } from '@/context/AuthContext';
-import { Settings as SettingsIcon, Users, Database, Sparkles, Plug, Package, Building2, Award } from 'lucide-react';
+import { Settings as SettingsIcon, Users, Database, Sparkles, Plug, Package, Building2, Award, Target } from 'lucide-react';
 import { SelectField } from '@/components/ui/FormField';
 import { Button } from '@/components/ui/button';
 
-type SettingsTab = 'general' | 'products' | 'business-units' | 'integrations' | 'ai' | 'marca' | 'data' | 'users';
+type SettingsTab = 'general' | 'products' | 'business-units' | 'integrations' | 'ai' | 'marca' | 'metas' | 'data' | 'users';
 
 interface GeneralSettingsProps {
   hash?: string;
@@ -201,6 +202,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
       setActiveTab('integrations');
     } else if (pathname?.includes('/settings/marca')) {
       setActiveTab('marca');
+    } else if (pathname?.includes('/settings/metas')) {
+      setActiveTab('metas');
     } else if (pathname?.includes('/settings/data')) {
       setActiveTab('data');
     } else if (pathname?.includes('/settings/users')) {
@@ -217,6 +220,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
     ...(profile?.role === 'admin' ? [{ id: 'integrations' as SettingsTab, name: 'Integrações', icon: Plug }] : []),
     { id: 'ai' as SettingsTab, name: 'Central de I.A', icon: Sparkles },
     ...(profile?.role === 'admin' ? [{ id: 'marca' as SettingsTab, name: 'Marca', icon: Award }] : []),
+    { id: 'metas' as SettingsTab, name: 'Metas', icon: Target },
     { id: 'data' as SettingsTab, name: 'Dados', icon: Database },
     ...(profile?.role === 'admin' ? [{ id: 'users' as SettingsTab, name: 'Equipa', icon: Users }] : []),
   ];
@@ -237,6 +241,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
         return <AICenterSettings />;
       case 'marca':
         return <MarcaSettings />;
+      case 'metas':
+        return <MetasSettings />;
       case 'data':
         return <DataStorageSettings />;
       case 'users':
