@@ -549,7 +549,7 @@ export const WebhooksSection: React.FC = () => {
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-white/5 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Excluir
+                    Eliminar
                   </button>
                 </div>
               </div>
@@ -634,7 +634,7 @@ export const WebhooksSection: React.FC = () => {
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-white/5 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Excluir
+                    Eliminar
                   </button>
                 </div>
               </div>
@@ -1167,13 +1167,13 @@ export const WebhooksSection: React.FC = () => {
         isOpen={confirmDeleteInboundOpen}
         onClose={() => setConfirmDeleteInboundOpen(false)}
         onConfirm={handleDeleteInbound}
-        title="Excluir webhook de entrada?"
+        title="Eliminar webhook de entrada?"
         message={
           <div>
             Isso remove apenas a <b>configuração</b> do webhook (URL/secret param de entrada). Leads já criados no CRM não serão apagados.
           </div>
         }
-        confirmText="Excluir"
+        confirmText="Eliminar"
         cancelText="Cancelar"
         variant="danger"
       />
@@ -1182,13 +1182,13 @@ export const WebhooksSection: React.FC = () => {
         isOpen={confirmDeleteOutboundOpen}
         onClose={() => setConfirmDeleteOutboundOpen(false)}
         onConfirm={handleDeleteOutbound}
-        title="Excluir follow-up (webhook de saída)?"
+        title="Eliminar follow-up (webhook de saída)?"
         message={
           <div>
             Isso remove apenas a <b>configuração</b> do follow-up. O CRM não enviará mais notificações quando o lead mudar de etapa.
           </div>
         }
-        confirmText="Excluir"
+        confirmText="Eliminar"
         cancelText="Cancelar"
         variant="danger"
       />

@@ -2186,7 +2186,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                                   <button
                                     type="button"
                                     className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-200 hover:bg-rose-500/15"
-                                    title="Excluir"
+                                    title="Eliminar"
                                     onClick={() => void deleteNote.mutate(n.id)}
                                   >
                                     <X className="h-3.5 w-3.5" />

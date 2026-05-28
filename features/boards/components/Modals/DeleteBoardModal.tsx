@@ -72,7 +72,7 @@ export const DeleteBoardModal: React.FC<DeleteBoardModalProps> = ({
               <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-              Excluir Board
+              Eliminar Board
             </h2>
           </div>
           <button
@@ -147,7 +147,7 @@ export const DeleteBoardModal: React.FC<DeleteBoardModalProps> = ({
                             ? 'text-red-700 dark:text-red-300 font-medium'
                             : 'text-slate-700 dark:text-slate-300'
                         }`}>
-                          Excluir negócios também
+                          Eliminar negócios também
                         </span>
                       </button>
                     </div>
@@ -180,7 +180,7 @@ export const DeleteBoardModal: React.FC<DeleteBoardModalProps> = ({
                     }`}
                   >
                     <Trash2 className="w-4 h-4" />
-                    Excluir negócios junto com o board
+                    Eliminar negócios juntamente com o board
                   </button>
                 </>
               )}
@@ -210,11 +210,11 @@ export const DeleteBoardModal: React.FC<DeleteBoardModalProps> = ({
                 : 'bg-slate-200 dark:bg-dark-hover text-slate-400 cursor-not-allowed'
             }`}
           >
-            {selectedTargetBoardId === '__DELETE__' 
-              ? 'Excluir Tudo' 
-              : hasDeals && selectedTargetBoardId 
-                ? 'Mover e Excluir' 
-                : 'Excluir'}
+            {selectedTargetBoardId === '__DELETE__'
+              ? 'Eliminar Tudo'
+              : hasDeals && selectedTargetBoardId
+                ? 'Mover e Eliminar'
+                : 'Eliminar'}
           </button>
         </div>
       </div>

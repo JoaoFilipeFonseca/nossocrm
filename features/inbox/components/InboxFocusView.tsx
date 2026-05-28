@@ -588,7 +588,7 @@ export const InboxFocusView: React.FC<InboxFocusViewProps> = ({
                   <div>
                     <div className="text-sm font-semibold text-slate-900 dark:text-white">Vincular contexto</div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Esta atividade não tem deal/contato associado. Selecione um negócio para abrir o Cockpit.
+                      Esta actividade não tem negócio/contacto associado. Seleccione um negócio para abrir o Cockpit.
                     </div>
                   </div>
                   <button

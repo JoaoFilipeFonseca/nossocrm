@@ -138,7 +138,7 @@ export const ContactsPage: React.FC = () => {
                             className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors"
                         >
                             <Trash2 size={14} />
-                            Excluir selecionados
+                            Eliminar seleccionados
                         </button>
                     </div>
                 </div>
@@ -207,9 +207,9 @@ export const ContactsPage: React.FC = () => {
                 isOpen={!!controller.deleteId}
                 onClose={() => controller.setDeleteId(null)}
                 onConfirm={controller.confirmDelete}
-                title="Excluir Contacto"
+                title="Eliminar Contacto"
                 message="Tem certeza que deseja excluir este contacto? Esta ação não pode ser desfeita."
-                confirmText="Excluir"
+                confirmText="Eliminar"
                 variant="danger"
             />
 
@@ -217,9 +217,9 @@ export const ContactsPage: React.FC = () => {
                 isOpen={!!controller.deleteCompanyId}
                 onClose={() => controller.setDeleteCompanyId(null)}
                 onConfirm={controller.confirmDeleteCompany}
-                title="Excluir Empresa"
+                title="Eliminar Empresa"
                 message="Tem certeza que deseja excluir esta empresa? Esta ação não pode ser desfeita."
-                confirmText="Excluir"
+                confirmText="Eliminar"
                 variant="danger"
             />
 
@@ -247,7 +247,7 @@ export const ContactsPage: React.FC = () => {
                         <p className="text-red-500 dark:text-red-400 font-medium">Ao excluir, todos os negócios também serão excluídos.</p>
                     </div>
                 }
-                confirmText="Excluir Tudo"
+                confirmText="Eliminar Tudo"
                 variant="danger"
             />
 
@@ -256,25 +256,25 @@ export const ContactsPage: React.FC = () => {
                 isOpen={controller.bulkDeleteConfirm}
                 onClose={() => controller.setBulkDeleteConfirm(false)}
                 onConfirm={controller.confirmBulkDelete}
-                title={controller.viewMode === 'people' ? 'Excluir Contactos em Massa' : 'Excluir Empresas em Massa'}
+                title={controller.viewMode === 'people' ? 'Eliminar Contactos em Massa' : 'Eliminar Empresas em Massa'}
                 message={
                     <div className="space-y-2">
                         <p>
-                            Tem certeza que deseja excluir <strong>{controller.selectedIds.size}</strong>{' '}
+                            Tem a certeza que pretende eliminar <strong>{controller.selectedIds.size}</strong>{' '}
                             {controller.viewMode === 'people' ? 'contacto(s)' : 'empresa(s)'}?
                         </p>
                         {controller.viewMode === 'people' ? (
                             <p className="text-red-500 dark:text-red-400 text-sm">
-                                Todos os negócios vinculados também serão excluídos. Esta ação não pode ser desfeita.
+                                Todos os negócios associados também serão eliminados. Esta acção não pode ser desfeita.
                             </p>
                         ) : (
                             <p className="text-red-500 dark:text-red-400 text-sm">
-                                Contatos/negócios vinculados serão desvinculados da empresa antes da exclusão. Esta ação não pode ser desfeita.
+                                Contactos/negócios associados serão desassociados da empresa antes de ser eliminada. Esta acção não pode ser desfeita.
                             </p>
                         )}
                     </div>
                 }
-                confirmText={`Excluir ${controller.selectedIds.size} ${controller.viewMode === 'people' ? 'contacto(s)' : 'empresa(s)'}`}
+                confirmText={`Eliminar ${controller.selectedIds.size} ${controller.viewMode === 'people' ? 'contacto(s)' : 'empresa(s)'}`}
                 variant="danger"
             />
 

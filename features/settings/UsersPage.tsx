@@ -141,7 +141,7 @@ export const UsersPage: React.FC = () => {
                         Configuração incompleta
                     </h2>
                     <p className="text-slate-500 dark:text-slate-400">
-                        O Supabase não está configurado neste ambiente. Configure as variáveis de ambiente para gerenciar usuários.
+                        O Supabase não está configurado neste ambiente. Configure as variáveis de ambiente para gerir utilizadores.
                     </p>
                 </div>
             </div>
@@ -263,7 +263,7 @@ export const UsersPage: React.FC = () => {
                     </div>
                     <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">Acesso Restrito</h2>
                     <p className="text-slate-500 dark:text-slate-400 max-w-sm">
-                        Apenas administradores podem gerenciar usuários da equipe.
+                        Apenas administradores podem gerir utilizadores da equipa.
                     </p>
                 </div>
             </div>

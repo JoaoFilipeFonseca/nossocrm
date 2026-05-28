@@ -262,7 +262,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
                   className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                  title="Excluir conversa"
+                  title="Eliminar conversa"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -291,7 +291,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
                       className="gap-2 text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-500/10"
                     >
                       <Trash2 className="w-4 h-4" />
-                      Excluir conversa
+                      Eliminar conversa
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -355,7 +355,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
       <Modal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        title="Excluir conversa"
+        title="Eliminar conversa"
         size="sm"
       >
         <div className="space-y-4">
@@ -377,7 +377,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
               disabled={isDeleting}
               className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
             >
-              {isDeleting ? 'Excluindo...' : 'Excluir'}
+              {isDeleting ? 'A eliminar...' : 'Eliminar'}
             </button>
           </div>
         </div>
