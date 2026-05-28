@@ -8,6 +8,16 @@
 
 ## 🐛 Bugs UI activos
 
+### B-009 · 2 botões flutuantes sobrepostos no canto inferior direito (mobile)
+- **Quando:** 28/05/2026 manhã, screenshot do João.
+- **Sintoma:** botão de chamada (azul/rosa, capture nativo Sprint 12 C1.5) aparece sobreposto a outro FAB no mesmo canto. Visualmente quase um por cima do outro. Confunde + obstrui toque.
+- **Hipótese:** FAB CHQ global (Sprint 13 c3, `features/.../FabChqGlobal.tsx` ou similar) e o botão "Gravar chamada" (Sprint 12 C1.5) ambos com `position: fixed; bottom-X; right-X` próximos. Z-index e/ou offset não diferenciados.
+- **Files a inspeccionar:** procurar `fixed bottom-` e `position: fixed` em `app/`, `features/inbox`, `features/deals`, `components/`. Identificar TODOS os FABs renderizados em /boards e /inbox mobile.
+- **Fix esperado (1 sessão curta):**
+  - Empilhar verticalmente: FAB CHQ em `bottom-4 right-4`, gravar-chamada em `bottom-20 right-4` (ou variantes).
+  - OU agrupar num único FAB com menu (CHQ + Chamada + Foto + ...) que abre ao tocar — UX iOS-friendly e desafoga canto.
+- **Capturado meta:** João observou e disse "tens que ser tu a estar atento não eu" — fica como lição: depois de criar FAB novo, conferir se há outros FABs na mesma página + viewport mobile.
+
 ### B-008 · Adaptar `/settings/automation-logs` ao novo schema `automation_executions`
 - **Quando:** 26/05/2026, Sprint 0 da Máquina de Automações (commit 2).
 - **Contexto:** O Sprint 0 fez `DROP TABLE IF EXISTS automation_executions CASCADE` da tabela legacy (placeholder do Bloco 1 #127, 0 rows) e recriou-a com schema novo (`status`, `variables`, `resume_at`, `is_test`, `automation_version`...). A página `/settings/automation-logs` continua a consumir o schema antigo.
