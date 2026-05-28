@@ -203,3 +203,11 @@ Todos os commits pushed e em produção. GCM autorizado via browser. Próximos p
 ---
 
 > **Como usar:** quando o utilizador propuser feature/fix novo mid-sessão e estiver fora do objectivo da sessão activa, perguntar "CAPTURA ou agora?". Se CAPTURA, adicionar aqui com data e contexto suficiente para retomar sem perder informação.
+
+---
+
+## B-007 · Sweep PT-PT "Atividade(s)" → "Actividade(s)" (28/05/2026, Sprint 37)
+- **Escopo medido:** 51 ocorrências em 28 ficheiros (grep `[A-Za-z'"> ]Atividade`).
+- **Cuidado cirúrgico obrigatório:** só strings VISÍVEIS ao utilizador. NÃO mexer em identificadores `activities`, routes `/activities`, nomes de tabela/coluna, tipos/interfaces, chaves de API. Muitos matches estão dentro de prompts de IA (`lib/ai/tools.ts`, `crmAgent.ts`) — rever caso a caso.
+- **Ficheiros com mais peso:** features/inbox (useInboxController 6, InboxPage 2), features/activities (vários), Layout.tsx 2, navConfig.ts 1, SettingsPage.tsx 1 (label "Atividades" no SelectField), DashboardPage 1, DealCockpit (real+mock), lib/supabase/activities.ts 4.
+- **Recomendação:** commit/sessão próprios com verify isolado (tsc+lint+smoke + olho em routes). Não bundlar com features.

@@ -21,7 +21,7 @@ export default async function ChecklistsPage() {
 
   const { data: boards } = await supabase
     .from('boards')
-    .select('id, name, board_stages(id, label, color, "order")')
+    .select('id, name, board_stages!board_stages_board_id_fkey(id, label, color, "order")')
     .order('name')
     .returns<{ id: string; name: string; board_stages: { id: string; label: string; color: string | null; order: number }[] }[]>();
 

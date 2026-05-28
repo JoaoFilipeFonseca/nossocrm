@@ -17,6 +17,7 @@ import { useMoveDeal } from '@/lib/query/hooks/useMoveDeal';
 import { useCreateActivity } from '@/lib/query/hooks/useActivitiesQuery';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { useRealtimeSyncKanban } from '@/lib/realtime/useRealtimeSync';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { useLifecycleStages } from '@/lib/query/hooks/useLifecycleStagesQuery';
@@ -483,7 +484,7 @@ export const useBoardsController = () => {
 
       // Guard: never send temp-* ids to the backend. This happens when user drags immediately after creating a deal.
       if (deal.id.startsWith('temp-')) {
-        addToast('Aguarde o negócio salvar para mover (1s) e tente novamente.', 'info');
+        addToast('Aguarde o negócio guardar para mover (1s) e tente novamente.', 'info');
         setDraggingId(null);
         return;
       }
@@ -549,7 +550,7 @@ export const useBoardsController = () => {
       return;
     }
     if (deal.id.startsWith('temp-')) {
-      addToast('Aguarde o negócio salvar para mover (1s) e tente novamente.', 'info');
+      addToast('Aguarde o negócio guardar para mover (1s) e tente novamente.', 'info');
       return;
     }
 
@@ -595,6 +596,25 @@ export const useBoardsController = () => {
       });
       if (skipped) {
         addToast(`Avançou ${pendingStageMove.dealTitle} sem completar o checklist.`, 'info');
+        // Regista o skip em audit_logs: histórico verdadeiro de quem avançou
+        // uma stage sem cumprir o checklist (fire-and-forget, não bloqueia o move).
+        const supabase = createClient();
+        if (supabase && organizationId) {
+          void supabase.from('audit_logs').insert({
+            user_id: profile?.id ?? null,
+            organization_id: organizationId,
+            action: 'STAGE_CHECKLIST_SKIPPED',
+            resource_type: 'deal',
+            resource_id: pendingStageMove.dealId,
+            severity: 'warning',
+            details: {
+              deal_title: pendingStageMove.dealTitle,
+              board_id: activeBoard.id,
+              to_stage_id: pendingStageMove.toStageId,
+              to_stage_name: pendingStageMove.toStageName,
+            },
+          });
+        }
       }
     }
     setPendingStageMove(null);

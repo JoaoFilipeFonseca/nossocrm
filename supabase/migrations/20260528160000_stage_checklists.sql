@@ -8,7 +8,8 @@
 --   [{ "label": "Confirmar CC", "required": true }, ...]
 --
 -- Modal é NÃO bloqueante: utilizador pode marcar tudo ou clicar "Avançar
--- mesmo assim". Decisão fica registada em audit_log_v2 via app code.
+-- mesmo assim". Decisão fica registada em audit_logs (action
+-- STAGE_CHECKLIST_SKIPPED) via app code em useBoardsController.
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.stage_checklists (
