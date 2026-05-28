@@ -1179,7 +1179,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     <div className="space-y-3 pl-4 border-l border-slate-200 dark:border-slate-800">
                       {dealActivities.length === 0 && (
                         <p className="text-sm text-slate-500 italic pl-4">
-                          Nenhuma atividade registrada.
+                          Nenhuma actividade registrada.
                         </p>
                       )}
                       {dealActivities.map(activity => (

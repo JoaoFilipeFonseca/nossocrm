@@ -354,7 +354,7 @@ export const useInboxController = () => {
       } catch (error: any) {
         if (isMounted) {
           // Fallback message if AI proxy fails
-          const fallback = `Você tem ${overdueActivities.length} atividades atrasadas, ${stalledDeals.length} negócios parados e ${upsellDeals.length} oportunidades de upsell.`;
+          const fallback = `Você tem ${overdueActivities.length} actividades atrasadas, ${stalledDeals.length} negócios parados e ${upsellDeals.length} oportunidades de upsell.`;
           setBriefing(fallback);
         }
       } finally {
@@ -386,7 +386,7 @@ export const useInboxController = () => {
       },
     });
 
-    showToast(`Atividade criada: ${action.title}`, 'success');
+    showToast(`Actividade criada: ${action.title}`, 'success');
   };
 
   const handleCompleteActivity = (id: string) => {
@@ -396,7 +396,7 @@ export const useInboxController = () => {
         { id, updates: { completed: !activity.completed } },
         {
           onSuccess: () => {
-            showToast(activity.completed ? 'Atividade reaberta' : 'Atividade concluída!', 'success');
+            showToast(activity.completed ? 'Actividade reaberta' : 'Actividade concluída!', 'success');
           },
         }
       );
@@ -422,7 +422,7 @@ export const useInboxController = () => {
   const handleDiscardActivity = (id: string) => {
     deleteActivityMutation.mutate(id, {
       onSuccess: () => {
-        showToast('Atividade removida', 'info');
+        showToast('Actividade removida', 'info');
       },
     });
   };

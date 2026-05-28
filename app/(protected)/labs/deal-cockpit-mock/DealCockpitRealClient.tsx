@@ -1134,7 +1134,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
         completed: false,
         user: actor,
       });
-      pushToast('Atividade agendada', 'success');
+      pushToast('Actividade agendada', 'success');
     },
     [addActivity, actor, pushToast, selectedDeal]
   );
@@ -1410,7 +1410,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
               <div className="text-sm font-semibold text-slate-100">{nextBestAction.action}</div>
               <div className="mt-1 text-xs text-slate-400">{nextBestAction.reason}</div>
               <div className="mt-2 text-[11px] text-slate-500">
-                Aqui EXECUTA (e tenta registrar o que dá). No rodapé da timeline você REGISTRA atividades rápidas que aconteceram fora do CRM.
+                Aqui EXECUTA (e tenta registrar o que dá). No rodapé da timeline você REGISTRA actividades rápidas que aconteceram fora do CRM.
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -1617,7 +1617,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
           <div className="flex min-h-0 flex-col gap-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold text-slate-100">Atividades</div>
+                <div className="text-sm font-semibold text-slate-100">Actividades</div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -1719,7 +1719,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                 <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
                   <span
                     className="text-[11px] font-semibold uppercase tracking-wide text-slate-600"
-                    title="Use quando a atividade aconteceu fora do CRM"
+                    title="Use quando a actividade aconteceu fora do CRM"
                   >
                     Registrar (fora do CRM):
                   </span>

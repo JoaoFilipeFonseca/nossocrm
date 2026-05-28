@@ -139,10 +139,10 @@ export const useActivitiesController = () => {
   };
 
   const handleDeleteActivity = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta atividade?')) {
+    if (window.confirm('Tem certeza que deseja excluir esta actividade?')) {
       deleteActivityMutation.mutate(id, {
         onSuccess: () => {
-          showToast('Atividade excluída com sucesso', 'success');
+          showToast('Actividade excluída com sucesso', 'success');
         },
       });
     }
@@ -160,7 +160,7 @@ export const useActivitiesController = () => {
         },
         {
           onSuccess: () => {
-            showToast(activity.completed ? 'Atividade reaberta' : 'Atividade concluída', 'success');
+            showToast(activity.completed ? 'Actividade reaberta' : 'Actividade concluída', 'success');
           },
         }
       );
@@ -194,7 +194,7 @@ export const useActivitiesController = () => {
         },
         {
           onSuccess: () => {
-            showToast('Atividade atualizada com sucesso', 'success');
+            showToast('Actividade atualizada com sucesso', 'success');
             setIsModalOpen(false);
           },
         }
@@ -218,11 +218,11 @@ export const useActivitiesController = () => {
         },
         {
           onSuccess: () => {
-            showToast('Atividade criada com sucesso', 'success');
+            showToast('Actividade criada com sucesso', 'success');
             setIsModalOpen(false);
           },
           onError: (error: Error) => {
-            showToast(`Erro ao criar atividade: ${error.message}`, 'error');
+            showToast(`Erro ao criar actividade: ${error.message}`, 'error');
           },
         }
       );

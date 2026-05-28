@@ -40,13 +40,13 @@ export const ActivityStatusIcon: React.FC<ActivityStatusIconProps> = ({
     const getStatusLabel = () => {
         switch (status) {
             case 'yellow':
-                return 'Atenção: Sem atividade agendada';
+                return 'Atenção: Sem actividade agendada';
             case 'red':
-                return 'Atividade atrasada';
+                return 'Actividade atrasada';
             case 'green':
-                return 'Atividade agendada para hoje';
+                return 'Actividade agendada para hoje';
             default:
-                return 'Atividade futura agendada';
+                return 'Actividade futura agendada';
         }
     };
 
@@ -86,7 +86,7 @@ export const ActivityStatusIcon: React.FC<ActivityStatusIconProps> = ({
             <button 
                 type="button"
                 onClick={onToggle}
-                aria-label={`${getStatusLabel()}. Clique para agendar atividade`}
+                aria-label={`${getStatusLabel()}. Clique para agendar actividade`}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
                 className="hover:scale-110 transition-transform cursor-pointer p-1 -m-1 focus-visible-ring rounded-full"
@@ -97,7 +97,7 @@ export const ActivityStatusIcon: React.FC<ActivityStatusIconProps> = ({
             {isOpen && dealId && (
                 <div
                     role="menu"
-                    aria-label="Agendar atividade rápida"
+                    aria-label="Agendar actividade rápida"
                     className="absolute bottom-full right-0 mb-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-white/10 z-50 overflow-hidden animate-in zoom-in-95 duration-100"
                     onClick={(e) => e.stopPropagation()}
                 >

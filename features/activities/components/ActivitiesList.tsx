@@ -75,9 +75,9 @@ export const ActivitiesList: React.FC<ActivitiesListProps> = ({
             <div className="bg-white dark:bg-dark-card rounded-xl border border-slate-200 dark:border-white/5 border-dashed">
                 <EmptyState
                     icon={CheckSquare}
-                    title="Nenhuma atividade encontrada"
-                    description="Crie uma atividade para começar a acompanhar seu trabalho."
-                    action={onAddActivity ? { label: 'Nova Atividade', onClick: onAddActivity } : undefined}
+                    title="Nenhuma actividade encontrada"
+                    description="Crie uma actividade para começar a acompanhar seu trabalho."
+                    action={onAddActivity ? { label: 'Nova Actividade', onClick: onAddActivity } : undefined}
                 />
             </div>
         );

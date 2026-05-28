@@ -335,7 +335,7 @@ export default function DealCockpitMockClient() {
 
       if (actionId === 'dx') {
         pushAssistant(
-          'Diagnóstico rápido (mock):\n\n• Momentum: médio (última atividade há 2 dias)\n• Risco: “campeão” no cliente ainda não confirmado\n• Próximo passo recomendado: confirmar kickoff + alinhar critérios de sucesso (30/60 dias).'
+          'Diagnóstico rápido (mock):\n\n• Momentum: médio (última actividade há 2 dias)\n• Risco: “campeão” no cliente ainda não confirmado\n• Próximo passo recomendado: confirmar kickoff + alinhar critérios de sucesso (30/60 dias).'
         );
         prependTimeline({ kind: 'system', title: 'IA gerou diagnóstico', subtitle: 'Resumo (mock) adicionado no painel de IA.' });
         return;
@@ -496,7 +496,7 @@ export default function DealCockpitMockClient() {
               <div className="text-sm font-semibold text-slate-100">{mock.nextAction.title}</div>
               <div className="mt-1 text-xs text-slate-400">{mock.nextAction.description}</div>
               <div className="mt-2 text-[11px] text-slate-500">
-                Ações aqui EXECUTAM (discador, rascunho, agendar). No rodapé da timeline você REGISTRA atividades rápidas.
+                Ações aqui EXECUTAM (discador, rascunho, agendar). No rodapé da timeline você REGISTRA actividades rápidas.
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -722,7 +722,7 @@ export default function DealCockpitMockClient() {
           <div className="flex min-h-0 flex-col gap-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold text-slate-100">Atividades</div>
+                <div className="text-sm font-semibold text-slate-100">Actividades</div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -827,7 +827,7 @@ export default function DealCockpitMockClient() {
                 <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
                   <span
                     className="text-[11px] font-semibold uppercase tracking-wide text-slate-600"
-                    title="Use quando a atividade aconteceu fora do CRM (ex.: WhatsApp/telefone externo)"
+                    title="Use quando a actividade aconteceu fora do CRM (ex.: WhatsApp/telefone externo)"
                   >
                     Registrar (fora do CRM):
                   </span>

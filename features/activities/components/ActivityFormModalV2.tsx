@@ -114,7 +114,7 @@ export const ActivityFormModalV2: React.FC<ActivityFormModalV2Props> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={editingActivity ? 'Editar Atividade' : 'Nova Atividade'}
+      title={editingActivity ? 'Editar Actividade' : 'Nova Actividade'}
     >
       <ModalForm onSubmit={handleSubmit(handleFormSubmit)}>
         <InputField
@@ -157,13 +157,13 @@ export const ActivityFormModalV2: React.FC<ActivityFormModalV2Props> = ({
 
         <TextareaField
           label="Descrição"
-          placeholder="Detalhes da atividade..."
+          placeholder="Detalhes da actividade..."
           error={errors.description}
           registration={register('description')}
         />
 
         <SubmitButton isLoading={isSubmitting}>
-          {editingActivity ? 'Salvar Alterações' : 'Criar Atividade'}
+          {editingActivity ? 'Salvar Alterações' : 'Criar Actividade'}
         </SubmitButton>
       </ModalForm>
     </Modal>

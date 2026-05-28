@@ -58,7 +58,7 @@ export const InboxBriefing: React.FC<InboxBriefingProps> = ({
             </div>
           ) : (
             <p className="text-slate-200 leading-relaxed">
-              {briefing || 'Vamos começar o dia! Confira suas atividades abaixo.'}
+              {briefing || 'Vamos começar o dia! Confira suas actividades abaixo.'}
             </p>
           )}
         </div>

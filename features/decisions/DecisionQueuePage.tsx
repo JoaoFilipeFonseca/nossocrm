@@ -196,7 +196,7 @@ export const DecisionQueuePage: React.FC = () => {
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
             Clique em "Analisar Agora" para que a IA analise seu CRM e sugira ações
-            baseadas em deals parados, atividades atrasadas e oportunidades.
+            baseadas em deals parados, actividades atrasadas e oportunidades.
           </p>
           <button
             onClick={runAnalyzers}

@@ -378,7 +378,7 @@ const DashboardPage: React.FC = () => {
           <div className="p-5 border-b border-slate-100 dark:border-white/5 bg-white/50 dark:bg-slate-900/50 rounded-t-xl backdrop-blur-sm z-10 shrink-0">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">
-                Atividades Recentes
+                Actividades Recentes
               </h2>
             </div>
           </div>
@@ -392,7 +392,7 @@ const DashboardPage: React.FC = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-slate-500 py-8">
                   <Clock size={32} className="mb-2 opacity-50" />
-                  <p className="text-sm">Nenhuma atividade recente.</p>
+                  <p className="text-sm">Nenhuma actividade recente.</p>
                 </div>
               )}
             </div>
@@ -401,7 +401,7 @@ const DashboardPage: React.FC = () => {
               onClick={() => router.push('/activities')}
               className="w-full mt-4 py-2 text-sm text-primary-500 border border-dashed border-primary-500/30 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-colors"
             >
-              Ver todas as atividades
+              Ver todas as actividades
             </button>
           </div>
         </div>

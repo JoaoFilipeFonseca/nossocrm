@@ -94,7 +94,7 @@ export const PipelineAlertsModal: React.FC<PipelineAlertsModalProps> = ({
     {
       type: 'no-activity',
       title: 'Sem Próximo Passo',
-      description: 'Nenhuma atividade futura agendada',
+      description: 'Nenhuma actividade futura agendada',
       deals: dealsWithoutActivity,
       color: 'text-amber-500 bg-amber-500/10',
       icon: Calendar,
@@ -214,7 +214,7 @@ export const PipelineAlertsModal: React.FC<PipelineAlertsModalProps> = ({
         {/* Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
           <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-            💡 Dica: Deals sem atividade futura têm menor chance de conversão. Agende próximos passos!
+            💡 Dica: Deals sem actividade futura têm menor chance de conversão. Agende próximos passos!
           </p>
         </div>
       </div>

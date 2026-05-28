@@ -1105,9 +1105,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
           completed: false,
           user: actor,
         });
-        pushToast('Atividade agendada', 'success');
+        pushToast('Actividade agendada', 'success');
       } catch (e) {
-        pushToast(errorMessage(e, 'Não foi possível agendar a atividade.'), 'danger');
+        pushToast(errorMessage(e, 'Não foi possível agendar a actividade.'), 'danger');
       }
     },
     [addActivity, actor, pushToast, selectedDeal]
@@ -1692,7 +1692,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
           <div className="flex min-h-0 flex-col gap-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold text-slate-100">Atividades</div>
+                <div className="text-sm font-semibold text-slate-100">Actividades</div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -1761,7 +1761,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                   {filteredTimelineItems.length === 0 ? (
                     <div className="px-6 py-10 text-center">
                       <div className="text-sm font-semibold text-slate-200">
-                        {timelineItems.length === 0 ? 'Sem atividades ainda' : 'Sem resultados'}
+                        {timelineItems.length === 0 ? 'Sem actividades ainda' : 'Sem resultados'}
                       </div>
                       <div className="mt-2 text-xs text-slate-500">
                         {timelineItems.length === 0
@@ -1814,7 +1814,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                 <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
                   <span
                     className="text-[11px] font-semibold uppercase tracking-wide text-slate-600"
-                    title="Use quando a atividade aconteceu fora do CRM"
+                    title="Use quando a actividade aconteceu fora do CRM"
                   >
                     Registrar (fora do CRM):
                   </span>

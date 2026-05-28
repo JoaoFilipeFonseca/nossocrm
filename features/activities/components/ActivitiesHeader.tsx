@@ -43,7 +43,7 @@ export const ActivitiesHeader: React.FC<ActivitiesHeaderProps> = ({
     <div className="flex justify-between items-center mb-8">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-display">
-          Atividades
+          Actividades
         </h1>
         <div className="mt-1 flex items-center gap-2">
           <p className="text-slate-500 dark:text-slate-400">Gerencie suas tarefas e compromissos</p>
@@ -82,7 +82,7 @@ export const ActivitiesHeader: React.FC<ActivitiesHeaderProps> = ({
           className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2.5 rounded-lg font-medium transition-colors shadow-lg shadow-primary-600/20"
         >
           <Plus size={20} />
-          Nova Atividade
+          Nova Actividade
         </button>
       </div>
     </div>

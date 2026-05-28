@@ -192,7 +192,7 @@ export const InboxOverviewView: React.FC<InboxOverviewViewProps> = ({
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">Visão Geral</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Diagnóstico rápido do dia (sem virar outra lista de atividades).
+            Diagnóstico rápido do dia (sem virar outra lista de actividades).
           </p>
         </div>
         <div className="flex items-center gap-2">

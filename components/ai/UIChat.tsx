@@ -385,7 +385,7 @@ export function UIChat({
 
         if (hasDealContext) {
             return {
-                subtitle: 'Deal • Contacto • Atividades • Notas • Ficheiros • Scripts',
+                subtitle: 'Deal • Contacto • Actividades • Notas • Ficheiros • Scripts',
                 quickActions: [
                     {
                         label: '🧾 Diagnóstico do Deal',

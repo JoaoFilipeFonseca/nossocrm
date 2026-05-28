@@ -357,7 +357,7 @@ export const ApiKeysSection: React.FC = () => {
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json?.error || 'Falha no teste');
-        setActionTestResult({ ok: true, message: 'OK (atividade criada)', raw: json });
+        setActionTestResult({ ok: true, message: 'OK (actividade criada)', raw: json });
         return;
       }
 

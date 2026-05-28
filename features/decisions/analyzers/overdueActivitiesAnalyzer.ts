@@ -32,7 +32,7 @@ function generateReasoning(activity: Activity, daysOverdue: number, deal?: DealV
   parts.push(`${typeLabel} "${activity.title}" está ${daysOverdue} ${daysOverdue === 1 ? 'dia' : 'dias'} atrasada.`);
   
   if (deal) {
-    parts.push(`Esta atividade está vinculada ao deal "${deal.title}" (${deal.value.toLocaleString('pt-PT')} €).`);
+    parts.push(`Esta actividade está vinculada ao deal "${deal.title}" (${deal.value.toLocaleString('pt-PT')} €).`);
     
     if (deal.probability >= 60) {
       parts.push('O deal está em estágio avançado, então este atraso pode impactar o fechamento.');

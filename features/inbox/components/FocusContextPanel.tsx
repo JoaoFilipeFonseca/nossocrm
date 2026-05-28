@@ -1189,7 +1189,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                             {/* Header - Simple */}
                             <div className="shrink-0 h-12 flex items-center justify-between px-6 border-b border-white/5">
                                 <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                    Atividades
+                                    Actividades
                                 </h3>
                                 <div className="flex items-center gap-1">
                                     <button className="p-1.5 hover:bg-white/5 rounded text-slate-500 hover:text-white transition-colors">
@@ -1218,7 +1218,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                             <ArrowUpRight size={24} className="text-slate-500" />
                                         </div>
                                         <p className="text-sm font-medium text-white mb-1">
-                                            Nenhuma atividade
+                                            Nenhuma actividade
                                         </p>
                                         <p className="text-sm text-slate-500 max-w-[200px]">
                                             Comece adicionando uma nota ou agendando uma ação.

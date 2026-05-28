@@ -105,7 +105,7 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
               href={filterParam ? `/activities?filter=${filterParam}` : '/activities'}
               className="flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-colors"
             >
-              Ver todas as {activities.length} atividades
+              Ver todas as {activities.length} actividades
               <ArrowRight size={16} />
             </Link>
           )}

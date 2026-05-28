@@ -197,7 +197,7 @@ export const DataStorageSettings: React.FC = () => {
                     </div>
                     <div className="p-4 bg-gray-50 dark:bg-dark-bg rounded-lg text-center">
                         <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activities}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">Atividades</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Actividades</div>
                     </div>
                     <div className="p-4 bg-gray-50 dark:bg-dark-bg rounded-lg text-center">
                         <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.boards}</div>
@@ -232,7 +232,7 @@ export const DataStorageSettings: React.FC = () => {
                                     <li>{stats.deals} negócios</li>
                                     <li>{stats.contacts} contatos</li>
                                     <li>{stats.companies} empresas de clientes</li>
-                                    <li>{stats.activities} atividades</li>
+                                    <li>{stats.activities} actividades</li>
                                     <li>{stats.boards} boards (e seus stages)</li>
                                     <li>Todas as tags e produtos</li>
                                 </ul>

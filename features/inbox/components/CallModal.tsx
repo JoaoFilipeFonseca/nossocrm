@@ -234,7 +234,7 @@ export const CallModal: React.FC<CallModalProps> = ({
                     {/* Title */}
                     <div>
                         <label className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 block">
-                            Título da atividade
+                            Título da actividade
                         </label>
                         <input
                             type="text"

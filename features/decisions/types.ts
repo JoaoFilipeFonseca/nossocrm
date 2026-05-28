@@ -247,7 +247,7 @@ export const TYPE_LABELS: Record<DecisionType, string> = {
   hot_lead: 'Lead Quente',
   deadline_approaching: 'Prazo Próximo',
   follow_up_due: 'Follow-up Pendente',
-  overdue_activity: 'Atividade Atrasada',
+  overdue_activity: 'Actividade Atrasada',
   deal_at_risk: 'Deal em Risco',
   unanswered_proposal: 'Proposta sem Resposta',
   new_lead_assigned: 'Novo Lead',

@@ -62,7 +62,7 @@ function generateReasoning(
   if (daysSinceActivity > 14) {
     parts.push(`Este deal está parado há ${daysSinceActivity} dias, o que é crítico.`);
   } else {
-    parts.push(`Este deal não tem atividade há ${daysSinceActivity} dias.`);
+    parts.push(`Este deal não tem actividade há ${daysSinceActivity} dias.`);
   }
 
   if (lastActivity) {
@@ -78,7 +78,7 @@ function generateReasoning(
       parts.push('Já tentamos ligar antes. Uma reunião presencial ou por vídeo pode destravar a negociação.');
     }
   } else {
-    parts.push('Não há registro de atividades anteriores com este cliente.');
+    parts.push('Não há registro de actividades anteriores com este cliente.');
   }
 
   if (deal.value > 50000) {

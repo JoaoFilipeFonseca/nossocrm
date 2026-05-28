@@ -252,7 +252,7 @@ export const AuditLogDashboard: React.FC = () => {
             Logs de Auditoria
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Monitore atividades de segurança e tentativas de acesso não autorizado
+            Monitore actividades de segurança e tentativas de acesso não autorizado
           </p>
         </div>
         <button

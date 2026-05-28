@@ -144,7 +144,7 @@ export function ScheduleModal({
                 <div className="flex items-center justify-between p-4 border-b border-slate-800 shrink-0">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                         <Calendar size={20} className="text-primary-400" />
-                        Agendar Atividade
+                        Agendar Actividade
                     </h2>
                     <button
                         onClick={onClose}

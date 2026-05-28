@@ -66,7 +66,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
               { value: '/inbox-focus', label: 'Inbox (Foco)' },
               { value: '/boards', label: 'Boards (Kanban)' },
               { value: '/contacts', label: 'Contactos' },
-              { value: '/activities', label: 'Atividades' },
+              { value: '/activities', label: 'Actividades' },
               { value: '/reports', label: 'Relatórios' },
             ]}
             value={controller.defaultRoute}

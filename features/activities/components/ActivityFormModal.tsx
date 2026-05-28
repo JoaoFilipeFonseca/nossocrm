@@ -78,7 +78,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
       >
         <div className="p-5 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">
-            {editingActivity ? 'Editar Atividade' : 'Nova Atividade'}
+            {editingActivity ? 'Editar Actividade' : 'Nova Actividade'}
           </h2>
           <button
             onClick={onClose}
@@ -165,7 +165,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
             </label>
             <textarea
               className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 min-h-[80px]"
-              placeholder="Detalhes da atividade..."
+              placeholder="Detalhes da actividade..."
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
             />
@@ -175,7 +175,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
             type="submit"
             className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-2.5 rounded-lg mt-2 shadow-lg shadow-primary-600/20 transition-all"
           >
-            {editingActivity ? 'Salvar Alterações' : 'Criar Atividade'}
+            {editingActivity ? 'Salvar Alterações' : 'Criar Actividade'}
           </button>
         </form>
       </div>
