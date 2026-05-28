@@ -110,7 +110,11 @@ export const CHQFloatingButton: React.FC = () => {
         onClick={() => setOpen(true)}
         title="Registar CHQ rápido"
         aria-label="Registar Conversa Humana Qualificada"
-        className="fixed bottom-5 right-5 z-40 h-14 w-14 rounded-full bg-primary-600 hover:bg-primary-500 text-white shadow-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+        // Empilhado ACIMA do VoiceCaptureFAB para evitar sobreposicao (B-009).
+        // Mobile: voice fica em safe+96px; CHQ a 72px acima (safe+168).
+        // Desktop: voice fica em bottom-6 (24px); CHQ em bottom-24 (96px = 72px acima).
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 168px)' }}
+        className="fixed z-40 md:!bottom-24 right-4 md:right-6 h-14 w-14 rounded-full bg-primary-600 hover:bg-primary-500 text-white shadow-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
       >
         <Phone className="h-6 w-6" />
       </button>

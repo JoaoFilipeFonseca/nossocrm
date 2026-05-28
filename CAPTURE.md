@@ -14,6 +14,7 @@
 - **Resolvido 28/05/2026** apos sweep Sprint 29: removida directive nao usada + `let` -> `const` no destructure. `npm run lint` passa zero warnings.
 
 ### B-009 · 2 botões flutuantes sobrepostos no canto inferior direito (mobile)
+- **Resolvido 28/05/2026.** `CHQFloatingButton` empilhado acima do `VoiceCaptureFAB`. Mobile: voice em safe+96px, CHQ em safe+168px (72px acima). Desktop: voice bottom-6, CHQ bottom-24. Confirmado visualmente em /dashboard live: CHQ azul em cima, voice rosa em baixo, ~75px de separação.
 - **Quando:** 28/05/2026 manhã, screenshot do João.
 - **Sintoma:** botão de chamada (azul/rosa, capture nativo Sprint 12 C1.5) aparece sobreposto a outro FAB no mesmo canto. Visualmente quase um por cima do outro. Confunde + obstrui toque.
 - **Hipótese:** FAB CHQ global (Sprint 13 c3, `features/.../FabChqGlobal.tsx` ou similar) e o botão "Gravar chamada" (Sprint 12 C1.5) ambos com `position: fixed; bottom-X; right-X` próximos. Z-index e/ou offset não diferenciados.
