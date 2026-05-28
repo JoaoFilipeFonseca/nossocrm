@@ -16,14 +16,15 @@ import { ProductsCatalogManager } from './components/ProductsCatalogManager';
 import { AICenterSettings } from './AICenterSettings';
 import { MarcaSettings } from './marca/MarcaSettings';
 import { MetasSettings } from './metas/MetasSettings';
+import { ChecklistsTab } from './ChecklistsTab';
 
 import { UsersPage } from './UsersPage';
 import { useAuth } from '@/context/AuthContext';
-import { Settings as SettingsIcon, Users, Database, Sparkles, Plug, Package, Building2, Award, Target } from 'lucide-react';
+import { Settings as SettingsIcon, Users, Database, Sparkles, Plug, Package, Building2, Award, Target, ListChecks } from 'lucide-react';
 import { SelectField } from '@/components/ui/FormField';
 import { Button } from '@/components/ui/button';
 
-type SettingsTab = 'general' | 'products' | 'business-units' | 'integrations' | 'ai' | 'marca' | 'metas' | 'data' | 'users';
+type SettingsTab = 'general' | 'products' | 'business-units' | 'integrations' | 'ai' | 'marca' | 'metas' | 'checklists' | 'data' | 'users';
 
 interface GeneralSettingsProps {
   hash?: string;
@@ -207,6 +208,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
       setActiveTab('marca');
     } else if (pathname?.includes('/settings/metas')) {
       setActiveTab('metas');
+    } else if (pathname?.includes('/settings/checklists')) {
+      setActiveTab('checklists');
     } else if (pathname?.includes('/settings/data')) {
       setActiveTab('data');
     } else if (pathname?.includes('/settings/users')) {
@@ -224,6 +227,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
     { id: 'ai' as SettingsTab, name: 'Central de I.A', icon: Sparkles },
     ...(profile?.role === 'admin' ? [{ id: 'marca' as SettingsTab, name: 'Marca', icon: Award }] : []),
     { id: 'metas' as SettingsTab, name: 'Metas', icon: Target },
+    ...(profile?.role === 'admin' ? [{ id: 'checklists' as SettingsTab, name: 'Checklists', icon: ListChecks }] : []),
     { id: 'data' as SettingsTab, name: 'Dados', icon: Database },
     ...(profile?.role === 'admin' ? [{ id: 'users' as SettingsTab, name: 'Equipa', icon: Users }] : []),
   ];
@@ -246,6 +250,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ tab: initialTab }) => {
         return <MarcaSettings />;
       case 'metas':
         return <MetasSettings />;
+      case 'checklists':
+        return <ChecklistsTab />;
       case 'data':
         return <DataStorageSettings />;
       case 'users':
