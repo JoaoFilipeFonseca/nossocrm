@@ -217,8 +217,16 @@ Todos os commits pushed e em produção. GCM autorizado via browser. Próximos p
 
 ---
 
-## B-007 · Sweep PT-PT "Atividade(s)" → "Actividade(s)" (28/05/2026, Sprint 37)
-- **Escopo medido:** 51 ocorrências em 28 ficheiros (grep `[A-Za-z'"> ]Atividade`).
-- **Cuidado cirúrgico obrigatório:** só strings VISÍVEIS ao utilizador. NÃO mexer em identificadores `activities`, routes `/activities`, nomes de tabela/coluna, tipos/interfaces, chaves de API. Muitos matches estão dentro de prompts de IA (`lib/ai/tools.ts`, `crmAgent.ts`) — rever caso a caso.
-- **Ficheiros com mais peso:** features/inbox (useInboxController 6, InboxPage 2), features/activities (vários), Layout.tsx 2, navConfig.ts 1, SettingsPage.tsx 1 (label "Atividades" no SelectField), DashboardPage 1, DealCockpit (real+mock), lib/supabase/activities.ts 4.
-- **Recomendação:** commit/sessão próprios com verify isolado (tsc+lint+smoke + olho em routes). Não bundlar com features.
+## ✅ B-007 (RESOLVIDO 29/05/2026, commit 31a2150) · Sweep PT-PT "Atividade(s)" → "Actividade(s)" (Sprint 37)
+- **Resolução:** 45 trocas em 24 ficheiros de copy visível (`features/`, `components/`, `app/`) — labels, placeholders, toasts, aria-labels, metadata, nav, reasoning de decisões. tsc EXIT=0, vitest 353/0/5. Routes `/activities`, ids, enums e valores persistidos intactos.
+- **Deixado de fora de propósito (decisão do João pendente):**
+  1. **`lib/ai/**`** (tools.ts, global-rules.ts, crmAgent.ts, agent/*) e **`features/ai-hub/tools/crmTools.ts`** + **UIChat.tsx:393** (prompt) — texto enviado AO MODELO, não é UI pura. Trocar pode afectar comportamento da IA. Decidir caso a caso.
+  2. **`lib/public-api/openapi.ts`** — strings de doc da API pública.
+  3. **`decisions/analyzers/*` campos `config.name`/`config.description`** — propagam para `analyzerName` em objectos de decisão; possível comparação/persistência. Não tocado por precaução.
+  4. **`stagnantDealsAnalyzer.ts:127` `activityDescription`** — vira descrição de actividade PERSISTIDA na BD ao aplicar a sugestão. Não tocar (é dado).
+  5. Comentários/JSDoc e migrations/seed/docs/testes — fora de scope.
+
+## ⚠️ NOVO défice descoberto durante B-007 (29/05/2026) · Código cheio de PT-BR, não só "atividade"
+- Ao varrer o B-007 apareceram MUITAS palavras PT-BR no copy visível, muito além de "atividade": **"registrar"/"registro"/"registrada"**, **"Buscar"** (→Procurar), **"você"/"seu"/"sua"**, **"Salvar"** (→Guardar), **"selecionada"/"atualizada"/"concluídas"**, **"Tem certeza que deseja excluir"** (→Tem a certeza que pretende eliminar), **"chance"**.
+- **Impacto:** o produto inteiro tem dissonância PT-BR vs o PT-PT pré-AO que o João exige. É um défice sistémico, não pontual.
+- **Recomendação:** sessão dedicada "sweep PT-BR→PT-PT" com glossário fixo (registar, procurar, guardar, eliminar, seleccionado, actualizado, etc.) via sub-agente + revisão. NÃO bundlar com features. Maior esforço que B-007.
