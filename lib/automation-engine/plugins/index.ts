@@ -11,6 +11,7 @@ export { actionLog } from './actions/log';
 export { actionHttpRequest } from './actions/http-request';
 export { actionSendTelegram } from './actions/send-telegram';
 export { actionSendWhatsapp } from './actions/send-whatsapp';
+export { actionSendEmail } from './actions/send-email';
 export { actionModifyContact } from './actions/modify-contact';
 export { actionModifyDeal } from './actions/modify-deal';
 export { actionCreateTask } from './actions/create-task';
