@@ -32,6 +32,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { getAtomMeta, ATOM_CATALOG } from '@/lib/automation-engine/catalog';
 import { ConditionNode } from './nodes/ConditionNode';
+import { NodeConfigPanel } from './NodeConfigPanel';
 
 const NODE_TYPES = {
   'logic.condition': ConditionNode,
@@ -167,6 +168,7 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [fullscreen, setFullscreen] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAt = useRef<number>(Date.now());
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -222,10 +224,14 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
+    const removed = changes.filter((c) => c.type === 'remove').map((c) => (c as { id: string }).id);
+    if (removed.length && selectedNodeId && removed.includes(selectedNodeId)) {
+      setSelectedNodeId(null);
+    }
     if (changes.some((c) => (c.type === 'position' && c.dragging === false) || c.type === 'remove')) {
       scheduleSave();
     }
-  }, [scheduleSave]);
+  }, [scheduleSave, selectedNodeId]);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
     setEdges((eds) => applyEdgeChanges(changes, eds));
@@ -251,6 +257,47 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
     });
     scheduleSave();
   }, [scheduleSave]);
+
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id);
+  }, []);
+
+  const onPaneClick = useCallback(() => {
+    setSelectedNodeId(null);
+  }, []);
+
+  const updateSelectedConfig = useCallback((nextConfig: Record<string, unknown>) => {
+    if (!selectedNodeId) return;
+    setNodes((nds) => nds.map((n) => {
+      if (n.id !== selectedNodeId) return n;
+      const data = n.data as RFNodeData;
+      return { ...n, data: { ...data, config: nextConfig } as unknown as RFNodeData };
+    }));
+    scheduleSave();
+  }, [selectedNodeId, scheduleSave]);
+
+  const duplicateSelected = useCallback(() => {
+    if (!selectedNodeId) return;
+    const src = getNodes().find((n) => n.id === selectedNodeId);
+    if (!src) return;
+    const newId = newNodeId();
+    const clone: Node = {
+      ...src,
+      id: newId,
+      position: { x: (src.position?.x ?? 0) + 40, y: (src.position?.y ?? 0) + 40 },
+      selected: false,
+    };
+    setNodes((nds) => nds.concat(clone));
+    setSelectedNodeId(newId);
+    scheduleSave();
+  }, [selectedNodeId, getNodes, scheduleSave]);
+
+  const deleteOne = useCallback((id: string) => {
+    rfSetNodes((nds) => nds.filter((n) => n.id !== id));
+    rfSetEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+    if (selectedNodeId === id) setSelectedNodeId(null);
+    scheduleSave();
+  }, [rfSetNodes, rfSetEdges, selectedNodeId, scheduleSave]);
 
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -313,15 +360,20 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
 
   const hasNodesNoEdges = nodes.length >= 2 && edges.length === 0;
 
+  const selectedNode = selectedNodeId ? nodes.find((n) => n.id === selectedNodeId) ?? null : null;
+  const selectedAtom = selectedNode ? (selectedNode.data as RFNodeData).atom : null;
+  const selectedConfig = selectedNode ? ((selectedNode.data as RFNodeData).config ?? {}) : {};
+
   return (
-    <div
-      ref={wrapperRef}
-      className={fullscreen
-        ? 'fixed inset-0 z-50 bg-white'
-        : `relative ${className ?? 'h-[500px]'}`}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-    >
+    <div className={fullscreen
+      ? 'fixed inset-0 z-50 bg-white flex'
+      : `flex ${className ?? 'h-[500px]'}`}>
+      <div
+        ref={wrapperRef}
+        className="relative flex-1 min-w-0"
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+      >
       {/* CSS scoped: aumenta handles default React Flow para serem mais visiveis */}
       <style jsx global>{`
         .react-flow__handle {
@@ -341,6 +393,8 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         nodesDraggable
@@ -398,6 +452,15 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
           </div>
         </div>
       ) : null}
+      </div>
+      <NodeConfigPanel
+        selectedNodeId={selectedNodeId}
+        selectedAtomId={selectedAtom}
+        config={selectedConfig as Record<string, unknown>}
+        onConfigChange={updateSelectedConfig}
+        onDuplicate={selectedNodeId ? duplicateSelected : undefined}
+        onDelete={selectedNodeId ? () => deleteOne(selectedNodeId) : undefined}
+      />
     </div>
   );
 }
