@@ -98,7 +98,7 @@ export const CallUploadModal: React.FC<Props> = ({ isOpen, onClose, dealId, cont
             <input
               ref={fileRef}
               type="file"
-              accept="audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/aac,audio/flac,audio/*"
+              accept="audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/aac,audio/flac,audio/*,.txt,.md,text/plain,text/markdown"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               className="hidden"
               disabled={uploading}
@@ -120,9 +120,9 @@ export const CallUploadModal: React.FC<Props> = ({ isOpen, onClose, dealId, cont
                   className="w-full flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-300 hover:text-primary-500 py-2"
                 >
                   <Upload className="h-4 w-4" />
-                  ou carregar ficheiro existente
+                  ou carregar áudio / transcript do Notta
                 </button>
-                <span className="text-[11px] text-slate-400">m4a, mp3, wav, ogg, webm (até 100 MB)</span>
+                <span className="text-[11px] text-slate-400">Áudio: m4a/mp3/wav/ogg/webm (até 100 MB). Transcript: .txt/.md (até 2 MB) exportado do Notta.</span>
               </div>
             ) : (
               <div className="space-y-2">

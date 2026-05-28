@@ -8,6 +8,12 @@
 
 ## 🐛 Bugs UI activos
 
+### B-010 · 4 warnings ESLint pre-existentes (max-warnings=0)
+- **Quando:** detectado 28/05/2026 Sprint 29 c1, ja existiam antes.
+- **Onde:** `features/inbox/components/MessageComposerModal.tsx:279` (eslint-disable nao usado) + `lib/contacts/import/extras.ts:41` (3x prefer-const: `d`, `mo`, `y`).
+- **Impacto:** `npm run lint` falha no precheck (max 0 warnings). Bloqueia precheck mas nao build.
+- **Fix esperado:** 5 minutos. Run `npx eslint --fix` nos 2 ficheiros + remove a directive nao usada.
+
 ### B-009 · 2 botões flutuantes sobrepostos no canto inferior direito (mobile)
 - **Quando:** 28/05/2026 manhã, screenshot do João.
 - **Sintoma:** botão de chamada (azul/rosa, capture nativo Sprint 12 C1.5) aparece sobreposto a outro FAB no mesmo canto. Visualmente quase um por cima do outro. Confunde + obstrui toque.
