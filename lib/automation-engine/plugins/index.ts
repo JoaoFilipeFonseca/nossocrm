@@ -21,3 +21,6 @@ export { logicWaitFixed } from './logic/wait-fixed';
 export { logicWaitUntil } from './logic/wait-until';
 export { logicCondition } from './logic/condition';
 export { logicHumanApproval } from './logic/human-approval';
+export { logicSwitch } from './logic/switch';
+export { logicFilter } from './logic/filter';
+export { logicWaitHumanized } from './logic/wait-humanized';

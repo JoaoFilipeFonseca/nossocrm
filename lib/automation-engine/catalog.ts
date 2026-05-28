@@ -206,6 +206,118 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       required: ['left', 'operator'],
     },
   },
+  {
+    id: 'trigger.schedule',
+    category: 'trigger',
+    name: 'Disparar por horário',
+    icon: '⏰',
+    description: 'Cron-like. Dispara a automação a cada X minutos / dias / horários definidos.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        cron: { type: 'string', description: 'Expressão cron 5 campos (ex: 0 9 * * 1-5 = 09h dias úteis).' },
+        timezone: { type: 'string', description: 'Timezone (default Europe/Lisbon).' },
+      },
+      required: ['cron'],
+    },
+  },
+  {
+    id: 'action.send_whatsapp',
+    category: 'action',
+    name: 'Enviar WhatsApp',
+    icon: '💬',
+    description: 'Envia mensagem via canal WhatsApp configurado (Meta WABA).',
+    configSchema: {
+      type: 'object',
+      properties: {
+        to: { type: 'string', description: 'Número destino com indicativo (ex: 351912345678).' },
+        text: { type: 'string' },
+        template_name: { type: 'string', description: 'Se usar template Meta pré-aprovado.' },
+        template_vars: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['to'],
+    },
+  },
+  {
+    id: 'action.send_email',
+    category: 'action',
+    name: 'Enviar email',
+    icon: '📧',
+    description: 'Envia email via Resend. Necessita DKIM/SPF configurados.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        to: { type: 'string' },
+        from: { type: 'string', description: 'Remetente (deixa em branco para usar default da org).' },
+        subject: { type: 'string' },
+        html: { type: 'string', description: 'Corpo HTML. Suporta {{...}}.' },
+        text: { type: 'string', description: 'Versão texto. Suporta {{...}}.' },
+        reply_to: { type: 'string' },
+      },
+      required: ['to', 'subject'],
+    },
+  },
+  {
+    id: 'logic.wait_until',
+    category: 'logic',
+    name: 'Esperar até evento',
+    icon: '🎯',
+    description: 'Suspende até um evento específico chegar (ou timeout). Bifurca em event/timeout.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        event_types: { type: 'array', items: { type: 'string' }, minItems: 1 },
+        timeout_hours: { type: 'integer', minimum: 1 },
+      },
+      required: ['event_types', 'timeout_hours'],
+    },
+  },
+  {
+    id: 'logic.switch',
+    category: 'logic',
+    name: 'Escolher (switch)',
+    icon: '🔀',
+    description: 'Compara um valor com a lista de casos e segue o ramo correspondente (case_0, case_1, ..., default).',
+    configSchema: {
+      type: 'object',
+      properties: {
+        expression: { type: 'string' },
+        cases: { type: 'array', items: { type: 'string' }, minItems: 1 },
+      },
+      required: ['expression', 'cases'],
+    },
+  },
+  {
+    id: 'logic.filter',
+    category: 'logic',
+    name: 'Filtrar (continua só se)',
+    icon: '🚦',
+    description: 'Avalia condição. Se passa, continua. Se falha, termina a automação sem erro.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        left: {},
+        operator: { type: 'string', enum: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'ends_with', 'in', 'is_empty', 'is_not_empty'] },
+        right: {},
+      },
+      required: ['left', 'operator'],
+    },
+  },
+  {
+    id: 'logic.wait_humanized',
+    category: 'logic',
+    name: 'Esperar (humanizado)',
+    icon: '🌤️',
+    description: 'Espera aleatório entre min e max segundos. Nunca Domingos. Sáb 9h-13h. Seg-Sex 8h-21h Lisboa.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        min_seconds: { type: 'integer', minimum: 1 },
+        max_seconds: { type: 'integer', minimum: 1 },
+      },
+      required: ['min_seconds', 'max_seconds'],
+    },
+  },
 ];
 
 const byId = new Map(ATOM_CATALOG.map((a) => [a.id, a]));

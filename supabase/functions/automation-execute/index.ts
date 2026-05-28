@@ -314,6 +314,85 @@ const ATOMS: Record<string, AtomExecFn> = {
     };
   },
 
+  "logic.switch": async (ctx) => {
+    const expression = String(ctx.config.expression ?? "").trim().toLowerCase();
+    const rawCases = Array.isArray(ctx.config.cases) ? (ctx.config.cases as unknown[]) : [];
+    const cases = rawCases.map((v) => String(v ?? "").trim().toLowerCase());
+    const idx = cases.indexOf(expression);
+    if (idx === -1) return { matched_case: null, matched_index: -1, _branch_taken: "default" };
+    return { matched_case: rawCases[idx], matched_index: idx, _branch_taken: `case_${idx}` };
+  },
+
+  "logic.filter": async (ctx) => {
+    const op = String(ctx.config.operator ?? "eq");
+    const left = ctx.config.left;
+    const right = ctx.config.right;
+    const cmp = (l: unknown, o: string, r: unknown): boolean => {
+      switch (o) {
+        case "eq": return String(l ?? "") === String(r ?? "");
+        case "neq": return String(l ?? "") !== String(r ?? "");
+        case "gt": return Number(l) > Number(r);
+        case "gte": return Number(l) >= Number(r);
+        case "lt": return Number(l) < Number(r);
+        case "lte": return Number(l) <= Number(r);
+        case "contains": return String(l ?? "").toLowerCase().includes(String(r ?? "").toLowerCase());
+        case "starts_with": return String(l ?? "").toLowerCase().startsWith(String(r ?? "").toLowerCase());
+        case "ends_with": return String(l ?? "").toLowerCase().endsWith(String(r ?? "").toLowerCase());
+        case "in": {
+          const arr = Array.isArray(r) ? (r as unknown[]).map((x) => String(x)) : String(r ?? "").split(",").map((s) => s.trim());
+          return arr.includes(String(l ?? ""));
+        }
+        case "is_empty": return l === null || l === undefined || String(l).trim() === "";
+        case "is_not_empty": return !(l === null || l === undefined || String(l).trim() === "");
+        default: throw new Error(`operador desconhecido: ${o}`);
+      }
+    };
+    const passed = cmp(left, op, right);
+    if (!passed) return { passed: false, _branch_taken: "stop", _halt: true };
+    return { passed: true, _branch_taken: "pass" };
+  },
+
+  "logic.wait_humanized": async (ctx) => {
+    const minS = Math.max(1, Number(ctx.config.min_seconds ?? 60));
+    const maxS = Math.max(minS, Number(ctx.config.max_seconds ?? minS));
+    const span = maxS - minS;
+    const randomS = span === 0 ? minS : minS + Math.floor(Math.random() * (span + 1));
+    const lisbonParts = (d: Date) => {
+      const fmt = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Lisbon", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false,
+      });
+      const parts = fmt.formatToParts(d);
+      const weekday = parts.find((p) => p.type === "weekday")?.value ?? "Mon";
+      const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+      return { weekday, hour };
+    };
+    const inside = (d: Date) => {
+      const { weekday, hour } = lisbonParts(d);
+      if (weekday === "Sun") return false;
+      if (weekday === "Sat") return hour >= 9 && hour < 13;
+      return hour >= 8 && hour < 21;
+    };
+    const stepMs = 15 * 60 * 1000;
+    const now = Date.now();
+    const target = new Date(now + randomS * 1000);
+    let final = target;
+    if (!inside(final)) {
+      for (let i = 0; i < 14 * 24 * 4; i += 1) {
+        final = new Date(final.getTime() + stepMs);
+        if (inside(final)) break;
+      }
+    }
+    const shifted = final.getTime() !== target.getTime();
+    const waitedSeconds = Math.round((final.getTime() - now) / 1000);
+    return {
+      _suspend: true,
+      _resumeAt: final.toISOString(),
+      waited_seconds: waitedSeconds,
+      shifted,
+      original_resume_at: target.toISOString(),
+    };
+  },
+
   "logic.condition": async (ctx) => {
     const op = String(ctx.config.operator ?? "eq");
     const left = ctx.config.left;
@@ -549,8 +628,13 @@ Deno.serve(async (req) => {
         }).eq("id", nodeExec.id);
       }
 
+      // Detecta _halt (terminação suave — sai do loop como completed)
+      const out = output as { _suspend?: boolean; _resumeAt?: string; _approval_token?: string; _halt?: boolean };
+      if (out?._halt === true) {
+        current = null;
+        break;
+      }
       // Detecta _suspend
-      const out = output as { _suspend?: boolean; _resumeAt?: string; _approval_token?: string };
       if (out?._suspend === true && out._resumeAt) {
         suspended = true;
         resumeAt = out._resumeAt;
