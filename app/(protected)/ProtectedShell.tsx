@@ -12,6 +12,7 @@ import Layout from '@/components/Layout'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { CHQFloatingButton } from '@/components/CHQFloatingButton'
 import { ClientErrorReporter } from '@/components/ClientErrorReporter'
+import { ConsentGate } from '@/components/ConsentGate'
 
 export default function ProtectedShell({
     children,
@@ -71,6 +72,7 @@ export default function ProtectedShell({
                                 <ClientErrorReporter />
                                 {shouldUseAppShell ? <Layout>{children}</Layout> : children}
                                 {shouldUseAppShell && <CHQFloatingButton />}
+                                {shouldUseAppShell && <ConsentGate />}
                             </TooltipProvider>
                         </AIProvider>
                     </AuthProvider>

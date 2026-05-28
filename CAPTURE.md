@@ -8,6 +8,13 @@
 
 ## 🐛 Bugs UI activos
 
+### B-011 · ConsentModal copy em PT-BR ("seus dados", "coletados")
+- **Quando:** detectado 28/05/2026 ao montar ConsentGate (Sprint 31 c1).
+- **Onde:** `components/ConsentModal.tsx` CONSENT_LABELS + textos "LGPD".
+- **Sintoma:** copy fala em "seus" em vez de "os seus", "coletados" em vez de "recolhidos", "Política" copy brasileiro. Strings menores: "Salvando...", "LGPD" (Brasil) deve ser "RGPD" (Portugal).
+- **Fix esperado:** 10 min — re-escrever 5 entries de CONSENT_LABELS + button copy + secao headings em PT-PT pre-AO 1990. Trocar referencias LGPD por RGPD.
+- **Impacto:** baixo (mostra cumprimento de privacidade mas em portugues errado). NAO bloqueante para uso interno.
+
 ### B-010 · 4 warnings ESLint pre-existentes (max-warnings=0)
 - **Quando:** detectado 28/05/2026 Sprint 29 c1, ja existiam antes.
 - **Onde:** `features/inbox/components/MessageComposerModal.tsx:279` (eslint-disable nao usado) + `lib/contacts/import/extras.ts:41` (3x prefer-const: `d`, `mo`, `y`).
