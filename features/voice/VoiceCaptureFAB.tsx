@@ -36,9 +36,19 @@ export const VoiceCaptureFAB: React.FC = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const tickRef = useRef<number | null>(null);
   const pollRef = useRef<number | null>(null);
+  // Sprint 30 c3 — Wake Lock para iPhone nao pausar quando ecra apaga.
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const [screenHidden, setScreenHidden] = useState(false);
 
   // Esconder em rotas onde estorva (ex: login)
   const hideFAB = pathname?.startsWith('/login') || pathname?.startsWith('/install') || pathname === '/';
+
+  const releaseWakeLock = async () => {
+    if (wakeLockRef.current) {
+      try { await wakeLockRef.current.release(); } catch { /* ignore */ }
+      wakeLockRef.current = null;
+    }
+  };
 
   const cleanup = () => {
     if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
@@ -46,9 +56,20 @@ export const VoiceCaptureFAB: React.FC = () => {
     if (streamRef.current) { streamRef.current.getTracks().forEach((t) => t.stop()); streamRef.current = null; }
     mediaRecorderRef.current = null;
     chunksRef.current = [];
+    void releaseWakeLock();
+    setScreenHidden(false);
   };
 
   useEffect(() => () => cleanup(), []);
+
+  // Sprint 30 c3 — avisar se ecra apaga durante gravacao (iOS pode pausar MediaRecorder).
+  useEffect(() => {
+    const onVisibility = () => {
+      if (stage === 'recording') setScreenHidden(document.hidden);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [stage]);
 
   const reset = () => {
     cleanup();
@@ -76,6 +97,14 @@ export const VoiceCaptureFAB: React.FC = () => {
       mr.start();
       setStage('recording');
       tickRef.current = window.setInterval(() => setSeconds((s) => s + 1), 1000);
+      // Pedir Wake Lock (iOS Safari 16.4+ / Chrome). Falha silenciosa se nao suportado.
+      try {
+        if ('wakeLock' in navigator && (navigator as any).wakeLock?.request) {
+          wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch { /* ignore */ }
+      // Haptic discreto ao iniciar (Android; iPhone nao suporta Vibration mas nao rebenta).
+      try { navigator.vibrate?.(40); } catch { /* ignore */ }
     } catch (e: any) {
       const msg = e?.name === 'NotAllowedError'
         ? 'Permissão do microfone negada. Active nas definições do browser.'
@@ -96,6 +125,8 @@ export const VoiceCaptureFAB: React.FC = () => {
     try { mr.stop(); } catch { resolve(null); }
     if (streamRef.current) { streamRef.current.getTracks().forEach((t) => t.stop()); streamRef.current = null; }
     if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
+    void releaseWakeLock();
+    try { navigator.vibrate?.([30, 40, 30]); } catch { /* ignore */ }
   });
 
   const upload = async (blob: Blob) => {
@@ -233,6 +264,12 @@ export const VoiceCaptureFAB: React.FC = () => {
                     {Math.floor(seconds / 60).toString().padStart(2, '0')}:{(seconds % 60).toString().padStart(2, '0')}
                   </p>
                   <p className="mt-2 text-sm text-slate-500">A gravar… tap para parar e processar</p>
+
+                  {screenHidden && (
+                    <div className="mt-3 mx-auto max-w-xs rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/40 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+                      ⚠️ Ecrã apagou. iPhone pode pausar a gravação. Mantenha esta janela à frente.
+                    </div>
+                  )}
 
                   {seconds < 30 && (
                     <div className="mt-5 mx-auto max-w-xs text-left rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 p-3 space-y-1.5">
