@@ -6,12 +6,12 @@
 
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { loadAutomationParams } from '../_shared/automation-params.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const TELEGRAM_API = 'https://api.telegram.org';
-const THRESHOLD = 3;
-const WINDOW_MS = 5 * 60 * 1000;
+const DEFAULTS = { threshold: 3, window_minutes: 5 };
 
 Deno.serve(async (req: Request) => {
   const cronSecret = req.headers.get('X-Cron-Secret') || '';
@@ -24,7 +24,12 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers: { 'content-type': 'application/json' } });
   }
 
-  const cutoff = new Date(Date.now() - WINDOW_MS).toISOString();
+  const params = await loadAutomationParams(supabase, 'client-errors-alert', DEFAULTS);
+  const threshold = Math.max(1, Math.floor(Number(params.threshold) || DEFAULTS.threshold));
+  const windowMinutes = Math.max(1, Math.floor(Number(params.window_minutes) || DEFAULTS.window_minutes));
+  const windowMs = windowMinutes * 60 * 1000;
+
+  const cutoff = new Date(Date.now() - windowMs).toISOString();
 
   const { data: pending, error: qErr } = await supabase
     .from('client_errors')
@@ -48,7 +53,7 @@ Deno.serve(async (req: Request) => {
   const sent: Array<{ org: string; count: number; ok: boolean; error?: string }> = [];
 
   for (const [orgId, rows] of byOrg.entries()) {
-    if (rows.length < THRESHOLD) {
+    if (rows.length < threshold) {
       sent.push({ org: orgId, count: rows.length, ok: false, error: 'below threshold' });
       continue;
     }
@@ -67,7 +72,7 @@ Deno.serve(async (req: Request) => {
     const sample = rows.slice(0, 3).map((r) => `• <code>${r.source}</code>: ${(r.message || '').slice(0, 80)}`).join('\n');
     const text = [
       `⚠️ <b>Rajada de erros front-end</b>`,
-      `${rows.length} erros nos últimos 5 minutos.`,
+      `${rows.length} erros nos últimos ${windowMinutes} minutos.`,
       ``,
       sample,
       ``,

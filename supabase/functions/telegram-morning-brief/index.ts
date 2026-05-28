@@ -6,11 +6,13 @@
 
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { loadAutomationParams } from '../_shared/automation-params.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const TELEGRAM_API = 'https://api.telegram.org';
+const DEFAULTS = { skip_weekends: true, cold_deals_days: 10 };
 
 function fmt(n: number): string {
   return Math.round(n).toLocaleString('pt-PT');
@@ -27,11 +29,17 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers: { 'content-type': 'application/json' } });
   }
 
+  const params = await loadAutomationParams(supabase, 'telegram-morning-brief', DEFAULTS);
+  const skipWeekends = params.skip_weekends !== false;
+  const coldDealsDays = Math.max(1, Math.floor(Number(params.cold_deals_days) || DEFAULTS.cold_deals_days));
+
   const now = new Date();
-  const lisbonStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon', weekday: 'short' }).format(now);
-  const dayLower = lisbonStr.toLowerCase();
-  if (dayLower.startsWith('sat') || dayLower.startsWith('sun')) {
-    return new Response(JSON.stringify({ ok: true, skipped: 'weekend' }), { status: 200, headers: { 'content-type': 'application/json' } });
+  if (skipWeekends) {
+    const lisbonStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon', weekday: 'short' }).format(now);
+    const dayLower = lisbonStr.toLowerCase();
+    if (dayLower.startsWith('sat') || dayLower.startsWith('sun')) {
+      return new Response(JSON.stringify({ ok: true, skipped: 'weekend' }), { status: 200, headers: { 'content-type': 'application/json' } });
+    }
   }
 
   const { data: orgs, error: orgsErr } = await supabase
@@ -65,7 +73,7 @@ Deno.serve(async (req: Request) => {
         goal: { year: number; annual_target_eur: number; ytd_target_eur: number; ytd_realized_eur: number; pct: number | null; semaphore: string };
       };
 
-      const cutoff = new Date(Date.now() - 10 * 86400000).toISOString();
+      const cutoff = new Date(Date.now() - coldDealsDays * 86400000).toISOString();
       const { count: coldCount } = await supabase
         .from('deals')
         .select('id', { count: 'exact', head: true })
@@ -92,7 +100,7 @@ Deno.serve(async (req: Request) => {
       ];
       if ((coldCount ?? 0) > 0) {
         lines.push('');
-        lines.push(`🥶 <b>${coldCount} ${coldCount === 1 ? 'deal frio' : 'deals frios'}</b> > 10 dias sem mexer. Liga, escreve, ou aceita perda.`);
+        lines.push(`🥶 <b>${coldCount} ${coldCount === 1 ? 'deal frio' : 'deals frios'}</b> > ${coldDealsDays} dias sem mexer. Liga, escreve, ou aceita perda.`);
       }
       lines.push('');
       lines.push(`Atalhos: /numeros · /chq · /menu`);

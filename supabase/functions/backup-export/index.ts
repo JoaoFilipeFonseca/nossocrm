@@ -8,6 +8,7 @@
 
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { loadAutomationParams } from '../_shared/automation-params.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -34,7 +35,7 @@ const TABLES = [
   'imoveis',
 ];
 
-const MAX_BACKUPS_PER_ORG = 12;
+const DEFAULTS = { retention: 12 };
 
 function isoWeekTag(d: Date = new Date()): string {
   const dt = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -59,6 +60,9 @@ Deno.serve(async (req: Request) => {
       headers: { 'content-type': 'application/json' },
     });
   }
+
+  const params = await loadAutomationParams(supabase, 'backup-weekly', DEFAULTS);
+  const retention = Math.max(1, Math.floor(Number(params.retention) || DEFAULTS.retention));
 
   const weekTag = isoWeekTag();
   const startedAt = new Date().toISOString();
@@ -123,8 +127,8 @@ Deno.serve(async (req: Request) => {
         limit: 100,
         sortBy: { column: 'name', order: 'desc' },
       });
-      if (files && files.length > MAX_BACKUPS_PER_ORG) {
-        const toDelete = files.slice(MAX_BACKUPS_PER_ORG).map((f) => `${org.id}/${f.name}`);
+      if (files && files.length > retention) {
+        const toDelete = files.slice(retention).map((f) => `${org.id}/${f.name}`);
         const { error: delErr } = await supabase.storage.from('backups').remove(toDelete);
         if (!delErr) cleaned = toDelete.length;
       }
