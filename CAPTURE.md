@@ -28,11 +28,7 @@
 - **Capturado meta:** João observou e disse "tens que ser tu a estar atento não eu" — fica como lição: depois de criar FAB novo, conferir se há outros FABs na mesma página + viewport mobile.
 
 ### B-008 · Adaptar `/settings/automation-logs` ao novo schema `automation_executions`
-- **Quando:** 26/05/2026, Sprint 0 da Máquina de Automações (commit 2).
-- **Contexto:** O Sprint 0 fez `DROP TABLE IF EXISTS automation_executions CASCADE` da tabela legacy (placeholder do Bloco 1 #127, 0 rows) e recriou-a com schema novo (`status`, `variables`, `resume_at`, `is_test`, `automation_version`...). A página `/settings/automation-logs` continua a consumir o schema antigo.
-- **Impacto actual:** página passa a mostrar lista vazia (sem crash). O CRM em produção mantém-se funcional.
-- **Falta:** adaptar a query e UI da página ao novo schema, e idealmente fundir com a vista de execuções da máquina de automações (cockpit unificado).
-- **Estimativa:** 1 sessão, parte do Sprint 7 (Observabilidade) do plano de automações em `docs/automation-engine/07-sprint-plan.md`.
+- **Resolvido 28/05/2026** Sprint 35 c2. Query adaptada ao schema novo (started_at, trigger_type, duration_ms, is_test, automation_version), join para automations (icon+name) e deals (title). UI mostra estado em PT (A correr, Concluída, A aguardar, Falhou, Cancelada), badge "teste", link para /automacoes/[id] no nome da automação, link para contacto/imóvel quando aplicável. Mantém-se como antechamber do Sprint 7 cockpit unificado; replay+timeline detalhado fica para sprint dedicado.
 
 ### B-007 · Sweep PT-PT alargado — substituir "deal" por "negócio" em todo o UI visível
 - **Quando:** 25/05/2026 noite, ao testar chamadas A.1.
