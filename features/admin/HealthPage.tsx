@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Database, Clock, AlertOctagon, Sparkles, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
+import { Database, Clock, AlertOctagon, Sparkles, CheckCircle2, XCircle, RefreshCw, ChevronDown, ChevronUp, Check } from 'lucide-react';
 
 type HealthStatus = {
   generated_at: string;
@@ -28,10 +28,50 @@ function formatBytes(n: number): string {
   return `${(n / 1048576).toFixed(1)} MB`;
 }
 
+type ClientErrorRow = {
+  id: string;
+  source: string;
+  message: string;
+  stack: string | null;
+  url: string | null;
+  created_at: string;
+  resolved: boolean;
+  alerted_at: string | null;
+};
+
 const HealthPage: React.FC = () => {
   const [data, setData] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showErrors, setShowErrors] = useState(false);
+  const [errors, setErrors] = useState<ClientErrorRow[]>([]);
+  const [errorsLoading, setErrorsLoading] = useState(false);
+
+  const loadErrors = () => {
+    setErrorsLoading(true);
+    fetch('/api/admin/client-errors', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => setErrors(Array.isArray(j.items) ? j.items : []))
+      .catch(() => setErrors([]))
+      .finally(() => setErrorsLoading(false));
+  };
+
+  const toggleErrors = () => {
+    setShowErrors((v) => {
+      const next = !v;
+      if (next && errors.length === 0) loadErrors();
+      return next;
+    });
+  };
+
+  const resolveError = (id: string) => {
+    setErrors((rows) => rows.map((r) => r.id === id ? { ...r, resolved: true } : r));
+    fetch(`/api/admin/client-errors?id=${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ resolved: true }),
+    }).catch(() => {});
+  };
 
   const load = () => {
     setLoading(true);
@@ -124,21 +164,28 @@ const HealthPage: React.FC = () => {
         </div>
 
         {/* Erros front-end 24h */}
-        <div className={`rounded-2xl border p-5 ${errorsAlert ? 'bg-rose-50 dark:bg-rose-500/5 border-rose-200 dark:border-rose-500/30' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
+        <button
+          type="button"
+          onClick={toggleErrors}
+          className={`text-left rounded-2xl border p-5 transition-colors ${errorsAlert ? 'bg-rose-50 dark:bg-rose-500/5 border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/10' : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'}`}
+        >
           <div className="flex items-center gap-2 mb-3">
             <AlertOctagon className={`h-5 w-5 ${errorsAlert ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`} />
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Erros front-end (24h)</h3>
-            {!errorsAlert && data.client_errors_24h === 0 && <CheckCircle2 className="h-4 w-4 text-emerald-500 ml-auto" />}
+            <span className="ml-auto flex items-center gap-1">
+              {!errorsAlert && data.client_errors_24h === 0 && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+              {showErrors ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </span>
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white">{data.client_errors_24h}</div>
           <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {data.client_errors_24h === 0
               ? 'Nada partiu nas últimas 24h.'
               : errorsAlert
-                ? 'Alerta. Mais de 5 erros — investigar.'
-                : 'Dentro do normal.'}
+                ? 'Alerta. Mais de 5 erros — clica para investigar.'
+                : 'Dentro do normal. Clica para ver detalhe.'}
           </div>
-        </div>
+        </button>
 
         {/* AI keys */}
         <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-5">
@@ -173,6 +220,61 @@ const HealthPage: React.FC = () => {
             </li>
           </ul>
         </div>
+
+        {/* Sprint 26 c1: lista expandida de erros */}
+        {showErrors && (
+          <div className="md:col-span-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <AlertOctagon className="h-4 w-4 text-rose-500" />
+                Erros recentes (top 30)
+              </h3>
+              <button onClick={loadErrors} className="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white inline-flex items-center gap-1">
+                <RefreshCw className="h-3 w-3" /> Recarregar
+              </button>
+            </div>
+            {errorsLoading ? (
+              <p className="text-sm text-slate-400">A carregar...</p>
+            ) : errors.length === 0 ? (
+              <p className="text-sm text-slate-500">Sem erros registados.</p>
+            ) : (
+              <ul className="space-y-2 text-xs">
+                {errors.map((e) => (
+                  <li
+                    key={e.id}
+                    className={`p-2 rounded-lg border ${e.resolved ? 'border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 opacity-60' : 'border-rose-100 dark:border-rose-500/20 bg-rose-50/50 dark:bg-rose-500/5'}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <code className="text-[10px] text-slate-500 dark:text-slate-400">{e.source}</code>
+                          <span className="text-[10px] text-slate-400">{new Date(e.created_at).toLocaleString('pt-PT')}</span>
+                          {e.alerted_at && <span className="text-[10px] text-amber-600 dark:text-amber-400">📨 alerta enviado</span>}
+                        </div>
+                        <div className="text-slate-800 dark:text-slate-200 font-medium mt-1 break-words">{e.message}</div>
+                        {e.url && <div className="text-[10px] text-slate-400 mt-0.5 truncate" title={e.url}>{e.url}</div>}
+                        {e.stack && (
+                          <details className="mt-1">
+                            <summary className="text-[10px] text-slate-400 cursor-pointer hover:text-slate-600">ver stack</summary>
+                            <pre className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 overflow-x-auto whitespace-pre-wrap break-words">{e.stack.slice(0, 1500)}</pre>
+                          </details>
+                        )}
+                      </div>
+                      {!e.resolved && (
+                        <button
+                          onClick={() => resolveError(e.id)}
+                          className="flex-shrink-0 text-[10px] text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1 px-2 py-1 rounded border border-emerald-300 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+                        >
+                          <Check className="h-3 w-3" /> Marcar resolvido
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {/* Cron jobs */}
         <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-5 md:col-span-2">
