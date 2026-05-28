@@ -165,6 +165,96 @@ export async function createEntityFromVoice(
     };
   }
 
+  if (intent === 'call_recording') {
+    // Sprint 30 — Joao acabou uma chamada e ditou descricao no FAB.
+    // Match contact por nome, encontra deal aberto, regista chamada completa
+    // (call_recordings + activity CALL). Fecha CHQ automatico.
+    const term = extraction.contact_name?.trim();
+    if (!term) {
+      return { kind: 'unmatched', summary: extraction.summary, reason: 'Nenhum contacto identificado na descrição' };
+    }
+
+    let { data: contacts } = await supabase.rpc('search_contacts_unaccent', {
+      p_org_id: orgId, p_term: term, p_limit: 5,
+    });
+    if (!contacts || contacts.length === 0) {
+      const firstWord = term.split(/\s+/)[0];
+      const r = await supabase.rpc('search_contacts_unaccent', {
+        p_org_id: orgId, p_term: firstWord, p_limit: 5,
+      });
+      contacts = r.data;
+    }
+    if (!contacts || contacts.length === 0) {
+      return { kind: 'unmatched', summary: extraction.summary, reason: `Contacto "${term}" não encontrado` };
+    }
+
+    const chosen = contacts[0];
+    const { data: deals } = await supabase
+      .from('deals')
+      .select('id')
+      .eq('organization_id', orgId)
+      .eq('contact_id', chosen.id)
+      .is('deleted_at', null)
+      .eq('is_won', false)
+      .eq('is_lost', false)
+      .order('updated_at', { ascending: false })
+      .limit(1);
+
+    const dealId = deals?.[0]?.id || null;
+
+    const { data: callRow } = await supabase
+      .from('call_recordings')
+      .insert({
+        organization_id: orgId,
+        deal_id: dealId,
+        contact_id: chosen.id,
+        audio_path: null,
+        audio_mime: 'audio/voice-inapp',
+        source: 'voice-inapp',
+        status: 'processed',
+        transcript: extraction.transcript,
+        summary: extraction.summary,
+        processed_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+
+    if (!dealId) {
+      return {
+        kind: 'unmatched',
+        summary: extraction.summary,
+        reason: `${chosen.name} não tem negócio aberto. Transcript guardado em call_recordings.`,
+        call_recording_id: callRow?.id,
+      };
+    }
+
+    const { data: act } = await supabase
+      .from('deal_activities')
+      .insert({
+        deal_id: dealId,
+        organization_id: orgId,
+        type: 'CALL',
+        description: `📞 Chamada (ditada via mic CRM)\n\n${extraction.summary || extraction.transcript.slice(0, 280)}`,
+        metadata: {
+          source: 'voice-inapp',
+          call_recording_id: callRow?.id,
+          transcript: extraction.transcript,
+        },
+      })
+      .select('id')
+      .single();
+
+    return {
+      kind: 'deal_activity',
+      id: act?.id,
+      deal_id: dealId,
+      contact_id: chosen.id,
+      contact_name: chosen.name,
+      summary: extraction.summary,
+      call_recording_id: callRow?.id,
+    };
+  }
+
   if (intent === 'lead') {
     const insertObj: any = {
       organization_id: orgId,
