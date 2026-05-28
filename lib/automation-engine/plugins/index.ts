@@ -17,5 +17,6 @@ export { actionCreateTask } from './actions/create-task';
 export { actionRunAi } from './actions/run-ai';
 
 export { logicWaitFixed } from './logic/wait-fixed';
+export { logicWaitUntil } from './logic/wait-until';
 export { logicCondition } from './logic/condition';
 export { logicHumanApproval } from './logic/human-approval';
