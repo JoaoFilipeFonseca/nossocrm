@@ -202,6 +202,15 @@ Todos os commits pushed e em produção. GCM autorizado via browser. Próximos p
 
 ---
 
+## T-001 · 3 testes só-de-teste destapados ao instalar @testing-library/dom (28/05/2026, Sprint 37)
+- **Contexto:** instalar `@testing-library/dom` (commit cc69c36) fez os 12 ficheiros DOM voltarem a carregar (209→350 testes a passar). Isso destapou 3 falhas reais que antes estavam escondidas (os ficheiros nem carregavam). NENHUMA parte a app em produção, são todas de setup/expectativa de teste.
+- **1) `features/inbox/components/CallModal.test.tsx`** — espera `tel:+5511999990000` mas o código formata `tel:(11) 99999-0000`. Expectativa desactualizada; além disso o `+55` é brasileiro (resíduo de template, CRM é PT). Decidir: alinhar teste ao formato real OU corrigir formatação do tel para E.164.
+- **2) `features/boards/components/Modals/DealDetailModal.test.tsx`** ("hook order regression") — renderiza sem `QueryClientProvider`, logo `useQueryClient` (DealDetailModal.tsx:200) rebenta. Falta o wrapper no render do teste. Não é bug de produção (a app tem provider).
+- **3) `test/stories/US-001-abrir-deal-no-boards.test.tsx`** — mesma raiz do #2 (falta provider à volta do boards/deal modal).
+- **Recomendação:** sessão curta "higiene de testes" — wrap dos renders num helper com QueryClientProvider + decidir formato tel. Não bundlar com features.
+
+---
+
 > **Como usar:** quando o utilizador propuser feature/fix novo mid-sessão e estiver fora do objectivo da sessão activa, perguntar "CAPTURA ou agora?". Se CAPTURA, adicionar aqui com data e contexto suficiente para retomar sem perder informação.
 
 ---
