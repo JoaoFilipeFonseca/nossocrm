@@ -4,6 +4,7 @@ import { Contact, Company, ContactSortableColumn } from '@/types';
 import { StageBadge } from './ContactsStageTabs';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LogCHQQuick } from '@/features/boards/components/Kanban/LogCHQQuick';
+import { toWhatsAppPhone } from '@/lib/phone';
 
 // Performance: reuse Intl formatters (they are relatively expensive to instantiate).
 const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
@@ -319,7 +320,7 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                                                         <Phone size={12} /> <span className="truncate">{contact.phone}</span>
                                                     </a>
                                                     <a
-                                                        href={`https://wa.me/${contact.phone.replace(/[^0-9]/g, '')}`}
+                                                        href={`https://wa.me/${toWhatsAppPhone(contact.phone)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         onClick={() => {
