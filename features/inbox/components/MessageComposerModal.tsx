@@ -276,7 +276,6 @@ export function MessageComposerModal({
         })();
 
         return () => { abort.abort(); };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, channel]);
 
     const canOpen = useMemo(() => {

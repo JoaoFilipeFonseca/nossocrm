@@ -38,7 +38,7 @@ export function parseDateDDMMYYYY(raw: string | undefined | null): string | null
   if (!s) return null;
   const m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/.exec(s);
   if (!m) return null;
-  let [, d, mo, y] = m;
+  const [, d, mo, y] = m;
   let year = parseInt(y, 10);
   if (year < 100) year += 2000;
   const day = parseInt(d, 10);
