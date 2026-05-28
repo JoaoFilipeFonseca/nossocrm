@@ -233,6 +233,16 @@ export const VoiceCaptureFAB: React.FC = () => {
                     {Math.floor(seconds / 60).toString().padStart(2, '0')}:{(seconds % 60).toString().padStart(2, '0')}
                   </p>
                   <p className="mt-2 text-sm text-slate-500">A gravar… tap para parar e processar</p>
+
+                  {seconds < 30 && (
+                    <div className="mt-5 mx-auto max-w-xs text-left rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 p-3 space-y-1.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">💡 Diga o nome do cliente para ligar automaticamente</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">📞 <em>“Acabei de falar com a Maria sobre o T3 em Matosinhos, ela vai mandar IRS amanhã e visita marcada sexta às 15h.”</em></p>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">🎯 <em>“Lembra-me de ligar ao Bruno na quinta de manhã.”</em></p>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">👤 <em>“Novo lead Pedro 912345678 procura T2 até 280k em Gondomar.”</em></p>
+                    </div>
+                  )}
+
                   <button onClick={reset} className="mt-4 text-xs text-slate-400 hover:text-rose-500 inline-flex items-center gap-1">
                     <Trash2 className="h-3 w-3" /> Cancelar
                   </button>
