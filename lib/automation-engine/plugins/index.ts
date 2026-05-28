@@ -24,3 +24,6 @@ export { logicHumanApproval } from './logic/human-approval';
 export { logicSwitch } from './logic/switch';
 export { logicFilter } from './logic/filter';
 export { logicWaitHumanized } from './logic/wait-humanized';
+
+export { dataSetVariable } from './data/set-variable';
+export { dataFormatText } from './data/format-text';

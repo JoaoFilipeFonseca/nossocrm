@@ -315,6 +315,14 @@ export const useBoardsController = () => {
     stageId: string;
   } | null>(null);
 
+  // Sprint 36 c6 M-012: Stage checklist modal pending state
+  const [pendingStageMove, setPendingStageMove] = useState<{
+    dealId: string;
+    dealTitle: string;
+    toStageId: string;
+    toStageName: string;
+  } | null>(null);
+
   // Open deal from URL param (e.g., /boards?deal=xxx)
   useEffect(() => {
     if (!searchParams) return;
@@ -558,15 +566,42 @@ export const useBoardsController = () => {
         stageId: newStageId,
       });
     } else {
-      // Regular move or WON stage
-      moveDealMutation.mutate({
+      // Sprint 36 c6 M-012: abre StageChecklistModal antes de mover.
+      // O modal carrega items da stage e auto-confirma se não houver
+      // (passthrough silencioso).
+      setPendingStageMove({
         dealId,
-        targetStageId: newStageId,
+        dealTitle: deal.title,
+        toStageId: newStageId,
+        toStageName: targetStage?.label ?? '—',
+      });
+    }
+  };
+
+  // Sprint 36 c6 M-012: confirma / cancela o move pendente da stage checklist
+  const confirmPendingStageMove = (skipped: boolean) => {
+    if (!pendingStageMove || !activeBoard) {
+      setPendingStageMove(null);
+      return;
+    }
+    const deal = deals.find(d => d.id === pendingStageMove.dealId);
+    if (deal) {
+      moveDealMutation.mutate({
+        dealId: pendingStageMove.dealId,
+        targetStageId: pendingStageMove.toStageId,
         deal,
         board: activeBoard,
         lifecycleStages,
       });
+      if (skipped) {
+        addToast(`Avançou ${pendingStageMove.dealTitle} sem completar o checklist.`, 'info');
+      }
     }
+    setPendingStageMove(null);
+  };
+
+  const cancelPendingStageMove = () => {
+    setPendingStageMove(null);
   };
 
   const handleQuickAddActivity = (
@@ -885,6 +920,10 @@ export const useBoardsController = () => {
     lossReasonModal,
     handleLossReasonConfirm,
     handleLossReasonClose,
+    // Sprint 36 c6 M-012: Stage checklist modal
+    pendingStageMove,
+    confirmPendingStageMove,
+    cancelPendingStageMove,
     // UX: global overlay while creating board (start-from-zero flow)
     boardCreateOverlay,
   };

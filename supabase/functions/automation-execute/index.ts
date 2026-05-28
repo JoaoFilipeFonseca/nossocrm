@@ -393,6 +393,14 @@ const ATOMS: Record<string, AtomExecFn> = {
     };
   },
 
+  "data.set_variable": async (ctx) => {
+    return { value: ctx.config.value ?? null };
+  },
+
+  "data.format_text": async (ctx) => {
+    return { text: String(ctx.config.template ?? "") };
+  },
+
   "logic.condition": async (ctx) => {
     const op = String(ctx.config.operator ?? "eq");
     const left = ctx.config.left;

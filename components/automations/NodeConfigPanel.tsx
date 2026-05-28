@@ -24,6 +24,9 @@ export interface NodeConfigPanelProps {
   onDuplicate?: () => void;
   onDelete?: () => void;
   className?: string;
+  /** Em mobile, controla se o drawer está visível (default false oculta tudo). */
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 function categoryChipClass(atomId: string): string {
@@ -42,26 +45,36 @@ export function NodeConfigPanel({
   onDuplicate,
   onDelete,
   className,
+  mobileOpen = false,
+  onMobileClose,
 }: NodeConfigPanelProps) {
+  const desktopBase = `hidden md:flex md:flex-col w-72 lg:w-80 shrink-0 border-l border-slate-200 bg-white overflow-y-auto ${className ?? ''}`;
+  const mobileBase = mobileOpen
+    ? `flex flex-col fixed inset-y-0 right-0 w-80 max-w-[90vw] z-40 bg-white shadow-2xl border-l border-slate-200 overflow-y-auto md:hidden`
+    : 'hidden';
+
   if (!selectedNodeId || !selectedAtomId) {
     return (
-      <aside className={`hidden md:flex md:flex-col w-72 lg:w-80 shrink-0 border-l border-slate-200 bg-white overflow-y-auto ${className ?? ''}`}>
-        <div className="p-4 text-center text-slate-500">
-          <div className="text-2xl mb-2">👉</div>
-          <div className="text-sm font-medium text-slate-700">Nenhum nó seleccionado</div>
-          <div className="text-xs mt-1 text-slate-500">
-            Clica num nó do canvas para abrir as opções de configuração.
-          </div>
-        </div>
-      </aside>
+      <>
+        <aside className={desktopBase}>
+          <EmptyState />
+        </aside>
+        {mobileOpen ? (
+          <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={onMobileClose} />
+        ) : null}
+        <aside className={mobileBase}>
+          <MobileHeader onClose={onMobileClose} />
+          <EmptyState />
+        </aside>
+      </>
     );
   }
 
   const meta = getAtomMeta(selectedAtomId);
   const schema = meta?.configSchema ?? {};
 
-  return (
-    <aside className={`hidden md:flex md:flex-col w-72 lg:w-80 shrink-0 border-l border-slate-200 bg-white overflow-y-auto ${className ?? ''}`}>
+  const content = (
+    <>
       <header className="px-3 py-2.5 border-b border-slate-100 bg-slate-50/50">
         <div className="flex items-start gap-2">
           <div className="text-xl leading-none mt-0.5">{meta?.icon ?? '❓'}</div>
@@ -114,6 +127,50 @@ export function NodeConfigPanel({
         <summary className="cursor-pointer hover:text-slate-600">ID interno do nó</summary>
         <code className="mt-1 block font-mono text-slate-500 break-all">{selectedNodeId}</code>
       </details>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      <aside className={desktopBase}>
+        {content}
+      </aside>
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={onMobileClose} />
+      ) : null}
+      <aside className={mobileBase}>
+        <MobileHeader onClose={onMobileClose} />
+        {content}
+      </aside>
+    </>
   );
 }
+
+function EmptyState() {
+  return (
+    <div className="p-4 text-center text-slate-500">
+      <div className="text-2xl mb-2">👉</div>
+      <div className="text-sm font-medium text-slate-700">Nenhum nó seleccionado</div>
+      <div className="text-xs mt-1 text-slate-500">
+        Clica num nó do canvas para abrir as opções de configuração.
+      </div>
+    </div>
+  );
+}
+
+function MobileHeader({ onClose }: { onClose?: () => void }) {
+  return (
+    <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div className="text-xs font-semibold text-slate-700">Configurar nó</div>
+      <button
+        type="button"
+        onClick={onClose}
+        className="text-slate-500 hover:text-slate-900 text-lg px-2"
+        aria-label="Fechar painel"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+

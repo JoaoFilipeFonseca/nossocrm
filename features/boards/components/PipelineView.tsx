@@ -9,6 +9,7 @@ import { KanbanBoard } from './Kanban/KanbanBoard';
 import { KanbanList } from './Kanban/KanbanList';
 import { DeleteBoardModal } from './Modals/DeleteBoardModal';
 import { LossReasonModal } from '@/components/ui/LossReasonModal';
+import { StageChecklistModal } from '@/components/boards/StageChecklistModal';
 import { DealView, CustomFieldDefinition, Board, BoardStage } from '@/types';
 import { ExportTemplateModal } from './Modals/ExportTemplateModal';
 import { useAuth } from '@/context/AuthContext';
@@ -76,6 +77,15 @@ interface PipelineViewProps {
   } | null;
   handleLossReasonConfirm: (reason: string) => void;
   handleLossReasonClose: () => void;
+  // Sprint 36 c6 M-012 Stage checklist
+  pendingStageMove?: {
+    dealId: string;
+    dealTitle: string;
+    toStageId: string;
+    toStageName: string;
+  } | null;
+  confirmPendingStageMove?: (skipped: boolean) => void;
+  cancelPendingStageMove?: () => void;
   boardCreateOverlay?: { title: string; subtitle?: string } | null;
 }
 
@@ -241,9 +251,12 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
   lossReasonModal,
   handleLossReasonConfirm,
   handleLossReasonClose,
+  pendingStageMove,
+  confirmPendingStageMove,
+  cancelPendingStageMove,
   boardCreateOverlay,
 }) => {
-  const { profile } = useAuth();
+  const { profile, organizationId } = useAuth();
   const isAdmin = profile?.role === 'admin';
   const [isExportModalOpen, setIsExportModalOpen] = React.useState(false);
 
@@ -413,6 +426,19 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
         onConfirm={handleLossReasonConfirm}
         dealTitle={lossReasonModal?.dealTitle}
       />
+
+      {pendingStageMove && activeBoard && organizationId ? (
+        <StageChecklistModal
+          organizationId={organizationId}
+          boardId={activeBoard.id}
+          toStageId={pendingStageMove.toStageId}
+          toStageName={pendingStageMove.toStageName}
+          dealTitle={pendingStageMove.dealTitle}
+          onConfirm={() => confirmPendingStageMove?.(false)}
+          onSkip={() => confirmPendingStageMove?.(true)}
+          onCancel={() => cancelPendingStageMove?.()}
+        />
+      ) : null}
 
       {activeBoard && (
         <ExportTemplateModal

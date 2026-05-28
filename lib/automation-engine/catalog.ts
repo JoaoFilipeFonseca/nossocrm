@@ -318,6 +318,34 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       required: ['min_seconds', 'max_seconds'],
     },
   },
+  {
+    id: 'data.set_variable',
+    category: 'data',
+    name: 'Guardar variável',
+    icon: '📥',
+    description: 'Guarda um valor numa variável reutilizável a jusante via {{ este_no.output.value }}.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        value: {},
+      },
+      required: ['value'],
+    },
+  },
+  {
+    id: 'data.format_text',
+    category: 'data',
+    name: 'Formatar texto',
+    icon: '🧾',
+    description: 'Gera texto formatado com {{ variáveis }} Liquid. Resultado em {{ este_no.output.text }}.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        template: { type: 'string' },
+      },
+      required: ['template'],
+    },
+  },
 ];
 
 const byId = new Map(ATOM_CATALOG.map((a) => [a.id, a]));

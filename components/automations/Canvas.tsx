@@ -32,10 +32,14 @@ import {
 import '@xyflow/react/dist/style.css';
 import { getAtomMeta, ATOM_CATALOG } from '@/lib/automation-engine/catalog';
 import { ConditionNode } from './nodes/ConditionNode';
+import { SwitchNode } from './nodes/SwitchNode';
+import { FilterNode } from './nodes/FilterNode';
 import { NodeConfigPanel } from './NodeConfigPanel';
 
 const NODE_TYPES = {
   'logic.condition': ConditionNode,
+  'logic.switch': SwitchNode,
+  'logic.filter': FilterNode,
 } as const;
 
 interface AutomationNodeIn {
@@ -93,6 +97,8 @@ function nodeLabel(atomId: string) {
 
 function nodeTypeFor(atomId: string): string {
   if (atomId === 'logic.condition') return 'logic.condition';
+  if (atomId === 'logic.switch') return 'logic.switch';
+  if (atomId === 'logic.filter') return 'logic.filter';
   return 'default';
 }
 
@@ -113,15 +119,35 @@ function makeRFNode(input: AutomationNodeIn, fallbackIndex: number): Node<RFNode
   };
 }
 
+function edgeStyleFor(sourceHandle?: string | null): { stroke: string; label?: string } {
+  if (!sourceHandle) return { stroke: '#94a3b8' };
+  if (sourceHandle === 'true') return { stroke: '#10b981', label: 'Sim' };
+  if (sourceHandle === 'false') return { stroke: '#ef4444', label: 'Não' };
+  if (sourceHandle === 'pass') return { stroke: '#10b981', label: 'passa' };
+  if (sourceHandle === 'stop') return { stroke: '#ef4444', label: 'pára' };
+  if (sourceHandle === 'default') return { stroke: '#64748b', label: 'default' };
+  if (sourceHandle === 'approved') return { stroke: '#10b981', label: 'aprovado' };
+  if (sourceHandle === 'rejected') return { stroke: '#ef4444', label: 'rejeitado' };
+  if (sourceHandle === 'edited') return { stroke: '#f59e0b', label: 'editado' };
+  if (sourceHandle === 'timeout') return { stroke: '#64748b', label: 'timeout' };
+  if (sourceHandle === 'event') return { stroke: '#10b981', label: 'evento' };
+  if (sourceHandle.startsWith('case_')) {
+    const palette = ['#10b981', '#3b82f6', '#a855f7', '#ec4899', '#f59e0b', '#06b6d4', '#84cc16', '#f97316'];
+    const idx = parseInt(sourceHandle.slice(5), 10);
+    return { stroke: palette[Number.isFinite(idx) ? idx % palette.length : 0], label: sourceHandle };
+  }
+  return { stroke: '#94a3b8', label: sourceHandle };
+}
+
 function makeRFEdge(e: AutomationEdgeIn): Edge {
-  const stroke = e.sourceHandle === 'true' ? '#10b981' : e.sourceHandle === 'false' ? '#ef4444' : '#94a3b8';
+  const { stroke, label } = edgeStyleFor(e.sourceHandle);
   return {
     id: e.id,
     source: e.source,
     target: e.target,
     sourceHandle: e.sourceHandle ?? undefined,
     targetHandle: e.targetHandle ?? undefined,
-    label: e.sourceHandle === 'true' ? 'Sim' : e.sourceHandle === 'false' ? 'Não' : undefined,
+    label,
     labelStyle: { fontSize: 10, fontWeight: 700, fill: stroke },
     labelBgStyle: { fill: '#ffffff' },
     labelBgPadding: [2, 4],
@@ -169,6 +195,7 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [fullscreen, setFullscreen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedAt = useRef<number>(Date.now());
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -241,9 +268,7 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
   const onConnect = useCallback((connection: Connection) => {
     setEdges((eds) => {
       const id = `e-${connection.source}-${connection.target}-${connection.sourceHandle ?? 'def'}-${Date.now()}`;
-      const handle = connection.sourceHandle;
-      const stroke = handle === 'true' ? '#10b981' : handle === 'false' ? '#ef4444' : '#94a3b8';
-      const label = handle === 'true' ? 'Sim' : handle === 'false' ? 'Não' : undefined;
+      const { stroke, label } = edgeStyleFor(connection.sourceHandle);
       return addEdge({
         ...connection,
         id,
@@ -252,7 +277,7 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
         labelStyle: { fontSize: 10, fontWeight: 700, fill: stroke },
         labelBgStyle: { fill: '#ffffff' },
         labelBgPadding: [2, 4],
-        style: { stroke, strokeWidth: handle ? 2 : 1.5 },
+        style: { stroke, strokeWidth: connection.sourceHandle ? 2 : 1.5 },
       }, eds);
     });
     scheduleSave();
@@ -260,6 +285,9 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setMobilePanelOpen(true);
+    }
   }, []);
 
   const onPaneClick = useCallback(() => {
@@ -460,6 +488,8 @@ function CanvasInner({ automationId, definition, className }: CanvasProps) {
         onConfigChange={updateSelectedConfig}
         onDuplicate={selectedNodeId ? duplicateSelected : undefined}
         onDelete={selectedNodeId ? () => deleteOne(selectedNodeId) : undefined}
+        mobileOpen={mobilePanelOpen && selectedNodeId !== null}
+        onMobileClose={() => setMobilePanelOpen(false)}
       />
     </div>
   );

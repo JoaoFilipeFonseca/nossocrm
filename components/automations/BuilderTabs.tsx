@@ -30,6 +30,7 @@ type Mode = 'write' | 'linear' | 'visual';
 
 export function BuilderTabs({ automationId, definition }: BuilderTabsProps) {
   const [mode, setMode] = useState<Mode>('write');
+  const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
 
   return (
     <div>
@@ -79,8 +80,11 @@ export function BuilderTabs({ automationId, definition }: BuilderTabsProps) {
           <LinearBuilder automationId={automationId} definition={definition} />
         </div>
       ) : (
-        <div className="flex border border-slate-200 rounded-md overflow-hidden bg-slate-50 h-[720px]">
-          <Palette />
+        <div className="relative flex border border-slate-200 rounded-md overflow-hidden bg-slate-50 h-[720px]">
+          <Palette
+            mobileOpen={mobilePaletteOpen}
+            onMobileClose={() => setMobilePaletteOpen(false)}
+          />
           <div className="flex-1 min-w-0">
             <Canvas
               automationId={automationId}
@@ -88,6 +92,16 @@ export function BuilderTabs({ automationId, definition }: BuilderTabsProps) {
               className="h-full bg-slate-50"
             />
           </div>
+          {/* FAB mobile: abrir Palette */}
+          <button
+            type="button"
+            onClick={() => setMobilePaletteOpen(true)}
+            className="md:hidden absolute bottom-3 left-3 z-20 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg w-12 h-12 flex items-center justify-center text-xl"
+            aria-label="Abrir átomos"
+            title="Abrir átomos"
+          >
+            ⚛
+          </button>
         </div>
       )}
     </div>

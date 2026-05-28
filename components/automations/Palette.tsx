@@ -46,7 +46,14 @@ function onDragStart(event: React.DragEvent<HTMLDivElement>, atomId: string) {
   event.dataTransfer.effectAllowed = 'move';
 }
 
-export function Palette() {
+export interface PaletteProps {
+  /** Em mobile, controla se o drawer está visível. Em desktop ignorado. */
+  mobileOpen?: boolean;
+  /** Callback ao fechar o drawer mobile (tap no backdrop ou X). */
+  onMobileClose?: () => void;
+}
+
+export function Palette({ mobileOpen = false, onMobileClose }: PaletteProps = {}) {
   const grouped = useMemo(() => {
     const map = new Map<AtomMetadata['category'], AtomMetadata[]>();
     for (const atom of ATOM_CATALOG) {
@@ -57,9 +64,54 @@ export function Palette() {
     return CATEGORY_ORDER.filter((c) => map.has(c)).map((c) => ({ category: c, atoms: map.get(c)! }));
   }, []);
 
+  const desktopClass = 'hidden md:flex md:flex-col w-60 shrink-0 border-r border-slate-200 bg-white overflow-y-auto';
+  const mobileClass = mobileOpen
+    ? 'flex flex-col fixed inset-y-0 left-0 w-72 max-w-[85vw] z-40 bg-white shadow-2xl border-r border-slate-200 overflow-y-auto md:hidden'
+    : 'hidden';
+
   return (
-    <aside className="w-60 shrink-0 border-r border-slate-200 bg-white overflow-y-auto">
-      <div className="px-3 py-2 border-b border-slate-100">
+    <>
+      {/* Desktop sempre montado */}
+      <aside className={desktopClass}>
+        <PaletteContent grouped={grouped} />
+      </aside>
+
+      {/* Mobile drawer com backdrop */}
+      {mobileOpen ? (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={onMobileClose}
+        />
+      ) : null}
+      <aside className={mobileClass}>
+        <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white">
+          <div>
+            <div className="text-xs font-semibold text-slate-700">Átomos</div>
+            <div className="text-[10px] text-slate-400">Toca + arrasta para o canvas</div>
+          </div>
+          <button
+            type="button"
+            onClick={onMobileClose}
+            className="text-slate-500 hover:text-slate-900 text-lg px-2"
+            aria-label="Fechar palette"
+          >
+            ✕
+          </button>
+        </div>
+        <PaletteContent grouped={grouped} />
+      </aside>
+    </>
+  );
+}
+
+interface PaletteContentProps {
+  grouped: Array<{ category: AtomMetadata['category']; atoms: AtomMetadata[] }>;
+}
+
+function PaletteContent({ grouped }: PaletteContentProps) {
+  return (
+    <>
+      <div className="px-3 py-2 border-b border-slate-100 hidden md:block">
         <div className="text-xs font-semibold text-slate-700">Átomos</div>
         <div className="text-[10px] text-slate-400">Arrasta para o canvas</div>
       </div>
@@ -90,6 +142,6 @@ export function Palette() {
           </div>
         ))}
       </div>
-    </aside>
+    </>
   );
 }
