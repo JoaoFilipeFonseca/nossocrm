@@ -5,6 +5,7 @@
 // ============================================================================
 
 export { triggerEvent } from './triggers/event';
+export { triggerSchedule } from './triggers/schedule';
 
 export { actionLog } from './actions/log';
 export { actionHttpRequest } from './actions/http-request';
