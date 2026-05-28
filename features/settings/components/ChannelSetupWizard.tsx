@@ -803,7 +803,7 @@ function TestStep({
           {isSaving ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Salvando...
+              A guardar...
             </>
           ) : (
             <>

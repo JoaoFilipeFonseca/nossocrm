@@ -258,7 +258,7 @@ export const AIConfigSection: React.FC = () => {
                             >
                                 {dynamicModels.length === 0 ? (
                                     <option value="" disabled>
-                                        {modelsLoading ? 'Carregando...' : aiKeyConfigured ? 'Nenhum modelo encontrado' : 'Configure a chave de API primeiro'}
+                                        {modelsLoading ? 'A carregar...' : aiKeyConfigured ? 'Nenhum modelo encontrado' : 'Configure a chave de API primeiro'}
                                     </option>
                                 ) : (
                                     <>

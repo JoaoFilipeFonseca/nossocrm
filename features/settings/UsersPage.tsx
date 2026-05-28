@@ -248,7 +248,7 @@ export const UsersPage: React.FC = () => {
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <Loader2 className="animate-spin h-8 w-8 text-primary-500" />
-                    <span className="text-sm text-slate-500 dark:text-slate-400">Carregando equipe...</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">A carregar equipa...</span>
                 </div>
             </div>
         );

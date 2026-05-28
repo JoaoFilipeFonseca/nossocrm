@@ -29,7 +29,7 @@ export default async function JoinPage({
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-dark-bg">
         <div className="text-center">
           <div className="h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-500 dark:text-slate-400">Carregando...</p>
+          <p className="text-slate-500 dark:text-slate-400">A carregar...</p>
         </div>
       </div>
     }>

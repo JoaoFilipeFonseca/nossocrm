@@ -253,7 +253,7 @@ export const AIFeaturesSection: React.FC = () => {
               <div className="min-h-[280px] flex items-center justify-center text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Carregando prompt...
+                  A carregar prompt...
                 </div>
               </div>
             ) : (

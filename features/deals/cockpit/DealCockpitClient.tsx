@@ -270,7 +270,7 @@ function TemplatePickerModal({
 
             <div className="h-105 overflow-auto rounded-2xl border border-white/10 bg-white/2">
               {isLoading ? (
-                <div className="p-4 text-sm text-slate-400">Carregando scripts…</div>
+                <div className="p-4 text-sm text-slate-400">A carregar scripts…</div>
               ) : filtered.length === 0 ? (
                 <div className="p-4 text-sm text-slate-400">Nenhum template encontrado.</div>
               ) : (
@@ -1285,14 +1285,14 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
         <div className="max-w-xl w-full rounded-2xl border border-white/10 bg-white/3 p-6">
           <div className="flex items-center justify-between gap-3">
             <div className="text-lg font-semibold">Cockpit</div>
-            <div className="text-xs text-slate-400">Carregando…</div>
+            <div className="text-xs text-slate-400">A carregar…</div>
           </div>
           <div className="mt-4 space-y-3">
             <div className="h-4 w-2/3 rounded bg-white/10 animate-pulse" />
             <div className="h-4 w-full rounded bg-white/10 animate-pulse" />
             <div className="h-4 w-5/6 rounded bg-white/10 animate-pulse" />
           </div>
-          <div className="mt-4 text-xs text-slate-500">Buscando deals, boards e atividades do seu workspace…</div>
+          <div className="mt-4 text-xs text-slate-500">A obter negócios, boards e actividades do seu workspace…</div>
         </div>
       </div>
     );
@@ -1306,9 +1306,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
             <div className="text-lg font-semibold">Cockpit</div>
             <div className="text-xs text-slate-400">/deals/[dealId]/cockpit</div>
           </div>
-          <div className="mt-3 text-sm text-slate-300">Não encontrei nenhum deal carregado no contexto.</div>
+          <div className="mt-3 text-sm text-slate-300">Não encontrei nenhum negócio carregado no contexto.</div>
           <div className="mt-2 text-xs text-slate-500">
-            Dica: abra o app normal (Boards) para carregar dados. Quando houver deals carregados, você consegue trocar aqui mesmo pelo seletor no topo.
+            Dica: abra o app normal (Boards) para carregar dados. Quando houver negócios carregados, pode trocar aqui mesmo pelo selector no topo.
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
@@ -1472,7 +1472,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
               <div className="text-sm font-semibold text-slate-100">{nextBestAction.action}</div>
               <div className="mt-1 text-xs text-slate-400">{nextBestAction.reason}</div>
               <div className="mt-2 text-[11px] text-slate-500">
-                Aqui EXECUTA (e tenta registrar o que dá). No rodapé da timeline você REGISTRA atividades rápidas que aconteceram fora do CRM.
+                Aqui EXECUTA (e tenta registar o que dá). No rodapé da timeline REGISTA actividades rápidas que aconteceram fora do CRM.
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -1765,8 +1765,8 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                       </div>
                       <div className="mt-2 text-xs text-slate-500">
                         {timelineItems.length === 0
-                          ? 'Quando você registrar uma nota, ligação ou mudança de etapa, ela aparece aqui.'
-                          : 'Tente limpar busca e filtros para ver tudo novamente.'}
+                          ? 'Quando registar uma nota, ligação ou mudança de etapa, aparece aqui.'
+                          : 'Tente limpar pesquisa e filtros para ver tudo novamente.'}
                       </div>
                       {timelineItems.length !== 0 ? (
                         <div className="mt-4 flex items-center justify-center gap-2">
@@ -2080,7 +2080,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                   </button>
                 </div>
 
-                <div className="mt-2 text-[11px] text-slate-600">Dica: isso fica no deal atual e aparece igual quando você trocar de deal.</div>
+                <div className="mt-2 text-[11px] text-slate-600">Dica: isto fica no negócio actual e aparece igual quando trocar de negócio.</div>
               </Panel>
             </div>
           </div>
@@ -2154,10 +2154,10 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                             if (!content) return;
                             await createNote.mutateAsync(content);
                             setDealNoteDraft('');
-                            pushToast('Nota persistida salva', 'success');
+                            pushToast('Nota guardada', 'success');
                           }}
                         >
-                          {createNote.isPending ? 'Salvando…' : 'Adicionar'}
+                          {createNote.isPending ? 'A guardar…' : 'Adicionar'}
                         </button>
                       </div>
                     </div>

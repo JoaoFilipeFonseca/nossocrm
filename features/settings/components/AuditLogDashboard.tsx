@@ -372,7 +372,7 @@ export const AuditLogDashboard: React.FC = () => {
         {loading ? (
           <div className="p-8 text-center">
             <RefreshCw className="w-8 h-8 text-slate-400 animate-spin mx-auto mb-3" />
-            <p className="text-slate-500 dark:text-slate-400">Carregando logs...</p>
+            <p className="text-slate-500 dark:text-slate-400">A carregar logs...</p>
           </div>
         ) : logs.length === 0 ? (
           <div className="p-8 text-center">

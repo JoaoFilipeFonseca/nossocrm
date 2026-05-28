@@ -58,10 +58,10 @@ const WelcomeMessage: React.FC = () => (
       <Sparkles size={32} />
     </div>
     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-      Olá! Sou seu assistente de CRM
+      Olá! Sou o seu assistente de CRM
     </h2>
     <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-      Posso ajudar você a gerenciar deals, atividades, contatos e muito mais.
+      Posso ajudá-lo a gerir negócios, actividades, contactos e muito mais.
       Experimente perguntar algo!
     </p>
     <div className="flex flex-wrap justify-center gap-2">
@@ -101,7 +101,7 @@ const APINotConfigured: React.FC = () => {
 
         {/* Description */}
         <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-          Para usar o assistente de IA, você precisa configurar uma chave de API.
+          Para usar o assistente de IA, precisa de configurar uma chave de API.
           Suportamos <strong className="text-slate-800 dark:text-slate-200">Google Gemini</strong>, <strong className="text-slate-800 dark:text-slate-200">OpenAI</strong> e <strong className="text-slate-800 dark:text-slate-200">Anthropic</strong>.
         </p>
 

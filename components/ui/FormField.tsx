@@ -489,7 +489,7 @@ const buttonVariants = {
  * @param {SubmitButtonProps} {
   children,
   isLoading,
-  loadingText = 'Salvando...',
+  loadingText = 'A guardar...',
   disabled,
   className,
   variant = 'primary',
@@ -497,7 +497,7 @@ const buttonVariants = {
 } - Parâmetro `{
   children,
   isLoading,
-  loadingText = 'Salvando...',
+  loadingText = 'A guardar...',
   disabled,
   className,
   variant = 'primary',
@@ -508,7 +508,7 @@ const buttonVariants = {
 export const SubmitButton: React.FC<SubmitButtonProps> = ({
   children,
   isLoading,
-  loadingText = 'Salvando...',
+  loadingText = 'A guardar...',
   disabled,
   className,
   variant = 'primary',

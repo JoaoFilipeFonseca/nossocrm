@@ -281,7 +281,7 @@ export function StageAIConfig({ boardId, stages, goalStageId }: StageAIConfigPro
               {batchSaving ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Salvando...
+                  A guardar...
                 </>
               ) : (
                 <>
@@ -708,7 +708,7 @@ function StageConfigRow({
                 onClick={handleSave}
                 disabled={!hasChanges || isSaving}
               >
-                {isSaving ? 'Salvando...' : 'Salvar'}
+                {isSaving ? 'A guardar...' : 'Salvar'}
               </Button>
             </div>
           </div>

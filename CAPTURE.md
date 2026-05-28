@@ -38,19 +38,10 @@
 - **Estimativa:** 1 sessão dedicada com grep "deal", revisão manual e PT-PT correcto.
 
 ### B-006 · DealCard painel esquerdo (Detalhes + Tags) com excesso de espaçamento — força scroll horizontal/vertical
-- **Quando:** 25/05/2026 noite, ao abrir Sonia Rodrigo no /boards.
-- **Sintoma:** secções DETALHES (Prioridade, Criado em, Probabilidade), TAGS, Adicionar Tag ocupam mais espaço vertical do que o necessário. Painel direito ("CONTACTO PRINCIPAL", botões executar como, KPIs) fica cortado por baixo — utilizador tem de scrollar barra horizontal/vertical para ver email/telefone. No telemóvel é pior.
-- **Files a inspeccionar:** `features/boards/components/Modals/DealDetailModal.tsx` (painel esquerdo), eventual sub-componente Detalhes.
-- **Fix esperado:** compactar padding/gap entre rows (Prioridade/Criado/Probabilidade podem ser 1 linha cada com label + valor inline), reduzir altura do "Adicionar Tag" (input + chip), ou tornar Detalhes colapsível com summary. Mobile: stack vertical, esconder Detalhes por defeito.
-- **Capturado:** 25/05/2026 noite, "perco tempo a mexer na barra".
+- **Resolvido no Sprint 12 c1** (`features/boards/components/Modals/DealDetailModal.tsx:849` comment "Detalhes compactos em 1 linha (3 chips inline). Antes ocupava 3 rows verticais."). Confirmado em 28/05/2026 durante sweep CAPTURE.
 
 ### B-001 · Painel direito (Chat IA / Notas / Scripts / Ficheiros) come o espaço da área central no Inbox→Foco
-- **Quando:** durante sessões de Claude Code (provavelmente sempre, mas é nessa altura que o João nota).
-- **Sintoma:** painel direito ocupa ~30% da largura; área de actividades + composer fica espremida; texto "Nenhuma atividade" cai por baixo do botão WhatsApp/Email/Ag.Ligação.
-- **Screenshot:** apresentado pelo João em 22/05/2026 noite.
-- **Hipótese:** o painel direito deveria ser collapsível (drawer) ou ter `max-width` fixo. Provavelmente CSS grid/flex sem `minmax` nas colunas, e o conteúdo do Chat IA força expansão.
-- **Files a inspeccionar:** `features/inbox/components/FocusContextPanel.tsx` (layout 3-col), eventual `AppShell` ou wrapper.
-- **Fix esperado:** drawer recolhível para Chat IA OR ajustar grid template para `[main 1fr][side 320px]` fixo.
+- **Resolvido no Sprint 12 c2** (`features/inbox/components/FocusContextPanel.tsx:127`): `workspaceCollapsed` default em <1024px viewport + persistência localStorage `foco_workspace_collapsed`. Toggle PanelRightOpen/Close acima das tabs. Confirmado em 28/05/2026 durante sweep CAPTURE.
 
 ### B-002 · Bug "manha" sem til em WhatsApp Bruno (22/05 noite, smoke Playwright)
 - **Status:** ⚠️ MITIGADO em prompt v3 BD (UPDATE replace 'manha'→'manhã' + Sabado→Sábado + Terca→Terça + historico→histórico).
@@ -198,10 +189,7 @@ Combinar 1+4 dá UX "instantâneo real" (200ms). Custo: ~$0.001/abertura mesmo s
 Todos os commits pushed e em produção. GCM autorizado via browser. Próximos pushes são automáticos. PAT antigo da memory **fica obsoleto** — não usar.
 
 ## B-005 · SW cache atrapalha ver nova versão
-
-Após deploy, primeira visita continua a servir versão antiga via Service Worker cache. Sintoma: sidebar continua a mostrar build tag anterior. Workaround: hard refresh (Ctrl+Shift+R) OR Application → SW → Unregister.
-
-**Fix futuro:** SW auto-update agressivo — implementar listener `controllerchange` no client + force `skipWaiting()` no SW para activar nova versão imediato após install. Sessão dedicada ~30min.
+- **Resolvido no Sprint 12 c3** (`app/sw.js/route.ts` doc comment "B-005 resolve" + `components/pwa/ServiceWorkerRegister.tsx` com controllerchange + skipWaiting + check periódico 60s + check on visibility). CACHE_NAME usa NEXT_PUBLIC_BUILD_TAG dinâmico. Confirmado em 28/05/2026 durante sweep CAPTURE.
 
 ## ✅ Resolvidos esta sessão (22/05 noite)
 
