@@ -22,7 +22,7 @@ describe('CallModal (modo sem WebRTC)', () => {
         onClose={vi.fn()}
         onSave={vi.fn()}
         contactName="Carla"
-        contactPhone="(11) 99999-0000"
+        contactPhone="912 345 678"
       />
     );
 
@@ -38,7 +38,7 @@ describe('CallModal (modo sem WebRTC)', () => {
         onClose={vi.fn()}
         onSave={vi.fn()}
         contactName="Carla"
-        contactPhone="(11) 99999-0000"
+        contactPhone="912 345 678"
       />
     );
 
@@ -58,7 +58,7 @@ describe('CallModal (modo sem WebRTC)', () => {
         onClose={vi.fn()}
         onSave={vi.fn()}
         contactName="Carla"
-        contactPhone="(11) 99999-0000"
+        contactPhone="912 345 678"
       />
     );
 
@@ -67,7 +67,7 @@ describe('CallModal (modo sem WebRTC)', () => {
     act(() => {
       fireEvent.click(openDialerButton!);
     });
-    expect(openSpy).toHaveBeenCalledWith('tel:+5511999990000', '_self');
+    expect(openSpy).toHaveBeenCalledWith('tel:+351912345678', '_self');
 
     // Após 1 segundo, deve marcar 00:01
     act(() => {

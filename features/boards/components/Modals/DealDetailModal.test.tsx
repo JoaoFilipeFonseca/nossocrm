@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { DealDetailModal } from './DealDetailModal';
 
@@ -197,8 +198,14 @@ vi.mock('@/context/CRMContext', () => ({
 
 describe('DealDetailModal', () => {
   it('does not crash when toggling open/close (hook order regression)', () => {
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
     const { rerender } = render(
-      <DealDetailModal dealId="deal-1" isOpen={false} onClose={() => {}} />
+      <DealDetailModal dealId="deal-1" isOpen={false} onClose={() => {}} />,
+      { wrapper }
     );
 
     expect(document.body.textContent).not.toContain('Application error');
