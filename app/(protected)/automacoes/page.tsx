@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { listAutomations, statusChipClass, statusLabel } from '@/lib/automations/server';
 import { CardActions } from './CardActions';
+import { SystemAutomationsSection } from './SystemAutomationsSection';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Automações | Foco Imo' };
@@ -34,6 +35,11 @@ export default async function AutomacoesPage() {
           ⚡ Nova automação
         </Link>
       </div>
+
+      {/* Sprint 27 c2: automações de sistema (cron + edge) editáveis sem código */}
+      <SystemAutomationsSection />
+
+      <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3">Tuas automações</h2>
 
       {errorMsg ? (
         <div className="rounded-md bg-red-50 text-red-700 p-4 text-sm">Erro ao carregar: {errorMsg}</div>
