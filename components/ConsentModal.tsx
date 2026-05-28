@@ -1,6 +1,6 @@
 /**
  * T016: ConsentModal Component
- * Modal para coleta de consentimentos LGPD
+ * Modal para recolha de consentimentos RGPD
  */
 
 import React, { useState } from 'react';
@@ -20,24 +20,24 @@ interface ConsentModalProps {
 
 const CONSENT_LABELS: Record<ConsentType, { title: string; description: string }> = {
   terms: {
-    title: 'Termos de Uso',
-    description: 'Li e aceito os Termos de Uso do Foco Imo.',
+    title: 'Termos de Utilização',
+    description: 'Li e aceito os Termos de Utilização do Foco Imo.',
   },
   privacy: {
     title: 'Política de Privacidade',
-    description: 'Li e aceito a Política de Privacidade, que explica como seus dados são coletados e utilizados.',
+    description: 'Li e aceito a Política de Privacidade, que explica como os seus dados são recolhidos e utilizados.',
   },
   data_processing: {
     title: 'Processamento de Dados',
-    description: 'Autorizo o processamento dos meus dados pessoais para uso da plataforma, conforme a LGPD.',
+    description: 'Autorizo o processamento dos meus dados pessoais para utilização da plataforma, conforme o RGPD.',
   },
   marketing: {
     title: 'Comunicações de Marketing',
     description: 'Aceito receber comunicações promocionais e novidades por email.',
   },
   analytics: {
-    title: 'Análise de Uso',
-    description: 'Autorizo a coleta de dados de uso para melhoria da plataforma.',
+    title: 'Análise de Utilização',
+    description: 'Autorizo a recolha de dados de utilização para melhoria da plataforma.',
   },
 };
 
@@ -120,7 +120,7 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({
             Consentimentos Necessários
           </h2>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Para continuar usando o Foco Imo, precisamos do seu consentimento.
+            Para continuar a utilizar o Foco Imo, precisamos do seu consentimento.
           </p>
         </div>
 
@@ -169,13 +169,13 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({
           {/* Legal Links */}
           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-dark-border">
             <div className="flex flex-wrap gap-4 text-sm">
-              <a 
-                href="/termos-de-uso" 
-                target="_blank" 
+              <a
+                href="/termos-de-uso"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary-600 hover:text-primary-700 dark:text-primary-400"
               >
-                Termos de Uso (v{CONSENT_VERSIONS.terms})
+                Termos de Utilização (v{CONSENT_VERSIONS.terms})
               </a>
               <a 
                 href="/politica-de-privacidade" 
@@ -206,7 +206,7 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({
               disabled={!canSubmit || isSubmitting}
               className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Salvando...' : 'Aceitar e Continuar'}
+              {isSubmitting ? 'A guardar...' : 'Aceitar e Continuar'}
             </button>
           </div>
         </div>

@@ -9,11 +9,7 @@
 ## 🐛 Bugs UI activos
 
 ### B-011 · ConsentModal copy em PT-BR ("seus dados", "coletados")
-- **Quando:** detectado 28/05/2026 ao montar ConsentGate (Sprint 31 c1).
-- **Onde:** `components/ConsentModal.tsx` CONSENT_LABELS + textos "LGPD".
-- **Sintoma:** copy fala em "seus" em vez de "os seus", "coletados" em vez de "recolhidos", "Política" copy brasileiro. Strings menores: "Salvando...", "LGPD" (Brasil) deve ser "RGPD" (Portugal).
-- **Fix esperado:** 10 min — re-escrever 5 entries de CONSENT_LABELS + button copy + secao headings em PT-PT pre-AO 1990. Trocar referencias LGPD por RGPD.
-- **Impacto:** baixo (mostra cumprimento de privacidade mas em portugues errado). NAO bloqueante para uso interno.
+- **Resolvido 28/05/2026** Sprint 35 c1. CONSENT_LABELS reescritos PT-PT pre-AO (Termos de Utilização, recolhidos, RGPD em vez de LGPD, "os seus" em vez de "seus"), button "A guardar..." em vez de "Salvando...", header "Para continuar a utilizar". Header doc comment trocado de "coleta LGPD" para "recolha RGPD". Nota: comentários internos em `lib/consent/consentService.ts` mantêm "LGPD" — só copy visível foi mexido (B-007 é sessão dedicada para sweep alargado).
 
 ### B-010 · 4 warnings ESLint pre-existentes (max-warnings=0)
 - **Quando:** detectado 28/05/2026 Sprint 29 c1, ja existiam antes.
