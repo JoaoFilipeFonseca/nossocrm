@@ -204,3 +204,73 @@ describe('runGraph — paridade T1', () => {
     expect(seen[0].trigger).toEqual({ type: 'manual' });
   });
 });
+
+describe('runGraph — fan-out + join (T2)', () => {
+  it('diamante: D corre uma só vez, depois de B e C', async () => {
+    const d = def([['a', 'trigger.event'], ['b', 'action.log'], ['c', 'action.log'], ['dd', 'action.log']], [
+      ['a', 'b'],
+      ['a', 'c'],
+      ['b', 'dd'],
+      ['c', 'dd'],
+    ]);
+    const order: string[] = [];
+    const { result, state } = await runGraph(d, {
+      startNodeId: 'a',
+      state: createInitialState('a'),
+      deps: makeDeps({}, order),
+    });
+    expect(result.kind).toBe('done');
+    expect(order).toEqual(['a', 'b', 'c', 'dd']); // dd só após ambos os ramos
+    expect(order.filter((id) => id === 'dd')).toHaveLength(1); // join corre 1x
+    expect(state.visited.filter((id) => id === 'dd')).toHaveLength(1);
+  });
+
+  it('fan-out: todos os ramos paralelos executam', async () => {
+    const d = def([['a', 'trigger.event'], ['x', 'action.log'], ['y', 'action.send_telegram'], ['z', 'action.create_task']], [
+      ['a', 'x'],
+      ['a', 'y'],
+      ['a', 'z'],
+    ]);
+    const order: string[] = [];
+    const { result } = await runGraph(d, {
+      startNodeId: 'a',
+      state: createInitialState('a'),
+      deps: makeDeps({}, order),
+    });
+    expect(result.kind).toBe('done');
+    expect(new Set(order)).toEqual(new Set(['a', 'x', 'y', 'z']));
+  });
+
+  it('condition: só o ramo tomado arma o join', async () => {
+    const d = def([['c', 'logic.condition'], ['dd', 'action.log']], [
+      ['c', 'dd', 'true'],
+      ['c', 'dd', 'false'],
+    ]);
+    const order: string[] = [];
+    const { result } = await runGraph(d, {
+      startNodeId: 'c',
+      state: createInitialState('c'),
+      deps: makeDeps({ c: { _branch_taken: 'true' } }, order),
+    });
+    expect(result.kind).toBe('done');
+    expect(order).toEqual(['c', 'dd']); // join corre apesar de só 1 ramo chegar
+  });
+
+  it('_halt num ramo não bloqueia o join', async () => {
+    const d = def([['a', 'trigger.event'], ['b', 'action.log'], ['c', 'logic.filter'], ['dd', 'action.log']], [
+      ['a', 'b'],
+      ['a', 'c'],
+      ['b', 'dd'],
+      ['c', 'dd'],
+    ]);
+    const order: string[] = [];
+    const { result } = await runGraph(d, {
+      startNodeId: 'a',
+      state: createInitialState('a'),
+      deps: makeDeps({ c: { _halt: true } }, order),
+    });
+    expect(result.kind).toBe('done');
+    expect(order).toEqual(['a', 'b', 'c', 'dd']); // dd corre mesmo com o ramo c morto
+    expect(order.filter((id) => id === 'dd')).toHaveLength(1);
+  });
+});
