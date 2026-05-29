@@ -55,6 +55,7 @@ export async function GET() {
     pages: metadata.pages ?? [],
     adAccounts: metadata.ad_accounts ?? [],
     subscribedPageId: metadata.subscribed_page_id ?? null,
+    selectedAdAccountId: metadata.selected_ad_account_id ?? null,
     webhookUrl,
     verifyToken: metadata.webhook_verify_token ?? null,
     lastError: data.last_error ?? null,

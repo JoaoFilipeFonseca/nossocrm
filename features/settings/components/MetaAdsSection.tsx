@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Power,
   LayoutGrid,
+  Trash2,
 } from 'lucide-react';
 import { SettingsSection } from './SettingsSection';
 import { useAuth } from '@/context/AuthContext';
@@ -23,6 +24,7 @@ interface MetaStatus {
   pages?: { id: string; name: string }[];
   adAccounts?: { id: string; name: string; account_id: string }[];
   subscribedPageId?: string | null;
+  selectedAdAccountId?: string | null;
   webhookUrl?: string | null;
   verifyToken?: string | null;
   lastError?: string | null;
@@ -101,6 +103,32 @@ export function MetaAdsSection() {
     }
   };
 
+  const [busy, setBusy] = useState(false);
+  const configure = async (
+    body: { action: string; pageId?: string; adAccountId?: string },
+    okMsg: string,
+  ) => {
+    setBusy(true);
+    try {
+      const res = await fetch('/api/integrations/meta/configure', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || data.error) {
+        addToast(data.error || 'Não foi possível guardar.', 'error');
+      } else {
+        addToast(okMsg, 'success');
+        await loadStatus();
+      }
+    } catch {
+      addToast('Erro de ligação.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleDisconnect = async () => {
     setDisconnecting(true);
     try {
@@ -167,40 +195,105 @@ export function MetaAdsSection() {
             </button>
           </div>
 
-          {/* Páginas */}
+          {/* Páginas — escolher qual recebe leads */}
           {status?.pages && status.pages.length > 0 && (
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10">
-              <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                Páginas
+              <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                Página que recebe leads
               </p>
-              <div className="space-y-1.5">
-                {status.pages.map((p) => (
-                  <div key={p.id} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                    <LayoutGrid className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{p.name}</span>
-                    {status.subscribedPageId === p.id && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300">
-                        a receber leads
-                      </span>
-                    )}
-                  </div>
-                ))}
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
+                Só a Página escolhida envia leads para o CRM. As outras não cruzam dados.
+              </p>
+              <div className="space-y-1">
+                {status.pages.map((p) => {
+                  const active = status.subscribedPageId === p.id;
+                  return (
+                    <div
+                      key={p.id}
+                      className={cn(
+                        'flex items-center gap-2 rounded-lg px-2 py-1.5 border',
+                        active
+                          ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20'
+                          : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10',
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="meta-page"
+                        checked={active}
+                        disabled={busy}
+                        onChange={() => configure({ action: 'select_page', pageId: p.id }, `Leads agora pela Página "${p.name}".`)}
+                        className="accent-green-600"
+                      />
+                      <LayoutGrid className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="text-sm text-slate-700 dark:text-slate-200 flex-1 truncate">{p.name}</span>
+                      {active ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 shrink-0">
+                          a receber leads
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => configure({ action: 'remove_page', pageId: p.id }, 'Página removida da lista.')}
+                          disabled={busy}
+                          title="Remover da lista"
+                          className="shrink-0 p-1 text-slate-400 hover:text-red-500 disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* Contas de anúncios */}
+          {/* Contas de anúncios — escolher a activa */}
           {status?.adAccounts && status.adAccounts.length > 0 && (
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10">
-              <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                Contas de anúncios
+              <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                Conta de anúncios
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
+                Escolha a sua conta. Usada para as métricas (custo, CPA, ROAS) na fase seguinte.
               </p>
               <div className="space-y-1">
-                {status.adAccounts.map((a) => (
-                  <p key={a.id} className="text-sm text-slate-700 dark:text-slate-200">
-                    {a.name} <span className="text-slate-400">({a.account_id})</span>
-                  </p>
-                ))}
+                {status.adAccounts.map((a) => {
+                  const active = status.selectedAdAccountId === a.id;
+                  return (
+                    <div
+                      key={a.id}
+                      className={cn(
+                        'flex items-center gap-2 rounded-lg px-2 py-1.5 border',
+                        active
+                          ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20'
+                          : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10',
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="meta-adaccount"
+                        checked={active}
+                        disabled={busy}
+                        onChange={() => configure({ action: 'select_ad_account', adAccountId: a.id }, `Conta "${a.name}" seleccionada.`)}
+                        className="accent-blue-600"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-200 flex-1 truncate">
+                        {a.name} <span className="text-slate-400">({a.account_id})</span>
+                      </span>
+                      {!active && (
+                        <button
+                          onClick={() => configure({ action: 'remove_ad_account', adAccountId: a.id }, 'Conta removida da lista.')}
+                          disabled={busy}
+                          title="Remover da lista"
+                          className="shrink-0 p-1 text-slate-400 hover:text-red-500 disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

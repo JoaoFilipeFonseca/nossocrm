@@ -150,3 +150,22 @@ export async function subscribePageToLeadgen(pageId: string, pageAccessToken: st
     throw new Error('A Meta recusou a subscrição da Página ao leadgen.');
   }
 }
+
+/** Remove a subscrição da app a uma Página (deixa de receber leads dela). */
+export async function unsubscribePage(pageId: string, pageAccessToken: string): Promise<void> {
+  await graphJson(`${META_GRAPH_BASE}/${pageId}/subscribed_apps?access_token=${encodeURIComponent(pageAccessToken)}`, {
+    method: 'DELETE',
+  });
+}
+
+/** Obtém o token de acesso de uma Página a partir do token de utilizador. */
+export async function getPageAccessToken(userToken: string, pageId: string): Promise<string | null> {
+  try {
+    const json = await graphJson(
+      `${META_GRAPH_BASE}/${pageId}?fields=access_token&access_token=${encodeURIComponent(userToken)}`,
+    );
+    return (json.access_token as string) ?? null;
+  } catch {
+    return null;
+  }
+}
