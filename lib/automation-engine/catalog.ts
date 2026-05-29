@@ -32,7 +32,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
     configSchema: {
       type: 'object',
       properties: {
-        events: { type: 'array', items: { type: 'string' }, minItems: 1 },
+        events: { type: 'array', items: { type: 'string' }, minItems: 1, format: 'events' },
       },
       required: ['events'],
     },

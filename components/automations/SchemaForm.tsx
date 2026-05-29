@@ -23,6 +23,7 @@
 
 import { useCallback } from 'react';
 import { DurationInput, type BaseUnit } from './DurationInput';
+import { EventMultiSelect } from './EventMultiSelect';
 
 interface FieldSpec {
   type?: string;
@@ -95,6 +96,19 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
             {spec.description ? <span className="ml-1 text-[10px] text-slate-400 font-normal">— {spec.description}</span> : null}
           </span>
         );
+
+        // eventos — multi-selecção com nomes humanos (só os eventos reais)
+        if (spec.format === 'events') {
+          return (
+            <label key={key} className="block">
+              {label}
+              <EventMultiSelect
+                value={Array.isArray(v) ? (v as string[]) : []}
+                onChange={(next) => update(key, next.length > 0 ? next : undefined)}
+              />
+            </label>
+          );
+        }
 
         // duração (número + unidade) — grava na unidade base do átomo
         if (spec.format === 'duration') {
