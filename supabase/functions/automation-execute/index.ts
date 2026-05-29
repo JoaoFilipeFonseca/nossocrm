@@ -15,8 +15,21 @@
  */
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { Liquid } from "npm:liquidjs@10";
-
-type AtomOutput = Record<string, unknown>;
+import {
+  runGraph,
+  findStartNode,
+  nextTarget,
+  createInitialState,
+  serializeState,
+  deserializeState,
+  wakeDueSuspends,
+  type AutomationDefinition,
+  type AutomationNode,
+  type AtomOutput,
+  type RunnerDeps,
+  type RunnerState,
+  type SerializedRunState,
+} from "../_shared/runner.ts";
 
 interface NodeExecContext {
   supabase: SupabaseClient;
@@ -25,28 +38,14 @@ interface NodeExecContext {
   organizationId: string;
   nodeId: string;
   config: Record<string, unknown>;
+  // Config crua (sem render Liquid). Usada por átomos que precisam do valor real
+  // e não da versão stringificada, ex: logic.loop a resolver um array.
+  rawConfig: Record<string, unknown>;
+  // Scope completo (baseContext + variáveis acumuladas + item/index do loop).
+  scope: Record<string, unknown>;
   variables: Record<string, { output: unknown }>;
   triggerEvent?: { type: string; payload: unknown };
   log: (level: string, message: string) => Promise<void>;
-}
-
-interface AutomationNode {
-  id: string;
-  atom: string;
-  position?: { x: number; y: number };
-  config: Record<string, unknown>;
-}
-
-interface AutomationEdge {
-  id: string;
-  source: string;
-  target: string;
-  sourceHandle?: string;
-}
-
-interface AutomationDefinition {
-  nodes: AutomationNode[];
-  edges: AutomationEdge[];
 }
 
 interface ExecuteRequest {
@@ -89,6 +88,34 @@ async function resolveConfig(config: Record<string, unknown>, vars: Record<strin
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(config)) out[k] = await resolveValue(v, vars);
   return out;
+}
+
+/**
+ * Resolve um valor para um array REAL (sem stringificar via Liquid). Aceita:
+ *  - um array literal já presente na config;
+ *  - uma expressão Liquid de um único bind "{{ contact.deals }}" (avaliada com
+ *    evalValue para devolver o valor real);
+ *  - uma string JSON de array.
+ * Devolve [] se nada resolver para array.
+ */
+async function resolveToArray(raw: unknown, scope: Record<string, unknown>): Promise<unknown[]> {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    const expr = raw.trim();
+    const single = expr.match(/^\{\{\s*([\s\S]+?)\s*\}\}$/);
+    if (single) {
+      try {
+        const v = await liquid.evalValue(single[1], scope);
+        if (Array.isArray(v)) return v;
+        if (v !== null && v !== undefined) return [v];
+      } catch { /* cai para JSON abaixo */ }
+    }
+    try {
+      const v = JSON.parse(expr);
+      if (Array.isArray(v)) return v;
+    } catch { /* não é JSON */ }
+  }
+  return [];
 }
 
 // ----------------------------------------------------------------------------
@@ -156,6 +183,22 @@ const ATOMS: Record<string, AtomExecFn> = {
     const json = await res.json().catch(() => ({})) as { ok?: boolean; result?: { message_id?: number }; description?: string };
     if (!res.ok || !json.ok) throw new Error(`Telegram API erro ${res.status}: ${json.description ?? "unknown"}`);
     return { ok: true, message_id: json.result?.message_id ?? 0, sent_at: new Date().toISOString() };
+  },
+
+  "logic.loop": async (ctx) => {
+    // Resolve o array a iterar a partir da config crua (não stringificada).
+    const items = await resolveToArray(ctx.rawConfig.items, ctx.scope);
+    const maxIter = Number(ctx.config.max_iterations ?? 100);
+    const parallel = ctx.config.parallel === true || ctx.config.parallel === "true";
+    const limited = items.slice(0, Number.isFinite(maxIter) && maxIter > 0 ? maxIter : 100);
+    // _loop sinaliza ao runner para gerir as iterações (handleLoop).
+    return {
+      _loop: true,
+      items_resolved: limited,
+      max_iterations: Number.isFinite(maxIter) && maxIter > 0 ? maxIter : 100,
+      parallel,
+      count: limited.length,
+    };
   },
 
   "logic.wait_fixed": async (ctx) => {
@@ -431,28 +474,6 @@ const ATOMS: Record<string, AtomExecFn> = {
 };
 
 // ----------------------------------------------------------------------------
-// Helpers de grafo
-// ----------------------------------------------------------------------------
-function findStartNode(def: AutomationDefinition): AutomationNode | null {
-  const targets = new Set(def.edges.map((e) => e.target));
-  return def.nodes.find((n) => !targets.has(n.id)) ?? null;
-}
-
-function nextNode(def: AutomationDefinition, currentId: string, branch?: string): AutomationNode | null {
-  // Se o nó anterior produziu um branch (ex: logic.condition -> "true"|"false"),
-  // procura primeiro uma edge com sourceHandle igual a esse branch.
-  if (branch) {
-    const branched = def.edges.find((e) => e.source === currentId && e.sourceHandle === branch);
-    if (branched) return def.nodes.find((n) => n.id === branched.target) ?? null;
-  }
-  // Fallback: primeira edge sem sourceHandle, ou qualquer edge.
-  const fallback = def.edges.find((e) => e.source === currentId && !e.sourceHandle)
-    ?? def.edges.find((e) => e.source === currentId);
-  if (!fallback) return null;
-  return def.nodes.find((n) => n.id === fallback.target) ?? null;
-}
-
-// ----------------------------------------------------------------------------
 // Helpers de variáveis
 // ----------------------------------------------------------------------------
 async function loadContactDealImovel(
@@ -467,20 +488,6 @@ async function loadContactDealImovel(
     imovelId ? supabase.from("imoveis").select("*").eq("id", imovelId).maybeSingle().then((r) => r.data) : Promise.resolve(null),
   ]);
   return { contact, deal, imovel };
-}
-
-function buildVariables(
-  base: { contact: unknown; deal: unknown; imovel: unknown },
-  triggerEvent: { type: string; payload: unknown } | undefined,
-  accumulated: Record<string, { output: unknown }>,
-): Record<string, unknown> {
-  return {
-    contact: base.contact ?? {},
-    deal: base.deal ?? {},
-    imovel: base.imovel ?? {},
-    trigger: triggerEvent ?? {},
-    ...accumulated,
-  };
 }
 
 // ----------------------------------------------------------------------------
@@ -506,20 +513,32 @@ Deno.serve(async (req) => {
   let automation: { id: string; definition: AutomationDefinition; version: number; organization_id: string };
   let variables: Record<string, { output: unknown }> = {};
   let triggerEvent: { type: string; payload: unknown } | undefined;
-  let startNode: AutomationNode | null;
+  let startNodeId: string | null;
   let contactId: string | null = null;
   let dealId: string | null = null;
   let imovelId: string | null = null;
+  // Estado já reidratado (modo resume com run_state multi-frame). Quando definido,
+  // o runner usa o frontier serializado em vez de um startNodeId.
+  let preparedState: RunnerState | null = null;
+  const nowIso = new Date().toISOString();
 
   if (body.execution_id) {
     // ----- Modo resume -----
+    // Claim por compare-and-set: só um resume avança (waiting -> running). Evita
+    // que duas schedules da mesma execução se sobreponham no run_state.
     const { data: exec, error: eErr } = await supabase
       .from("automation_executions")
-      .select("id, organization_id, automation_id, variables, resume_node_id, trigger_event, contact_id, deal_id, imovel_id")
+      .update({ status: "running", resume_at: null })
       .eq("id", body.execution_id)
-      .single();
-    if (eErr || !exec) return new Response(JSON.stringify({ error: "execution not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
-    if (exec.organization_id !== body.organization_id) return new Response(JSON.stringify({ error: "org mismatch" }), { status: 403, headers: { "Content-Type": "application/json" } });
+      .eq("organization_id", body.organization_id)
+      .eq("status", "waiting")
+      .select("id, organization_id, automation_id, variables, run_state, resume_node_id, trigger_event, contact_id, deal_id, imovel_id")
+      .maybeSingle();
+    if (eErr) return new Response(JSON.stringify({ error: "resume claim failed", details: eErr }), { status: 500, headers: { "Content-Type": "application/json" } });
+    if (!exec) {
+      // Já reclamada por outro resume, ou não está em waiting. Sai sem mexer.
+      return new Response(JSON.stringify({ skipped: "already claimed or not waiting", execution_id: body.execution_id }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
 
     const { data: auto, error: aErr } = await supabase.from("automations").select("id, definition, version, organization_id").eq("id", exec.automation_id).single();
     if (aErr || !auto) return new Response(JSON.stringify({ error: "automation not found for execution" }), { status: 404, headers: { "Content-Type": "application/json" } });
@@ -531,10 +550,19 @@ Deno.serve(async (req) => {
     contactId = exec.contact_id as string | null;
     dealId = exec.deal_id as string | null;
     imovelId = exec.imovel_id as string | null;
-    const lastBranch = (variables[exec.resume_node_id ?? ""] as { output?: { _branch_taken?: string } } | undefined)?.output?._branch_taken;
-    startNode = exec.resume_node_id ? nextNode(automation.definition, exec.resume_node_id, lastBranch) : findStartNode(automation.definition);
 
-    await supabase.from("automation_executions").update({ status: "running", resume_at: null }).eq("id", executionId);
+    if (exec.run_state) {
+      // ----- Resume multi-frame: reidrata o frontier e acorda os ramos devidos -----
+      preparedState = deserializeState(exec.run_state as SerializedRunState);
+      wakeDueSuspends(automation.definition, preparedState, nowIso);
+      startNodeId = null;
+    } else {
+      // ----- Resume legacy (execuções criadas antes do run_state) -----
+      const lastBranch = (variables[exec.resume_node_id ?? ""] as { output?: { _branch_taken?: string } } | undefined)?.output?._branch_taken;
+      startNodeId = exec.resume_node_id
+        ? nextTarget(automation.definition, exec.resume_node_id, lastBranch)
+        : (findStartNode(automation.definition)?.id ?? null);
+    }
   } else {
     // ----- Modo normal: cria execução -----
     const { data: auto, error: aErr } = await supabase.from("automations").select("id, definition, version, organization_id, status").eq("id", body.automation_id!).single();
@@ -553,8 +581,9 @@ Deno.serve(async (req) => {
       else if (evtType.startsWith("imovel.")) imovelId = payload.id;
     }
 
-    startNode = findStartNode(automation.definition);
+    const startNode = findStartNode(automation.definition);
     if (!startNode) return new Response(JSON.stringify({ error: "no trigger node" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    startNodeId = startNode.id;
 
     const { data: execution, error: execErr } = await supabase.from("automation_executions").insert({
       automation_id: automation.id,
@@ -575,39 +604,43 @@ Deno.serve(async (req) => {
   // ----- Carrega contact/deal/imovel para o template context -----
   const baseRefs = await loadContactDealImovel(supabase, contactId, dealId, imovelId);
 
-  // ----- Loop de execução -----
+  // ----- Execução via runner partilhado -----
   const startedAt = Date.now();
-  let current: AutomationNode | null = startNode;
-  let errorMessage: string | null = null;
-  let errorNodeId: string | null = null;
-  let suspended = false;
-  let resumeAt: string | null = null;
-  const safetyLimit = 50;
-  let count = 0;
 
-  while (current && count < safetyLimit) {
-    count += 1;
-    const node: AutomationNode = current;
-    const atomFn = ATOMS[node.atom];
+  // Contexto base do template (igual ao antigo buildVariables): contact/deal/imovel/trigger.
+  const baseContext: Record<string, unknown> = {
+    contact: baseRefs.contact ?? {},
+    deal: baseRefs.deal ?? {},
+    imovel: baseRefs.imovel ?? {},
+    trigger: triggerEvent ?? {},
+  };
+
+  // Estado do runner. Resume multi-frame usa o estado já reidratado; senão cria
+  // um estado novo e reaproveita as variáveis acumuladas (resume legacy/normal).
+  const state = preparedState ?? createInitialState(startNodeId ?? "");
+  if (!preparedState) state.variables = variables;
+
+  // runNode: resolve a config, persiste o node_execution e devolve o output.
+  // Lança em caso de átomo desconhecido ou erro do átomo (o runner trata como falha).
+  const runNode = async (node: AutomationNode, vars: Record<string, unknown>): Promise<AtomOutput> => {
     const nodeStart = Date.now();
+    const atomFn = ATOMS[node.atom];
 
-    if (!atomFn) {
-      const errMsg = `unknown atom: ${node.atom}`;
-      await supabase.from("automation_node_executions").insert({
-        execution_id: executionId, organization_id: automation.organization_id, node_id: node.id, atom_id: node.atom,
-        status: "failed", input: { config: node.config }, error: errMsg, completed_at: new Date().toISOString(), duration_ms: Date.now() - nodeStart,
-      });
-      errorMessage = errMsg; errorNodeId = node.id; break;
-    }
-
-    // Resolve config via LiquidJS antes de passar ao átomo
-    const vars = buildVariables(baseRefs, triggerEvent, variables);
     let resolvedConfig: Record<string, unknown>;
     try {
       resolvedConfig = await resolveConfig(node.config, vars);
     } catch (e) {
       resolvedConfig = node.config;
       console.error("resolveConfig falhou:", e);
+    }
+
+    if (!atomFn) {
+      const errMsg = `unknown atom: ${node.atom}`;
+      await supabase.from("automation_node_executions").insert({
+        execution_id: executionId, organization_id: automation.organization_id, node_id: node.id, atom_id: node.atom,
+        status: "failed", input: { config: resolvedConfig }, error: errMsg, completed_at: new Date().toISOString(), duration_ms: Date.now() - nodeStart,
+      });
+      throw new Error(errMsg);
     }
 
     const { data: nodeExec } = await supabase.from("automation_node_executions").insert({
@@ -617,7 +650,7 @@ Deno.serve(async (req) => {
 
     const ctx: NodeExecContext = {
       supabase, executionId, automationId: automation.id, organizationId: automation.organization_id, nodeId: node.id,
-      config: resolvedConfig, variables, triggerEvent,
+      config: resolvedConfig, rawConfig: node.config, scope: vars, variables: state.variables, triggerEvent,
       log: async (level: string, message: string) => {
         await supabase.from("automation_node_executions").insert({
           execution_id: executionId, organization_id: automation.organization_id, node_id: `${node.id}.log`, atom_id: "system.log",
@@ -628,35 +661,12 @@ Deno.serve(async (req) => {
 
     try {
       const output = await atomFn(ctx);
-      variables[node.id] = { output };
-
       if (nodeExec?.id) {
         await supabase.from("automation_node_executions").update({
           status: "completed", output, completed_at: new Date().toISOString(), duration_ms: Date.now() - nodeStart,
         }).eq("id", nodeExec.id);
       }
-
-      // Detecta _halt (terminação suave — sai do loop como completed)
-      const out = output as { _suspend?: boolean; _resumeAt?: string; _approval_token?: string; _halt?: boolean };
-      if (out?._halt === true) {
-        current = null;
-        break;
-      }
-      // Detecta _suspend
-      if (out?._suspend === true && out._resumeAt) {
-        suspended = true;
-        resumeAt = out._resumeAt;
-        const execUpdate: Record<string, unknown> = {
-          status: "waiting", current_node_id: node.id, resume_node_id: node.id, resume_at: resumeAt, variables,
-        };
-        if (out._approval_token) execUpdate.pending_approval_token = out._approval_token;
-        await supabase.from("automation_executions").update(execUpdate).eq("id", executionId);
-        await supabase.from("automation_schedules").insert({
-          execution_id: executionId, organization_id: automation.organization_id, scheduled_for: resumeAt,
-          resume_node_id: node.id, status: "pending",
-        });
-        break;
-      }
+      return output;
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
       if (nodeExec?.id) {
@@ -664,26 +674,51 @@ Deno.serve(async (req) => {
           status: "failed", error: errMsg, completed_at: new Date().toISOString(), duration_ms: Date.now() - nodeStart,
         }).eq("id", nodeExec.id);
       }
-      errorMessage = errMsg; errorNodeId = node.id; break;
+      throw e;
     }
+  };
 
-    const lastOut = variables[node.id]?.output as { _branch_taken?: string } | undefined;
-    current = nextNode(automation.definition, node.id, lastOut?._branch_taken);
-  }
+  const deps: RunnerDeps = { baseContext, runNode };
+  // Corre o runner quando há trabalho: arranque normal (startNodeId) ou resume
+  // (preparedState — mesmo com frontier vazio, para reavaliar ramos suspensos).
+  const outcome = (startNodeId || preparedState)
+    ? await runGraph(automation.definition, startNodeId ? { startNodeId, state, deps } : { state, deps })
+    : { result: { kind: "done" as const }, state };
 
-  // ----- Final -----
+  variables = outcome.state.variables;
+  const count = outcome.state.iterationCount;
   const durationMs = Date.now() - startedAt;
 
-  if (suspended) {
+  // ----- Final -----
+  if (outcome.result.kind === "suspended") {
+    const suspends = outcome.result.suspends;
+    const earliest = suspends.reduce((min, s) => (s.resumeAt < min ? s.resumeAt : min), suspends[0].resumeAt);
+    const approval = suspends.find((s) => s.approvalToken)?.approvalToken ?? null;
+    const firstNode = suspends[0].nodeId;
+    await supabase.from("automation_executions").update({
+      status: "waiting", current_node_id: firstNode, resume_node_id: firstNode, resume_at: earliest,
+      variables, run_state: serializeState(state), pending_approval_token: approval,
+    }).eq("id", executionId);
+    // Mantém as schedules em sincronia com run_state.suspended: cancela as
+    // pendentes antigas e insere uma por ramo ainda suspenso.
+    await supabase.from("automation_schedules").update({ status: "cancelled" }).eq("execution_id", executionId).eq("status", "pending");
+    await supabase.from("automation_schedules").insert(
+      suspends.map((s) => ({
+        execution_id: executionId, organization_id: automation.organization_id,
+        scheduled_for: s.resumeAt, resume_node_id: s.nodeId, frame_id: s.frameId, status: "pending",
+      })),
+    );
     return new Response(JSON.stringify({
-      execution_id: executionId, status: "waiting", resume_at: resumeAt, nodes_executed: count,
+      execution_id: executionId, status: "waiting", resume_at: earliest, suspended: suspends.length, nodes_executed: count,
     }), { status: 200, headers: { "Content-Type": "application/json" } });
   }
 
+  const errorMessage = outcome.result.kind === "error" ? outcome.result.message : null;
+  const errorNodeId = outcome.result.kind === "error" ? outcome.result.nodeId : null;
   const finalStatus = errorMessage ? "failed" : "completed";
   await supabase.from("automation_executions").update({
     status: finalStatus, completed_at: new Date().toISOString(), duration_ms: durationMs,
-    variables, error_message: errorMessage, error_node_id: errorNodeId,
+    variables, error_message: errorMessage, error_node_id: errorNodeId, run_state: null,
   }).eq("id", executionId);
 
   return new Response(JSON.stringify({
