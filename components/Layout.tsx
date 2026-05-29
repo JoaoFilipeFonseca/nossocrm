@@ -49,7 +49,8 @@ import {
   Target,
   Archive,
   Zap,
-  Activity
+  Activity,
+  Megaphone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -85,6 +86,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/activities': 'Actividades',
   '/decisions': 'Decisões',
   '/reports': 'Relatórios',
+  '/anuncios': 'Anúncios',
   '/criativos': 'Criativos',
   '/settings': 'Configurações',
   '/profile': 'Perfil',
@@ -190,7 +192,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // [back-arrow]
   const _router = useRouter();
   const _pn = usePathname() || '/';
-  const _TOP_LEVEL = new Set(['/', '/dashboard', '/inbox', '/messaging', '/matches', '/boards', '/contacts', '/imoveis', '/activities', '/reports', '/settings', '/profile']);
+  const _TOP_LEVEL = new Set(['/', '/dashboard', '/inbox', '/messaging', '/matches', '/boards', '/contacts', '/imoveis', '/activities', '/reports', '/anuncios', '/settings', '/profile']);
   const showBack = !_TOP_LEVEL.has(_pn);
   const handleBack = () => { try { _router.back(); } catch (e) { _router.push('/dashboard'); } };
 const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -327,6 +329,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
             { to: '/imoveis', icon: Home, label: 'Imóveis', prefetch: undefined, badge: undefined },
             { to: '/activities', icon: CheckSquare, label: 'Actividades', prefetch: 'activities' as const, badge: undefined },
             { to: '/reports', icon: BarChart3, label: 'Relatórios', prefetch: 'reports' as const, badge: undefined },
+            { to: '/anuncios', icon: Megaphone, label: 'Anúncios', prefetch: undefined, badge: undefined },
             { to: '/criativos', icon: Archive, label: 'Criativos', prefetch: undefined, badge: undefined },
             { to: '/automacoes', icon: Zap, label: 'Automações', prefetch: undefined, badge: undefined },
             ...(profile?.role === 'admin' ? [{ to: '/admin/saude', icon: Activity, label: 'Saúde', prefetch: undefined, badge: undefined }] : []),
