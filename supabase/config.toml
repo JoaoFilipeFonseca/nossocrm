@@ -100,3 +100,8 @@ verify_jwt = false
 # a segurança é a assinatura X-Hub-Signature-256 (App Secret) + verify token.
 [functions.automation-meta-leads]
 verify_jwt = false
+
+# Sync de métricas Meta Ads (Marketing API). Chamada por cron sem JWT;
+# a segurança é o header X-Cron-Secret == backup_cron_secret.
+[functions.automation-meta-insights]
+verify_jwt = false
