@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
   // Lookup da execution suspensa
   const { data: exec, error: execErr } = await supabase
     .from("automation_executions")
-    .select("id, organization_id, status, variables, resume_node_id")
+    .select("id, organization_id, status, variables, run_state, resume_node_id")
     .eq("pending_approval_token", token)
     .eq("status", "waiting")
     .maybeSingle();
@@ -102,11 +102,24 @@ Deno.serve(async (req) => {
     },
   };
 
+  // Se a execução usa run_state multi-frame, marca o ramo suspenso deste nó
+  // como devido (resumeAt = agora) para o resume o acordar.
+  const nowIso = new Date().toISOString();
+  let runStatePatch: Record<string, unknown> | null = null;
+  const runState = exec.run_state as { suspended?: Array<{ nodeId: string; resumeAt: string }> } | null;
+  if (runState && Array.isArray(runState.suspended)) {
+    runState.suspended = runState.suspended.map((s) =>
+      s.nodeId === nodeId ? { ...s, resumeAt: nowIso } : s
+    );
+    runStatePatch = runState as unknown as Record<string, unknown>;
+  }
+
   // Limpa o token + marca para retomar IMEDIATAMENTE
   await supabase.from("automation_executions").update({
     pending_approval_token: null,
-    resume_at: new Date().toISOString(),
+    resume_at: nowIso,
     variables,
+    ...(runStatePatch ? { run_state: runStatePatch } : {}),
     status: "waiting", // cron resume vai apanhar
   }).eq("id", exec.id);
 

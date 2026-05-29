@@ -97,13 +97,25 @@ Deno.serve(async (req) => {
   const ids = rows.map((r) => r.id);
   await supabase.from("automation_schedules").update({ status: "fired", fired_at: new Date().toISOString() }).in("id", ids);
 
-  // 3. Invoca automation-execute em paralelo
-  const invocations: Array<{ id: string; ok: boolean; status: number; body: string }> = [];
-  await runInChunks(rows, PARALLEL_LIMIT, async (row) => {
-    const r = await invokeExecuteResume(supabaseUrl, serviceKey, row.execution_id, row.organization_id);
-    invocations.push({ id: row.id, ...r });
+  // 3. Dedupe por execution_id: uma execução pode ter vários ramos suspensos
+  //    (várias schedules). O runner multi-frame retoma todos os ramos devidos
+  //    numa só invocação, por isso basta invocar automation-execute 1x por
+  //    execução (o claim CAS protege contra resumes concorrentes na mesma row).
+  const byExecution = new Map<string, { execution_id: string; organization_id: string }>();
+  for (const row of rows) {
+    if (!byExecution.has(row.execution_id)) {
+      byExecution.set(row.execution_id, { execution_id: row.execution_id, organization_id: row.organization_id });
+    }
+  }
+  const executions = [...byExecution.values()];
+
+  // 4. Invoca automation-execute em paralelo (uma vez por execução)
+  const invocations: Array<{ execution_id: string; ok: boolean; status: number; body: string }> = [];
+  await runInChunks(executions, PARALLEL_LIMIT, async (e) => {
+    const r = await invokeExecuteResume(supabaseUrl, serviceKey, e.execution_id, e.organization_id);
+    invocations.push({ execution_id: e.execution_id, ...r });
     return r;
   });
 
-  return new Response(JSON.stringify({ fired: rows.length, invocations: invocations.length, results: invocations.map((i) => ({ schedule_id: i.id, ok: i.ok, status: i.status })) }), { status: 200, headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify({ fired: rows.length, invocations: invocations.length, results: invocations.map((i) => ({ execution_id: i.execution_id, ok: i.ok, status: i.status })) }), { status: 200, headers: { "Content-Type": "application/json" } });
 });

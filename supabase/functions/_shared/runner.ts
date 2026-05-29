@@ -68,15 +68,39 @@ export interface Frame {
   loopStack: LoopFrame[];
 }
 
+// Um ramo suspenso à espera de retoma (wait/aprovação). Guarda a posição para
+// continuar a partir dos sucessores do nó de suspensão quando ficar devido.
+export interface SuspendedEntry {
+  frameId: string;
+  nodeId: string;
+  loopStack: LoopFrame[];
+  resumeAt: string;
+  approvalToken?: string;
+  branch?: string;
+}
+
 export interface RunnerState {
   // Outputs acumulados por nó: { [nodeId]: { output } } (formato legacy mantido).
   variables: Record<string, { output: unknown }>;
   frontier: Frame[];
+  // Ramos suspensos (waits/aprovações) a aguardar retoma — frontier multi-frame.
+  suspended: SuspendedEntry[];
   joins: Record<string, { arrived: string[] }>;
   // Conta iterações concluídas por loop paralelo (para disparar loop_done 1x).
   loopCompletions: Record<string, number>;
   visited: string[];
   iterationCount: number;
+}
+
+// Estado serializado persistido em automation_executions.run_state (suspend/resume).
+export interface SerializedRunState {
+  v: 2;
+  variables: Record<string, { output: unknown }>;
+  frontier: Frame[];
+  suspended: SuspendedEntry[];
+  joins: Record<string, { arrived: string[] }>;
+  loopCompletions: Record<string, number>;
+  visited: string[];
 }
 
 // ----------------------------------------------------------------------------
@@ -92,7 +116,7 @@ export interface RunnerDeps {
 
 export type RunResult =
   | { kind: 'done' }
-  | { kind: 'suspended'; suspendNodeId: string; resumeAt: string; approvalToken?: string }
+  | { kind: 'suspended'; suspends: Array<{ frameId: string; nodeId: string; resumeAt: string; approvalToken?: string }> }
   | { kind: 'error'; nodeId: string; message: string };
 
 export interface RunOutcome {
@@ -242,11 +266,58 @@ export function createInitialState(startNodeId: string): RunnerState {
   return {
     variables: {},
     frontier: [{ frameId: 'root', nodeId: startNodeId, loopStack: [] }],
+    suspended: [],
     joins: {},
     loopCompletions: {},
     visited: [],
     iterationCount: 0,
   };
+}
+
+/** Serializa o estado para persistir em automation_executions.run_state. */
+export function serializeState(state: RunnerState): SerializedRunState {
+  return {
+    v: 2,
+    variables: state.variables,
+    frontier: state.frontier,
+    suspended: state.suspended,
+    joins: state.joins,
+    loopCompletions: state.loopCompletions,
+    visited: state.visited,
+  };
+}
+
+/** Reidrata o estado a partir do run_state persistido (para o modo resume). */
+export function deserializeState(raw: SerializedRunState): RunnerState {
+  return {
+    variables: raw.variables ?? {},
+    frontier: raw.frontier ?? [],
+    suspended: raw.suspended ?? [],
+    joins: raw.joins ?? {},
+    loopCompletions: raw.loopCompletions ?? {},
+    visited: raw.visited ?? [],
+    iterationCount: 0,
+  };
+}
+
+/**
+ * Acorda os ramos suspensos cujo resumeAt já passou (`nowIso`): para cada um,
+ * faz fan-out a partir dos sucessores do nó de suspensão (continua DEPOIS do
+ * wait) e remove-o de `suspended`. O branch é lido das variáveis (ex: decisão
+ * de aprovação humana) com fallback ao branch guardado. Devolve quantos acordou.
+ */
+export function wakeDueSuspends(def: AutomationDefinition, state: RunnerState, nowIso: string): number {
+  const due = state.suspended.filter((s) => s.resumeAt <= nowIso);
+  if (due.length === 0) return 0;
+  state.suspended = state.suspended.filter((s) => s.resumeAt > nowIso);
+  for (const entry of due) {
+    const recorded = (state.variables[entry.nodeId] as { output?: { _branch_taken?: string } } | undefined)?.output?._branch_taken;
+    const branch = typeof recorded === 'string' ? recorded : entry.branch;
+    for (const edge of edgesFrom(def, entry.nodeId, branch)) {
+      state.frontier.push({ frameId: `${entry.frameId}/${edge.id}`, nodeId: edge.target, loopStack: entry.loopStack });
+    }
+  }
+  return due.length;
 }
 
 /**
@@ -333,10 +404,15 @@ export function handleLoop(
 // ----------------------------------------------------------------------------
 export async function runGraph(
   def: AutomationDefinition,
-  opts: { startNodeId: string; state: RunnerState; deps: RunnerDeps },
+  opts: { startNodeId?: string; state: RunnerState; deps: RunnerDeps },
 ): Promise<RunOutcome> {
   const { state, deps } = opts;
-  state.frontier = [{ frameId: 'root', nodeId: opts.startNodeId, loopStack: [] }];
+  // Modo normal: arranca num só frame. Modo resume: usa o frontier já reidratado.
+  if (opts.startNodeId) {
+    state.frontier = [{ frameId: 'root', nodeId: opts.startNodeId, loopStack: [] }];
+  }
+  // Tecto é por invocação (não acumula entre resumes).
+  state.iterationCount = 0;
 
   while (state.frontier.length > 0 && state.iterationCount < SAFETY_CAP) {
     // 1. Separa frames prontos dos joins ainda à espera de mais ramos.
@@ -402,17 +478,18 @@ export async function runGraph(
       // Terminação suave: o ramo morre, não propaga sucessores.
       if (output?._halt === true) continue;
 
-      // Suspensão: T2 mantém a semântica single-frame (T4 generaliza multi-frame).
+      // Suspensão: parqueia o ramo e continua os restantes (multi-frame). A
+      // execução só fica 'waiting' quando o frontier activo esvazia.
       if (output?._suspend === true && typeof output._resumeAt === 'string') {
-        return {
-          result: {
-            kind: 'suspended',
-            suspendNodeId: node.id,
-            resumeAt: output._resumeAt,
-            approvalToken: typeof output._approval_token === 'string' ? output._approval_token : undefined,
-          },
-          state,
-        };
+        state.suspended.push({
+          frameId: r.frame.frameId,
+          nodeId: node.id,
+          loopStack: r.frame.loopStack,
+          resumeAt: output._resumeAt,
+          approvalToken: typeof output._approval_token === 'string' ? output._approval_token : undefined,
+          branch: typeof output._branch_taken === 'string' ? output._branch_taken : undefined,
+        });
+        continue;
       }
 
       // Fan-out: expande todas as edges aplicáveis em novos frames.
@@ -425,6 +502,22 @@ export async function runGraph(
     }
 
     state.frontier = dedupeFrontier(nextFrontier);
+  }
+
+  // Frontier activo esgotou. Se há ramos suspensos, a execução fica 'waiting'.
+  if (state.suspended.length > 0) {
+    return {
+      result: {
+        kind: 'suspended',
+        suspends: state.suspended.map((s) => ({
+          frameId: s.frameId,
+          nodeId: s.nodeId,
+          resumeAt: s.resumeAt,
+          approvalToken: s.approvalToken,
+        })),
+      },
+      state,
+    };
   }
 
   return { result: { kind: 'done' }, state };

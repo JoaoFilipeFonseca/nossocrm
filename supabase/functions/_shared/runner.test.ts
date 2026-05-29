@@ -10,6 +10,9 @@ import {
   nextTarget,
   buildScope,
   createInitialState,
+  serializeState,
+  deserializeState,
+  wakeDueSuspends,
   SAFETY_CAP,
   LOOP_ATOM,
   type AutomationDefinition,
@@ -140,7 +143,11 @@ describe('runGraph — paridade T1', () => {
       state: createInitialState('a'),
       deps: makeDeps({ w: { _suspend: true, _resumeAt: '2026-06-01T10:00:00.000Z' } }, order),
     });
-    expect(result).toEqual({ kind: 'suspended', suspendNodeId: 'w', resumeAt: '2026-06-01T10:00:00.000Z', approvalToken: undefined });
+    expect(result.kind).toBe('suspended');
+    if (result.kind === 'suspended') {
+      expect(result.suspends).toHaveLength(1);
+      expect(result.suspends[0]).toMatchObject({ nodeId: 'w', resumeAt: '2026-06-01T10:00:00.000Z' });
+    }
     expect(order).toEqual(['a', 'w']);
   });
 
@@ -152,7 +159,10 @@ describe('runGraph — paridade T1', () => {
       state: createInitialState('h'),
       deps: makeDeps({ h: { _suspend: true, _resumeAt: '2026-06-02T09:00:00.000Z', _approval_token: 'tok123' } }, order),
     });
-    expect(result).toEqual({ kind: 'suspended', suspendNodeId: 'h', resumeAt: '2026-06-02T09:00:00.000Z', approvalToken: 'tok123' });
+    expect(result.kind).toBe('suspended');
+    if (result.kind === 'suspended') {
+      expect(result.suspends[0]).toMatchObject({ nodeId: 'h', resumeAt: '2026-06-02T09:00:00.000Z', approvalToken: 'tok123' });
+    }
   });
 
   it('erro do átomo devolve kind:error com nodeId e mensagem', async () => {
@@ -356,5 +366,68 @@ describe('runGraph — logic.loop forEach (T3)', () => {
     expect(order.filter((id) => id === 'body')).toHaveLength(3);
     expect(new Set(bodyRuns.map((b) => b.index))).toEqual(new Set([0, 1, 2]));
     expect(order.filter((id) => id === 'done')).toHaveLength(1); // loop_done 1x
+  });
+});
+
+describe('runGraph — suspend/resume multi-frame (T4)', () => {
+  // a -> {w1, w2} (fan-out); w1 -> e1; w2 -> e2. w1/w2 suspendem.
+  function parallelWaitDef(): AutomationDefinition {
+    return def([['a', 'trigger.event'], ['w1', 'logic.wait_fixed'], ['w2', 'logic.wait_fixed'], ['e1', 'action.log'], ['e2', 'action.log']], [
+      ['a', 'w1'],
+      ['a', 'w2'],
+      ['w1', 'e1'],
+      ['w2', 'e2'],
+    ]);
+  }
+  const suspendOutputs = {
+    w1: { _suspend: true, _resumeAt: '2026-06-01T10:00:00.000Z' },
+    w2: { _suspend: true, _resumeAt: '2026-06-01T11:00:00.000Z' },
+  };
+
+  it('dois waits paralelos suspendem ambos os ramos', async () => {
+    const order: string[] = [];
+    const state = createInitialState('a');
+    const { result } = await runGraph(parallelWaitDef(), { startNodeId: 'a', state, deps: makeDeps(suspendOutputs, order) });
+    expect(result.kind).toBe('suspended');
+    if (result.kind === 'suspended') expect(result.suspends.map((s) => s.nodeId).sort()).toEqual(['w1', 'w2']);
+    expect(state.suspended).toHaveLength(2);
+    expect(state.frontier).toHaveLength(0);
+    expect(order).toEqual(['a', 'w1', 'w2']);
+  });
+
+  it('resume acorda ambos os ramos e completa (roundtrip de serialização)', async () => {
+    const d = parallelWaitDef();
+    const state1 = createInitialState('a');
+    await runGraph(d, { startNodeId: 'a', state: state1, deps: makeDeps(suspendOutputs, []) });
+
+    // Simula persistência em run_state JSONB.
+    const persisted = JSON.parse(JSON.stringify(serializeState(state1)));
+    const state2 = deserializeState(persisted);
+
+    const woken = wakeDueSuspends(d, state2, '2026-06-01T12:00:00.000Z');
+    expect(woken).toBe(2);
+    expect(state2.suspended).toHaveLength(0);
+
+    const order2: string[] = [];
+    const { result } = await runGraph(d, { state: state2, deps: makeDeps({}, order2) });
+    expect(result.kind).toBe('done');
+    expect(order2.sort()).toEqual(['e1', 'e2']);
+  });
+
+  it('resume parcial: só o ramo devido acorda, o outro fica suspenso', async () => {
+    const d = parallelWaitDef();
+    const state1 = createInitialState('a');
+    await runGraph(d, { startNodeId: 'a', state: state1, deps: makeDeps(suspendOutputs, []) });
+    const state2 = deserializeState(JSON.parse(JSON.stringify(serializeState(state1))));
+
+    const woken = wakeDueSuspends(d, state2, '2026-06-01T10:30:00.000Z'); // só w1 devido
+    expect(woken).toBe(1);
+    expect(state2.suspended.map((s) => s.nodeId)).toEqual(['w2']);
+
+    const order2: string[] = [];
+    const { result } = await runGraph(d, { state: state2, deps: makeDeps({}, order2) });
+    expect(order2).toEqual(['e1']);
+    expect(result.kind).toBe('suspended');
+    if (result.kind === 'suspended') expect(result.suspends.map((s) => s.nodeId)).toEqual(['w2']);
   });
 });

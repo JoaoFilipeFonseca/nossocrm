@@ -20,10 +20,15 @@ import {
   findStartNode,
   nextTarget,
   createInitialState,
+  serializeState,
+  deserializeState,
+  wakeDueSuspends,
   type AutomationDefinition,
   type AutomationNode,
   type AtomOutput,
   type RunnerDeps,
+  type RunnerState,
+  type SerializedRunState,
 } from "../_shared/runner.ts";
 
 interface NodeExecContext {
@@ -512,16 +517,28 @@ Deno.serve(async (req) => {
   let contactId: string | null = null;
   let dealId: string | null = null;
   let imovelId: string | null = null;
+  // Estado já reidratado (modo resume com run_state multi-frame). Quando definido,
+  // o runner usa o frontier serializado em vez de um startNodeId.
+  let preparedState: RunnerState | null = null;
+  const nowIso = new Date().toISOString();
 
   if (body.execution_id) {
     // ----- Modo resume -----
+    // Claim por compare-and-set: só um resume avança (waiting -> running). Evita
+    // que duas schedules da mesma execução se sobreponham no run_state.
     const { data: exec, error: eErr } = await supabase
       .from("automation_executions")
-      .select("id, organization_id, automation_id, variables, resume_node_id, trigger_event, contact_id, deal_id, imovel_id")
+      .update({ status: "running", resume_at: null })
       .eq("id", body.execution_id)
-      .single();
-    if (eErr || !exec) return new Response(JSON.stringify({ error: "execution not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
-    if (exec.organization_id !== body.organization_id) return new Response(JSON.stringify({ error: "org mismatch" }), { status: 403, headers: { "Content-Type": "application/json" } });
+      .eq("organization_id", body.organization_id)
+      .eq("status", "waiting")
+      .select("id, organization_id, automation_id, variables, run_state, resume_node_id, trigger_event, contact_id, deal_id, imovel_id")
+      .maybeSingle();
+    if (eErr) return new Response(JSON.stringify({ error: "resume claim failed", details: eErr }), { status: 500, headers: { "Content-Type": "application/json" } });
+    if (!exec) {
+      // Já reclamada por outro resume, ou não está em waiting. Sai sem mexer.
+      return new Response(JSON.stringify({ skipped: "already claimed or not waiting", execution_id: body.execution_id }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
 
     const { data: auto, error: aErr } = await supabase.from("automations").select("id, definition, version, organization_id").eq("id", exec.automation_id).single();
     if (aErr || !auto) return new Response(JSON.stringify({ error: "automation not found for execution" }), { status: 404, headers: { "Content-Type": "application/json" } });
@@ -533,12 +550,19 @@ Deno.serve(async (req) => {
     contactId = exec.contact_id as string | null;
     dealId = exec.deal_id as string | null;
     imovelId = exec.imovel_id as string | null;
-    const lastBranch = (variables[exec.resume_node_id ?? ""] as { output?: { _branch_taken?: string } } | undefined)?.output?._branch_taken;
-    startNodeId = exec.resume_node_id
-      ? nextTarget(automation.definition, exec.resume_node_id, lastBranch)
-      : (findStartNode(automation.definition)?.id ?? null);
 
-    await supabase.from("automation_executions").update({ status: "running", resume_at: null }).eq("id", executionId);
+    if (exec.run_state) {
+      // ----- Resume multi-frame: reidrata o frontier e acorda os ramos devidos -----
+      preparedState = deserializeState(exec.run_state as SerializedRunState);
+      wakeDueSuspends(automation.definition, preparedState, nowIso);
+      startNodeId = null;
+    } else {
+      // ----- Resume legacy (execuções criadas antes do run_state) -----
+      const lastBranch = (variables[exec.resume_node_id ?? ""] as { output?: { _branch_taken?: string } } | undefined)?.output?._branch_taken;
+      startNodeId = exec.resume_node_id
+        ? nextTarget(automation.definition, exec.resume_node_id, lastBranch)
+        : (findStartNode(automation.definition)?.id ?? null);
+    }
   } else {
     // ----- Modo normal: cria execução -----
     const { data: auto, error: aErr } = await supabase.from("automations").select("id, definition, version, organization_id, status").eq("id", body.automation_id!).single();
@@ -591,9 +615,10 @@ Deno.serve(async (req) => {
     trigger: triggerEvent ?? {},
   };
 
-  // Estado do runner. Em resume, reaproveita as variáveis acumuladas.
-  const state = createInitialState(startNodeId ?? "");
-  state.variables = variables;
+  // Estado do runner. Resume multi-frame usa o estado já reidratado; senão cria
+  // um estado novo e reaproveita as variáveis acumuladas (resume legacy/normal).
+  const state = preparedState ?? createInitialState(startNodeId ?? "");
+  if (!preparedState) state.variables = variables;
 
   // runNode: resolve a config, persiste o node_execution e devolve o output.
   // Lança em caso de átomo desconhecido ou erro do átomo (o runner trata como falha).
@@ -654,8 +679,10 @@ Deno.serve(async (req) => {
   };
 
   const deps: RunnerDeps = { baseContext, runNode };
-  const outcome = startNodeId
-    ? await runGraph(automation.definition, { startNodeId, state, deps })
+  // Corre o runner quando há trabalho: arranque normal (startNodeId) ou resume
+  // (preparedState — mesmo com frontier vazio, para reavaliar ramos suspensos).
+  const outcome = (startNodeId || preparedState)
+    ? await runGraph(automation.definition, startNodeId ? { startNodeId, state, deps } : { state, deps })
     : { result: { kind: "done" as const }, state };
 
   variables = outcome.state.variables;
@@ -664,18 +691,25 @@ Deno.serve(async (req) => {
 
   // ----- Final -----
   if (outcome.result.kind === "suspended") {
-    const { suspendNodeId, resumeAt, approvalToken } = outcome.result;
-    const execUpdate: Record<string, unknown> = {
-      status: "waiting", current_node_id: suspendNodeId, resume_node_id: suspendNodeId, resume_at: resumeAt, variables,
-    };
-    if (approvalToken) execUpdate.pending_approval_token = approvalToken;
-    await supabase.from("automation_executions").update(execUpdate).eq("id", executionId);
-    await supabase.from("automation_schedules").insert({
-      execution_id: executionId, organization_id: automation.organization_id, scheduled_for: resumeAt,
-      resume_node_id: suspendNodeId, status: "pending",
-    });
+    const suspends = outcome.result.suspends;
+    const earliest = suspends.reduce((min, s) => (s.resumeAt < min ? s.resumeAt : min), suspends[0].resumeAt);
+    const approval = suspends.find((s) => s.approvalToken)?.approvalToken ?? null;
+    const firstNode = suspends[0].nodeId;
+    await supabase.from("automation_executions").update({
+      status: "waiting", current_node_id: firstNode, resume_node_id: firstNode, resume_at: earliest,
+      variables, run_state: serializeState(state), pending_approval_token: approval,
+    }).eq("id", executionId);
+    // Mantém as schedules em sincronia com run_state.suspended: cancela as
+    // pendentes antigas e insere uma por ramo ainda suspenso.
+    await supabase.from("automation_schedules").update({ status: "cancelled" }).eq("execution_id", executionId).eq("status", "pending");
+    await supabase.from("automation_schedules").insert(
+      suspends.map((s) => ({
+        execution_id: executionId, organization_id: automation.organization_id,
+        scheduled_for: s.resumeAt, resume_node_id: s.nodeId, frame_id: s.frameId, status: "pending",
+      })),
+    );
     return new Response(JSON.stringify({
-      execution_id: executionId, status: "waiting", resume_at: resumeAt, nodes_executed: count,
+      execution_id: executionId, status: "waiting", resume_at: earliest, suspended: suspends.length, nodes_executed: count,
     }), { status: 200, headers: { "Content-Type": "application/json" } });
   }
 
@@ -684,7 +718,7 @@ Deno.serve(async (req) => {
   const finalStatus = errorMessage ? "failed" : "completed";
   await supabase.from("automation_executions").update({
     status: finalStatus, completed_at: new Date().toISOString(), duration_ms: durationMs,
-    variables, error_message: errorMessage, error_node_id: errorNodeId,
+    variables, error_message: errorMessage, error_node_id: errorNodeId, run_state: null,
   }).eq("id", executionId);
 
   return new Response(JSON.stringify({
