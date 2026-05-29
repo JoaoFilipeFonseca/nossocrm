@@ -174,6 +174,9 @@ export interface Contact {
 
   /** Quando true, o agente de IA não responde a este contato em nenhum canal. */
   aiPaused?: boolean;
+
+  /** Linhagem do anúncio (Meta Ads) que gerou este contacto, quando aplicável. */
+  attribution?: MetaAdAttribution | null;
 }
 
 // ITEM 3: Produtos e Serviços

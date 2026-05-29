@@ -6,6 +6,7 @@ import { fakeContact } from '@/lib/debug';
 import { FocusTrap, useFocusReturn } from '@/lib/a11y';
 
 import ContactFilesPanel from './ContactFilesPanel';
+import { MetaAttribution } from '@/components/MetaAttribution';
 interface ContactFormData {
   name: string;
   email: string;
@@ -118,6 +119,9 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
             </button>
           </div>
         <form onSubmit={onSubmit} className="p-5 space-y-4">
+          {editingContact?.attribution && (
+            <MetaAttribution attribution={editingContact.attribution} />
+          )}
           <div>
             <label htmlFor="contact-name" className="block text-xs font-bold text-slate-500 uppercase mb-1">
               Nome Completo <span aria-hidden="true">*</span>

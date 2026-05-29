@@ -13,7 +13,7 @@
  */
 
 import { supabase } from './client';
-import { Contact, CRMCompany, OrganizationId, PaginationState, PaginatedResponse, ContactsServerFilters } from '@/types';
+import { Contact, CRMCompany, OrganizationId, PaginationState, PaginatedResponse, ContactsServerFilters, MetaAdAttribution } from '@/types';
 import { sanitizeUUID, sanitizeText, sanitizeNumber } from './utils';
 import { normalizePhoneE164 } from '@/lib/phone';
 
@@ -81,6 +81,8 @@ export interface DbContact {
   owner_id: string | null;
   /** Quando true, o agente de IA não responde a este contato. */
   ai_paused: boolean;
+  /** Linhagem do anúncio (Meta Ads) que gerou o contacto, quando aplicável. */
+  attribution: Record<string, unknown> | null;
 }
 
 /**
@@ -134,6 +136,7 @@ const transformContact = (db: DbContact): Contact => ({
   createdAt: db.created_at,
   updatedAt: db.updated_at,
   aiPaused: db.ai_paused ?? false,
+  attribution: (db.attribution as MetaAdAttribution) || null,
 });
 
 /**
