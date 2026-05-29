@@ -22,14 +22,20 @@
  */
 
 import { useCallback } from 'react';
+import { DurationInput, type BaseUnit } from './DurationInput';
 
 interface FieldSpec {
   type?: string;
   enum?: unknown[];
+  enumLabels?: string[];
   items?: { type?: string };
   description?: string;
   default?: unknown;
   minimum?: number;
+  /** 'duration' → render número + unidade (DurationInput). */
+  format?: string;
+  /** Unidade base que o átomo consome quando format === 'duration'. */
+  unit?: BaseUnit;
 }
 
 interface JSONSchema {
@@ -89,6 +95,20 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
             {spec.description ? <span className="ml-1 text-[10px] text-slate-400 font-normal">— {spec.description}</span> : null}
           </span>
         );
+
+        // duração (número + unidade) — grava na unidade base do átomo
+        if (spec.format === 'duration') {
+          return (
+            <label key={key} className="block">
+              {label}
+              <DurationInput
+                value={typeof v === 'number' ? v : undefined}
+                base={spec.unit ?? 'seconds'}
+                onChange={(next) => update(key, next)}
+              />
+            </label>
+          );
+        }
 
         // string + enum
         if (spec.type === 'string' && Array.isArray(spec.enum)) {
