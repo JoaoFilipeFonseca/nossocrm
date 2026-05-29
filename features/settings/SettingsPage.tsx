@@ -9,6 +9,7 @@ import { ApiKeysSection } from './components/ApiKeysSection';
 import { WebhooksSection } from './components/WebhooksSection';
 import { McpSection } from './components/McpSection';
 import { ChannelsSection } from './components/ChannelsSection';
+import { MetaAdsSection } from './components/MetaAdsSection';
 import { NottaImportSection } from './components/NottaImportSection';
 import { BusinessUnitsSection } from './components/BusinessUnitsSection';
 import { DataStorageSettings } from './components/DataStorageSettings';
@@ -116,13 +117,13 @@ const ProductsSettings: React.FC = () => {
 };
 
 const IntegrationsSettings: React.FC = () => {
-  type IntegrationsSubTab = 'channels' | 'webhooks' | 'api' | 'mcp' | 'notta';
+  type IntegrationsSubTab = 'channels' | 'meta-ads' | 'webhooks' | 'api' | 'mcp' | 'notta';
   const [subTab, setSubTab] = useState<IntegrationsSubTab>('channels');
 
   useEffect(() => {
     const syncFromHash = () => {
     const h = typeof window !== 'undefined' ? (window.location.hash || '').replace('#', '') : '';
-    if (h === 'channels' || h === 'webhooks' || h === 'api' || h === 'mcp' || h === 'notta') setSubTab(h as IntegrationsSubTab);
+    if (h === 'channels' || h === 'meta-ads' || h === 'webhooks' || h === 'api' || h === 'mcp' || h === 'notta') setSubTab(h as IntegrationsSubTab);
     };
 
     syncFromHash();
@@ -147,6 +148,7 @@ const IntegrationsSettings: React.FC = () => {
       <div className="flex items-center gap-2 mb-6">
         {([
           { id: 'channels' as const, label: 'Canais (Messaging)' },
+          { id: 'meta-ads' as const, label: 'Meta Ads' },
           { id: 'notta' as const, label: 'Notta' },
           { id: 'webhooks' as const, label: 'Webhooks' },
           { id: 'api' as const, label: 'API' },
@@ -168,6 +170,7 @@ const IntegrationsSettings: React.FC = () => {
       </div>
 
       {subTab === 'channels' && <ChannelsSection />}
+      {subTab === 'meta-ads' && <MetaAdsSection />}
       {subTab === 'notta' && <NottaImportSection />}
       {subTab === 'api' && <ApiKeysSection />}
       {subTab === 'webhooks' && <WebhooksSection />}
