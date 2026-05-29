@@ -185,6 +185,107 @@ const ATOMS: Record<string, AtomExecFn> = {
     return { ok: true, message_id: json.result?.message_id ?? 0, sent_at: new Date().toISOString() };
   },
 
+  // action.send_email — envia via canal Resend connected da org (messaging_channels).
+  // Paridade com lib/automation-engine/plugins/actions/send-email.ts.
+  "action.send_email": async (ctx) => {
+    const to = String(ctx.config.to ?? "").trim();
+    const subject = String(ctx.config.subject ?? "").trim();
+    const text = String(ctx.config.text ?? "").trim();
+    const html = ctx.config.html ? String(ctx.config.html) : undefined;
+    const replyToOverride = (ctx.config.reply_to as string | undefined) || null;
+    const overrideChannelId = (ctx.config.channel_id as string | undefined) || null;
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!to || !EMAIL_RE.test(to)) throw new Error(`to (email) inválido: ${to}`);
+    if (!subject) throw new Error("subject é obrigatório");
+    if (!text) throw new Error("text é obrigatório");
+
+    let q = ctx.supabase
+      .from("messaging_channels")
+      .select("id, credentials, provider, channel_type, status")
+      .eq("organization_id", ctx.organizationId)
+      .eq("provider", "resend")
+      .eq("channel_type", "email")
+      .is("deleted_at", null);
+    q = overrideChannelId ? q.eq("id", overrideChannelId) : q.eq("status", "connected");
+    const { data: emailChannels, error: emErr } = await q.order("updated_at", { ascending: false }).limit(1);
+    if (emErr) throw new Error(`Falha a ler messaging_channels: ${emErr.message}`);
+    const channel = emailChannels?.[0] as { id: string; credentials: Record<string, unknown> } | undefined;
+    if (!channel) {
+      throw new Error(
+        overrideChannelId
+          ? `Canal ${overrideChannelId} não encontrado ou não é Resend email`
+          : "Sem canal Resend connected. Configura em Definições, Integrações (requer DKIM/SPF em joaofilipefonseca.pt).",
+      );
+    }
+    const creds = (channel.credentials || {}) as { apiKey?: string; fromName?: string; fromEmail?: string; replyTo?: string };
+    if (!creds.apiKey || !creds.fromEmail) throw new Error("Credenciais Resend incompletas (apiKey e fromEmail obrigatórios)");
+    const fromHeader = creds.fromName ? `${creds.fromName} <${creds.fromEmail}>` : creds.fromEmail;
+    const replyTo = replyToOverride || creds.replyTo;
+    const emailBody: Record<string, unknown> = { from: fromHeader, to: [to], subject, text };
+    if (html) emailBody.html = html;
+    if (replyTo) emailBody.reply_to = replyTo;
+    const emailRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${creds.apiKey}` },
+      body: JSON.stringify(emailBody),
+    });
+    const emailJson = await emailRes.json().catch(() => ({})) as { id?: string; error?: { message?: string }; message?: string; statusCode?: number };
+    if (!emailRes.ok || emailJson.error || (emailJson.statusCode && emailJson.statusCode >= 400)) {
+      const errMsg = emailJson.error?.message || emailJson.message || `Resend API ${emailRes.status}`;
+      throw new Error(`Email envio falhou: ${errMsg}`);
+    }
+    return { ok: true, external_message_id: emailJson.id || "", sent_at: new Date().toISOString(), channel_id: channel.id };
+  },
+
+  // action.send_whatsapp — envia texto via canal WhatsApp Meta Cloud connected da org.
+  // Paridade com lib/automation-engine/plugins/actions/send-whatsapp.ts.
+  "action.send_whatsapp": async (ctx) => {
+    const to = String(ctx.config.to ?? "").replace(/\D/g, "");
+    const text = String(ctx.config.text ?? "").trim();
+    const overrideChannelId = (ctx.config.channel_id as string | undefined) || null;
+    if (!to) throw new Error("to (telefone) é obrigatório");
+    if (!text) throw new Error("text é obrigatório");
+
+    let q = ctx.supabase
+      .from("messaging_channels")
+      .select("id, credentials, provider, channel_type, status")
+      .eq("organization_id", ctx.organizationId)
+      .eq("provider", "meta_cloud")
+      .eq("channel_type", "whatsapp")
+      .is("deleted_at", null);
+    q = overrideChannelId ? q.eq("id", overrideChannelId) : q.eq("status", "connected");
+    const { data: waChannels, error: waErr } = await q.order("updated_at", { ascending: false }).limit(1);
+    if (waErr) throw new Error(`Falha a ler messaging_channels: ${waErr.message}`);
+    const waChannel = waChannels?.[0] as { id: string; credentials: Record<string, unknown> } | undefined;
+    if (!waChannel) {
+      throw new Error(
+        overrideChannelId
+          ? `Canal ${overrideChannelId} não encontrado ou não é Meta Cloud WhatsApp`
+          : "Sem canal WhatsApp Meta Cloud connected. Configura em Definições, Integrações.",
+      );
+    }
+    const waCreds = (waChannel.credentials || {}) as { phoneNumberId?: string; accessToken?: string; apiVersion?: string };
+    if (!waCreds.phoneNumberId || !waCreds.accessToken) throw new Error("Credenciais Meta Cloud incompletas (phoneNumberId e accessToken obrigatórios)");
+    const apiVersion = waCreds.apiVersion || "v21.0";
+    const waRes = await fetch(`https://graph.facebook.com/${apiVersion}/${waCreds.phoneNumberId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${waCreds.accessToken}` },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to,
+        type: "text",
+        text: { preview_url: false, body: text },
+      }),
+    });
+    const waJson = await waRes.json().catch(() => ({})) as { messages?: { id: string }[]; error?: { message: string } };
+    if (!waRes.ok || waJson.error) {
+      const errMsg = waJson.error?.message || `Meta API ${waRes.status}`;
+      throw new Error(`WhatsApp envio falhou: ${errMsg}`);
+    }
+    return { ok: true, external_message_id: waJson.messages?.[0]?.id || "", sent_at: new Date().toISOString(), channel_id: waChannel.id };
+  },
+
   "logic.loop": async (ctx) => {
     // Resolve o array a iterar a partir da config crua (não stringificada).
     const items = await resolveToArray(ctx.rawConfig.items, ctx.scope);
