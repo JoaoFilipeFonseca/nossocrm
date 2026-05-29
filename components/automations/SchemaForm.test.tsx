@@ -2,8 +2,8 @@
 // Testes do SchemaForm (Sprint 37 Fase 1) — duração + (F1-b) etiquetas enum.
 // ============================================================================
 
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { SchemaForm } from './SchemaForm';
 
 describe('SchemaForm — campo de duração', () => {
@@ -22,5 +22,23 @@ describe('SchemaForm — campo de duração', () => {
     const schema = { type: 'object', properties: { url: { type: 'string' } } };
     render(<SchemaForm schema={schema} values={{}} onChange={() => {}} />);
     expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+});
+
+describe('SchemaForm — etiquetas humanas (enumLabels)', () => {
+  it('mostra a etiqueta PT mas grava o valor técnico', () => {
+    const onChange = vi.fn();
+    const schema = {
+      type: 'object',
+      properties: {
+        operator: { type: 'string', enum: ['eq', 'gt'], enumLabels: ['igual a', 'maior que'] },
+      },
+    };
+    render(<SchemaForm schema={schema} values={{}} onChange={onChange} />);
+    // a opção mostra o texto humano
+    expect(screen.getByRole('option', { name: 'maior que' })).toBeInTheDocument();
+    // mas grava o valor técnico
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'gt' } });
+    expect(onChange).toHaveBeenLastCalledWith({ operator: 'gt' });
   });
 });

@@ -121,8 +121,10 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
                 className="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
               >
                 <option value="">— escolhe —</option>
-                {spec.enum.map((opt) => (
-                  <option key={String(opt)} value={String(opt)}>{String(opt)}</option>
+                {spec.enum.map((opt, i) => (
+                  <option key={String(opt)} value={String(opt)}>
+                    {Array.isArray(spec.enumLabels) && spec.enumLabels[i] ? spec.enumLabels[i] : String(opt)}
+                  </option>
                 ))}
               </select>
             </label>

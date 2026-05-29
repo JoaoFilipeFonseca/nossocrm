@@ -47,7 +47,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       type: 'object',
       properties: {
         message: { type: 'string' },
-        level: { type: 'string', enum: ['debug', 'info', 'warn', 'error'] },
+        level: { type: 'string', enum: ['debug', 'info', 'warn', 'error'], enumLabels: ['Depuração', 'Informação', 'Aviso', 'Erro'] },
       },
       required: ['message'],
     },
@@ -81,7 +81,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       properties: {
         text: { type: 'string' },
         chat_id: { type: 'string' },
-        parse_mode: { type: 'string', enum: ['HTML', 'MarkdownV2', 'none'] },
+        parse_mode: { type: 'string', enum: ['HTML', 'MarkdownV2', 'none'], enumLabels: ['HTML', 'Markdown', 'Sem formatação'] },
       },
       required: ['text'],
     },
@@ -200,7 +200,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       type: 'object',
       properties: {
         left: {},
-        operator: { type: 'string', enum: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'ends_with', 'in', 'is_empty', 'is_not_empty'] },
+        operator: { type: 'string', enum: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'ends_with', 'in', 'is_empty', 'is_not_empty'], enumLabels: ['igual a', 'diferente de', 'maior que', 'maior ou igual a', 'menor que', 'menor ou igual a', 'contém', 'começa por', 'termina em', 'está na lista', 'está vazio', 'não está vazio'] },
         right: {},
       },
       required: ['left', 'operator'],
@@ -313,7 +313,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       type: 'object',
       properties: {
         left: {},
-        operator: { type: 'string', enum: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'ends_with', 'in', 'is_empty', 'is_not_empty'] },
+        operator: { type: 'string', enum: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'ends_with', 'in', 'is_empty', 'is_not_empty'], enumLabels: ['igual a', 'diferente de', 'maior que', 'maior ou igual a', 'menor que', 'menor ou igual a', 'contém', 'começa por', 'termina em', 'está na lista', 'está vazio', 'não está vazio'] },
         right: {},
       },
       required: ['left', 'operator'],
