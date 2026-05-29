@@ -8,12 +8,15 @@ import { EventMultiSelect } from './EventMultiSelect';
 import { EMITTED_EVENTS } from '@/lib/automation-engine/builder-catalog';
 
 describe('EventMultiSelect', () => {
-  it('mostra os 9 eventos reais com nomes em PT', () => {
+  it('mostra os 10 eventos reais com nomes em PT', () => {
     render(<EventMultiSelect value={[]} onChange={() => {}} />);
-    expect(EMITTED_EVENTS).toHaveLength(9);
+    expect(EMITTED_EVENTS).toHaveLength(10);
     expect(screen.getByText('Quando um contacto é criado')).toBeInTheDocument();
     expect(screen.getByText('Quando um negócio é ganho')).toBeInTheDocument();
-    expect(screen.getAllByRole('checkbox')).toHaveLength(9);
+    expect(
+      screen.getByText('Quando entra uma lead do Meta Ads (Facebook/Instagram)'),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('checkbox')).toHaveLength(10);
   });
 
   it('grava o id técnico ao marcar', () => {

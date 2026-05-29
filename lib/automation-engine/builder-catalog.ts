@@ -27,6 +27,7 @@ export const EMITTED_EVENTS: readonly EmittedEvent[] = [
   { id: 'deal.stage.changed', label: 'Quando um negócio muda de etapa', group: 'Negócios' },
   { id: 'deal.won', label: 'Quando um negócio é ganho', group: 'Negócios' },
   { id: 'deal.lost', label: 'Quando um negócio é perdido', group: 'Negócios' },
+  { id: 'lead.meta_ads', label: 'Quando entra uma lead do Meta Ads (Facebook/Instagram)', group: 'Leads' },
 ];
 
 export interface BuilderVariable {
