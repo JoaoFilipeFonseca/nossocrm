@@ -49,6 +49,8 @@ export async function GET() {
   }
 
   return json({
+    // linked = conta autorizada (token guardado); connected = já recebe leads.
+    linked: data.status === 'active' && Boolean(metadata.token_secret_name),
     connected: data.status === 'active' && Boolean(metadata.subscribed_page_id),
     status: data.status,
     accountName: data.account_name,

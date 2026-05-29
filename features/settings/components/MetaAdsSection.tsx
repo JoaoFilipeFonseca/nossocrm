@@ -18,6 +18,7 @@ import { useToast } from '@/context/ToastContext';
 import { cn } from '@/lib/utils/cn';
 
 interface MetaStatus {
+  linked?: boolean;
   connected: boolean;
   status?: string;
   accountName?: string;
@@ -153,7 +154,8 @@ export function MetaAdsSection() {
     );
   }
 
-  const isConnected = status?.connected;
+  const isLinked = status?.linked;
+  const hasPage = Boolean(status?.subscribedPageId);
   const isError = status?.status === 'error';
 
   return (
@@ -167,18 +169,29 @@ export function MetaAdsSection() {
         <div className="flex items-center justify-center py-10">
           <RefreshCw className="w-6 h-6 text-slate-400 animate-spin" />
         </div>
-      ) : isConnected ? (
+      ) : isLinked ? (
         <div className="space-y-4">
           {/* Estado ligado */}
-          <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
+          <div className={cn(
+            'flex items-start justify-between gap-4 p-4 rounded-xl border',
+            hasPage
+              ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20'
+              : 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20',
+          )}>
             <div className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+              {hasPage ? (
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              )}
               <div>
-                <h4 className="text-sm font-semibold text-green-800 dark:text-green-200">
+                <h4 className={cn('text-sm font-semibold', hasPage ? 'text-green-800 dark:text-green-200' : 'text-amber-800 dark:text-amber-200')}>
                   Conta ligada{status?.accountName ? `: ${status.accountName}` : ''}
                 </h4>
-                <p className="text-xs text-green-700 dark:text-green-300 mt-0.5">
-                  As leads dos anúncios entram automaticamente no CRM.
+                <p className={cn('text-xs mt-0.5', hasPage ? 'text-green-700 dark:text-green-300' : 'text-amber-700 dark:text-amber-300')}>
+                  {hasPage
+                    ? 'As leads dos anúncios entram automaticamente no CRM.'
+                    : 'Falta escolher a Página que vai receber as leads (abaixo).'}
                 </p>
               </div>
             </div>

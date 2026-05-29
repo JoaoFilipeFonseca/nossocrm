@@ -12,7 +12,6 @@ import {
   exchangeForLongLivedToken,
   fetchUserPages,
   fetchAdAccounts,
-  subscribePageToLeadgen,
 } from '@/lib/integrations/meta/oauth';
 import { metaRedirectUri, metaTokenSecretName } from '@/lib/integrations/meta/config';
 
@@ -109,35 +108,26 @@ export async function GET(req: NextRequest) {
     });
     if (tokErr) throw new Error(`Falha ao guardar o token no Vault: ${tokErr.message}`);
 
-    // Subscreve a primeira Página ao leadgen (Fase A: 1 Página).
-    let subscribedPageId: string | null = null;
-    let subError: string | null = null;
-    if (pages.length > 0) {
-      try {
-        await subscribePageToLeadgen(pages[0].id, pages[0].access_token);
-        subscribedPageId = pages[0].id;
-      } catch (e) {
-        subError = e instanceof Error ? e.message : 'Erro ao subscrever a Página.';
-      }
-    } else {
-      subError = 'Nenhuma Página de Facebook encontrada nesta conta.';
-    }
+    // NÃO subscrevemos nenhuma Página automaticamente: o utilizador escolhe-a
+    // a seguir (evita ligar a Página errada e voltar a ela em cada reconexão).
+    // Numa reconexão, preservamos a Página já escolhida.
+    const prevPageId =
+      (existing?.metadata as Record<string, unknown> | undefined)?.subscribed_page_id ?? null;
 
     await admin
       .from('automation_integrations')
       .update({
-        status: subscribedPageId ? 'active' : 'error',
-        account_name: pages[0]?.name ?? 'Meta',
-        metadata: { ...baseMetadata, token_secret_name: tokenName, subscribed_page_id: subscribedPageId },
-        last_error: subError,
+        status: 'active',
+        account_name:
+          (pages.find((p) => p.id === prevPageId)?.name) ?? pages[0]?.name ?? 'Meta',
+        metadata: { ...baseMetadata, token_secret_name: tokenName, subscribed_page_id: prevPageId },
+        last_error: pages.length === 0 ? 'Nenhuma Página de Facebook encontrada nesta conta.' : null,
         last_used_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', integrationId);
 
-    const res = subscribedPageId
-      ? back(origin, { meta: 'ligado' })
-      : back(origin, { meta: 'sem_pagina' });
+    const res = back(origin, { meta: pages.length === 0 ? 'sem_pagina' : 'ligado' });
     res.cookies.delete('meta_oauth_state');
     return res;
   } catch (e) {
