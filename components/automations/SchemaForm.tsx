@@ -23,6 +23,10 @@
 
 import { useCallback } from 'react';
 import { DurationInput, type BaseUnit } from './DurationInput';
+import { EventMultiSelect } from './EventMultiSelect';
+import { TextField } from './TextField';
+import { KeyValueEditor } from './KeyValueEditor';
+import { BUILDER_VARIABLES } from '@/lib/automation-engine/builder-catalog';
 
 interface FieldSpec {
   type?: string;
@@ -95,6 +99,19 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
             {spec.description ? <span className="ml-1 text-[10px] text-slate-400 font-normal">— {spec.description}</span> : null}
           </span>
         );
+
+        // eventos — multi-selecção com nomes humanos (só os eventos reais)
+        if (spec.format === 'events') {
+          return (
+            <label key={key} className="block">
+              {label}
+              <EventMultiSelect
+                value={Array.isArray(v) ? (v as string[]) : []}
+                onChange={(next) => update(key, next.length > 0 ? next : undefined)}
+              />
+            </label>
+          );
+        }
 
         // duração (número + unidade) — grava na unidade base do átomo
         if (spec.format === 'duration') {
@@ -185,6 +202,19 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
           );
         }
 
+        // object como pares chave/valor (ex: cabeçalhos HTTP)
+        if (spec.format === 'keyvalue') {
+          return (
+            <label key={key} className="block">
+              {label}
+              <KeyValueEditor
+                value={v && typeof v === 'object' ? (v as Record<string, unknown>) : undefined}
+                onChange={(next) => update(key, next)}
+              />
+            </label>
+          );
+        }
+
         // object — JSON cru
         if (spec.type === 'object') {
           const jsonVal = v && typeof v === 'object' ? JSON.stringify(v, null, 2) : '';
@@ -207,28 +237,17 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
           );
         }
 
-        // string (default)
+        // string (default) — com botão de inserir variável
         const multiline = looksMultiline(key, spec);
+        const strVal = typeof v === 'string' ? v : v === undefined || v === null ? '' : String(v);
         return (
           <label key={key} className="block">
             {label}
-            {multiline ? (
-              <textarea
-                value={typeof v === 'string' ? v : ''}
-                onChange={(e) => update(key, e.target.value)}
-                rows={3}
-                className="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm font-mono"
-                placeholder='Suporta {{ variavel }}'
-              />
-            ) : (
-              <input
-                type="text"
-                value={typeof v === 'string' ? v : v === undefined || v === null ? '' : String(v)}
-                onChange={(e) => update(key, e.target.value)}
-                className="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm font-mono"
-                placeholder='Suporta {{ variavel }}'
-              />
-            )}
+            <TextField
+              value={strVal}
+              onChange={(next) => update(key, next)}
+              multiline={multiline}
+            />
           </label>
         );
       })}
@@ -237,12 +256,12 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
         <details className="text-[10px] text-slate-500 mt-2">
           <summary className="cursor-pointer hover:text-slate-700">Variáveis disponíveis</summary>
           <div className="mt-1 pl-2 border-l border-slate-200 space-y-0.5">
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ contact.id }}'}</code> · id do contacto do trigger</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ contact.name }}'}</code> · nome do contacto</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ deal.id }}'}</code> · id do deal do trigger</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ deal.value | money }}'}</code> · valor do deal formatado</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ trigger.payload.* }}'}</code> · dados do evento</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ nodeId.output.* }}'}</code> · output de um passo anterior</div>
+            {BUILDER_VARIABLES.map((bv) => (
+              <div key={bv.token}>
+                <code className="bg-slate-100 px-1 rounded">{bv.token}</code> · {bv.label.toLowerCase()}
+              </div>
+            ))}
+            <div><code className="bg-slate-100 px-1 rounded">{'{{ nodeId.output.* }}'}</code> · resultado de um passo anterior</div>
           </div>
         </details>
       ) : null}
