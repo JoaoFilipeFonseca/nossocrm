@@ -69,6 +69,8 @@ export function ActionSheet({
                 'bg-white dark:bg-dark-card',
                 'border border-slate-200 dark:border-white/10',
                 'shadow-2xl overflow-hidden',
+                // coluna flex para o corpo poder deslizar dentro do max-height
+                'flex flex-col',
                 // safe area
                 'pb-[var(--app-safe-area-bottom,0px)]',
                 maxHeightClassName || 'max-h-[calc(90dvh-1rem)]'
@@ -82,7 +84,7 @@ export function ActionSheet({
               {/* subtle teal rim light */}
               <div className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 dark:opacity-100 bg-[radial-gradient(900px_circle_at_20%_0%,rgba(34,211,238,0.14),transparent_55%),radial-gradient(700px_circle_at_100%_10%,rgba(45,212,191,0.10),transparent_55%)]" />
 
-              <div className={cn('relative px-4 py-4 sm:px-5 border-b border-slate-200 dark:border-white/10', className)}>
+              <div className={cn('relative shrink-0 px-4 py-4 sm:px-5 border-b border-slate-200 dark:border-white/10', className)}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-slate-900 dark:text-white">{title}</div>
@@ -103,7 +105,7 @@ export function ActionSheet({
                 </div>
               </div>
 
-              <div className="relative p-4 sm:p-5 overflow-auto">{children}</div>
+              <div className="relative flex-1 min-h-0 p-4 sm:p-5 overflow-y-auto">{children}</div>
             </motion.div>
           </motion.div>
         </FocusTrap>

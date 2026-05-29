@@ -14,6 +14,8 @@ import {
   Home,
   Target,
   Zap,
+  Megaphone,
+  Archive,
 } from 'lucide-react';
 
 export type PrimaryNavId = 'inbox' | 'messaging' | 'cruzamentos' | 'matches' | 'boards' | 'contacts' | 'imoveis' | 'activities' | 'more';
@@ -38,7 +40,7 @@ export const PRIMARY_NAV: PrimaryNavItem[] = [
   { id: 'more', label: 'Mais', icon: MoreHorizontal },
 ];
 
-export type SecondaryNavId = 'dashboard' | 'reports' | 'automacoes' | 'automation_logs' | 'settings' | 'profile';
+export type SecondaryNavId = 'dashboard' | 'reports' | 'anuncios' | 'criativos' | 'automacoes' | 'automation_logs' | 'settings' | 'profile';
 
 export interface SecondaryNavItem {
   id: SecondaryNavId;
@@ -51,6 +53,8 @@ export interface SecondaryNavItem {
 export const SECONDARY_NAV: SecondaryNavItem[] = [
   { id: 'dashboard', label: 'Visão Geral', href: '/dashboard', icon: LayoutDashboard },
   { id: 'reports', label: 'Relatórios', href: '/reports', icon: BarChart3 },
+  { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
+  { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
   { id: 'automacoes', label: 'Automações', href: '/automacoes', icon: Zap },
   { id: 'automation_logs', label: 'Logs Automações', href: '/settings/automation-logs', icon: ScrollText },
   { id: 'settings', label: 'Configurações', href: '/settings', icon: Settings },
