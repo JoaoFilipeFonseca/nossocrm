@@ -11,14 +11,17 @@ export const META_OAUTH_DIALOG = `https://www.facebook.com/${META_GRAPH_VERSION}
 
 // Permissões pedidas no diálogo de autorização.
 // Fase A precisa de leads + páginas; ads_read/business_management preparam a
-// Fase B (métricas). Em modo de desenvolvimento o João (admin/tester) usa
-// todas sem App Review.
+// Fase B (métricas); ads_management permite a edição (MA-EDIT: pausar/reactivar
+// anúncios e alterar orçamento do adset). Em modo de desenvolvimento o João
+// (admin/tester) usa todas sem App Review. Ao acrescentar scopes, a conta tem
+// de ser religada para a Meta conceder a nova permissão ao token.
 export const META_OAUTH_SCOPES = [
   'leads_retrieval',
   'pages_show_list',
   'pages_manage_metadata',
   'pages_read_engagement',
   'ads_read',
+  'ads_management',
   'business_management',
 ].join(',');
 

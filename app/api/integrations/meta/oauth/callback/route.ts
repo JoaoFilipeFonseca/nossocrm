@@ -78,6 +78,11 @@ export async function GET(req: NextRequest) {
       webhook_verify_token:
         (existing?.metadata as Record<string, unknown> | undefined)?.webhook_verify_token ??
         crypto.randomUUID(),
+      // Numa reconexão (ex.: para conceder um novo scope), preservamos a conta
+      // de anúncios já escolhida — senão o dashboard/sync/edição ficariam sem
+      // conta seleccionada.
+      selected_ad_account_id:
+        (existing?.metadata as Record<string, unknown> | undefined)?.selected_ad_account_id ?? null,
     };
 
     let integrationId = existing?.id as string | undefined;

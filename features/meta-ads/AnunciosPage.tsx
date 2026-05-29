@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain } from 'lucide-react';
+import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2 } from 'lucide-react';
 
 export interface AdPerformanceRow {
   ad_id: string;
@@ -79,6 +79,7 @@ export const AnunciosPage: React.FC = () => {
   const [analyses, setAnalyses] = useState<Map<string, AdAnalysis>>(new Map());
   const [analyzedAt, setAnalyzedAt] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [editing, setEditing] = useState<AdPerformanceRow | null>(null);
 
   const loadAnalyses = useCallback(() => {
     fetch('/api/meta-ads/analyses', { cache: 'no-store' })
@@ -264,6 +265,7 @@ export const AnunciosPage: React.FC = () => {
                 <th className="px-3 py-2 font-semibold text-right">CPA</th>
                 <th className="px-3 py-2 font-semibold text-right">Efectivo</th>
                 <th className="px-3 py-2 font-semibold text-right">ROAS</th>
+                <th className="px-3 py-2 font-semibold text-right">Editar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -334,6 +336,17 @@ export const AnunciosPage: React.FC = () => {
                     <td className="px-3 py-2 text-right tabular-nums font-medium">
                       {roas === null ? '—' : <span className={roas >= 1 ? 'text-emerald-600' : 'text-slate-700'}>{roas.toFixed(2)}x</span>}
                     </td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setEditing(r)}
+                        className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 focus-visible:ring-2 focus-visible:ring-violet-400 outline-none"
+                        title="Editar anúncio (pausar/reactivar, orçamento)"
+                        aria-label={`Editar ${r.ad_name || r.ad_id}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -368,6 +381,259 @@ export const AnunciosPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {editing && (
+        <AdEditModal
+          ad={editing}
+          onClose={() => setEditing(null)}
+          onDone={() => {
+            setEditing(null);
+            load(days);
+            loadAnalyses();
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Modal de edição do anúncio (MA-EDIT, tier fácil).
+// Lê o estado vivo da Meta antes de qualquer alteração e exige confirmação
+// explícita. Pausar/reactivar é por anúncio; orçamento é do adset (afecta todos
+// os anúncios do adset) — a UI di-lo claramente. CBO não é editável aqui.
+// ---------------------------------------------------------------------------
+interface AdLiveState {
+  ad_id: string;
+  ad_name: string | null;
+  status: string;
+  effective_status: string;
+  adset_id: string | null;
+  adset_name: string | null;
+  campaign_name: string | null;
+  daily_budget: number | null;
+  lifetime_budget: number | null;
+  budget_level: 'adset' | 'campaign' | 'none';
+}
+
+const AdEditModal: React.FC<{
+  ad: AdPerformanceRow;
+  onClose: () => void;
+  onDone: () => void;
+}> = ({ ad, onClose, onDone }) => {
+  const [state, setState] = useState<AdLiveState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState<'pause' | 'resume' | 'budget' | null>(null);
+  const [budgetInput, setBudgetInput] = useState('');
+  const currency = ad.currency || 'EUR';
+
+  const loadState = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    fetch(`/api/meta-ads/ad/${ad.ad_id}`, { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.error) { setError(j.error); return; }
+        const s: AdLiveState = j.state;
+        setState(s);
+        const cents = s.daily_budget ?? s.lifetime_budget;
+        setBudgetInput(cents ? (cents / 100).toFixed(2) : '');
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [ad.ad_id]);
+
+  useEffect(() => { loadState(); }, [loadState]);
+
+  const act = useCallback(
+    (body: Record<string, unknown>, optimisticMsg: string) => {
+      setBusy(true);
+      setError(null);
+      fetch('/api/meta-ads/edit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+        .then((r) => r.json())
+        .then((j) => {
+          if (j.error) { setError(j.error); setConfirm(null); return; }
+          // sucesso: fecha e recarrega a página
+          onDone();
+        })
+        .catch((e) => setError(e.message))
+        .finally(() => setBusy(false));
+      void optimisticMsg;
+    },
+    [onDone],
+  );
+
+  const isActive = state?.status === 'ACTIVE';
+  const budgetKind: 'daily' | 'lifetime' = state?.daily_budget ? 'daily' : 'lifetime';
+  const currentCents = state ? (state.daily_budget ?? state.lifetime_budget) : null;
+  const newCents = Math.round((parseFloat(budgetInput.replace(',', '.')) || 0) * 100);
+
+  return (
+    <div
+      className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Editar anúncio ${ad.ad_name || ad.ad_id}`}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-xl bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-4">
+          <div className="min-w-0">
+            <h3 className="font-semibold text-slate-900 truncate">{ad.ad_name || ad.ad_id}</h3>
+            {ad.campaign_name && <p className="text-xs text-slate-400 truncate">{ad.campaign_name}</p>}
+          </div>
+          <button onClick={onClose} aria-label="Fechar" className="shrink-0 text-slate-400 hover:text-slate-700">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {loading ? (
+            <div className="flex items-center gap-2 text-sm text-slate-500 py-6 justify-center">
+              <Loader2 className="w-4 h-4 animate-spin" /> A ler o estado actual na Meta...
+            </div>
+          ) : !state ? (
+            <div className="rounded-md bg-rose-50 text-rose-700 p-3 text-sm">
+              {error || 'Não foi possível ler o anúncio.'}
+              <button onClick={loadState} className="ml-2 underline">Tentar de novo</button>
+            </div>
+          ) : (
+            <>
+              {error && <div className="rounded-md bg-rose-50 text-rose-700 p-3 text-sm">{error}</div>}
+
+              {/* Estado actual */}
+              <div className="rounded-lg border border-slate-200 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-500">Estado actual</span>
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                      isActive
+                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                        : 'bg-slate-100 text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    {isActive ? 'Activo' : state.status === 'PAUSED' ? 'Em pausa' : state.status}
+                  </span>
+                </div>
+                {state.effective_status && state.effective_status !== state.status && (
+                  <p className="text-xs text-slate-400 mt-1">Estado efectivo na Meta: {state.effective_status}</p>
+                )}
+              </div>
+
+              {/* Pausar / reactivar */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Estado do anúncio</h4>
+                {confirm === 'pause' || confirm === 'resume' ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-sm text-slate-800">
+                      Vai {confirm === 'pause' ? 'pausar' : 'reactivar'} «{ad.ad_name || ad.ad_id}» na Meta. Confirma?
+                    </p>
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        disabled={busy}
+                        onClick={() => act({ action: confirm === 'pause' ? 'pause_ad' : 'resume_ad', ad_id: ad.ad_id }, '')}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-60"
+                      >
+                        {busy && <Loader2 className="w-4 h-4 animate-spin" />} Confirmar
+                      </button>
+                      <button disabled={busy} onClick={() => setConfirm(null)} className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : isActive ? (
+                  <button
+                    onClick={() => setConfirm('pause')}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 w-full justify-center"
+                  >
+                    <Pause className="w-4 h-4" /> Pausar anúncio
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setConfirm('resume')}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 w-full justify-center"
+                  >
+                    <PlayCircle className="w-4 h-4" /> Reactivar anúncio
+                  </button>
+                )}
+              </div>
+
+              {/* Orçamento do adset */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Orçamento</h4>
+                {state.budget_level === 'campaign' ? (
+                  <p className="text-sm text-slate-500 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    Orçamento gerido ao nível da campanha (CBO). Não é editável por anúncio aqui.
+                  </p>
+                ) : state.budget_level === 'none' || !state.adset_id ? (
+                  <p className="text-sm text-slate-500 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    Este anúncio não tem orçamento editável ao nível do adset.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs text-slate-400">
+                      Orçamento {budgetKind === 'daily' ? 'diário' : 'total'} do adset
+                      {state.adset_name ? ` «${state.adset_name}»` : ''}. Afecta todos os anúncios deste adset.
+                    </p>
+                    {confirm === 'budget' ? (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                        <p className="text-sm text-slate-800">
+                          Alterar o orçamento {budgetKind === 'daily' ? 'diário' : 'total'} de{' '}
+                          <b>{currentCents ? money(currentCents / 100, currency) : '—'}</b> para{' '}
+                          <b>{money(newCents / 100, currency)}</b>?
+                        </p>
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            disabled={busy}
+                            onClick={() => act({ action: 'set_adset_budget', ad_id: ad.ad_id, amount_cents: newCents, kind: budgetKind }, '')}
+                            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-60"
+                          >
+                            {busy && <Loader2 className="w-4 h-4 animate-spin" />} Confirmar
+                          </button>
+                          <button disabled={busy} onClick={() => setConfirm(null)} className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="number"
+                            min="1"
+                            step="0.01"
+                            inputMode="decimal"
+                            value={budgetInput}
+                            onChange={(e) => setBudgetInput(e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
+                            aria-label="Novo orçamento"
+                          />
+                        </div>
+                        <button
+                          disabled={!newCents || newCents === currentCents}
+                          onClick={() => setConfirm('budget')}
+                          className="text-sm font-medium px-3 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50"
+                        >
+                          Guardar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
