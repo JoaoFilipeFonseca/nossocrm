@@ -195,17 +195,30 @@ export function MetaAdsSection() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleDisconnect}
-              disabled={disconnecting}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                bg-white dark:bg-white/5 border border-red-200 dark:border-red-500/20
-                text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10
-                transition-colors disabled:opacity-50 shrink-0"
-            >
-              <Power className="w-3.5 h-3.5" />
-              Desligar
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="/api/integrations/meta/oauth/start"
+                title="Voltar a autorizar (ex.: para conceder novas permissões como a gestão de anúncios)"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                  bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10
+                  text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10
+                  transition-colors"
+              >
+                <Facebook className="w-3.5 h-3.5" />
+                Reautorizar
+              </a>
+              <button
+                onClick={handleDisconnect}
+                disabled={disconnecting}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                  bg-white dark:bg-white/5 border border-red-200 dark:border-red-500/20
+                  text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10
+                  transition-colors disabled:opacity-50"
+              >
+                <Power className="w-3.5 h-3.5" />
+                Desligar
+              </button>
+            </div>
           </div>
 
           {/* Páginas — escolher qual recebe leads */}
