@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TrendingUp, RefreshCw, Megaphone } from 'lucide-react';
+import { TrendingUp, RefreshCw, Megaphone, Play, X } from 'lucide-react';
 
 export interface AdPerformanceRow {
   ad_id: string;
@@ -16,6 +16,8 @@ export interface AdPerformanceRow {
   won_deals: number;
   won_value: number;
   currency: string | null;
+  thumbnail_url: string | null;
+  creative_type: string | null;
 }
 
 const PERIODS = [
@@ -52,6 +54,7 @@ export const AnunciosPage: React.FC = () => {
   const [rows, setRows] = useState<AdPerformanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
 
   const load = useCallback((d: number) => {
     setLoading(true);
@@ -189,8 +192,32 @@ export const AnunciosPage: React.FC = () => {
                 return (
                   <tr key={r.ad_id} className="hover:bg-slate-50">
                     <td className="px-3 py-2">
-                      <div className="font-medium text-slate-900">{r.ad_name || r.ad_id}</div>
-                      {r.campaign_name && <div className="text-xs text-slate-400">{r.campaign_name}</div>}
+                      <div className="flex items-center gap-2.5">
+                        {r.thumbnail_url ? (
+                          <button
+                            type="button"
+                            onClick={() => setLightbox({ url: r.thumbnail_url!, name: r.ad_name || r.ad_id })}
+                            className="relative shrink-0 rounded-md overflow-hidden border border-slate-200 hover:ring-2 hover:ring-violet-300 focus-visible:ring-2 focus-visible:ring-violet-400 outline-none"
+                            title="Ver criativo"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={r.thumbnail_url} alt={r.ad_name || 'Criativo do anúncio'} className="w-11 h-11 object-cover" loading="lazy" />
+                            {r.creative_type === 'video' && (
+                              <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <Play className="w-4 h-4 text-white" fill="currentColor" />
+                              </span>
+                            )}
+                          </button>
+                        ) : (
+                          <div className="w-11 h-11 shrink-0 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-300">
+                            <Megaphone className="w-4 h-4" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="font-medium text-slate-900 truncate max-w-[220px]">{r.ad_name || r.ad_id}</div>
+                          {r.campaign_name && <div className="text-xs text-slate-400 truncate max-w-[220px]">{r.campaign_name}</div>}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">{money(r.spend, r.currency)}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-slate-500">{num(r.impressions)}</td>
@@ -222,6 +249,29 @@ export const AnunciosPage: React.FC = () => {
       <p className="text-xs text-slate-400 mt-3">
         Leads marcadas com <span className="font-medium">*</span> usam a contagem da Meta (ainda sem leads atribuídas a esse anúncio no CRM). CPL usa as leads do CRM quando existem.
       </p>
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setLightbox(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Criativo: ${lightbox.name}`}
+        >
+          <div className="relative max-w-2xl max-h-[85dvh]" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setLightbox(null)}
+              aria-label="Fechar"
+              className="absolute -top-3 -right-3 bg-white rounded-full p-1.5 shadow-lg text-slate-600 hover:text-slate-900"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={lightbox.url} alt={lightbox.name} className="max-w-full max-h-[80dvh] rounded-lg object-contain bg-white" />
+            <p className="text-center text-white text-sm mt-2">{lightbox.name}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

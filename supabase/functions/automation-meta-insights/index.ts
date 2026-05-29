@@ -180,7 +180,57 @@ async function syncIntegration(
     .upsert(records, { onConflict: 'organization_id,integration_id,ad_id,date' });
   if (upErr) return { rows: 0, account: adAccount, error: `upsert: ${upErr.message}` };
 
+  // Criativos (best-effort): só os anúncios ainda sem criativo guardado.
+  await syncCreatives(supabase, integ, records, token as string);
+
   return { rows: records.length, account: adAccount };
+}
+
+// Busca e guarda o criativo (miniatura/tipo) dos anúncios que ainda não o têm.
+async function syncCreatives(
+  supabase: Db,
+  integ: { id: string; organization_id: string },
+  records: Record<string, unknown>[],
+  token: string,
+): Promise<void> {
+  try {
+    const adIds = Array.from(new Set(records.map((r) => r.ad_id as string).filter(Boolean)));
+    if (adIds.length === 0) return;
+
+    const { data: existing } = await supabase
+      .from('ad_creatives')
+      .select('ad_id')
+      .eq('organization_id', integ.organization_id)
+      .in('ad_id', adIds);
+    const have = new Set((existing ?? []).map((e: { ad_id: string }) => e.ad_id));
+    const missing = adIds.filter((id) => !have.has(id)).slice(0, 200);
+
+    const creativeFields = encodeURIComponent('creative{id,thumbnail_url,image_url,object_type,video_id}');
+    for (const adId of missing) {
+      try {
+        const res = await fetch(
+          `${GRAPH}/${adId}?fields=${creativeFields}&access_token=${encodeURIComponent(token)}`,
+        );
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) continue;
+        const c = body?.creative ?? {};
+        const type = c.video_id ? 'video' : (c.image_url || c.thumbnail_url) ? 'image' : 'unknown';
+        await supabase.from('ad_creatives').upsert(
+          {
+            organization_id: integ.organization_id,
+            integration_id: integ.id,
+            ad_id: adId,
+            creative_id: c.id ?? null,
+            thumbnail_url: c.thumbnail_url ?? null,
+            image_url: c.image_url ?? null,
+            creative_type: type,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'organization_id,ad_id' },
+        );
+      } catch { /* um criativo falhar não parte o sync */ }
+    }
+  } catch { /* criativos são best-effort */ }
 }
 
 Deno.serve(async (req: Request) => {
