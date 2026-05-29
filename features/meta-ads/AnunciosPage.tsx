@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TrendingUp, RefreshCw, Megaphone, Play, X } from 'lucide-react';
+import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain } from 'lucide-react';
 
 export interface AdPerformanceRow {
   ad_id: string;
@@ -19,6 +19,25 @@ export interface AdPerformanceRow {
   thumbnail_url: string | null;
   creative_type: string | null;
 }
+
+export interface AdAnalysis {
+  ad_id: string;
+  ad_name: string | null;
+  verdict: 'parar' | 'aumentar' | 'testar' | 'manter';
+  confidence: number | null;
+  reason: string | null;
+  suggestion: string | null;
+  impact_eur: number | null;
+  is_anomaly: boolean;
+  days_with_data: number | null;
+}
+
+const VERDICT_META: Record<string, { label: string; cls: string; panel: string }> = {
+  parar: { label: 'Parar', cls: 'bg-rose-100 text-rose-700 border-rose-200', panel: 'border-rose-200 bg-rose-50' },
+  aumentar: { label: 'Aumentar', cls: 'bg-emerald-100 text-emerald-700 border-emerald-200', panel: 'border-emerald-200 bg-emerald-50' },
+  testar: { label: 'Testar', cls: 'bg-amber-100 text-amber-700 border-amber-200', panel: 'border-amber-200 bg-amber-50' },
+  manter: { label: 'Manter', cls: 'bg-slate-100 text-slate-600 border-slate-200', panel: 'border-slate-200 bg-white' },
+};
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -57,6 +76,31 @@ export const AnunciosPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
+  const [analyses, setAnalyses] = useState<Map<string, AdAnalysis>>(new Map());
+  const [analyzedAt, setAnalyzedAt] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  const loadAnalyses = useCallback(() => {
+    fetch('/api/meta-ads/analyses', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        const items: AdAnalysis[] = Array.isArray(j.items) ? j.items : [];
+        setAnalyses(new Map(items.map((a) => [a.ad_id, a])));
+        setAnalyzedAt(j.analyzed_at ?? null);
+      })
+      .catch(() => { /* painel opcional */ });
+  }, []);
+
+  const runAnalysis = useCallback(() => {
+    setAnalyzing(true);
+    fetch('/api/meta-ads/analyze', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })
+      .then((r) => r.json())
+      .then(() => loadAnalyses())
+      .catch(() => { /* erro silencioso; o cron diario cobre */ })
+      .finally(() => setAnalyzing(false));
+  }, [loadAnalyses]);
+
+  useEffect(() => { loadAnalyses(); }, [loadAnalyses]);
 
   const load = useCallback((d: number) => {
     setLoading(true);
@@ -104,6 +148,13 @@ export const AnunciosPage: React.FC = () => {
 
   const totalRoas = ratio(totals.wonValue, totals.spend);
 
+  const ORDER: Record<string, number> = { parar: 0, aumentar: 1, testar: 2, manter: 3 };
+  const recommendations = useMemo(() => {
+    return [...analyses.values()]
+      .filter((a) => a.verdict !== 'manter' || a.is_anomaly)
+      .sort((a, b) => (b.is_anomaly ? 1 : 0) - (a.is_anomaly ? 1 : 0) || ORDER[a.verdict] - ORDER[b.verdict]);
+  }, [analyses]);
+
   return (
     <div className="p-6 max-w-7xl">
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
@@ -130,6 +181,13 @@ export const AnunciosPage: React.FC = () => {
             ))}
           </div>
           <button
+            onClick={runAnalysis}
+            disabled={analyzing}
+            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-60"
+          >
+            <Brain className="h-4 w-4" /> {analyzing ? 'A analisar...' : 'Analisar agora'}
+          </button>
+          <button
             onClick={() => load(days)}
             className="text-slate-500 hover:text-slate-900 inline-flex items-center gap-1 text-sm px-2 py-1.5"
             aria-label="Recarregar"
@@ -138,6 +196,10 @@ export const AnunciosPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {analyzedAt && (
+        <p className="text-xs text-slate-400 -mt-3 mb-4">Última análise do analista IA: {analyzedAt}</p>
+      )}
 
       {/* Cartões de totais */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
@@ -148,6 +210,30 @@ export const AnunciosPage: React.FC = () => {
         <Kpi label="Dinheiro efectivo" value={money(totals.wonValue, currency)} />
         <Kpi label="ROAS" value={totalRoas === null ? '—' : `${totalRoas.toFixed(2)}x`} highlight />
       </div>
+
+      {recommendations.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+            <Brain className="h-4 w-4 text-violet-600" /> Recomendações do analista
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recommendations.map((a) => {
+              const meta = VERDICT_META[a.verdict] ?? VERDICT_META.manter;
+              return (
+                <div key={a.ad_id} className={`rounded-lg border p-3 ${meta.panel}`}>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="font-medium text-slate-900 text-sm truncate">{a.ad_name || a.ad_id}</span>
+                    <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border ${meta.cls}`}>{meta.label}</span>
+                  </div>
+                  {a.is_anomaly && <div className="text-xs font-medium text-rose-600 mb-1">⚠ Anomalia</div>}
+                  {a.reason && <p className="text-xs text-slate-600">{a.reason}</p>}
+                  {a.suggestion && <p className="text-xs text-slate-800 mt-1"><span className="font-medium">Sugestão:</span> {a.suggestion}</p>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {error ? (
         <div className="rounded-md bg-rose-50 text-rose-700 p-4 text-sm">Erro ao carregar: {error}</div>
@@ -216,7 +302,15 @@ export const AnunciosPage: React.FC = () => {
                           </div>
                         )}
                         <div className="min-w-0">
-                          <div className="font-medium text-slate-900 truncate max-w-[220px]">{r.ad_name || r.ad_id}</div>
+                          <div className="font-medium text-slate-900 truncate max-w-[220px] flex items-center gap-1.5">
+                            <span className="truncate">{r.ad_name || r.ad_id}</span>
+                            {(() => {
+                              const a = analyses.get(r.ad_id);
+                              if (!a || (a.verdict === 'manter' && !a.is_anomaly)) return null;
+                              const m = VERDICT_META[a.verdict] ?? VERDICT_META.manter;
+                              return <span className={`shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${m.cls}`} title={a.reason || ''}>{m.label}</span>;
+                            })()}
+                          </div>
                           {r.campaign_name && <div className="text-xs text-slate-400 truncate max-w-[220px]">{r.campaign_name}</div>}
                         </div>
                       </div>
