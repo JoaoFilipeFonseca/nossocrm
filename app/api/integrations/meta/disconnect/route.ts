@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   const admin = createStaticAdminClient();
   const { error } = await admin
     .from('automation_integrations')
-    .update({ status: 'disconnected', updated_at: new Date().toISOString() })
+    .update({ status: 'revoked', updated_at: new Date().toISOString() })
     .eq('organization_id', profile.organization_id)
     .eq('provider', 'meta');
 

@@ -83,9 +83,9 @@ export async function GET(req: NextRequest) {
         .insert({
           organization_id: orgId,
           provider: 'meta',
-          auth_type: 'oauth',
+          auth_type: 'oauth2',
           account_name: pages[0]?.name ?? 'Meta',
-          status: 'connecting',
+          status: 'active',
           metadata: baseMetadata,
           created_by: user.id,
         })
@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
     await admin
       .from('automation_integrations')
       .update({
-        status: subscribedPageId ? 'connected' : 'error',
+        status: subscribedPageId ? 'active' : 'error',
         account_name: pages[0]?.name ?? 'Meta',
         metadata: { ...baseMetadata, token_secret_name: tokenName, subscribed_page_id: subscribedPageId },
         last_error: subError,

@@ -39,7 +39,7 @@ export async function GET() {
 
   const metadata = (data.metadata ?? {}) as Record<string, unknown>;
   return json({
-    connected: data.status === 'connected',
+    connected: data.status === 'active' && Boolean(metadata.subscribed_page_id),
     status: data.status,
     accountName: data.account_name,
     pages: metadata.pages ?? [],
