@@ -23,6 +23,8 @@ interface MetaStatus {
   pages?: { id: string; name: string }[];
   adAccounts?: { id: string; name: string; account_id: string }[];
   subscribedPageId?: string | null;
+  webhookUrl?: string | null;
+  verifyToken?: string | null;
   lastError?: string | null;
   updatedAt?: string;
 }
@@ -199,6 +201,53 @@ export function MetaAdsSection() {
                     {a.name} <span className="text-slate-400">({a.account_id})</span>
                   </p>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Webhook das leads — passo único na app Meta */}
+          {status?.webhookUrl && status?.verifyToken && (
+            <div className="rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3 space-y-3">
+              <p className="text-[11px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+                Receber as leads (configurar uma vez na app Meta)
+              </p>
+              <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                Em developers.facebook.com → app → Webhooks → escolher
+                "Página" → subscrever o campo <b>leadgen</b>, com:
+              </p>
+              <div>
+                <label className="text-[10px] font-bold text-amber-600 dark:text-amber-300 uppercase tracking-wider">
+                  Callback URL
+                </label>
+                <div className="flex items-center gap-1 mt-1">
+                  <code className="flex-1 text-[11px] bg-white dark:bg-black/30 border border-amber-200 dark:border-amber-500/20 px-2.5 py-2 rounded-lg text-amber-900 dark:text-amber-100 break-all select-all font-mono">
+                    {status.webhookUrl}
+                  </code>
+                  <button
+                    onClick={() => copy(status.webhookUrl as string, 'Callback URL')}
+                    className="shrink-0 p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors"
+                    title="Copiar"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-amber-600 dark:text-amber-300 uppercase tracking-wider">
+                  Verify token
+                </label>
+                <div className="flex items-center gap-1 mt-1">
+                  <code className="flex-1 text-[11px] bg-white dark:bg-black/30 border border-amber-200 dark:border-amber-500/20 px-2.5 py-2 rounded-lg text-amber-900 dark:text-amber-100 break-all select-all font-mono">
+                    {status.verifyToken}
+                  </code>
+                  <button
+                    onClick={() => copy(status.verifyToken as string, 'Verify token')}
+                    className="shrink-0 p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors"
+                    title="Copiar"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           )}

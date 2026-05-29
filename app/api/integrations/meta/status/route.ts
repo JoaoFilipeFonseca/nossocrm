@@ -38,6 +38,16 @@ export async function GET() {
   if (!data) return json({ connected: false });
 
   const metadata = (data.metadata ?? {}) as Record<string, unknown>;
+
+  // URL do webhook de leads (edge function pública).
+  let webhookUrl: string | null = null;
+  try {
+    const ref = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || '').hostname.split('.')[0];
+    if (ref) webhookUrl = `https://${ref}.supabase.co/functions/v1/automation-meta-leads`;
+  } catch {
+    webhookUrl = null;
+  }
+
   return json({
     connected: data.status === 'active' && Boolean(metadata.subscribed_page_id),
     status: data.status,
@@ -45,6 +55,8 @@ export async function GET() {
     pages: metadata.pages ?? [],
     adAccounts: metadata.ad_accounts ?? [],
     subscribedPageId: metadata.subscribed_page_id ?? null,
+    webhookUrl,
+    verifyToken: metadata.webhook_verify_token ?? null,
     lastError: data.last_error ?? null,
     updatedAt: data.updated_at,
   });

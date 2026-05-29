@@ -95,3 +95,8 @@ enabled = false
 # portanto desabilitamos a verificação de JWT.
 [functions.webhook-in]
 verify_jwt = false
+
+# Webhook de Lead Ads do Meta (Facebook/Instagram). A Meta chama sem JWT;
+# a segurança é a assinatura X-Hub-Signature-256 (App Secret) + verify token.
+[functions.automation-meta-leads]
+verify_jwt = false

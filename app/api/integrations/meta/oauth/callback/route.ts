@@ -62,19 +62,24 @@ export async function GET(req: NextRequest) {
 
     const admin = createStaticAdminClient();
 
+    // Uma integração Meta por organização (upsert manual).
+    const { data: existing } = await admin
+      .from('automation_integrations')
+      .select('id, metadata')
+      .eq('organization_id', orgId)
+      .eq('provider', 'meta')
+      .maybeSingle();
+
     const baseMetadata = {
       pages: pages.map((p) => ({ id: p.id, name: p.name })),
       ad_accounts: adAccounts,
       connected_by: user.id,
+      // Token de handshake do webhook leadgen (não sensível; valida-se também
+      // a assinatura HMAC com o App Secret). Reutiliza-se se já existir.
+      webhook_verify_token:
+        (existing?.metadata as Record<string, unknown> | undefined)?.webhook_verify_token ??
+        crypto.randomUUID(),
     };
-
-    // Uma integração Meta por organização (upsert manual).
-    const { data: existing } = await admin
-      .from('automation_integrations')
-      .select('id')
-      .eq('organization_id', orgId)
-      .eq('provider', 'meta')
-      .maybeSingle();
 
     let integrationId = existing?.id as string | undefined;
     if (!integrationId) {
