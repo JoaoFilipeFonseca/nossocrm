@@ -47,7 +47,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       type: 'object',
       properties: {
         message: { type: 'string' },
-        level: { type: 'string', enum: ['debug', 'info', 'warn', 'error'] },
+        level: { type: 'string', enum: ['debug', 'info', 'warn', 'error'], enumLabels: ['Depuração', 'Informação', 'Aviso', 'Erro'] },
       },
       required: ['message'],
     },
@@ -81,7 +81,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       properties: {
         text: { type: 'string' },
         chat_id: { type: 'string' },
-        parse_mode: { type: 'string', enum: ['HTML', 'MarkdownV2', 'none'] },
+        parse_mode: { type: 'string', enum: ['HTML', 'MarkdownV2', 'none'], enumLabels: ['HTML', 'Markdown', 'Sem formatação'] },
       },
       required: ['text'],
     },
@@ -135,7 +135,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
         type: { type: 'string' },
         contact_id: { type: 'string' },
         deal_id: { type: 'string' },
-        due_in_hours: { type: 'number' },
+        due_in_hours: { type: 'number', format: 'duration', unit: 'hours' },
         due_at: { type: 'string' },
       },
       required: ['title'],
@@ -163,11 +163,11 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
     category: 'logic',
     name: 'Esperar tempo fixo',
     icon: '⏱️',
-    description: 'Suspende a automação por X segundos antes de continuar.',
+    description: 'Suspende a automação durante o tempo escolhido antes de continuar.',
     configSchema: {
       type: 'object',
       properties: {
-        seconds: { type: 'integer', minimum: 1 },
+        seconds: { type: 'integer', minimum: 1, format: 'duration', unit: 'seconds' },
       },
       required: ['seconds'],
     },
@@ -185,7 +185,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
         approve_label: { type: 'string' },
         reject_label: { type: 'string' },
         edit_label: { type: 'string' },
-        timeout_hours: { type: 'integer', minimum: 1 },
+        timeout_hours: { type: 'integer', minimum: 1, format: 'duration', unit: 'hours' },
       },
       required: ['message'],
     },
@@ -200,7 +200,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       type: 'object',
       properties: {
         left: {},
-        operator: { type: 'string', enum: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'ends_with', 'in', 'is_empty', 'is_not_empty'] },
+        operator: { type: 'string', enum: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'ends_with', 'in', 'is_empty', 'is_not_empty'], enumLabels: ['igual a', 'diferente de', 'maior que', 'maior ou igual a', 'menor que', 'menor ou igual a', 'contém', 'começa por', 'termina em', 'está na lista', 'está vazio', 'não está vazio'] },
         right: {},
       },
       required: ['left', 'operator'],
@@ -313,7 +313,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       type: 'object',
       properties: {
         left: {},
-        operator: { type: 'string', enum: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'ends_with', 'in', 'is_empty', 'is_not_empty'] },
+        operator: { type: 'string', enum: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'ends_with', 'in', 'is_empty', 'is_not_empty'], enumLabels: ['igual a', 'diferente de', 'maior que', 'maior ou igual a', 'menor que', 'menor ou igual a', 'contém', 'começa por', 'termina em', 'está na lista', 'está vazio', 'não está vazio'] },
         right: {},
       },
       required: ['left', 'operator'],
@@ -328,8 +328,8 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
     configSchema: {
       type: 'object',
       properties: {
-        min_seconds: { type: 'integer', minimum: 1 },
-        max_seconds: { type: 'integer', minimum: 1 },
+        min_seconds: { type: 'integer', minimum: 1, format: 'duration', unit: 'seconds' },
+        max_seconds: { type: 'integer', minimum: 1, format: 'duration', unit: 'seconds' },
       },
       required: ['min_seconds', 'max_seconds'],
     },

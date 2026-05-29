@@ -22,14 +22,20 @@
  */
 
 import { useCallback } from 'react';
+import { DurationInput, type BaseUnit } from './DurationInput';
 
 interface FieldSpec {
   type?: string;
   enum?: unknown[];
+  enumLabels?: string[];
   items?: { type?: string };
   description?: string;
   default?: unknown;
   minimum?: number;
+  /** 'duration' → render número + unidade (DurationInput). */
+  format?: string;
+  /** Unidade base que o átomo consome quando format === 'duration'. */
+  unit?: BaseUnit;
 }
 
 interface JSONSchema {
@@ -90,6 +96,20 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
           </span>
         );
 
+        // duração (número + unidade) — grava na unidade base do átomo
+        if (spec.format === 'duration') {
+          return (
+            <label key={key} className="block">
+              {label}
+              <DurationInput
+                value={typeof v === 'number' ? v : undefined}
+                base={spec.unit ?? 'seconds'}
+                onChange={(next) => update(key, next)}
+              />
+            </label>
+          );
+        }
+
         // string + enum
         if (spec.type === 'string' && Array.isArray(spec.enum)) {
           return (
@@ -101,8 +121,10 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
                 className="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
               >
                 <option value="">— escolhe —</option>
-                {spec.enum.map((opt) => (
-                  <option key={String(opt)} value={String(opt)}>{String(opt)}</option>
+                {spec.enum.map((opt, i) => (
+                  <option key={String(opt)} value={String(opt)}>
+                    {Array.isArray(spec.enumLabels) && spec.enumLabels[i] ? spec.enumLabels[i] : String(opt)}
+                  </option>
                 ))}
               </select>
             </label>
