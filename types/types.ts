@@ -208,6 +208,23 @@ export interface CustomFieldDefinition {
   options?: string[]; // For select type
 }
 
+// Linhagem do anúncio (Meta Ads e futuras fontes). Ver migração 20260529160000.
+export interface MetaAdAttribution {
+  source?: string | null;
+  platform?: string | null;
+  campaign_id?: string | null;
+  campaign_name?: string | null;
+  adset_id?: string | null;
+  adset_name?: string | null;
+  ad_id?: string | null;
+  ad_name?: string | null;
+  form_id?: string | null;
+  form_name?: string | null;
+  leadgen_id?: string | null;
+  page_id?: string | null;
+  captured_at?: string | null;
+}
+
 // O Dinheiro/Oportunidade (O que vai no Kanban)
 export interface Deal {
   id: string;
@@ -242,6 +259,8 @@ export interface Deal {
   lastStageChangeDate?: string; // For stagnation tracking
   lossReason?: string; // For win/loss analysis
   aiExtracted?: Record<string, any>; // AI-extracted BANT fields (zero config)
+  /** Linhagem do anúncio (Meta Ads). Propagada da lead/contacto. */
+  attribution?: MetaAdAttribution | null;
   /** Quando o humano interveio e pausou as automações deste deal. NULL = activas. (#124 pause-on-touch) */
   automationsPausedAt?: string | null;
   /** Motivo da pausa: moved_stage | tag_removed | manual_override | task_completed. */

@@ -24,6 +24,7 @@ import { ConfirmDialog as ConfirmModal } from '@/components/ui/confirm-dialog';
 import { LossReasonModal } from '@/components/ui/LossReasonModal';
 import { useMoveDealSimple } from '@/lib/query/hooks';
 import { DEALS_VIEW_KEY } from '@/lib/query';
+import { MetaAttribution } from '@/components/MetaAttribution';
 import { FocusTrap, useFocusReturn } from '@/lib/a11y';
 import { Activity, DealView } from '@/types';
 import { usePersistedState } from '@/hooks/usePersistedState';
@@ -943,6 +944,13 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     compact
                   />
                 </div>
+
+                {/* Origem do anúncio (Meta Ads) — só aparece em negócios vindos de leads de anúncios */}
+                {deal.attribution?.source === 'meta_ads' && (
+                  <div className="pt-4 border-t border-slate-100 dark:border-white/5">
+                    <MetaAttribution attribution={deal.attribution} />
+                  </div>
+                )}
 
                 {/* DYNAMIC CUSTOM FIELDS INPUTS */}
                 {customFieldDefinitions.length > 0 && (

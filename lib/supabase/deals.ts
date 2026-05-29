@@ -106,6 +106,8 @@ export interface DbDeal {
   automations_paused_at?: string | null;
   /** #124 — Motivo da pausa: moved_stage | tag_removed | manual_override | task_completed. */
   automations_paused_reason?: string | null;
+  /** Linhagem do anúncio (Meta Ads). Ver migração 20260529160000. */
+  attribution?: Record<string, any> | null;
 }
 
 /**
@@ -181,6 +183,7 @@ const transformDeal = (db: DbDeal | DbDealWithItems, items?: DbDealItem[]): Deal
     aiExtracted: db.ai_extracted || undefined,
     automationsPausedAt: db.automations_paused_at || null,
     automationsPausedReason: db.automations_paused_reason || null,
+    attribution: (db.attribution as import('@/types').MetaAdAttribution) || null,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
     items: filteredItems.map(i => ({
