@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const url = new URL(req.url);
-  const days = Math.max(1, Math.min(365, parseInt(url.searchParams.get('days') || '30', 10)));
+  // Até ~10 anos: medição vitalícia (cliente que comprou várias vezes ao longo de anos).
+  const days = Math.max(1, Math.min(3660, parseInt(url.searchParams.get('days') || '30', 10)));
   const to = new Date();
   const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
 

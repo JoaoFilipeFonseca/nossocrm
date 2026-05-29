@@ -108,59 +108,71 @@ async function syncIntegration(
 
   const until = new Date();
   const since = new Date(until.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
-  const timeRange = JSON.stringify({ since: ymd(since), until: ymd(until) });
   const fields = [
     'campaign_id', 'campaign_name', 'adset_id', 'adset_name',
     'ad_id', 'ad_name', 'spend', 'impressions', 'clicks', 'reach',
     'ctr', 'cpc', 'cpm', 'actions',
   ].join(',');
 
-  let url: string | null =
-    `${GRAPH}/${adAccount}/insights?level=ad&time_increment=1` +
-    `&time_range=${encodeURIComponent(timeRange)}&fields=${fields}` +
-    `&limit=200&access_token=${encodeURIComponent(token as string)}`;
+  // A Meta limita o volume por pedido (level=ad + time_increment=1). Para
+  // suportar backfill plurianual, parte-se a janela em blocos de 90 dias.
+  const DAY = 24 * 60 * 60 * 1000;
+  const WINDOW = 90 * DAY;
+  const windows: Array<[Date, Date]> = [];
+  for (let s = new Date(since); s < until;) {
+    const e = new Date(Math.min(until.getTime(), s.getTime() + WINDOW));
+    windows.push([s, e]);
+    s = new Date(e.getTime() + DAY);
+  }
 
   let currency: string | null = null;
   const records: Record<string, unknown>[] = [];
-  let pages = 0;
 
-  while (url && pages < 25) {
-    pages++;
-    const res = await fetch(url);
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const errMsg = body?.error?.message ?? `HTTP ${res.status}`;
-      return { rows: 0, account: adAccount, error: errMsg };
+  for (const [winStart, winEnd] of windows) {
+    const timeRange = JSON.stringify({ since: ymd(winStart), until: ymd(winEnd) });
+    let url: string | null =
+      `${GRAPH}/${adAccount}/insights?level=ad&time_increment=1` +
+      `&time_range=${encodeURIComponent(timeRange)}&fields=${fields}` +
+      `&limit=200&access_token=${encodeURIComponent(token as string)}`;
+    let pages = 0;
+    while (url && pages < 60) {
+      pages++;
+      const res = await fetch(url);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const errMsg = body?.error?.message ?? `HTTP ${res.status}`;
+        return { rows: 0, account: adAccount, error: errMsg };
+      }
+      const data = (body?.data ?? []) as InsightRow[];
+      for (const r of data) {
+        if (!r.ad_id || !r.date_start) continue;
+        records.push({
+          organization_id: integ.organization_id,
+          integration_id: integ.id,
+          date: r.date_start,
+          level: 'ad',
+          ad_account_id: adAccount,
+          campaign_id: r.campaign_id ?? null,
+          campaign_name: r.campaign_name ?? null,
+          adset_id: r.adset_id ?? null,
+          adset_name: r.adset_name ?? null,
+          ad_id: r.ad_id,
+          ad_name: r.ad_name ?? null,
+          spend: toNum(r.spend),
+          impressions: toInt(r.impressions),
+          clicks: toInt(r.clicks),
+          leads: countLeads(r.actions),
+          reach: toInt(r.reach),
+          ctr: toNum(r.ctr),
+          cpc: toNum(r.cpc),
+          cpm: toNum(r.cpm),
+          currency,
+          raw: r,
+          synced_at: new Date().toISOString(),
+        });
+      }
+      url = (body?.paging?.next as string) ?? null;
     }
-    const data = (body?.data ?? []) as InsightRow[];
-    for (const r of data) {
-      if (!r.ad_id || !r.date_start) continue;
-      records.push({
-        organization_id: integ.organization_id,
-        integration_id: integ.id,
-        date: r.date_start,
-        level: 'ad',
-        ad_account_id: adAccount,
-        campaign_id: r.campaign_id ?? null,
-        campaign_name: r.campaign_name ?? null,
-        adset_id: r.adset_id ?? null,
-        adset_name: r.adset_name ?? null,
-        ad_id: r.ad_id,
-        ad_name: r.ad_name ?? null,
-        spend: toNum(r.spend),
-        impressions: toInt(r.impressions),
-        clicks: toInt(r.clicks),
-        leads: countLeads(r.actions),
-        reach: toInt(r.reach),
-        ctr: toNum(r.ctr),
-        cpc: toNum(r.cpc),
-        cpm: toNum(r.cpm),
-        currency,
-        raw: r,
-        synced_at: new Date().toISOString(),
-      });
-    }
-    url = (body?.paging?.next as string) ?? null;
   }
 
   // A moeda da conta (uma chamada leve; opcional).
@@ -175,15 +187,21 @@ async function syncIntegration(
 
   if (records.length === 0) return { rows: 0, account: adAccount };
 
-  const { error: upErr } = await supabase
-    .from('ad_insights')
-    .upsert(records, { onConflict: 'organization_id,integration_id,ad_id,date' });
-  if (upErr) return { rows: 0, account: adAccount, error: `upsert: ${upErr.message}` };
+  // upsert em lotes (backfill pode trazer milhares de linhas).
+  let written = 0;
+  for (let i = 0; i < records.length; i += 500) {
+    const chunk = records.slice(i, i + 500);
+    const { error: upErr } = await supabase
+      .from('ad_insights')
+      .upsert(chunk, { onConflict: 'organization_id,integration_id,ad_id,date' });
+    if (upErr) return { rows: written, account: adAccount, error: `upsert: ${upErr.message}` };
+    written += chunk.length;
+  }
 
   // Criativos (best-effort): só os anúncios ainda sem criativo guardado.
   await syncCreatives(supabase, integ, records, token as string);
 
-  return { rows: records.length, account: adAccount };
+  return { rows: written, account: adAccount };
 }
 
 // Busca e guarda o criativo (miniatura/tipo) dos anúncios que ainda não o têm.
@@ -203,7 +221,7 @@ async function syncCreatives(
       .eq('organization_id', integ.organization_id)
       .in('ad_id', adIds);
     const have = new Set((existing ?? []).map((e: { ad_id: string }) => e.ad_id));
-    const missing = adIds.filter((id) => !have.has(id)).slice(0, 200);
+    const missing = adIds.filter((id) => !have.has(id)).slice(0, 300);
 
     const creativeFields = encodeURIComponent('creative{id,thumbnail_url,image_url,object_type,video_id}');
     for (const adId of missing) {
@@ -246,7 +264,9 @@ Deno.serve(async (req: Request) => {
   }
 
   const params = await loadAutomationParams(supabase, 'meta-insights-sync', DEFAULTS);
-  const lookbackDays = Math.max(1, Math.min(90, Math.floor(Number(params.lookback_days) || DEFAULTS.lookback_days)));
+  // Máx ~36,5 meses (a Meta rejeita início > 37 meses); o cron diário usa 7.
+  // Reter o histórico todo (medição vitalícia).
+  const lookbackDays = Math.max(1, Math.min(1110, Math.floor(Number(params.lookback_days) || DEFAULTS.lookback_days)));
 
   let ok = true;
   let errorText: string | null = null;
