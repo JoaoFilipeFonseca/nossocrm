@@ -24,6 +24,8 @@
 import { useCallback } from 'react';
 import { DurationInput, type BaseUnit } from './DurationInput';
 import { EventMultiSelect } from './EventMultiSelect';
+import { TextField } from './TextField';
+import { BUILDER_VARIABLES } from '@/lib/automation-engine/builder-catalog';
 
 interface FieldSpec {
   type?: string;
@@ -221,28 +223,17 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
           );
         }
 
-        // string (default)
+        // string (default) — com botão de inserir variável
         const multiline = looksMultiline(key, spec);
+        const strVal = typeof v === 'string' ? v : v === undefined || v === null ? '' : String(v);
         return (
           <label key={key} className="block">
             {label}
-            {multiline ? (
-              <textarea
-                value={typeof v === 'string' ? v : ''}
-                onChange={(e) => update(key, e.target.value)}
-                rows={3}
-                className="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm font-mono"
-                placeholder='Suporta {{ variavel }}'
-              />
-            ) : (
-              <input
-                type="text"
-                value={typeof v === 'string' ? v : v === undefined || v === null ? '' : String(v)}
-                onChange={(e) => update(key, e.target.value)}
-                className="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm font-mono"
-                placeholder='Suporta {{ variavel }}'
-              />
-            )}
+            <TextField
+              value={strVal}
+              onChange={(next) => update(key, next)}
+              multiline={multiline}
+            />
           </label>
         );
       })}
@@ -251,12 +242,12 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
         <details className="text-[10px] text-slate-500 mt-2">
           <summary className="cursor-pointer hover:text-slate-700">Variáveis disponíveis</summary>
           <div className="mt-1 pl-2 border-l border-slate-200 space-y-0.5">
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ contact.id }}'}</code> · id do contacto do trigger</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ contact.name }}'}</code> · nome do contacto</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ deal.id }}'}</code> · id do deal do trigger</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ deal.value | money }}'}</code> · valor do deal formatado</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ trigger.payload.* }}'}</code> · dados do evento</div>
-            <div><code className="bg-slate-100 px-1 rounded">{'{{ nodeId.output.* }}'}</code> · output de um passo anterior</div>
+            {BUILDER_VARIABLES.map((bv) => (
+              <div key={bv.token}>
+                <code className="bg-slate-100 px-1 rounded">{bv.token}</code> · {bv.label.toLowerCase()}
+              </div>
+            ))}
+            <div><code className="bg-slate-100 px-1 rounded">{'{{ nodeId.output.* }}'}</code> · resultado de um passo anterior</div>
           </div>
         </details>
       ) : null}
