@@ -33,6 +33,11 @@ interface NodeExecContext {
   organizationId: string;
   nodeId: string;
   config: Record<string, unknown>;
+  // Config crua (sem render Liquid). Usada por átomos que precisam do valor real
+  // e não da versão stringificada, ex: logic.loop a resolver um array.
+  rawConfig: Record<string, unknown>;
+  // Scope completo (baseContext + variáveis acumuladas + item/index do loop).
+  scope: Record<string, unknown>;
   variables: Record<string, { output: unknown }>;
   triggerEvent?: { type: string; payload: unknown };
   log: (level: string, message: string) => Promise<void>;
@@ -78,6 +83,34 @@ async function resolveConfig(config: Record<string, unknown>, vars: Record<strin
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(config)) out[k] = await resolveValue(v, vars);
   return out;
+}
+
+/**
+ * Resolve um valor para um array REAL (sem stringificar via Liquid). Aceita:
+ *  - um array literal já presente na config;
+ *  - uma expressão Liquid de um único bind "{{ contact.deals }}" (avaliada com
+ *    evalValue para devolver o valor real);
+ *  - uma string JSON de array.
+ * Devolve [] se nada resolver para array.
+ */
+async function resolveToArray(raw: unknown, scope: Record<string, unknown>): Promise<unknown[]> {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    const expr = raw.trim();
+    const single = expr.match(/^\{\{\s*([\s\S]+?)\s*\}\}$/);
+    if (single) {
+      try {
+        const v = await liquid.evalValue(single[1], scope);
+        if (Array.isArray(v)) return v;
+        if (v !== null && v !== undefined) return [v];
+      } catch { /* cai para JSON abaixo */ }
+    }
+    try {
+      const v = JSON.parse(expr);
+      if (Array.isArray(v)) return v;
+    } catch { /* não é JSON */ }
+  }
+  return [];
 }
 
 // ----------------------------------------------------------------------------
@@ -145,6 +178,22 @@ const ATOMS: Record<string, AtomExecFn> = {
     const json = await res.json().catch(() => ({})) as { ok?: boolean; result?: { message_id?: number }; description?: string };
     if (!res.ok || !json.ok) throw new Error(`Telegram API erro ${res.status}: ${json.description ?? "unknown"}`);
     return { ok: true, message_id: json.result?.message_id ?? 0, sent_at: new Date().toISOString() };
+  },
+
+  "logic.loop": async (ctx) => {
+    // Resolve o array a iterar a partir da config crua (não stringificada).
+    const items = await resolveToArray(ctx.rawConfig.items, ctx.scope);
+    const maxIter = Number(ctx.config.max_iterations ?? 100);
+    const parallel = ctx.config.parallel === true || ctx.config.parallel === "true";
+    const limited = items.slice(0, Number.isFinite(maxIter) && maxIter > 0 ? maxIter : 100);
+    // _loop sinaliza ao runner para gerir as iterações (handleLoop).
+    return {
+      _loop: true,
+      items_resolved: limited,
+      max_iterations: Number.isFinite(maxIter) && maxIter > 0 ? maxIter : 100,
+      parallel,
+      count: limited.length,
+    };
   },
 
   "logic.wait_fixed": async (ctx) => {
@@ -576,7 +625,7 @@ Deno.serve(async (req) => {
 
     const ctx: NodeExecContext = {
       supabase, executionId, automationId: automation.id, organizationId: automation.organization_id, nodeId: node.id,
-      config: resolvedConfig, variables: state.variables, triggerEvent,
+      config: resolvedConfig, rawConfig: node.config, scope: vars, variables: state.variables, triggerEvent,
       log: async (level: string, message: string) => {
         await supabase.from("automation_node_executions").insert({
           execution_id: executionId, organization_id: automation.organization_id, node_id: `${node.id}.log`, atom_id: "system.log",

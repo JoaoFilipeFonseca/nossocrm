@@ -54,7 +54,13 @@ export interface LoopFrame {
   items: unknown[];
   index: number;
   bodyEntryId: string;
+  parallel: boolean;
+  total: number;
 }
+
+// Id do átomo de loop (o runner reconhece-o para gerir iterações sem o executar
+// de novo em cada re-entrada via back-edge).
+export const LOOP_ATOM = 'logic.loop';
 
 export interface Frame {
   frameId: string;
@@ -67,6 +73,8 @@ export interface RunnerState {
   variables: Record<string, { output: unknown }>;
   frontier: Frame[];
   joins: Record<string, { arrived: string[] }>;
+  // Conta iterações concluídas por loop paralelo (para disparar loop_done 1x).
+  loopCompletions: Record<string, number>;
   visited: string[];
   iterationCount: number;
 }
@@ -235,9 +243,89 @@ export function createInitialState(startNodeId: string): RunnerState {
     variables: {},
     frontier: [{ frameId: 'root', nodeId: startNodeId, loopStack: [] }],
     joins: {},
+    loopCompletions: {},
     visited: [],
     iterationCount: 0,
   };
+}
+
+/**
+ * Gere a entrada e a iteração de um nó `logic.loop` (forEach). NÃO executa
+ * átomos; só calcula os próximos frames. O átomo (no adaptador) já resolveu o
+ * array em `output.items_resolved`. Convenção de handles: `loop_body` (corpo) e
+ * `loop_done` (saída); o fim do corpo é uma back-edge cujo target é o loop.
+ */
+export function handleLoop(
+  def: AutomationDefinition,
+  state: RunnerState,
+  frame: Frame,
+  output: AtomOutput,
+  nextFrontier: Frame[],
+): void {
+  const loopId = frame.nodeId;
+  const reentry = output._reentry === true;
+
+  const pushDone = (loopStack: LoopFrame[]) => {
+    for (const e of edgesFrom(def, loopId, 'loop_done')) {
+      nextFrontier.push({ frameId: `${frame.frameId}/${e.id}`, nodeId: e.target, loopStack });
+    }
+  };
+  const pushBody = (loopStack: LoopFrame[], iter: number) => {
+    for (const e of edgesFrom(def, loopId, 'loop_body')) {
+      nextFrontier.push({ frameId: `${frame.frameId}/${e.id}#${iter}`, nodeId: e.target, loopStack });
+    }
+  };
+
+  if (!reentry) {
+    // ----- Primeira entrada: fixa o snapshot do array -----
+    const itemsRaw = Array.isArray(output.items_resolved) ? (output.items_resolved as unknown[]) : [];
+    const maxIter = typeof output.max_iterations === 'number' && output.max_iterations > 0 ? output.max_iterations : 100;
+    const items = itemsRaw.slice(0, maxIter);
+    const parallel = output.parallel === true;
+    const bodyEntry = edgesFrom(def, loopId, 'loop_body')[0]?.target ?? '';
+
+    if (items.length === 0 || !bodyEntry) {
+      pushDone(frame.loopStack);
+      return;
+    }
+
+    if (parallel) {
+      state.loopCompletions[loopId] = 0;
+      for (let i = 0; i < items.length; i += 1) {
+        const lf: LoopFrame = { loopNodeId: loopId, items, index: i, bodyEntryId: bodyEntry, parallel: true, total: items.length };
+        pushBody([...frame.loopStack, lf], i);
+      }
+    } else {
+      const lf: LoopFrame = { loopNodeId: loopId, items, index: 0, bodyEntryId: bodyEntry, parallel: false, total: items.length };
+      pushBody([...frame.loopStack, lf], 0);
+    }
+    return;
+  }
+
+  // ----- Re-entrada via back-edge -----
+  const top = frame.loopStack[frame.loopStack.length - 1];
+  if (!top || top.loopNodeId !== loopId) {
+    // Estado inesperado: termina por loop_done para não bloquear.
+    pushDone(frame.loopStack);
+    return;
+  }
+  const base = frame.loopStack.slice(0, -1);
+
+  if (top.parallel) {
+    const done = (state.loopCompletions[loopId] ?? 0) + 1;
+    state.loopCompletions[loopId] = done;
+    if (done >= top.total) pushDone(base); // só dispara loop_done quando todas terminam
+    return; // caso contrário, o frame morre (já contabilizado)
+  }
+
+  // Sequencial: avança o índice.
+  const nextIndex = top.index + 1;
+  if (nextIndex >= top.items.length) {
+    pushDone(base);
+  } else {
+    const updated: LoopFrame = { ...top, index: nextIndex };
+    pushBody([...base, updated], nextIndex);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -252,10 +340,13 @@ export async function runGraph(
 
   while (state.frontier.length > 0 && state.iterationCount < SAFETY_CAP) {
     // 1. Separa frames prontos dos joins ainda à espera de mais ramos.
+    //    Nós de loop nunca são tratados como join (a back-edge dá-lhes >1 entrada,
+    //    mas a convergência é gerida pelo handleLoop, não pelo gate de join).
     const ready: Frame[] = [];
     const waiting: Frame[] = [];
     for (const f of state.frontier) {
-      if (isJoinNode(def, f.nodeId) && !joinReady(def, state, f.nodeId)) waiting.push(f);
+      const isLoop = nodeById(def, f.nodeId)?.atom === LOOP_ATOM;
+      if (!isLoop && isJoinNode(def, f.nodeId) && !joinReady(def, state, f.nodeId)) waiting.push(f);
       else ready.push(f);
     }
     // Só restam joins não-armados → nada avança (guarda anti-deadlock).
@@ -271,6 +362,11 @@ export async function runGraph(
     const execResults = await runWithConcurrency(ready, CONCURRENCY_CAP, async (frame) => {
       const node = nodeById(def, frame.nodeId);
       if (!node) return { frame, node: null as AutomationNode | null, output: null as AtomOutput | null, error: `node not found: ${frame.nodeId}` };
+      // Re-entrada num loop via back-edge: NÃO re-executa o átomo (items já fixados).
+      const isLoopReentry = node.atom === LOOP_ATOM && frame.loopStack.some((l) => l.loopNodeId === node.id);
+      if (isLoopReentry) {
+        return { frame, node, output: { _loop: true, _reentry: true } as AtomOutput, error: null as string | null };
+      }
       const vars = buildScope(deps.baseContext, state.variables, frame.loopStack);
       try {
         const output = await deps.runNode(node, vars);
@@ -288,6 +384,18 @@ export async function runGraph(
       }
       const node = r.node as AutomationNode;
       const output = r.output as AtomOutput;
+
+      // Loop forEach: gere iterações sem fan-out normal. Em re-entrada não
+      // grava variável (preserva o items_resolved da primeira entrada).
+      if (node.atom === LOOP_ATOM) {
+        if (output._reentry !== true) {
+          state.variables[node.id] = { output };
+          state.visited.push(node.id);
+        }
+        handleLoop(def, state, r.frame, output, nextFrontier);
+        continue;
+      }
+
       state.variables[node.id] = { output };
       state.visited.push(node.id);
 
@@ -310,7 +418,8 @@ export async function runGraph(
       // Fan-out: expande todas as edges aplicáveis em novos frames.
       const branch = typeof output?._branch_taken === 'string' ? output._branch_taken : undefined;
       for (const edge of edgesFrom(def, node.id, branch)) {
-        if (isJoinNode(def, edge.target)) registerArrival(state, edge.target, edge.id);
+        const targetIsLoop = nodeById(def, edge.target)?.atom === LOOP_ATOM;
+        if (!targetIsLoop && isJoinNode(def, edge.target)) registerArrival(state, edge.target, edge.id);
         nextFrontier.push({ frameId: `${r.frame.frameId}/${edge.id}`, nodeId: edge.target, loopStack: r.frame.loopStack });
       }
     }

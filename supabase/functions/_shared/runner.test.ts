@@ -11,6 +11,7 @@ import {
   buildScope,
   createInitialState,
   SAFETY_CAP,
+  LOOP_ATOM,
   type AutomationDefinition,
   type AutomationNode,
   type AtomOutput,
@@ -272,5 +273,88 @@ describe('runGraph — fan-out + join (T2)', () => {
     expect(result.kind).toBe('done');
     expect(order).toEqual(['a', 'b', 'c', 'dd']); // dd corre mesmo com o ramo c morto
     expect(order.filter((id) => id === 'dd')).toHaveLength(1);
+  });
+});
+
+describe('runGraph — logic.loop forEach (T3)', () => {
+  // Grafo: a -> L (loop); L --loop_body--> body; body --back-edge--> L;
+  //        L --loop_done--> done.
+  function loopDef(): AutomationDefinition {
+    return def([['a', 'trigger.event'], ['L', LOOP_ATOM], ['body', 'action.log'], ['done', 'action.log']], [
+      ['a', 'L'],
+      ['L', 'body', 'loop_body'],
+      ['body', 'L'], // back-edge
+      ['L', 'done', 'loop_done'],
+    ]);
+  }
+
+  // deps que devolve o output do loop em L e regista item/index nos corpos.
+  function loopDeps(loopOutput: AtomOutput, order: string[], bodyRuns: Array<{ item: unknown; index: unknown }>): RunnerDeps {
+    return {
+      baseContext: {},
+      runNode: async (node: AutomationNode, vars: Record<string, unknown>) => {
+        order.push(node.id);
+        if (node.atom === LOOP_ATOM) return loopOutput;
+        if (node.id === 'body') bodyRuns.push({ item: vars.item, index: vars.index });
+        return {};
+      },
+    };
+  }
+
+  it('itera sequencialmente com item/index correctos', async () => {
+    const order: string[] = [];
+    const bodyRuns: Array<{ item: unknown; index: unknown }> = [];
+    const { result } = await runGraph(loopDef(), {
+      startNodeId: 'a',
+      state: createInitialState('a'),
+      deps: loopDeps({ _loop: true, items_resolved: ['x', 'y', 'z'], max_iterations: 100, parallel: false }, order, bodyRuns),
+    });
+    expect(result.kind).toBe('done');
+    expect(order).toEqual(['a', 'L', 'body', 'body', 'body', 'done']);
+    expect(bodyRuns).toEqual([
+      { item: 'x', index: 0 },
+      { item: 'y', index: 1 },
+      { item: 'z', index: 2 },
+    ]);
+  });
+
+  it('max_iterations corta o número de iterações', async () => {
+    const order: string[] = [];
+    const bodyRuns: Array<{ item: unknown; index: unknown }> = [];
+    const { result } = await runGraph(loopDef(), {
+      startNodeId: 'a',
+      state: createInitialState('a'),
+      deps: loopDeps({ _loop: true, items_resolved: ['x', 'y', 'z', 'w'], max_iterations: 2, parallel: false }, order, bodyRuns),
+    });
+    expect(result.kind).toBe('done');
+    expect(bodyRuns.map((b) => b.index)).toEqual([0, 1]); // só 2 iterações
+    expect(order.filter((id) => id === 'done')).toHaveLength(1);
+  });
+
+  it('array vazio salta direto para loop_done', async () => {
+    const order: string[] = [];
+    const bodyRuns: Array<{ item: unknown; index: unknown }> = [];
+    const { result } = await runGraph(loopDef(), {
+      startNodeId: 'a',
+      state: createInitialState('a'),
+      deps: loopDeps({ _loop: true, items_resolved: [], max_iterations: 100, parallel: false }, order, bodyRuns),
+    });
+    expect(result.kind).toBe('done');
+    expect(bodyRuns).toHaveLength(0);
+    expect(order).toEqual(['a', 'L', 'done']);
+  });
+
+  it('parallel: corre todos os corpos e dispara loop_done uma só vez', async () => {
+    const order: string[] = [];
+    const bodyRuns: Array<{ item: unknown; index: unknown }> = [];
+    const { result } = await runGraph(loopDef(), {
+      startNodeId: 'a',
+      state: createInitialState('a'),
+      deps: loopDeps({ _loop: true, items_resolved: ['x', 'y', 'z'], max_iterations: 100, parallel: true }, order, bodyRuns),
+    });
+    expect(result.kind).toBe('done');
+    expect(order.filter((id) => id === 'body')).toHaveLength(3);
+    expect(new Set(bodyRuns.map((b) => b.index))).toEqual(new Set([0, 1, 2]));
+    expect(order.filter((id) => id === 'done')).toHaveLength(1); // loop_done 1x
   });
 });
