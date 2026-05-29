@@ -25,6 +25,7 @@ import { useCallback } from 'react';
 import { DurationInput, type BaseUnit } from './DurationInput';
 import { EventMultiSelect } from './EventMultiSelect';
 import { TextField } from './TextField';
+import { KeyValueEditor } from './KeyValueEditor';
 import { BUILDER_VARIABLES } from '@/lib/automation-engine/builder-catalog';
 
 interface FieldSpec {
@@ -196,6 +197,19 @@ export function SchemaForm({ schema, values, onChange, showVarsHint }: SchemaFor
                 }}
                 placeholder="separa por vírgulas"
                 className="mt-0.5 w-full rounded border border-slate-300 px-2 py-1 text-sm font-mono"
+              />
+            </label>
+          );
+        }
+
+        // object como pares chave/valor (ex: cabeçalhos HTTP)
+        if (spec.format === 'keyvalue') {
+          return (
+            <label key={key} className="block">
+              {label}
+              <KeyValueEditor
+                value={v && typeof v === 'object' ? (v as Record<string, unknown>) : undefined}
+                onChange={(next) => update(key, next)}
               />
             </label>
           );

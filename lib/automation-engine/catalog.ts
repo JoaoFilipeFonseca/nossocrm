@@ -63,7 +63,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
       properties: {
         method: { type: 'string', enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] },
         url: { type: 'string' },
-        headers: { type: 'object' },
+        headers: { type: 'object', format: 'keyvalue' },
         body: { type: 'string' },
         timeout_ms: { type: 'integer' },
       },
