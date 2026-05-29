@@ -288,6 +288,22 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
     },
   },
   {
+    id: 'logic.loop',
+    category: 'logic',
+    name: 'Repetir por cada (loop)',
+    icon: '🔁',
+    description: 'Itera sobre uma lista. Liga o ramo "loop_body" ao corpo e fecha o corpo de volta a este nó; "loop_done" segue quando terminar. Cada iteração expõe {{ item }} e {{ index }}.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        items: { type: 'string', description: 'Expressão que resolve numa lista, ex: {{ contact.deals }}.' },
+        max_iterations: { type: 'integer', minimum: 1, description: 'Tecto de iterações (default 100).' },
+        parallel: { type: 'boolean', description: 'Se ligado, corre as iterações em paralelo (cuidado com efeitos colaterais).' },
+      },
+      required: ['items'],
+    },
+  },
+  {
     id: 'logic.filter',
     category: 'logic',
     name: 'Filtrar (continua só se)',

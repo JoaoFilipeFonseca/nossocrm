@@ -34,12 +34,14 @@ import { getAtomMeta, ATOM_CATALOG } from '@/lib/automation-engine/catalog';
 import { ConditionNode } from './nodes/ConditionNode';
 import { SwitchNode } from './nodes/SwitchNode';
 import { FilterNode } from './nodes/FilterNode';
+import { LoopNode } from './nodes/LoopNode';
 import { NodeConfigPanel } from './NodeConfigPanel';
 
 const NODE_TYPES = {
   'logic.condition': ConditionNode,
   'logic.switch': SwitchNode,
   'logic.filter': FilterNode,
+  'logic.loop': LoopNode,
 } as const;
 
 interface AutomationNodeIn {
@@ -99,6 +101,7 @@ function nodeTypeFor(atomId: string): string {
   if (atomId === 'logic.condition') return 'logic.condition';
   if (atomId === 'logic.switch') return 'logic.switch';
   if (atomId === 'logic.filter') return 'logic.filter';
+  if (atomId === 'logic.loop') return 'logic.loop';
   return 'default';
 }
 
@@ -131,6 +134,8 @@ function edgeStyleFor(sourceHandle?: string | null): { stroke: string; label?: s
   if (sourceHandle === 'edited') return { stroke: '#f59e0b', label: 'editado' };
   if (sourceHandle === 'timeout') return { stroke: '#64748b', label: 'timeout' };
   if (sourceHandle === 'event') return { stroke: '#10b981', label: 'evento' };
+  if (sourceHandle === 'loop_body') return { stroke: '#a855f7', label: 'corpo' };
+  if (sourceHandle === 'loop_done') return { stroke: '#10b981', label: 'concluído' };
   if (sourceHandle.startsWith('case_')) {
     const palette = ['#10b981', '#3b82f6', '#a855f7', '#ec4899', '#f59e0b', '#06b6d4', '#84cc16', '#f97316'];
     const idx = parseInt(sourceHandle.slice(5), 10);
