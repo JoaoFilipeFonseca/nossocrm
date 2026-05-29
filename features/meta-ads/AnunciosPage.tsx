@@ -36,6 +36,11 @@ function num(value: number): string {
   return new Intl.NumberFormat('pt-PT').format(value || 0);
 }
 
+function pct(value: number | null): string {
+  if (value === null) return '—';
+  return `${value.toFixed(2)}%`;
+}
+
 // CPL/CPA/ROAS com guarda de divisão por zero.
 function ratio(numerator: number, denominator: number): number | null {
   if (!denominator) return null;
@@ -159,7 +164,10 @@ export const AnunciosPage: React.FC = () => {
                 <th className="px-3 py-2 font-semibold text-right">Gasto</th>
                 <th className="px-3 py-2 font-semibold text-right">Impressões</th>
                 <th className="px-3 py-2 font-semibold text-right">Cliques</th>
+                <th className="px-3 py-2 font-semibold text-right" title="Taxa de cliques (cliques / impressões)">CTR</th>
+                <th className="px-3 py-2 font-semibold text-right" title="Custo por clique">CPC</th>
                 <th className="px-3 py-2 font-semibold text-right">Leads</th>
+                <th className="px-3 py-2 font-semibold text-right" title="Conversão clique → lead">Cliq→Lead</th>
                 <th className="px-3 py-2 font-semibold text-right">CPL</th>
                 <th className="px-3 py-2 font-semibold text-right">Ganhos</th>
                 <th className="px-3 py-2 font-semibold text-right">CPA</th>
@@ -173,6 +181,11 @@ export const AnunciosPage: React.FC = () => {
                 const cpl = ratio(r.spend, leadsForCpl);
                 const cpa = ratio(r.spend, r.won_deals);
                 const roas = ratio(r.won_value, r.spend);
+                const ctrRatio = ratio(r.clicks, r.impressions);
+                const ctr = ctrRatio === null ? null : ctrRatio * 100;
+                const cpc = ratio(r.spend, r.clicks);
+                const clickToLeadRatio = ratio(leadsForCpl, r.clicks);
+                const clickToLead = clickToLeadRatio === null ? null : clickToLeadRatio * 100;
                 return (
                   <tr key={r.ad_id} className="hover:bg-slate-50">
                     <td className="px-3 py-2">
@@ -182,12 +195,15 @@ export const AnunciosPage: React.FC = () => {
                     <td className="px-3 py-2 text-right tabular-nums">{money(r.spend, r.currency)}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-slate-500">{num(r.impressions)}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-slate-500">{num(r.clicks)}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-500">{pct(ctr)}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-500">{cpc === null ? '—' : money(cpc, r.currency)}</td>
                     <td className="px-3 py-2 text-right tabular-nums">
                       {num(r.crm_leads || r.meta_leads)}
                       {r.crm_leads === 0 && r.meta_leads > 0 && (
                         <span className="text-slate-400 text-xs" title="Contagem da Meta (sem leads no CRM atribuídas a este anúncio)"> *</span>
                       )}
                     </td>
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-500">{pct(clickToLead)}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{cpl === null ? '—' : money(cpl, r.currency)}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{r.won_deals || '—'}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{cpa === null ? '—' : money(cpa, r.currency)}</td>
