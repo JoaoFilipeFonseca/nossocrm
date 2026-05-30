@@ -32,6 +32,32 @@ export interface AdAnalysis {
   days_with_data: number | null;
 }
 
+export interface AdStatus {
+  status: string;
+  effective_status: string;
+  budget_cents: number | null;
+  budget_kind: 'daily' | 'lifetime' | null;
+  budget_level: 'adset' | 'campaign' | 'none';
+}
+
+// Estado legível a partir do effective_status da Meta.
+function statusLabel(s: AdStatus | undefined): { text: string; cls: string; dot: string } {
+  if (!s) return { text: '—', cls: 'text-slate-400', dot: 'bg-slate-300' };
+  if (s.effective_status === 'ACTIVE') return { text: 'Activo', cls: 'text-emerald-700', dot: 'bg-emerald-500' };
+  if (s.status === 'PAUSED') return { text: 'Em pausa', cls: 'text-slate-500', dot: 'bg-slate-400' };
+  // Pausado a montante (adset/campanha) ou outro estado efectivo.
+  const friendly: Record<string, string> = {
+    ADSET_PAUSED: 'Adset em pausa',
+    CAMPAIGN_PAUSED: 'Campanha em pausa',
+    PAUSED: 'Em pausa',
+    PENDING_REVIEW: 'Em revisão',
+    DISAPPROVED: 'Reprovado',
+    ARCHIVED: 'Arquivado',
+    IN_PROCESS: 'A processar',
+  };
+  return { text: friendly[s.effective_status] ?? 'Em pausa', cls: 'text-amber-600', dot: 'bg-amber-400' };
+}
+
 const VERDICT_META: Record<string, { label: string; cls: string; panel: string }> = {
   parar: { label: 'Parar', cls: 'bg-rose-100 text-rose-700 border-rose-200', panel: 'border-rose-200 bg-rose-50' },
   aumentar: { label: 'Aumentar', cls: 'bg-emerald-100 text-emerald-700 border-emerald-200', panel: 'border-emerald-200 bg-emerald-50' },
@@ -80,6 +106,19 @@ export const AnunciosPage: React.FC = () => {
   const [analyzedAt, setAnalyzedAt] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [editing, setEditing] = useState<AdPerformanceRow | null>(null);
+  const [statuses, setStatuses] = useState<Map<string, AdStatus>>(new Map());
+
+  const loadStatuses = useCallback(() => {
+    fetch('/api/meta-ads/statuses', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        const obj: Record<string, AdStatus> = j.statuses ?? {};
+        setStatuses(new Map(Object.entries(obj)));
+      })
+      .catch(() => { /* coluna de estado é opcional */ });
+  }, []);
+
+  useEffect(() => { loadStatuses(); }, [loadStatuses]);
 
   const loadAnalyses = useCallback(() => {
     fetch('/api/meta-ads/analyses', { cache: 'no-store' })
@@ -253,6 +292,8 @@ export const AnunciosPage: React.FC = () => {
             <thead>
               <tr className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-3 py-2 font-semibold">Anúncio</th>
+                <th className="px-3 py-2 font-semibold">Estado</th>
+                <th className="px-3 py-2 font-semibold text-right" title="Orçamento diário do conjunto de anúncios (adset)">Orç./dia</th>
                 <th className="px-3 py-2 font-semibold text-right">Gasto</th>
                 <th className="px-3 py-2 font-semibold text-right">Impressões</th>
                 <th className="px-3 py-2 font-semibold text-right">Cliques</th>
@@ -270,6 +311,8 @@ export const AnunciosPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {rows.map((r) => {
+                const st = statuses.get(r.ad_id);
+                const stLabel = statusLabel(st);
                 const leadsForCpl = r.crm_leads || r.meta_leads;
                 const cpl = ratio(r.spend, leadsForCpl);
                 const cpa = ratio(r.spend, r.won_deals);
@@ -316,6 +359,19 @@ export const AnunciosPage: React.FC = () => {
                           {r.campaign_name && <div className="text-xs text-slate-400 truncate max-w-[220px]">{r.campaign_name}</div>}
                         </div>
                       </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap" title={st?.effective_status || ''}>
+                        <span className={`w-2 h-2 rounded-full ${stLabel.dot}`} />
+                        <span className={`text-xs font-medium ${stLabel.cls}`}>{stLabel.text}</span>
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-600">
+                      {st?.budget_level === 'adset' && st.budget_cents
+                        ? money(st.budget_cents / 100, r.currency)
+                        : st?.budget_level === 'campaign'
+                          ? <span className="text-xs text-slate-400" title="Orçamento gerido ao nível da campanha (CBO)">CBO</span>
+                          : '—'}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">{money(r.spend, r.currency)}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-slate-500">{num(r.impressions)}</td>
@@ -390,6 +446,7 @@ export const AnunciosPage: React.FC = () => {
             setEditing(null);
             load(days);
             loadAnalyses();
+            loadStatuses();
           }}
         />
       )}
