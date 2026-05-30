@@ -366,12 +366,15 @@ export const AnunciosPage: React.FC = () => {
                         <span className={`text-xs font-medium ${stLabel.cls}`}>{stLabel.text}</span>
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-slate-600">
-                      {st?.budget_level === 'adset' && st.budget_cents
-                        ? money(st.budget_cents / 100, r.currency)
-                        : st?.budget_level === 'campaign'
-                          ? <span className="text-xs text-slate-400" title="Orçamento gerido ao nível da campanha (CBO)">CBO</span>
-                          : '—'}
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-600 whitespace-nowrap">
+                      {st?.budget_cents ? (
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          {money(st.budget_cents / 100, r.currency)}
+                          {st.budget_level === 'campaign' && (
+                            <span className="text-[10px] font-semibold text-violet-500 bg-violet-50 border border-violet-200 rounded px-1" title="Orçamento ao nível da campanha (CBO)">CBO</span>
+                          )}
+                        </span>
+                      ) : '—'}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">{money(r.spend, r.currency)}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-slate-500">{num(r.impressions)}</td>
@@ -467,10 +470,12 @@ interface AdLiveState {
   effective_status: string;
   adset_id: string | null;
   adset_name: string | null;
+  campaign_id: string | null;
   campaign_name: string | null;
-  daily_budget: number | null;
-  lifetime_budget: number | null;
   budget_level: 'adset' | 'campaign' | 'none';
+  budget_id: string | null;
+  budget_cents: number | null;
+  budget_kind: 'daily' | 'lifetime' | null;
 }
 
 const AdEditModal: React.FC<{
@@ -495,8 +500,7 @@ const AdEditModal: React.FC<{
         if (j.error) { setError(j.error); return; }
         const s: AdLiveState = j.state;
         setState(s);
-        const cents = s.daily_budget ?? s.lifetime_budget;
-        setBudgetInput(cents ? (cents / 100).toFixed(2) : '');
+        setBudgetInput(s.budget_cents ? (s.budget_cents / 100).toFixed(2) : '');
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -527,8 +531,9 @@ const AdEditModal: React.FC<{
   );
 
   const isActive = state?.status === 'ACTIVE';
-  const budgetKind: 'daily' | 'lifetime' = state?.daily_budget ? 'daily' : 'lifetime';
-  const currentCents = state ? (state.daily_budget ?? state.lifetime_budget) : null;
+  const budgetKind: 'daily' | 'lifetime' = state?.budget_kind ?? 'daily';
+  const currentCents = state?.budget_cents ?? null;
+  const isCbo = state?.budget_level === 'campaign';
   const newCents = Math.round((parseFloat(budgetInput.replace(',', '.')) || 0) * 100);
 
   return (
@@ -624,34 +629,35 @@ const AdEditModal: React.FC<{
                 )}
               </div>
 
-              {/* Orçamento do adset */}
+              {/* Orçamento (adset ou campanha/CBO) */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Orçamento</h4>
-                {state.budget_level === 'campaign' ? (
+                {state.budget_level === 'none' || !state.budget_id ? (
                   <p className="text-sm text-slate-500 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                    Orçamento gerido ao nível da campanha (CBO). Não é editável por anúncio aqui.
-                  </p>
-                ) : state.budget_level === 'none' || !state.adset_id ? (
-                  <p className="text-sm text-slate-500 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                    Este anúncio não tem orçamento editável ao nível do adset.
+                    Este anúncio não tem orçamento editável.
                   </p>
                 ) : (
                   <div className="space-y-2">
                     <p className="text-xs text-slate-400">
-                      Orçamento {budgetKind === 'daily' ? 'diário' : 'total'} do adset
-                      {state.adset_name ? ` «${state.adset_name}»` : ''}. Afecta todos os anúncios deste adset.
+                      {isCbo ? (
+                        <>Orçamento {budgetKind === 'daily' ? 'diário' : 'total'} da campanha (CBO)
+                        {state.campaign_name ? ` «${state.campaign_name}»` : ''}. Afecta todos os anúncios da campanha.</>
+                      ) : (
+                        <>Orçamento {budgetKind === 'daily' ? 'diário' : 'total'} do adset
+                        {state.adset_name ? ` «${state.adset_name}»` : ''}. Afecta todos os anúncios deste adset.</>
+                      )}
                     </p>
                     {confirm === 'budget' ? (
                       <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                         <p className="text-sm text-slate-800">
-                          Alterar o orçamento {budgetKind === 'daily' ? 'diário' : 'total'} de{' '}
+                          Alterar o orçamento {budgetKind === 'daily' ? 'diário' : 'total'} {isCbo ? 'da campanha' : 'do adset'} de{' '}
                           <b>{currentCents ? money(currentCents / 100, currency) : '—'}</b> para{' '}
                           <b>{money(newCents / 100, currency)}</b>?
                         </p>
                         <div className="flex gap-2 mt-3">
                           <button
                             disabled={busy}
-                            onClick={() => act({ action: 'set_adset_budget', ad_id: ad.ad_id, amount_cents: newCents, kind: budgetKind }, '')}
+                            onClick={() => act({ action: 'set_budget', ad_id: ad.ad_id, amount_cents: newCents, kind: budgetKind }, '')}
                             className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-60"
                           >
                             {busy && <Loader2 className="w-4 h-4 animate-spin" />} Confirmar

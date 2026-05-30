@@ -2,11 +2,12 @@
 // write.ts — escrita na Marketing API (MA-EDIT, tier fácil)
 // ============================================================================
 // Épico Meta Ads — edição do anúncio a partir do CRM.
-//   - getAdLiveState: estado vivo do anúncio (status + orçamento do adset).
+//   - getAdLiveState: estado vivo do anúncio (status + orçamento editável).
 //   - setAdStatus: pausar / reactivar o anúncio (nível anúncio).
-//   - setAdsetBudget: alterar o orçamento do adset (afecta TODOS os anúncios
-//     desse adset). Detecta CBO (orçamento ao nível da campanha) para não
-//     deixar editar às cegas.
+//   - setBudget: alterar o orçamento no nó certo (adset OU campanha/CBO).
+// O orçamento pode viver no adset (afecta os anúncios do adset) ou na campanha
+// (CBO, afecta toda a campanha). Expomos um alvo de edição unificado
+// (budget_id/cents/kind) para a UI não ter de saber a topologia.
 // Tudo server-only. Precisa do scope `ads_management` no token (ver config.ts).
 // Em falha lança Error com mensagem PT (a Graph API é a autoridade final).
 // ============================================================================
@@ -27,12 +28,14 @@ export interface AdLiveState {
   adset_name: string | null;
   campaign_id: string | null;
   campaign_name: string | null;
-  /** Orçamento diário do adset em cêntimos (null se não aplicável). */
-  daily_budget: number | null;
-  /** Orçamento total do adset em cêntimos (null se não aplicável). */
-  lifetime_budget: number | null;
-  /** Nível onde o orçamento é editável. 'campaign' = CBO, não editável aqui. */
+  /** Nível onde o orçamento é editável. 'none' = sem orçamento editável. */
   budget_level: BudgetLevel;
+  /** Nó (adset ou campanha) ao qual se aplica a alteração de orçamento. */
+  budget_id: string | null;
+  /** Orçamento actual em cêntimos da moeda da conta. */
+  budget_cents: number | null;
+  /** Tipo de orçamento em uso (diário ou total). */
+  budget_kind: 'daily' | 'lifetime' | null;
 }
 
 function toCents(v: unknown): number | null {
@@ -70,7 +73,7 @@ async function graphPost(id: string, token: string, fields: Record<string, strin
   }
 }
 
-/** Lê o estado vivo do anúncio (status + orçamento do adset/campanha). */
+/** Lê o estado vivo do anúncio (status + orçamento editável adset/campanha). */
 export async function getAdLiveState(adId: string, token: string): Promise<AdLiveState> {
   const json = await graphGet(
     `${adId}?fields=name,status,effective_status,adset{id,name,daily_budget,lifetime_budget,campaign{id,name,daily_budget,lifetime_budget}}`,
@@ -86,8 +89,20 @@ export async function getAdLiveState(adId: string, token: string): Promise<AdLiv
   const campLifetime = toCents(campaign.lifetime_budget);
 
   let budgetLevel: BudgetLevel = 'none';
-  if (adsetDaily || adsetLifetime) budgetLevel = 'adset';
-  else if (campDaily || campLifetime) budgetLevel = 'campaign';
+  let budgetId: string | null = null;
+  let budgetCents: number | null = null;
+  let budgetKind: 'daily' | 'lifetime' | null = null;
+  if (adsetDaily || adsetLifetime) {
+    budgetLevel = 'adset';
+    budgetId = (adset.id as string) ?? null;
+    budgetCents = adsetDaily ?? adsetLifetime;
+    budgetKind = adsetDaily ? 'daily' : 'lifetime';
+  } else if (campDaily || campLifetime) {
+    budgetLevel = 'campaign';
+    budgetId = (campaign.id as string) ?? null;
+    budgetCents = campDaily ?? campLifetime;
+    budgetKind = campDaily ? 'daily' : 'lifetime';
+  }
 
   return {
     ad_id: adId,
@@ -98,9 +113,10 @@ export async function getAdLiveState(adId: string, token: string): Promise<AdLiv
     adset_name: (adset.name as string) ?? null,
     campaign_id: (campaign.id as string) ?? null,
     campaign_name: (campaign.name as string) ?? null,
-    daily_budget: adsetDaily,
-    lifetime_budget: adsetLifetime,
     budget_level: budgetLevel,
+    budget_id: budgetId,
+    budget_cents: budgetCents,
+    budget_kind: budgetKind,
   };
 }
 
@@ -110,15 +126,15 @@ export async function setAdStatus(adId: string, token: string, status: 'ACTIVE' 
 }
 
 /**
- * Altera o orçamento do adset. `kind` = 'daily' | 'lifetime', `cents` em
- * cêntimos da moeda da conta. Afecta TODOS os anúncios do adset.
+ * Altera o orçamento no nó indicado (adset ou campanha). `kind` = 'daily' |
+ * 'lifetime', `cents` em cêntimos da moeda da conta.
  */
-export async function setAdsetBudget(
-  adsetId: string,
+export async function setBudget(
+  nodeId: string,
   token: string,
   kind: 'daily' | 'lifetime',
   cents: number,
 ): Promise<void> {
   const field = kind === 'daily' ? 'daily_budget' : 'lifetime_budget';
-  await graphPost(adsetId, token, { [field]: String(cents) });
+  await graphPost(nodeId, token, { [field]: String(cents) });
 }

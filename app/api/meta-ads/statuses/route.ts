@@ -59,7 +59,10 @@ export async function GET() {
           bCents = adDaily ?? adLife;
           bKind = adDaily ? 'daily' : 'lifetime';
         } else if (cmpDaily || cmpLife) {
+          // CBO: o orçamento vive na campanha; mostramos o valor na mesma.
           level = 'campaign';
+          bCents = cmpDaily ?? cmpLife;
+          bKind = cmpDaily ? 'daily' : 'lifetime';
         }
         map[String(ad.id)] = {
           status: (ad.status as string) ?? 'UNKNOWN',
