@@ -196,7 +196,7 @@ export const AnunciosPage: React.FC = () => {
   }, [analyses]);
 
   return (
-    <div className="p-6 max-w-7xl">
+    <div className="p-6">
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2">
