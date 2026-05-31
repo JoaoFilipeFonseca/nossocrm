@@ -57,6 +57,13 @@
 - **Reaproveitar (não rebuildar):** Brand Kit, `creative_archive`/`/criativos`, `/avaliar`, portal/LPs, atribuição omnicanal.
 - **Esforço:** muito alto (épico de vários sub-épicos, cada um com Plan-First). **Impacto:** muito alto (diferenciador). **Sequência:** depois da recepção de leads estar pronta (mede o retorno de tudo o que se cria). Confirmar prioridades sub-módulo a sub-módulo com o João.
 
+### ⭐ NAV-MOBILE-DRAWER · Menu hambúrguer + gaveta esquerda deslizável (PEDIDO DIRECTO João 31/05 — PRIORIDADE no arranque da próxima sessão)
+- **Dor:** "no mobile tenho a barra fixa em baixo, não vejo tudo e não consigo verificar se estás a fazer bem. Quero um menu onde carrego e abre do lado esquerdo, e consigo deslizar para cima e para baixo."
+- **O que quer:** botão (hambúrguer) no topo em mobile → abre **gaveta (drawer) da ESQUERDA** com a navegação COMPLETA, **scroll vertical** (`overflow-y-auto`), fecha ao tocar fora/num link. Substitui/complementa a BottomNav fixa que corta itens.
+- **Ficheiros:** `components/layout/AppChrome.tsx` (3344 linhas — orquestra desktop vs mobile; é GLOBAL, blast radius alto), `BottomNav.tsx`, `MoreMenuSheet.tsx`, `NavigationRail.tsx`, `navConfig.ts` (itens da nav). Provável: novo `MobileNavDrawer.tsx` reutilizando `navConfig`, montado no header mobile do AppChrome.
+- **Cuidados:** mobile 375px + 540 + tablet 768; fechar ao navegar (regra menu_mobile_fecha); `overflow-y-auto` + safe-area; não tocar no desktop. **TRIPLA verificação mobile obrigatória** (dev local faz hang → verificar em produção/preview real, não só código).
+- **Porque não foi feito em 31/05:** contexto esgotado + ambiente a falhar leitura dos ficheiros de nav; mexer no layout global sem poder testar mobile arriscava partir a navegação toda. Fazer no início da próxima sessão.
+
 ### TODO-CONSOLIDATE · Salvar o backlog antigo do todo.md (pedido João 31/05)
 - **Pedido João:** "grava tudo na memória para não perdermos nada... existe um todo.md com muita coisa já."
 - **Situação:** `nossocrm/.claude/TODO.md` NÃO existe. O todo.md grande é **`crm/.claude/TODO.md` = 1744 linhas** (pasta IRMÃ `crm`, projecto antigo) + `portal-app/TODO.md`. Está em disco (não perdido), mas é stale e pode ter ideias ainda válidas.
