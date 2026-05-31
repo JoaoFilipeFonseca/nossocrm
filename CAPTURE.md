@@ -6,6 +6,81 @@
 
 ---
 
+## 🎯 Meta Ads Fase B — evolução do dashboard /anuncios (ideias do João 29/05, pós-b2)
+
+### MA-B2.1 · Métricas em falta no /anuncios (polish pequeno)
+- Hoje mostra: gasto, impressões, cliques, leads, CPL, ganhos, CPA, dinheiro efectivo, ROAS.
+- **Falta CTR** (taxa de cliques = cliques/impressões) — o João pediu "eficácia dos ads (CTR)". Acrescentar coluna CTR%. Dados já existem (clicks/impressions), 1 commit.
+- Sugestões adicionais a medir (resposta ao "devo medir algo mais?"): CPC (custo por clique), **taxa de conversão clique→lead** (leads/cliques), **CPM**, **frequência/saturação** (precisa do campo frequency da Marketing API), conversão **lead→negócio** e **negócio→ganho** por anúncio (qualidade da lead, não só volume), e tendência de gasto/CPL ao longo do tempo (sparkline).
+
+### MA-B2.2 · Preview do criativo (imagem/vídeo do anúncio) no /anuncios
+- **Pedido João:** "então e se aparecesse também imagem ou vídeo do anúncio para saber do que se trata?"
+- **Viável:** a Marketing API expõe o criativo do anúncio: `GET /{ad_id}?fields=creative{thumbnail_url,image_url,object_story_spec,video_id}`. Guardar `creative_thumbnail_url` + `creative_type` (image/video) numa tabela `ad_creatives` (key ad_id) ou colunas em ad_insights; sync na edge automation-meta-insights (1 fetch por anúncio novo, cachear). UI: thumbnail na 1ª coluna da tabela + lightbox ao clicar.
+- **Esforço:** médio (extra fetch + storage do URL + UI). **Impacto:** alto (reconhecimento imediato do anúncio). Ticket próprio.
+
+### MA-B2.3 · Analista IA dos anúncios — DIÁRIO, persistido, com alertas (não só a pedido)
+- **Pedido João (29/05, refinado):** "quero o meu analista a correr todos os dias 1x para não adiar decisões. Tem de ver 3 dias para ter dados mínimos para alguma decisão, depois ao 5.º dia mais uma decisão e ao 8.º outra; nos dias que não são de decisão, se houver algo alarmante deve avisar." + "não só quando carrego."
+- **Núcleo = cron diário** (system_automation `meta-ads-analyst`, visível em /automacoes), NÃO só botão. Guarda análises numa tabela `ad_analyses` (histórico por dia/anúncio) para consulta sem reanalisar. Botão "Analisar agora" no /anuncios = extra que lê a última análise (ou força nova).
+- **Cadência de decisão (interpretação a confirmar):** por anúncio, contar dias com dados desde o 1.º registo (`ad_insights`). Checkpoints de decisão aos **3, 5 e 8 dias** (e depois periodicamente) — só aí emite veredicto firme (PARAR/AUMENTAR/TESTAR/MANTER) com confiança crescente. Nos outros dias, corre na mesma mas só **alerta** se detectar anomalia.
+- **Anomalias (alerta Telegram, dias sem decisão):** CPL dispara (>X× média), gasto acumulado sem 1 lead, CTR colapsa, frequência alta (saturação), orçamento a esgotar. Reusa `telegram_crm_bot_token`/`chat_id` (regra Telegram só essencial, sem inundar).
+- **IA:** `getOrgAIConfig` → Gemini 2.5 Flash + fallback Claude, `generateText+Output.object` (schema Zod). Compara cada anúncio com médias da conta + tendência.
+- **Pré-requisito de qualidade:** funciona com gasto/CPL/CTR; muito melhor com leads novas no CRM (Fase A + origem-obrigatória) para medir leads QUALIFICADAS.
+- **Esforço:** médio-alto (tabela + cron em /automacoes + edge IA + anomalia + Telegram + UI). **Impacto:** muito alto. **Constrói ANTES da edição** (decisões primeiro, agir depois).
+
+### MA-EDIT · Editar o anúncio a partir do CRM (write-back Marketing API)
+- **Pedido João (29/05):** "porque não já agora eu conseguir fazer as alterações ao anúncio aqui no CRM na aba anúncios? para além das dicas, editar fotos, copy, valor e mais parâmetros."
+- **Honestidade de esforço (tiers — nem tudo é igual via API; precisa `ads_management`):**
+  - **Fácil/seguro:** pausar/reactivar anúncio, adset, campanha (status); alterar **orçamento** (adset daily/lifetime budget). Acção directa via API.
+  - **Médio:** alterar **copy/headline/CTA** → na Meta um criativo é praticamente imutável; "editar" = criar **novo ad creative** e trocar no anúncio (ou novo anúncio). Implica upload e versão nova.
+  - **Difícil:** trocar **imagem/vídeo** → upload do media (`/act_x/adimages` ou `advideos`) + novo criativo + swap. Mais passos + validações.
+- **Segurança:** acções que gastam dinheiro/alteram campanhas LIVE → confirmação explícita + audit log; nunca silencioso. Idealmente o analista (B2.3) sugere e a edição (MA-EDIT) executa com 1 clique + confirmação.
+- **Esforço:** alto (epic próprio, por tiers). **Sequência sugerida:** depois do analista. Começar pelos tier Fácil (pausar/reactivar + orçamento) que já dão 80% do valor accionável.
+
+### MA-DRILLDOWN · Atribuição e controlo ao nível do criativo (pedido João 31/05)
+- **Pedido João:** "dentro de um anúncio posso ter 100 conjuntos, cada um com o seu criativo e valor diferente; tenho de poder alterar/desligar só o que quero (não o anúncio todo) e ter dados de cada um — qual lead respondeu a qual criativo e de qual veio o negócio, com a copy e criativo específicos. Assim tenho dados reais e autonomia real."
+- **Alinhamento de hierarquia (importante):** Campanha → Conjunto (adset) → Anúncio (=1 criativo). Orçamento vive no conjunto (ABO) ou campanha (CBO), NUNCA no anúncio. Valor por criativo = 1 criativo por conjunto. Conta real: 10 campanhas / 24 conjuntos / 45 anúncios.
+- **Já existe (não rebuildar):** métricas por ad_id (ad_insights); pausar/reactivar por anúncio (MA-EDIT); orçamento por conjunto e campanha (MA-EDIT); `attribution.ad_id` em contacts/deals (canalização lead→criativo→negócio). Atribuição a 0 só porque nada entregou desde a integração.
+- **Gaps a construir:**
+  1. **Drill-down por anúncio:** clicar num criativo → painel com a LISTA de leads (nomes/contactos) e negócios atribuídos + € efectivo, não só contagens. Reusa `attribution.ad_id`; query leads/deals por ad_id da org no período + vida.
+  2. **Guardar + mostrar copy/headline/CTA do criativo:** `ad_creatives` hoje só tem thumbnail/image/permalink/creative_type. Acrescentar `title`, `body`, `cta_type` (fetch `creative{title,body,object_story_spec{...}}` na edge `automation-meta-insights`). Mostrar no /anuncios + drill-down.
+  3. **Vista em árvore Campanha → Conjunto → Anúncio:** agrupar a tabela por nível, com toggle on/off e orçamento em cada nó. Corresponde ao modelo mental do João.
+- **Esforço:** alto (epic próprio, por sub-tiers: copy primeiro → drill-down → árvore). **Impacto:** muito alto (núcleo do épico: medir qual criativo dá dinheiro). Plan-First dedicado. **Pré-requisito de dados:** leads novas via Fase A (CRM pronto a receber) para encher a atribuição.
+
+### MKT-STUDIO · "Estúdio de marketing" completo no CRM (visão grande, João 31/05)
+- **Pedido João:** "então e se eu tiver um Meta Ads com todas as funções no meu CRM, em que faço tudo aqui em vez de abrir o Meta que é mais complicado? e se na aba Marketing conseguir fazer LP de imóveis, LP de captação de leads, criativos de anúncios e carrosséis, posts, cartas, apresentações de serviço, ACM e muito mais."
+- **Visão:** transformar a aba Marketing num estúdio que cria E publica, sem sair do CRM. Sub-módulos:
+  1. **Gestão Meta end-to-end (MA-CREATE):** criar campanha/conjunto/anúncio/criativo via Marketing API (já temos `ads_management`). Estende o MA-EDIT (que já pausa/orçamenta) para criar de raiz. Esforço alto.
+  2. **Criativos de anúncio + carrosséis:** gerar imagem/copy/CTA com IA + Brand Kit; exportar/!publicar como criativo Meta. JÁ EXISTE base: `creative_archive` + `/criativos` + Brand Kit (`/settings/marca`) + skill `joao-fonseca-brand`. Falta o gerador visual + push para a Meta.
+  3. **Landing pages (imóveis + captação):** gerar LP por imóvel e LP de captação com form que carimba `attribution` (fonte própria). Liga ao portal/calculadoras existentes. Hosting Cloudflare Pages.
+  4. **Posts sociais:** gerar + (opcional) agendar via Graph API da Página.
+  5. **Documentos:** cartas, apresentações de serviço, **ACM/CMA** (análise comparativa de mercado) — usa skills docx/pptx/pdf + Brand Kit + comparáveis da zona + calculadora `/avaliar`.
+- **Reaproveitar (não rebuildar):** Brand Kit, `creative_archive`/`/criativos`, `/avaliar`, portal/LPs, atribuição omnicanal.
+- **Esforço:** muito alto (épico de vários sub-épicos, cada um com Plan-First). **Impacto:** muito alto (diferenciador). **Sequência:** depois da recepção de leads estar pronta (mede o retorno de tudo o que se cria). Confirmar prioridades sub-módulo a sub-módulo com o João.
+
+### MA-BACKFILL-ASYNC · Backfill plurianual de Insights via API async (futuro)
+- O sync por janelas de 90d + lookback até ~36,5 meses cobre contas normais. Mas a Meta devolve "(#1) reduce the amount of data" para janelas grandes com `level=ad` + `time_increment=1` quando o volume é alto. Para contas com MUITOS anos/anúncios, o caminho robusto é a **Marketing API async** (`POST /act_x/insights` → `report_run_id` → polling → fetch paginado). Não urgente: a conta do João só tem dados desde 28/02/2026 (já todos ingeridos). Ticket quando houver uma conta com histórico longo.
+
+### MA-OFFLINE · Marketing offline rastreável (flyers/cartas/outdoor) com QR único + analytics
+- **Pedido João 29/05:** "então e se fizer flyers, cartas ou outro modelo de marketing offline também posso colocar fotos do que fiz, dizer o valor que investi e depois ter um código QR único que vai medir quem entra e dar dados de análise para eu medir".
+- **Conceito:** uma "campanha offline" no CRM = nome + tipo (flyer/carta/outdoor/evento) + **fotos do material** + **valor investido** + zona/data. Gera um **QR code único** que aponta para um URL de captura com `?src=campanha_id` (landing/calculadora/form). Quem entra fica atribuído a essa campanha (mesma pipeline de `attribution`, fonte `offline`). Mede: scans, leads, CPL, negócios ganhos, ROAS — **lado a lado com os anúncios Meta** no mesmo dashboard de medição.
+- **Encaixa em:** épico Meta Ads → "atribuição omnicanal" (unificar leads web+ads+offline). Reusa `attribution` (já nas 3 tabelas) + a regra origem-obrigatória.
+- **Peças:** tabela `offline_campaigns` (fotos no bucket privado), gerador de QR (URL curto com id), página de captura que carimba a atribuição, e linhas no dashboard de medição. **Esforço:** médio-alto. **Impacto:** alto (poucos consultores medem offline; alinhado com "atribuição omnicanal"). Ticket próprio.
+
+---
+
+## 🧭 NAV-IA · Barra lateral sobrecarregada — agrupar em famílias (pedido directo João 29/05)
+- **Dor:** "estou sempre a acrescentar ideias e tu vais colocando mais e mais na barra lateral, o que neste momento não me deixa ver tudo tanto desktop como mobile, e não permite deslizar."
+- **Quick fix imediato (feito):** a `<nav>` da sidebar não tinha scroll → tornar deslizável (`overflow-y-auto`). Alivia já. (Mobile usa BottomNav + MoreMenuSheet.)
+- **Pedido de fundo:** "havendo pontos sobre o mesmo assunto estivesse apenas numa aba e ao carregar tivesse mais dentro — ex. Marketing com Anúncios e Criativos. Pensa que famílias podemos agrupar."
+- **Proposta de famílias (grupos colapsáveis), 16 itens → 6 grupos:**
+  1. **Início:** Visão Geral.
+  2. **Comunicação:** Inbox, Mensagens.
+  3. **CRM:** Boards, Contactos, Actividades.
+  4. **Imóveis:** Imóveis, Matches, Cruzamentos, Angariação IA.
+  5. **Marketing:** Anúncios, Criativos, Relatórios.
+  6. **Sistema:** Automações, Saúde (admin), Configurações.
+- **Esforço:** médio (Layout.tsx desktop + NavigationRail tablet + BottomNav/MoreMenuSheet mobile; grupos expansíveis com estado persistido; acessibilidade). **Impacto:** alto (UX, escala à medida que entram features). Ticket próprio — confirmar famílias com o João antes.
+
 ## 🐛 Bugs UI activos
 
 ### B-011 · ConsentModal copy em PT-BR ("seus dados", "coletados")
@@ -90,6 +165,14 @@
 - **Configuração:** tabela `stage_checklists` (organization_id, board_id, stage_id, items jsonb[]). Tab no `/settings` para editar checklists por pipeline.
 - **Comportamento:** se o utilizador tentar mudar de stage sem completar items, modal bloqueador com botão "Avançar mesmo assim" (audit log) ou "Completar primeiro".
 - **Valor:** evitar erros operacionais (CPCV sem caderneta, escritura sem certificado energético, etc.). Reduz fricção mental "o que tinha de fazer aqui mesmo?".
+
+### M-013 · Assinaturas de email (opcional por automação, várias assinaturas)
+- **Quando:** 29/05/2026, durante a sessão de integração email/WhatsApp (canal Resend ficou live).
+- **Pedido João:** assinatura no email "opcional por automação (uma caixa 'incluir assinatura')" e "depois até posso criar mais do que uma assinatura".
+- **Conceito:** tabela `email_signatures` (organization_id, name, html, image_base64/content_type, is_default, deleted_at) — suporta VÁRIAS assinaturas por org. O átomo `action.send_email` ganha `incluir_assinatura` (bool) + `signature_id` (opcional; default = a is_default). Quando ligado, anexa o banner inline via CID + HTML da assinatura. Catálogo da paleta com a caixa + selector de assinatura. Semente inicial = banner RE/MAX Majestic do João (`assinaturaremax.png`, já validado inline num teste, 199 KB).
+- **Nota técnica:** envio inline via CID já provado a funcionar (não precisa de hosting; não é bloqueado pelos clientes). Resend suporta `attachments[].content_id`.
+- **Estimativa:** 1 sessão dedicada (migração + seed + átomo edge + redeploy + catálogo, tsc/vitest).
+- **NÃO atacar agora** — capturado a pedido do João para não desviar do programa projectado.
 
 ---
 
@@ -230,3 +313,10 @@ Todos os commits pushed e em produção. GCM autorizado via browser. Próximos p
 - Ao varrer o B-007 apareceram MUITAS palavras PT-BR no copy visível, muito além de "atividade": **"registrar"/"registro"/"registrada"**, **"Buscar"** (→Procurar), **"você"/"seu"/"sua"**, **"Salvar"** (→Guardar), **"selecionada"/"atualizada"/"concluídas"**, **"Tem certeza que deseja excluir"** (→Tem a certeza que pretende eliminar), **"chance"**.
 - **Impacto:** o produto inteiro tem dissonância PT-BR vs o PT-PT pré-AO que o João exige. É um défice sistémico, não pontual.
 - **Recomendação:** sessão dedicada "sweep PT-BR→PT-PT" com glossário fixo (registar, procurar, guardar, eliminar, seleccionado, actualizado, etc.) via sub-agente + revisão. NÃO bundlar com features. Maior esforço que B-007.
+
+## 📌 Meta Ads Fase A — pontos em aberto (29/05/2026, c3 eec52db)
+- **/automacoes vs webhook automation-meta-leads:** a regra "toda automação em /automacoes" aplica-se a cron/background. Este é webhook inbound (precedente: messaging-webhook-* não estão em /automacoes); o toggle é o Ligar/Desligar em /settings/integracoes → Meta Ads. Avaliar se justifica entrada em /automacoes/sistema (so leitura: ver últimas leads recebidas).
+- **Página subscrita:** RESOLVIDO em c4 (`1061b57`/`73fa506`) — selector de Página/conta + remover. Multi-Página simultânea fica para refinamento futuro.
+- **✅ c4.1 RESOLVIDO (29/05, commit `98c6aaf`):** negócio herda `attribution` do contacto de origem ao ser criado sem atribuição própria. Trigger `BEFORE INSERT` em `deals` (`deals_inherit_attribution`, migração `20260529180000`), cobre todos os caminhos de criação, multi-tenant, não sobrepõe a atribuição do webhook. Verificado na BD (herança + no-override). Faz o card "Origem do anúncio" acender em uso real.
+- **c4.2 painel de atribuição no contacto (POR FAZER, ticket próprio):** BLOQUEADO por não existir detalhe/página de contacto read-only — só `features/contacts/components/ContactFormModal` (form de edição). Decidir superfície (bloco read-only no topo do ContactFormModal? criar /contacts/[id]?). Requer ainda: acrescentar `attribution` ao tipo `Contact` (`types/types.ts:152`) + ao mapeamento de leitura em `lib/supabase/contacts.ts` (hoje não lê a coluna). Componente `components/MetaAttribution.tsx` já existe e é reutilizável.
+- **c4.3 tag automática da linhagem (POR FAZER, ticket próprio):** `contacts` NÃO tem coluna `tags` (só `deals.tags string[]`). Mexe no modelo de tags (tabela `tags`, 64 linhas; confirmar junção contacto↔tag) + na edge `automation-meta-leads` (aplicar tag ex. "Meta Ads: <campanha>" ao criar lead/contacto). Maior esforço.
