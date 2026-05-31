@@ -338,18 +338,21 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
         stageId = firstStage?.id ?? null;
       }
       if (stageId) {
-        await supabase.from("deals").insert({
+        const { error: dealErr } = await supabase.from("deals").insert({
           organization_id: orgId,
           board_id: routing.board_id,
           stage_id: stageId,
-          status: stageId,
+          status: "open",
           contact_id: contactId,
           title: `${leadName} - Meta Ads`,
           value: 0,
-          source: "meta_ads",
           attribution,
         });
-        routed = true;
+        if (dealErr) {
+          console.error("[meta-leads] Erro ao criar negócio:", dealErr.message);
+        } else {
+          routed = true;
+        }
       }
     }
   }
