@@ -1,5 +1,11 @@
 # CAPTURE.md — Foco Imo
 
+> ⚠️ **CONSOLIDADO (31/05/2026) → ver `nossocrm/TODO.md` (catálogo único, fonte de verdade).**
+> Por decisão do João, o backlog passou todo para o `TODO.md`. Este ficheiro fica como
+> ARQUIVO detalhado (nada se perde) — mas não acrescentar itens novos aqui; usar o TODO.md.
+>
+> ---
+>
 > Coisas detectadas mid-sessão que NÃO são o objectivo activo.
 > NÃO atacar agora. Cada item é candidato a sessão dedicada (com Plan-First próprio).
 > Pacto: "1 objectivo por sessão" → tudo o resto vem para aqui.
