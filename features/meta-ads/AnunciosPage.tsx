@@ -352,7 +352,6 @@ export const AnunciosPage: React.FC = () => {
                             className="relative shrink-0 rounded-md overflow-hidden border border-slate-200 hover:ring-2 hover:ring-violet-300 focus-visible:ring-2 focus-visible:ring-violet-400 outline-none"
                             title="Ver criativo"
                           >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={r.thumbnail_url} alt={r.ad_name || 'Criativo do anúncio'} className="w-11 h-11 object-cover" loading="lazy" />
                             {r.creative_type === 'video' && (
                               <span className="absolute inset-0 flex items-center justify-center bg-black/30">
@@ -464,7 +463,6 @@ export const AnunciosPage: React.FC = () => {
             >
               <X className="w-5 h-5" />
             </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={lightbox.url} alt={lightbox.name} className="max-w-full max-h-[80dvh] rounded-lg object-contain bg-white" />
             <p className="text-center text-white text-sm mt-2">{lightbox.name}</p>
           </div>

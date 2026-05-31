@@ -196,6 +196,7 @@ export function MetaAdsSection() {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- redirecciona para rota de API (OAuth), não é página Next; <Link> não se aplica */}
               <a
                 href="/api/integrations/meta/oauth/start"
                 title="Voltar a autorizar (ex.: para conceder novas permissões como a gestão de anúncios)"
@@ -380,6 +381,7 @@ export function MetaAdsSection() {
             </div>
           )}
 
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- redirecciona para rota de API (OAuth), não é página Next; <Link> não se aplica */}
           <a
             href="/api/integrations/meta/oauth/start"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
