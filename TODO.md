@@ -200,11 +200,11 @@
 - **Q-2 · Resto do sweep PT-BR/AO90 (não-visível)** `[POR FAZER]` `P3`
   Comentários/JSDoc, `lib/ai/global-rules.ts` + `lib/ai/knowledge/imobiliario-pt.ts` (definem os termos a banir — rever com cuidado), fixtures de prompt em `app/api/test/**` e `app/(app)/test/`. Não vaza para cliente; baixa urgência.
 
-- **Q-BUG-IA · Erros de sentido em `lib/ai/crmAgent.ts`** `[POR FAZER]` `P2`
-  Detectado no sweep: ~linha 250 "Português europeu (PT-PT), NUNCA europeu" e ~284 "Mistures pt-PT com pt-PT" — ambos deviam dizer "brasileiro"/"pt-BR". Bug lógico na instrução à IA (não ortografia). Confirmar e corrigir.
+- **Q-BUG-IA · Erros de sentido em `lib/ai/crmAgent.ts`** `[FEITO]` (01/06, commit `4d1b1d5`)
+  "NUNCA europeu"→"NUNCA brasileiro (pt-BR)" e "Mistures pt-PT com pt-PT"→"Mistures pt-PT com pt-BR".
 
-- **B-LINT · 2 erros eslint pré-existentes (MA-EDIT 31 Mai)** `[POR FAZER]` `P3`
-  `features/settings/components/MetaAdsSection.tsx` linhas 199/383: `<a href="/api/integrations/meta/oauth/start">` → erro `no-html-link-for-pages` (é redirect OAuth, não página; resolver com `<a>`+eslint-disable justificado ou rota). `features/meta-ads/AnunciosPage.tsx` 355/467: directivas `eslint-disable` não usadas (remover). Bloqueiam `npm run lint`/precheck.
+- **B-LINT · 2 erros eslint pré-existentes (MA-EDIT 31 Mai)** `[FEITO]` (01/06, commit `4d1b1d5`)
+  MetaAdsSection `<a>` OAuth com eslint-disable justificado; AnunciosPage 2 directivas não usadas removidas. `npm run lint` volta a 0.
 
 - **Q-2 · B-007 resto do sweep "deal"→"negócio" no UI** `[POR FAZER]` `P?`
   Labels DealDetailModal, Cockpit, board headers, toasts. Não tocar identificadores. (origem: CAPTURE B-007)
