@@ -64,6 +64,13 @@
 - **Cuidados:** mobile 375px + 540 + tablet 768; fechar ao navegar (regra menu_mobile_fecha); `overflow-y-auto` + safe-area; não tocar no desktop. **TRIPLA verificação mobile obrigatória** (dev local faz hang → verificar em produção/preview real, não só código).
 - **Porque não foi feito em 31/05:** contexto esgotado + ambiente a falhar leitura dos ficheiros de nav; mexer no layout global sem poder testar mobile arriscava partir a navegação toda. Fazer no início da próxima sessão.
 
+### MSG-WHATSAPP-PROPRIO · SMS + WhatsApp (número próprio, sem Meta) no Inbox, com guarda selectiva e registo no card (pedido João 31/05)
+- **Pedido João:** "na parte das mensagens poder ter SMS e WhatsApp dentro da mesma; inserir já o meu número de WhatsApp **sem ser por Meta**, só eu a enviar/receber; **escolher** quais mensagens recebidas ficam no CRM (não todas, algumas não fazem sentido); e as que envio a leads ficam registadas nas mensagens **e dentro do card, no local correto**."
+- **Viável + base já existe:** `lib/messaging/` tem providers **Evolution API** e **Z-API** (WhatsApp NÃO-oficial via número próprio + QR — exactamente "sem Meta"). `messaging_channels` (mesmo padrão do email Resend) guarda credenciais por org. Inbox já existe. Átomo `action.send_whatsapp` já deployado (executor v12) mas hoje aponta a `meta_cloud`; aqui seria provider `evolution`/`zapi`.
+- **SMS:** precisa de provider (ex.: Twilio/serviço PT) — canal novo em `messaging_channels`.
+- **Peças:** (1) ligar canal WhatsApp não-oficial (Evolution/Z-API) com o número do João (QR), inserir em `messaging_channels`; (2) Inbox unifica SMS+WhatsApp; (3) **guarda selectiva** — incoming não persiste tudo; botão "guardar no CRM" por conversa/mensagem (ou regra), senão fica efémero/ignorado; (4) **registo no card**: mensagem enviada/recebida de um contacto/lead aparece na timeline do negócio no sítio certo (reusar `lead_eventos`/timeline + `deal_activities`).
+- **Decisões a tomar com o João:** Evolution vs Z-API (qual serviço/host); critério de "guardar selectivo" (manual por botão vs regra por contacto conhecido); SMS provider. **Esforço:** médio-alto (épico por fases: ligar canal → inbox → guarda selectiva → registo no card). NÃO implementar sem Plan-First dedicado.
+
 ### TODO-CONSOLIDATE · Salvar o backlog antigo do todo.md (pedido João 31/05)
 - **Pedido João:** "grava tudo na memória para não perdermos nada... existe um todo.md com muita coisa já."
 - **Situação:** `nossocrm/.claude/TODO.md` NÃO existe. O todo.md grande é **`crm/.claude/TODO.md` = 1744 linhas** (pasta IRMÃ `crm`, projecto antigo) + `portal-app/TODO.md`. Está em disco (não perdido), mas é stale e pode ter ideias ainda válidas.
