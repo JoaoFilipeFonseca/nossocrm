@@ -39,7 +39,7 @@ export async function POST(req: Request): Promise<Response> {
     await sendTelegramMessage(
       org.telegram_bot_token,
       org.telegram_chat_id,
-      '✅ <b>NossoCRM — Teste de notificação</b>\n\nSe você recebeu esta mensagem, as notificações de handoff estão configuradas corretamente!',
+      '✅ <b>NossoCRM — Teste de notificação</b>\n\nSe recebeu esta mensagem, as notificações de handoff estão configuradas correctamente!',
     );
     return json({ ok: true });
   } catch (err) {

@@ -17,7 +17,7 @@ import { Decision, AnalyzerResult, AnalyzerConfig, SuggestedAction } from '../ty
 export const stagnantDealsConfig: AnalyzerConfig = {
   id: 'stagnant_deals',
   name: 'Deals Parados',
-  description: 'Detecta deals sem atividade há mais de X dias',
+  description: 'Detecta deals sem actividade há mais de X dias',
   enabled: true,
   params: {
     minDaysStagnant: 7,
@@ -69,16 +69,16 @@ function generateReasoning(
     const activityType = lastActivity.type === 'CALL' ? 'uma ligação' :
                         lastActivity.type === 'EMAIL' ? 'um email' :
                         lastActivity.type === 'MEETING' ? 'uma reunião' : 'uma tarefa';
-    parts.push(`A última interação foi ${activityType}: "${lastActivity.title}".`);
+    parts.push(`A última interacção foi ${activityType}: "${lastActivity.title}".`);
     
     // Suggest alternative based on last activity
     if (lastActivity.type === 'EMAIL') {
       parts.push('Como a última tentativa foi por email, sugerimos uma ligação para ter resposta mais rápida.');
     } else if (lastActivity.type === 'CALL') {
-      parts.push('Já tentamos ligar antes. Uma reunião presencial ou por vídeo pode destravar a negociação.');
+      parts.push('Já tentámos ligar antes. Uma reunião presencial ou por vídeo pode desbloquear a negociação.');
     }
   } else {
-    parts.push('Não há registro de actividades anteriores com este cliente.');
+    parts.push('Não há registo de actividades anteriores com este cliente.');
   }
 
   if (deal.value > 50000) {
@@ -124,7 +124,7 @@ function generateSuggestedAction(
       activityType: actionType,
       activityTitle: `Follow-up: ${deal.title}`,
       activityDate: tomorrow.toISOString(),
-      activityDescription: `Retomar contacto após ${lastActivity ? 'última atividade: ' + lastActivity.title : 'período sem interação'}`,
+      activityDescription: `Retomar contacto após ${lastActivity ? 'última actividade: ' + lastActivity.title : 'período sem interacção'}`,
       dealId: deal.id,
       contactId: deal.contactId,
     },

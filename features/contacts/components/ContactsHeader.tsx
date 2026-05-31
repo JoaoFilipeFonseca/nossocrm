@@ -56,8 +56,8 @@ export const ContactsHeader: React.FC<ContactsHeaderProps> = ({
         </h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
           {viewMode === 'people'
-            ? 'Pessoas com quem você negocia.'
-            : 'Organizações onde seus contactos trabalham.'}
+            ? 'Pessoas com quem negocia.'
+            : 'Organizações onde os seus contactos trabalham.'}
         </p>
       </div>
       <div className="flex gap-3 w-full sm:w-auto">
@@ -71,8 +71,8 @@ export const ContactsHeader: React.FC<ContactsHeaderProps> = ({
             className="pl-3 pr-8 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-white/5 text-sm outline-none focus:ring-2 focus:ring-primary-500 dark:text-white backdrop-blur-sm appearance-none cursor-pointer"
           >
             <option value="ALL">Todos os Status</option>
-            <option value="ACTIVE">Ativos</option>
-            <option value="INACTIVE">Inativos</option>
+            <option value="ACTIVE">Activos</option>
+            <option value="INACTIVE">Inactivos</option>
             <option value="CHURNED">Perdidos (Churn)</option>
             <option value="RISK">Em Risco (Alerta)</option>
           </select>
@@ -82,7 +82,7 @@ export const ContactsHeader: React.FC<ContactsHeaderProps> = ({
           <input
             type="text"
             placeholder={
-              viewMode === 'people' ? 'Buscar nomes, emails...' : 'Buscar empresas, setor...'
+              viewMode === 'people' ? 'Procurar nomes, emails...' : 'Procurar empresas, sector...'
             }
             value={search}
             onChange={e => setSearch(e.target.value)}

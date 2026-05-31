@@ -239,7 +239,7 @@ describe('US-AI-008: AIMetricsSection', () => {
 
     // When thisMonth.total === 0, component shows empty state instead
     expect(
-      screen.getByText('Nenhuma conversa AI registrada ainda')
+      screen.getByText('Nenhuma conversa AI registada ainda')
     ).toBeTruthy();
   });
 

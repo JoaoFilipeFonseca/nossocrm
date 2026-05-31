@@ -149,7 +149,7 @@ export function ContactLinkModal({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar contacto por nome, email ou telefone..."
+                placeholder="Procurar contacto por nome, email ou telefone..."
                 className={cn(
                   'w-full pl-10 pr-4 py-2.5 rounded-lg border',
                   'bg-white dark:bg-black/20',
@@ -171,14 +171,14 @@ export function ContactLinkModal({
                 <div className="text-center py-8">
                   <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Digite ao menos 2 caracteres para buscar
+                    Escreva pelo menos 2 caracteres para procurar
                   </p>
                 </div>
               ) : filteredContacts.length === 0 ? (
                 <div className="text-center py-8">
                   <User className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Nenhum contato encontrado
+                    Nenhum contacto encontrado
                   </p>
                 </div>
               ) : (
@@ -242,7 +242,7 @@ export function ContactLinkModal({
                 )}
               >
                 <Plus className="w-4 h-4" />
-                <span className="text-sm font-medium">Criar novo contato</span>
+                <span className="text-sm font-medium">Criar novo contacto</span>
               </button>
             )}
           </>
@@ -258,7 +258,7 @@ export function ContactLinkModal({
                 <X className="w-4 h-4 text-slate-500" />
               </button>
               <h4 className="text-sm font-medium text-slate-900 dark:text-white">
-                Criar novo contato
+                Criar novo contacto
               </h4>
             </div>
 

@@ -107,14 +107,14 @@ const SEVERITY_CONFIG = {
 const ACTION_LABELS: Record<string, string> = {
   CROSS_TENANT_ATTEMPT: 'Tentativa Cross-Tenant',
   DATA_EXPORT: 'Exportação de Dados',
-  DATA_DELETION: 'Exclusão de Dados',
+  DATA_DELETION: 'Eliminação de Dados',
   REVOKE_AI_CONSENT: 'Revogação Consentimento IA',
   REVOKE_ALL_CONSENT: 'Revogação Total de Consentimento',
   LOGIN: 'Login',
   LOGOUT: 'Logout',
-  PASSWORD_CHANGE: 'Alteração de Senha',
+  PASSWORD_CHANGE: 'Alteração de Palavra-passe',
   USER_CREATED: 'Utilizador Criado',
-  USER_DELETED: 'Utilizador Excluído',
+  USER_DELETED: 'Utilizador Eliminado',
 };
 
 /**
@@ -261,7 +261,7 @@ export const AuditLogDashboard: React.FC = () => {
           className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
+          Actualizar
         </button>
       </div>
 
@@ -343,7 +343,7 @@ export const AuditLogDashboard: React.FC = () => {
             <option value="all">Todas Ações</option>
             <option value="CROSS_TENANT_ATTEMPT">Cross-Tenant</option>
             <option value="DATA_EXPORT">Exportação</option>
-            <option value="DATA_DELETION">Exclusão</option>
+            <option value="DATA_DELETION">Eliminação</option>
             <option value="REVOKE_AI_CONSENT">Revogação IA</option>
           </select>
 
@@ -378,7 +378,7 @@ export const AuditLogDashboard: React.FC = () => {
           <div className="p-8 text-center">
             <Shield className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
             <p className="text-slate-500 dark:text-slate-400">
-              Nenhum log encontrado para os filtros selecionados
+              Nenhum log encontrado para os filtros seleccionados
             </p>
           </div>
         ) : (

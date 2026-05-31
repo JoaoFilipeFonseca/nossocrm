@@ -168,18 +168,18 @@ export async function revokeConsent(type: ConsentType): Promise<boolean> {
 export function getConsentText(): { title: string; description: string; version: string } {
   return {
     title: 'Consentimento para Uso de IA',
-    description: `Ao aceitar, você autoriza:
+    description: `Ao aceitar, autoriza:
 
-• O processamento de seus dados e contatos por APIs de Inteligência Artificial externas (Google Gemini, OpenAI, Anthropic)
+• O processamento dos seus dados e contactos por APIs de Inteligência Artificial externas (Google Gemini, OpenAI, Anthropic)
 • Análise de leads, sugestões automatizadas e personalização de comunicações
 
-Observação sobre ditado por voz (microfone):
-• O recurso de ditado/transcrição é feito no seu navegador via Web Speech API.
-• Dependendo do navegador, o reconhecimento pode envolver processamento pelo fornecedor do navegador/OS.
+Nota sobre ditado por voz (microfone):
+• A funcionalidade de ditado/transcrição é feita no seu navegador via Web Speech API.
+• Consoante o navegador, o reconhecimento pode envolver processamento pelo fornecedor do navegador/SO.
 
-Seus dados serão tratados conforme nossa Política de Privacidade e a LGPD (Lei Geral de Proteção de Dados), incluindo Art. 11 para dados sensíveis (voz).
+Os seus dados serão tratados de acordo com a nossa Política de Privacidade e o RGPD (Regulamento Geral sobre a Protecção de Dados), incluindo dados sensíveis (voz).
 
-Você pode revogar este consentimento a qualquer momento nas Configurações → Privacidade.`,
+Pode revogar este consentimento a qualquer momento nas Definições → Privacidade.`,
     version: CONSENT_VERSION,
   };
 }

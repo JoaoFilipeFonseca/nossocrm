@@ -54,7 +54,7 @@ export const NottaImportSection: React.FC = () => {
     {
       n: 2,
       title: 'Exportar arquivos brutos',
-      body: 'Clique no ícone de download (topo direito, ao lado de Compartilhar) e escolha "Exportar arquivos brutos". Selecione o formato TXT.',
+      body: 'Clique no ícone de download (topo direito, ao lado de Compartilhar) e escolha "Exportar arquivos brutos". Seleccione o formato TXT.',
       icon: Download,
     },
     {
@@ -83,7 +83,7 @@ export const NottaImportSection: React.FC = () => {
       <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-4 flex items-start gap-3">
         <ShieldCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
         <div className="text-sm text-emerald-900 dark:text-emerald-100">
-          <strong>Privacidade garantida.</strong> Os transcripts ficam apenas no seu Supabase com RLS por organização. Não há partilha pública, não há link acessível na internet. Só você (sessão autenticada) vê os dados.
+          <strong>Privacidade garantida.</strong> Os transcripts ficam apenas no seu Supabase com RLS por organização. Não há partilha pública, não há link acessível na internet. Apenas quem tem sessão autenticada vê os dados.
         </div>
       </div>
 

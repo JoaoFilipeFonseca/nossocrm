@@ -385,7 +385,7 @@ function InfoView({
             text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
         >
           <Trash2 className="w-4 h-4" />
-          Excluir canal
+          Eliminar canal
         </button>
       </div>
     </div>
@@ -564,10 +564,10 @@ function CredentialsView({
           {isSaving ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Salvando...
+              A guardar...
             </>
           ) : (
-            'Salvar alterações'
+            'Guardar alterações'
           )}
         </button>
       </div>
@@ -588,7 +588,7 @@ interface DeleteViewProps {
 
 function DeleteView({ channel, onBack, onConfirm, isDeleting }: DeleteViewProps) {
   const [confirmText, setConfirmText] = useState('');
-  const canDelete = confirmText.toLowerCase() === 'excluir';
+  const canDelete = confirmText.toLowerCase() === 'eliminar';
 
   return (
     <div className="space-y-6">
@@ -597,10 +597,10 @@ function DeleteView({ channel, onBack, onConfirm, isDeleting }: DeleteViewProps)
           <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
         </div>
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-          Excluir canal?
+          Eliminar canal?
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Esta ação irá remover permanentemente o canal <strong>{channel.name}</strong> e
+          Esta acção irá remover permanentemente o canal <strong>{channel.name}</strong> e
           todas as suas configurações. As conversas existentes serão mantidas mas
           ficarão órfãs.
         </p>
@@ -608,13 +608,13 @@ function DeleteView({ channel, onBack, onConfirm, isDeleting }: DeleteViewProps)
 
       <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
         <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-          Digite <strong>excluir</strong> para confirmar:
+          Escreva <strong>eliminar</strong> para confirmar:
         </p>
         <input
           type="text"
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
-          placeholder="excluir"
+          placeholder="eliminar"
           className="w-full px-4 py-2.5 bg-white dark:bg-black/20 border border-red-200 dark:border-red-500/20 rounded-xl
             focus:outline-none focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
         />
@@ -638,12 +638,12 @@ function DeleteView({ channel, onBack, onConfirm, isDeleting }: DeleteViewProps)
           {isDeleting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Excluindo...
+              A eliminar...
             </>
           ) : (
             <>
               <Trash2 className="w-4 h-4" />
-              Excluir canal
+              Eliminar canal
             </>
           )}
         </button>
@@ -758,11 +758,11 @@ export function ChannelSetupModal({
           credentials: updatedCreds,
         },
       });
-      addToast('Canal atualizado com sucesso!', 'success');
+      addToast('Canal actualizado com sucesso!', 'success');
       setView('info');
     } catch (error) {
       addToast(
-        error instanceof Error ? error.message : 'Erro ao atualizar canal.',
+        error instanceof Error ? error.message : 'Erro ao actualizar canal.',
         'error'
       );
     }
@@ -799,7 +799,7 @@ export function ChannelSetupModal({
       onClose();
     } catch (error) {
       addToast(
-        error instanceof Error ? error.message : 'Erro ao excluir canal.',
+        error instanceof Error ? error.message : 'Erro ao eliminar canal.',
         'error'
       );
     }
@@ -834,7 +834,7 @@ export function ChannelSetupModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={view === 'info' ? 'Configurar Canal' : view === 'credentials' ? 'Editar Credenciais' : 'Excluir Canal'}
+      title={view === 'info' ? 'Configurar Canal' : view === 'credentials' ? 'Editar Credenciais' : 'Eliminar Canal'}
       size="md"
     >
       {view === 'info' && (

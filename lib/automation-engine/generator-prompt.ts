@@ -50,7 +50,7 @@ REGRAS DE GERAÇÃO:
 - Cada edge: { id, source, target, sourceHandle? }. sourceHandle só quando vier de logic.condition (true|false) ou logic.human_approval (approved|rejected|edited|timeout).
 - Posição: gera "position": { x: i * 220 + 80, y: 80 } para nós lineares. Em branching, distribui em y diferente (y: -100 / +100).
 - Templating Liquid: usa {{ contact.id }}, {{ contact.name }}, {{ deal.id }}, {{ deal.value | money }}, {{ trigger.payload.* }}, {{ <nodeId>.output.* }}.
-- Tempos: usuário diz "3 minutos" → seconds: 180. "2 dias" → seconds: 172800. "1 hora" → seconds: 3600. logic.wait_fixed aceita só segundos.
+- Tempos: utilizador diz "3 minutos" → seconds: 180. "2 dias" → seconds: 172800. "1 hora" → seconds: 3600. logic.wait_fixed aceita só segundos.
 - Se o utilizador menciona enviar SMS / email / WhatsApp, e esses átomos AINDA não existem, usa action.send_telegram com um aviso no texto (ex: "📧 EMAIL para cliente: ..."). Se for IA a redigir, encadeia action.run_ai → action.send_telegram com {{ <id>.output.text }}.
 - Se o utilizador quer aprovação humana antes de enviar algo, usa logic.human_approval com 2 ramos: approved → enviar, rejected → action.log.
 - Português europeu pré-AO 1990: contacto, acção, projecto, óptimo, exacto, eficiência.

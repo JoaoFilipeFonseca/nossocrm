@@ -278,7 +278,7 @@ export async function resolvePendingAdvance(
     .eq('organization_id', pending.organization_id);
 
   if (updateError) {
-    return { success: false, error: `Falha ao atualizar deal: ${updateError.message}` };
+    return { success: false, error: `Falha ao actualizar deal: ${updateError.message}` };
   }
 
   // 6. Atualizar pending advance como aprovado

@@ -72,7 +72,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
             ]}
             value={controller.defaultRoute}
             onChange={(e) => controller.setDefaultRoute(e.target.value)}
-            aria-label="Selecionar página inicial"
+            aria-label="Seleccionar página inicial"
           />
         </div>
       </div>

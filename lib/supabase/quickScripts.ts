@@ -124,8 +124,8 @@ export const quickScriptsService = {
     getCategoryInfo(category: ScriptCategory): { label: string; color: string } {
         const categories: Record<ScriptCategory, { label: string; color: string }> = {
             followup: { label: 'Follow-up', color: 'blue' },
-            objection: { label: 'Objeções', color: 'orange' },
-            closing: { label: 'Fechamento', color: 'green' },
+            objection: { label: 'Objecções', color: 'orange' },
+            closing: { label: 'Fecho', color: 'green' },
             intro: { label: 'Apresentação', color: 'purple' },
             rescue: { label: 'Resgate', color: 'yellow' },
             other: { label: 'Outros', color: 'slate' },

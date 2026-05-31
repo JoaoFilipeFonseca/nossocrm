@@ -473,7 +473,7 @@ export const useBoardsController = () => {
           deal = candidates[0];
         } else {
           if (candidates.length > 1) {
-            addToast('Não foi possível mover: existem múltiplos negócios com o mesmo título. Aguarde salvar e tente novamente.', 'info');
+            addToast('Não foi possível mover: existem múltiplos negócios com o mesmo título. Aguarde a gravação e tente novamente.', 'info');
           }
         }
       }
@@ -744,7 +744,7 @@ export const useBoardsController = () => {
     } catch (error) {
       const err = error as Error;
       console.error('[updateBoardAsync] Error:', err);
-      addToast(err.message || 'Erro ao atualizar board', 'error');
+      addToast(err.message || 'Erro ao actualizar board', 'error');
       throw err;
     }
   };
@@ -808,26 +808,26 @@ export const useBoardsController = () => {
         const { error: deleteDealsError } = await dealsService.deleteByBoardId(boardToDelete.id);
 
         if (deleteDealsError) {
-          addToast('Erro ao excluir negócios: ' + deleteDealsError.message, 'error');
+          addToast('Erro ao eliminar negócios: ' + deleteDealsError.message, 'error');
           return;
         }
 
         // Agora deleta o board
         deleteBoardMutation.mutate(boardToDelete.id, {
           onSuccess: () => {
-            addToast(`Board "${boardToDelete.name}" e seus negócios foram excluídos`, 'success');
+            addToast(`Board "${boardToDelete.name}" e os seus negócios foram eliminados`, 'success');
             if (boardToDelete.id === activeBoardId && defaultBoard && defaultBoard.id !== boardToDelete.id) {
               setActiveBoardId(defaultBoard.id);
             }
             setBoardToDelete(null);
           },
           onError: (error: Error) => {
-            addToast(error.message || 'Erro ao excluir board', 'error');
+            addToast(error.message || 'Erro ao eliminar board', 'error');
             setBoardToDelete(null);
           },
         });
       } catch (e) {
-        addToast('Erro inesperado ao excluir', 'error');
+        addToast('Erro inesperado ao eliminar', 'error');
         setBoardToDelete(null);
       }
       return;
@@ -839,14 +839,14 @@ export const useBoardsController = () => {
         { boardId: boardToDelete.id, targetBoardId },
         {
           onSuccess: () => {
-            addToast(`Board "${boardToDelete.name}" excluído! Negócios movidos com sucesso.`, 'success');
+            addToast(`Board "${boardToDelete.name}" eliminado! Negócios movidos com sucesso.`, 'success');
             if (boardToDelete.id === activeBoardId) {
               setActiveBoardId(targetBoardId);
             }
             setBoardToDelete(null);
           },
           onError: (error: Error) => {
-            addToast(error.message || 'Erro ao excluir board', 'error');
+            addToast(error.message || 'Erro ao eliminar board', 'error');
             setBoardToDelete(null);
           },
         }
@@ -857,14 +857,14 @@ export const useBoardsController = () => {
     // Caso 3: Board sem deals - delete normal
     deleteBoardMutation.mutate(boardToDelete.id, {
       onSuccess: () => {
-        addToast(`Board "${boardToDelete.name}" excluído com sucesso`, 'success');
+        addToast(`Board "${boardToDelete.name}" eliminado com sucesso`, 'success');
         if (boardToDelete.id === activeBoardId && defaultBoard) {
           setActiveBoardId(defaultBoard.id);
         }
         setBoardToDelete(null);
       },
       onError: (error: Error) => {
-        addToast(error.message || 'Erro ao excluir board', 'error');
+        addToast(error.message || 'Erro ao eliminar board', 'error');
         setBoardToDelete(null);
       },
     });

@@ -155,13 +155,13 @@ export const DeleteBoardModal: React.FC<DeleteBoardModalProps> = ({
 
                   {selectedTargetBoardId && selectedTargetBoardId !== '__DELETE__' && (
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Os negócios serão movidos para o primeiro estágio do board selecionado.
+                      Os negócios serão movidos para o primeiro estágio do board seleccionado.
                     </p>
                   )}
                   
                   {selectedTargetBoardId === '__DELETE__' && (
                     <p className="text-sm text-red-600 dark:text-red-400">
-                      ⚠️ Isso vai excluir permanentemente todos os negócios!
+                      ⚠️ Isto vai eliminar permanentemente todos os negócios!
                     </p>
                   )}
                 </>
@@ -169,7 +169,7 @@ export const DeleteBoardModal: React.FC<DeleteBoardModalProps> = ({
                 // Só tem 1 board - oferece apenas excluir os deals
                 <>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Este é o único board. Para excluí-lo, os negócios também serão removidos.
+                    Este é o único board. Para eliminá-lo, os negócios também serão removidos.
                   </p>
                   <button
                     onClick={() => onSelectTargetBoard('__DELETE__')}
@@ -187,8 +187,8 @@ export const DeleteBoardModal: React.FC<DeleteBoardModalProps> = ({
             </>
           ) : (
             <p className="text-slate-600 dark:text-slate-400">
-              Tem certeza que deseja excluir o board <strong>"{boardName}"</strong>?
-              Esta ação não pode ser desfeita.
+              Tem a certeza que pretende eliminar o board <strong>"{boardName}"</strong>?
+              Esta acção não pode ser desfeita.
             </p>
           )}
         </div>

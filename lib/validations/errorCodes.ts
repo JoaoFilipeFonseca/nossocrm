@@ -87,7 +87,7 @@ const ptBR: Translations = {
 
   // Selection errors
   SELECTION_REQUIRED: 'Selecione uma opção para {field}',
-  SELECTION_INVALID: 'Opção inválida selecionada',
+  SELECTION_INVALID: 'Opção inválida seleccionada',
 
   // API errors
   API_ERROR: 'Erro ao processar requisição. Tente novamente.',

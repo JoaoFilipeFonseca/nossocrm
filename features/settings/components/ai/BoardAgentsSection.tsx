@@ -116,7 +116,7 @@ export function BoardAgentsSection() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config),
     });
-    if (!res.ok) throw new Error('Falha ao salvar');
+    if (!res.ok) throw new Error('Falha ao guardar');
     const { config: saved } = await res.json() as { config: BoardAIConfig };
     setBoardConfigs((prev) => ({ ...prev, [selectedBoard.id]: saved }));
   }
@@ -208,7 +208,7 @@ export function BoardAgentsSection() {
         <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
           <strong>Observar</strong> — lê as mensagens, não responde. &nbsp;
           <strong>Responder</strong> — responde automaticamente. &nbsp;
-          &quot;Personalizar&quot; configura persona, objetivo e estágios.
+          &quot;Personalizar&quot; configura persona, objectivo e estágios.
         </p>
       </div>
 

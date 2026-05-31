@@ -53,7 +53,7 @@ export function MessageSearchBar({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar nas mensagens..."
+          placeholder="Procurar nas mensagens..."
           className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white placeholder:text-slate-400 outline-none"
         />
         {isLoading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}

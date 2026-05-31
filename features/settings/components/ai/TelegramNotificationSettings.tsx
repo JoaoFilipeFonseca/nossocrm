@@ -53,7 +53,7 @@ async function saveTelegramSettings(payload: SavePayload): Promise<void> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error('Falha ao salvar configurações');
+  if (!res.ok) throw new Error('Falha ao guardar configurações');
 }
 
 async function fetchBotInfo(): Promise<BotInfo> {
@@ -277,7 +277,7 @@ export function TelegramNotificationSettings() {
               <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground list-none flex items-center gap-1">
                 <span className="group-open:hidden">▶</span>
                 <span className="hidden group-open:inline">▼</span>
-                Atualizar token do bot
+                Actualizar token do bot
               </summary>
               <div className="mt-3 space-y-2">
                 <Input
@@ -292,7 +292,7 @@ export function TelegramNotificationSettings() {
                   onClick={handleSave}
                   disabled={!botToken.trim() || mutation.isPending}
                 >
-                  {mutation.isPending ? 'Salvando...' : saved ? 'Salvo ✓' : 'Salvar novo token'}
+                  {mutation.isPending ? 'A guardar...' : saved ? 'Guardado ✓' : 'Guardar novo token'}
                 </Button>
               </div>
             </details>
@@ -372,12 +372,12 @@ export function TelegramNotificationSettings() {
               onClick={handleSave}
               disabled={!botToken.trim() || mutation.isPending}
             >
-              {mutation.isPending ? 'Salvando...' : saved ? 'Salvo ✓' : 'Salvar'}
+              {mutation.isPending ? 'A guardar...' : saved ? 'Guardado ✓' : 'Guardar'}
             </Button>
 
             {mutation.isError && (
               <p className="text-sm text-destructive">
-                Erro ao salvar. Verifique o token e tente novamente.
+                Erro ao guardar. Verifique o token e tente novamente.
               </p>
             )}
           </div>

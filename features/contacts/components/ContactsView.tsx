@@ -48,14 +48,14 @@ export const ContactsView: React.FC<ContactsViewProps> = ({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input 
           type="text"
-          placeholder="Buscar por nome ou email..."
+          placeholder="Procurar por nome ou email..."
           className="w-full pl-10 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
           onChange={(e) => onSearch(e.target.value)}
         />
       </div>
 
       {isLoading ? (
-        <div className="text-center py-10 text-slate-500">Carregando...</div>
+        <div className="text-center py-10 text-slate-500">A carregar...</div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {contacts.map(contact => (

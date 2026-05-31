@@ -258,7 +258,7 @@ export function NewConversationModal({
               {/* Contact name (optional) */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Nome do contato <span className="text-slate-400">(opcional)</span>
+                  Nome do contacto <span className="text-slate-400">(opcional)</span>
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

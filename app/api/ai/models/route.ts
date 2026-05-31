@@ -138,6 +138,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error(`[api/ai/models] ${message}`);
-    return json({ error: `Falha ao buscar modelos: ${message}` }, 502);
+    return json({ error: `Falha ao obter modelos: ${message}` }, 502);
   }
 }

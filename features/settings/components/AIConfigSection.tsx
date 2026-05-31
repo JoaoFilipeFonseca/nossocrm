@@ -38,7 +38,7 @@ async function validateApiKey(apiKey: string, model: string): Promise<{ valid: b
         }
         return { valid: false, error: error?.error?.message || 'Erro desconhecido' };
     } catch {
-        return { valid: false, error: 'Erro de conexão. Verifique sua internet.' };
+        return { valid: false, error: 'Erro de ligação. Verifique a sua internet.' };
     }
 }
 
@@ -149,9 +149,9 @@ export const AIConfigSection: React.FC = () => {
                 await setAiApiKey(localApiKey);
                 // UX: após salvar uma key válida, colapsar LGPD automaticamente.
                 setLgpdExpanded(false);
-                showToast('Chave de API validada e salva!', 'success');
+                showToast('Chave de API validada e guardada!', 'success');
             } catch (err) {
-                showToast(err instanceof Error ? err.message : 'Falha ao salvar chave de API', 'error');
+                showToast(err instanceof Error ? err.message : 'Falha ao guardar chave de API', 'error');
             }
         } else {
             setValidationStatus('invalid');
@@ -192,7 +192,7 @@ export const AIConfigSection: React.FC = () => {
                 </div>
                 <div>
                     <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">Inteligência Artificial</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Configure qual cérebro vai alimentar seu CRM.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Configure qual cérebro vai alimentar o seu CRM.</p>
                 </div>
             </div>
 
@@ -248,10 +248,10 @@ export const AIConfigSection: React.FC = () => {
                                     setLocalModel(next);
                                     try {
                                         await setAiModel(next);
-                                        showToast('Modelo salvo!', 'success');
+                                        showToast('Modelo guardado!', 'success');
                                     } catch (err) {
                                         setLocalModel(null);
-                                        showToast(err instanceof Error ? err.message : 'Falha ao atualizar modelo', 'error');
+                                        showToast(err instanceof Error ? err.message : 'Falha ao actualizar modelo', 'error');
                                     }
                                 }}
                                 className="w-full appearance-none bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all disabled:opacity-50"
@@ -262,7 +262,7 @@ export const AIConfigSection: React.FC = () => {
                                     </option>
                                 ) : (
                                     <>
-                                        {!(localModel ?? isCatalogModel) && <option value="" disabled>Selecione um modelo</option>}
+                                        {!(localModel ?? isCatalogModel) && <option value="" disabled>Seleccione um modelo</option>}
                                         {dynamicModels.map(m => (
                                             <option key={m.id} value={m.id}>
                                                 {m.isAlias ? `★ ${m.name}` : m.name} ({m.id})
@@ -296,7 +296,7 @@ export const AIConfigSection: React.FC = () => {
                                     checked={aiThinking}
                                     onChange={(e) => setAiThinking(e.target.checked)}
                                     className="sr-only peer"
-                                    aria-label="Ativar Modo Pensamento"
+                                    aria-label="Activar Modo Pensamento"
                                 />
                                 <div className="w-11 h-6 bg-red-500 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-red-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-500 dark:peer-checked:bg-green-600"></div>
                             </label>
@@ -313,7 +313,7 @@ export const AIConfigSection: React.FC = () => {
                                     <span className="text-lg">🌍</span> Google Search Grounding
                                 </h3>
                                 <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                                    Conecta o modelo à internet para buscar informações atualizadas.
+                                    Conecta o modelo à internet para procurar informações actualizadas.
                                 </p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
@@ -322,7 +322,7 @@ export const AIConfigSection: React.FC = () => {
                                     checked={aiSearch}
                                     onChange={(e) => setAiSearch(e.target.checked)}
                                     className="sr-only peer"
-                                    aria-label="Ativar busca na web"
+                                    aria-label="Activar procura na web"
                                 />
                                 <div className="w-11 h-6 bg-red-500 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-red-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-500 dark:peer-checked:bg-green-600"></div>
                             </label>
@@ -341,7 +341,7 @@ export const AIConfigSection: React.FC = () => {
                                 type="password"
                                 value={localApiKey}
                                 onChange={(e) => handleKeyChange(e.target.value)}
-                                placeholder="Cole sua chave AIza..."
+                                placeholder="Cole a sua chave AIza..."
                                 className={`w-full bg-slate-50 dark:bg-slate-800 border rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all font-mono ${validationStatus === 'invalid'
                                         ? 'border-red-300 dark:border-red-500/50'
                                         : validationStatus === 'valid'
@@ -377,7 +377,7 @@ export const AIConfigSection: React.FC = () => {
                             ) : (
                                 <>
                                     <Save size={16} />
-                                    {hasUnsavedChanges ? 'Salvar' : 'Salvo'}
+                                    {hasUnsavedChanges ? 'Guardar' : 'Guardado'}
                                 </>
                             )}
                         </button>
@@ -398,8 +398,8 @@ export const AIConfigSection: React.FC = () => {
                         </p>
                     )}
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                        🔒 Sua chave é validada antes de salvar e armazenada no banco de dados da organização.
-                        Trate como segredo e use uma chave com o menor escopo possível.
+                        🔒 A sua chave é validada antes de guardar e armazenada na base de dados da organização.
+                        Trate como segredo e use uma chave com o menor âmbito possível.
                     </p>
 
                     {/* Seção LGPD Colapsável - Expandida por padrão */}
@@ -414,7 +414,7 @@ export const AIConfigSection: React.FC = () => {
                       type="password"
                       value={localAnthropicKey}
                       onChange={(e) => setLocalAnthropicKey(e.target.value)}
-                      placeholder={(orgSettings as any)?.aiHasAnthropicKey ? '•••••••••• guardada' : 'Cole sua chave sk-ant-api03-...'}
+                      placeholder={(orgSettings as any)?.aiHasAnthropicKey ? '•••••••••• guardada' : 'Cole a sua chave sk-ant-api03-...'}
                       className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
@@ -438,7 +438,7 @@ export const AIConfigSection: React.FC = () => {
                     disabled={!localAnthropicKey.trim() || savingAnthropic}
                     className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
-                    {savingAnthropic ? 'A guardar...' : ((orgSettings as any)?.aiHasAnthropicKey ? 'Atualizar' : 'Guardar')}
+                    {savingAnthropic ? 'A guardar...' : ((orgSettings as any)?.aiHasAnthropicKey ? 'Actualizar' : 'Guardar')}
                   </button>
                   {(orgSettings as any)?.aiHasAnthropicKey ? (
                     <button
@@ -507,7 +507,7 @@ export const AIConfigSection: React.FC = () => {
 
                                 <div className="pt-2 border-t border-amber-200 dark:border-amber-500/20">
                                     <p className="text-xs text-amber-700 dark:text-amber-300">
-                                        <strong>Como revogar:</strong> Remova sua chave de API a qualquer momento clicando no botão 🗑️ ao lado do campo.
+                                        <strong>Como revogar:</strong> Remova a sua chave de API a qualquer momento clicando no botão 🗑️ ao lado do campo.
                                         O consentimento será automaticamente revogado.
                                     </p>
                                 </div>
@@ -540,8 +540,8 @@ export const AIConfigSection: React.FC = () => {
                             {validationStatus === 'valid' && localApiKey
                                 ? `O sistema está configurado para usar o Google Gemini (${aiModel}).`
                                 : validationStatus === 'invalid'
-                                    ? 'Verifique sua chave de API e tente novamente.'
-                                    : 'Insira uma chave de API válida e clique em Salvar para usar o assistente.'}
+                                    ? 'Verifique a sua chave de API e tente novamente.'
+                                    : 'Insira uma chave de API válida e clique em Guardar para usar o assistente.'}
                         </p>
                     </div>
                 </div>

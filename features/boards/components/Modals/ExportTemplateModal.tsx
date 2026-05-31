@@ -261,7 +261,7 @@ export function ExportTemplateModal(props: {
   const handleDownloadJourney = () => {
     try {
       if (!canExportJourney) {
-        addToast('Selecione ao menos 1 board para exportar a jornada.', 'error');
+        addToast('Seleccione pelo menos 1 board para exportar a jornada.', 'error');
         return;
       }
       // If exporting a single board, the filename should be based on that board name.
@@ -333,11 +333,11 @@ export function ExportTemplateModal(props: {
 
   const handleInstallImportedJourney = async () => {
     if (!importJourney) {
-      addToast('Selecione um journey.json válido.', 'error');
+      addToast('Seleccione um journey.json válido.', 'error');
       return;
     }
     if (!onCreateBoardAsync) {
-      addToast('Import indisponível nesta tela.', 'error');
+      addToast('Importação indisponível neste ecrã.', 'error');
       return;
     }
 
@@ -420,9 +420,9 @@ export function ExportTemplateModal(props: {
       {panel === 'import' && (
         <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-slate-50/50 dark:bg-white/5 space-y-4">
           <div>
-            <div className="text-sm font-bold text-slate-900 dark:text-white">Importar template (arquivo JSON)</div>
+            <div className="text-sm font-bold text-slate-900 dark:text-white">Importar template (ficheiro JSON)</div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Faça upload do arquivo exportado e clique em <b>Instalar</b>.
+              Faça upload do ficheiro exportado e clique em <b>Instalar</b>.
             </div>
           </div>
 
@@ -470,7 +470,7 @@ export function ExportTemplateModal(props: {
                 : 'bg-primary-600 hover:bg-primary-700 text-white'
                 }`}
             >
-              <Download size={16} /> {isImporting ? 'Instalando…' : 'Instalar jornada'}
+              <Download size={16} /> {isImporting ? 'A instalar…' : 'Instalar jornada'}
             </button>
           </div>
         </div>
@@ -482,7 +482,7 @@ export function ExportTemplateModal(props: {
             Exportar template
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400">
-            Selecione 1 board (template simples) ou vários (jornada).
+            Seleccione 1 board (template simples) ou vários (jornada).
           </div>
         </div>
       )}
@@ -491,9 +491,9 @@ export function ExportTemplateModal(props: {
       <div className="grid grid-cols-1 gap-6">
         <div className="space-y-4">
           <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-slate-50/50 dark:bg-white/5">
-            <div className="text-sm font-bold text-slate-900 dark:text-white">1) Baixar arquivo do template</div>
+            <div className="text-sm font-bold text-slate-900 dark:text-white">1) Descarregar ficheiro do template</div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Esse arquivo é o que você vai guardar/publicar na comunidade.
+              Este ficheiro é o que vai guardar/publicar na comunidade.
             </div>
 
             <div className="mt-4">
@@ -558,14 +558,14 @@ export function ExportTemplateModal(props: {
                 onClick={handleDownloadJourney}
                 className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold flex items-center gap-2"
               >
-                <Download size={16} /> Baixar arquivo
+                <Download size={16} /> Descarregar ficheiro
               </button>
               <button
                 type="button"
                 onClick={handleCopyJourneyJson}
                 className="px-4 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-semibold flex items-center gap-2"
               >
-                <Copy size={16} /> Copiar arquivo (texto)
+                <Copy size={16} /> Copiar ficheiro (texto)
               </button>
             </div>
 

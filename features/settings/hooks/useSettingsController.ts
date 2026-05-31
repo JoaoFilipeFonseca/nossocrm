@@ -63,7 +63,7 @@ export const useSettingsController = () => {
             : f
         )
       );
-      addToast('Campo personalizado atualizado com sucesso!', 'success');
+      addToast('Campo personalizado actualizado com sucesso!', 'success');
       cancelEditingField();
     } else {
       // CREATE NEW

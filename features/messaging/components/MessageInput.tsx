@@ -686,7 +686,7 @@ export function MessageInput({ conversation, replyTo, onCancelReply }: MessageIn
                   theme={Theme.AUTO}
                   width={320}
                   height={400}
-                  searchPlaceholder="Buscar emoji..."
+                  searchPlaceholder="Procurar emoji..."
                   lazyLoadEmojis
                 />
               </div>

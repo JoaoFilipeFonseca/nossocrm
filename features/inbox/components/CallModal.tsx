@@ -295,7 +295,7 @@ export const CallModal: React.FC<CallModalProps> = ({
                         className="flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         <Check size={16} />
-                        Salvar Log
+                        Guardar Log
                     </button>
                 </div>
             </div>

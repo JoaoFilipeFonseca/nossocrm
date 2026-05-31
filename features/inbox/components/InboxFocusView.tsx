@@ -604,7 +604,7 @@ export const InboxFocusView: React.FC<InboxFocusViewProps> = ({
                   <input
                     value={contextSearch}
                     onChange={e => setContextSearch(e.target.value)}
-                    placeholder="Buscar negócio pelo título…"
+                    placeholder="Procurar negócio pelo título…"
                     className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary-500/40"
                   />
                 </div>

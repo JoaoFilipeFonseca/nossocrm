@@ -119,7 +119,7 @@ export const BoardSelector: React.FC<BoardSelectorProps> = ({
                           setIsOpen(false);
                         }}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                        title="Excluir board"
+                        title="Eliminar board"
                       >
                         <Trash2 size={14} />
                       </button>

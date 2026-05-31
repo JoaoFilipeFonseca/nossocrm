@@ -132,11 +132,11 @@ export const CreateDealModalV2: React.FC<CreateDealModalV2Props> = ({ isOpen, on
         </div>
 
         <div className="pt-2 border-t border-slate-100 dark:border-white/5">
-          <h3 className="text-xs font-bold text-slate-400 uppercase mb-3">Contato Principal</h3>
+          <h3 className="text-xs font-bold text-slate-400 uppercase mb-3">Contacto Principal</h3>
           <div className="space-y-3">
             <InputField
-              label="Nome do Contato"
-              placeholder="Nome do Contato"
+              label="Nome do Contacto"
+              placeholder="Nome do Contacto"
               error={errors.contactName}
               registration={register('contactName')}
             />

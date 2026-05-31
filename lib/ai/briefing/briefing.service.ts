@@ -26,14 +26,14 @@ const MAX_MESSAGES_FOR_BRIEFING = 50;
 // System Prompt
 // =============================================================================
 
-const BRIEFING_SYSTEM_PROMPT = `${IMOBILIARIO_PT_KNOWLEDGE}\n\nVocê é um assistente de vendas portugues (consultor imobiliario em Portugal) especializado em preparar briefings pré-conversa.
+const BRIEFING_SYSTEM_PROMPT = `${IMOBILIARIO_PT_KNOWLEDGE}\n\nÉs um assistente de vendas português (consultor imobiliário em Portugal) especializado em preparar briefings pré-conversa.
 
 IMPORTANTE: TODO o conteúdo gerado DEVE estar em PORTUGUÊS EUROPEU (pt-PT) formal. Não use inglês em nenhuma parte da resposta.
 
-Sua tarefa é analisar todo o histórico de comunicação com um lead e gerar um briefing estruturado que permita ao vendedor:
-1. Entender rapidamente o contexto do deal
-2. Saber exatamente onde parou a última conversa
-3. Ter uma estratégia clara para a próxima interação
+A tua tarefa é analisar todo o histórico de comunicação com um lead e gerar um briefing estruturado que permita ao vendedor:
+1. Perceber rapidamente o contexto do deal
+2. Saber exactamente onde parou a última conversa
+3. Ter uma estratégia clara para a próxima interacção
 
 FRAMEWORK BANT (responda em português):
 - Budget (Orçamento): Qual é o orçamento do lead? Foi mencionado? Está em negociação?
@@ -42,13 +42,13 @@ FRAMEWORK BANT (responda em português):
 - Timeline (Prazo): Qual é a urgência? Existe deadline?
 
 REGRAS:
-- Seja conciso e acionável
+- Seja conciso e accionável
 - Extraia informações concretas das conversas, não invente
 - Se algo não foi mencionado, use "Nenhuma informação disponível" (não use "unknown")
 - Sugira perguntas específicas baseadas no contexto
 - Alerte sobre riscos ou oportunidades identificados
-- Sua confiança deve refletir a quantidade e qualidade de informações disponíveis
-- SEMPRE responda em português europeu (pt-PT) formal, nunca em inglês`;
+- A confiança deve reflectir a quantidade e qualidade de informações disponíveis
+- Responda SEMPRE em português europeu (pt-PT) formal, nunca em inglês`;
 
 // =============================================================================
 // Context Building (Deal-based)
@@ -284,7 +284,7 @@ function formatContextForPrompt(context: DealContext): string {
 
   // Stage objective
   if (context.stage.goal) {
-    lines.push('## Objetivo do Estágio');
+    lines.push('## Objectivo do Estágio');
     lines.push(context.stage.goal);
     lines.push('');
   }
@@ -309,7 +309,7 @@ function formatContextForPrompt(context: DealContext): string {
   // Messages
   lines.push('## Histórico de Conversas');
   if (context.messages.length === 0) {
-    lines.push('Nenhuma mensagem registrada');
+    lines.push('Nenhuma mensagem registada');
   } else {
     context.messages.forEach((msg) => {
       const role = msg.direction === 'inbound' ? 'LEAD' : msg.isAI ? 'AI' : 'VENDEDOR';

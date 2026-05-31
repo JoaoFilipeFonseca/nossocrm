@@ -165,7 +165,7 @@ export const useMoveDeal = () => {
           dealId,
           dealTitle: deal.title,
           type: 'STATUS_CHANGE',
-          title: `Contato promovido para ${lifecycleStageName}`,
+          title: `Contacto promovido para ${lifecycleStageName}`,
           description: `Automático via LinkedStage da etapa "${targetStage.label}"`,
           date: new Date().toISOString(),
           completed: true,

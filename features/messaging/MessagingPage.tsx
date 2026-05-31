@@ -234,7 +234,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
                       ? 'text-primary-500 bg-primary-50 dark:bg-primary-500/10'
                       : 'text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
                   )}
-                  title="Buscar mensagens"
+                  title="Procurar mensagens"
                 >
                   <Search className="w-5 h-5" />
                 </button>
@@ -360,7 +360,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
       >
         <div className="space-y-4">
           <p className="text-slate-600 dark:text-slate-300">
-            Tem certeza que deseja excluir esta conversa? Todas as mensagens serão perdidas permanentemente.
+            Tem a certeza que pretende eliminar esta conversa? Todas as mensagens serão perdidas permanentemente.
           </p>
           <div className="flex gap-3 justify-end">
             <button

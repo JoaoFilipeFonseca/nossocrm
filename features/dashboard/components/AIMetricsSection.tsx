@@ -185,7 +185,7 @@ export function AIMetricsSection() {
             </div>
             <div>
               <p className="font-medium text-slate-700 dark:text-slate-200">
-                Nenhuma conversa AI registrada ainda
+                Nenhuma conversa AI registada ainda
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 Configure o AI Agent nas configurações para começar a automatizar conversas.

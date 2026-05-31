@@ -77,8 +77,8 @@ const LearnedCriterionSchema = z.object({
 const LearnedPatternSchema = z.object({
   greetingStyle: z.string().describe('Estilo típico de saudação usado'),
   questionPatterns: z.array(z.string()).describe('Perguntas comuns feitas para qualificação'),
-  objectionHandling: z.array(z.string()).describe('Técnicas usadas para lidar com objeções'),
-  closingTechniques: z.array(z.string()).describe('Técnicas de fechamento identificadas'),
+  objectionHandling: z.array(z.string()).describe('Técnicas usadas para lidar com objecções'),
+  closingTechniques: z.array(z.string()).describe('Técnicas de fecho identificadas'),
   tone: z.enum(['formal', 'casual', 'consultative']).describe('Tom geral da comunicação'),
   learnedCriteria: z.array(LearnedCriterionSchema).describe('Critérios de qualificação identificados'),
 });
@@ -87,28 +87,28 @@ const LearnedPatternSchema = z.object({
 // System Prompt
 // =============================================================================
 
-const FEW_SHOT_EXTRACTION_PROMPT = `Você é um especialista em análise de conversas de vendas.
+const FEW_SHOT_EXTRACTION_PROMPT = `É um especialista em análise de conversas de vendas.
 
-Sua tarefa é analisar conversas bem-sucedidas de vendas e extrair padrões que possam ser usados para treinar um AI Agent de vendas.
+A sua tarefa é analisar conversas bem-sucedidas de vendas e extrair padrões que possam ser usados para treinar um AI Agent de vendas.
 
 IMPORTANTE:
-- Foque em padrões CONSISTENTES que aparecem em múltiplas conversas
+- Foque-se em padrões CONSISTENTES que aparecem em múltiplas conversas
 - Identifique critérios de qualificação que o vendedor SEMPRE tenta descobrir
 - Note o tom e estilo de comunicação predominante
 - Extraia técnicas específicas, não genéricas
 
 Para os critérios de qualificação:
 - Use nomes em snake_case (ex: budget_confirmed, decision_maker_identified)
-- Forneça descrições claras e acionáveis
-- Inclua palavras-chave que ajudem a detectar quando o critério foi atendido
+- Forneça descrições claras e accionáveis
+- Inclua palavras-chave que ajudem a detectar quando o critério foi satisfeito
 - Marque como 'required' critérios que SEMPRE são verificados
 - Marque como 'nice_to_have' critérios que aparecem ocasionalmente
 
 Para padrões de comportamento:
 - Extraia o estilo de saudação predominante
 - Liste as perguntas de qualificação mais comuns
-- Identifique como objeções são tratadas
-- Note técnicas de fechamento usadas`;
+- Identifique como as objecções são tratadas
+- Note técnicas de fecho usadas`;
 
 // =============================================================================
 // Conversation Fetcher

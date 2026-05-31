@@ -180,7 +180,7 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
                   onClick={handleSave}
                   className="px-4 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-black text-xs font-bold rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all"
                 >
-                  Salvar Alterações
+                  Guardar Alterações
                 </button>
               </div>
             </div>

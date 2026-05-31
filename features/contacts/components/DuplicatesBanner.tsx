@@ -19,7 +19,7 @@ export const DuplicatesBanner: React.FC<DuplicatesBannerProps> = ({ count, onRes
         </div>
         <div>
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-            {count} grupo{count !== 1 ? 's' : ''} de contatos duplicados
+            {count} grupo{count !== 1 ? 's' : ''} de contactos duplicados
           </p>
           <p className="text-xs text-amber-600 dark:text-amber-400">
             Contatos com mesmo telefone ou e-mail podem ser mesclados

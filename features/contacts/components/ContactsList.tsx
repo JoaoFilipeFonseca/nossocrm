@@ -400,7 +400,7 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                                                 <button
                                                     onClick={() => setDeleteId(contact.id)}
                                                     className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-400 hover:text-red-500 transition-colors"
-                                                    aria-label={`Excluir ${contact.name}`}
+                                                    aria-label={`Eliminar ${contact.name}`}
                                                 >
                                                     <Trash2 size={16} aria-hidden="true" />
                                                 </button>
@@ -540,7 +540,7 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                                             <button
                                                 onClick={() => setDeleteCompanyId?.(company.id)}
                                                 className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-400 hover:text-red-500 transition-colors"
-                                                aria-label={`Excluir ${company.name}`}
+                                                aria-label={`Eliminar ${company.name}`}
                                             >
                                                 <Trash2 size={16} aria-hidden="true" />
                                             </button>

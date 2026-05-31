@@ -96,7 +96,7 @@ const transformActivity = (db: DbActivityWithDeal): Activity => ({
   clientCompanyId: (db as any).client_company_id || undefined,
   participantContactIds: (db as any).participant_contact_ids || [],
   dealTitle: db.deals?.title || '',
-  user: { name: 'Você', avatar: '' }, // Will be enriched later
+  user: { name: 'Eu', avatar: '' }, // Will be enriched later
 });
 
 /**

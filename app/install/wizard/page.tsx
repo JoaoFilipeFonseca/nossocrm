@@ -53,16 +53,16 @@ const STORAGE_SUPABASE_TOKEN = 'crm_install_supabase_token';
 const STORAGE_VERCEL_DEPLOYMENT_ID = 'crm_install_vercel_deployment_id';
 
 const STEP_LABELS: Record<string, string> = {
-  resolve_keys: 'Conectando ao Supabase',
-  setup_envs: 'Configurando variáveis na Vercel',
-  wait_project: 'Aguardando Supabase ficar ativo',
-  wait_storage: 'Aguardando Storage do Supabase',
-  migrations: 'Aplicando estrutura do banco (migrations)',
-  edge_secrets: 'Configurando funções (segredos)',
-  edge_deploy: 'Publicando funções (edge)',
-  bootstrap: 'Criando utilizador administrador',
-  redeploy: 'Iniciando redeploy na Vercel',
-  wait_vercel_deploy: 'Aguardando redeploy na Vercel (etapa final)',
+  resolve_keys: 'A ligar ao Supabase',
+  setup_envs: 'A configurar variáveis na Vercel',
+  wait_project: 'A aguardar que o Supabase fique activo',
+  wait_storage: 'A aguardar o Storage do Supabase',
+  migrations: 'A aplicar a estrutura da base de dados (migrations)',
+  edge_secrets: 'A configurar funções (segredos)',
+  edge_deploy: 'A publicar funções (edge)',
+  bootstrap: 'A criar utilizador administrador',
+  redeploy: 'A iniciar redeploy na Vercel',
+  wait_vercel_deploy: 'A aguardar redeploy na Vercel (etapa final)',
 };
 
 async function hashPassword(password: string): Promise<string> {
@@ -94,7 +94,7 @@ function suggestProjectName(existingNames: string[]) {
 function humanizeError(message: string) {
   const lower = String(message || '').toLowerCase();
   if (lower.includes('maximum limits') || lower.includes('2 project limit') || lower.includes('limit of 2 active projects')) {
-    return 'Limite do plano Free atingido. Pause um projeto existente para continuar.';
+    return 'Limite do plano Free atingido. Pause um projecto existente para continuar.';
   }
   return message;
 }
@@ -207,17 +207,17 @@ export default function InstallWizardPage() {
   const [changePasswordError, setChangePasswordError] = useState<string | null>(null);
   
   // Primeiro nome para personalização
-  const firstName = useMemo(() => userName.split(' ')[0] || 'você', [userName]);
+  const firstName = useMemo(() => userName.split(' ')[0] || 'comandante', [userName]);
   
   // Mensagens cinematográficas para provisioning (estilo Interstellar)
   const provisioningMessages = useMemo(() => [
-    { title: 'Calibrando coordenadas', subtitle: 'Definindo rota para o novo mundo...' },
-    { title: 'Estabelecendo conexão', subtitle: 'Abrindo canal de comunicação...' },
-    { title: 'Construindo infraestrutura', subtitle: 'Montando a estação orbital...' },
-    { title: 'Ativando sistemas', subtitle: 'Inicializando núcleo de dados...' },
-    { title: 'Sincronizando órbita', subtitle: 'Alinhando com a base de operações...' },
-    { title: 'Verificando integridade', subtitle: 'Checando sistemas de segurança...' },
-    { title: 'Preparando pouso', subtitle: 'Quase lá, comandante...' },
+    { title: 'A calibrar coordenadas', subtitle: 'A definir a rota para o novo mundo...' },
+    { title: 'A estabelecer ligação', subtitle: 'A abrir o canal de comunicação...' },
+    { title: 'A construir infraestrutura', subtitle: 'A montar a estação orbital...' },
+    { title: 'A activar sistemas', subtitle: 'A inicializar o núcleo de dados...' },
+    { title: 'A sincronizar órbita', subtitle: 'A alinhar com a base de operações...' },
+    { title: 'A verificar integridade', subtitle: 'A verificar os sistemas de segurança...' },
+    { title: 'A preparar aterragem', subtitle: 'Quase lá, comandante...' },
   ], []);
   
   // Estado para mensagem atual de provisioning
@@ -268,7 +268,7 @@ export default function InstallWizardPage() {
   const [runError, setRunError] = useState<string | null>(null);
   const [showInstallOverlay, setShowInstallOverlay] = useState(false);
   const [cinePhase, setCinePhase] = useState<'preparing' | 'running' | 'success' | 'error'>('preparing');
-  const [cineMessage, setCineMessage] = useState('Preparando a decolagem…');
+  const [cineMessage, setCineMessage] = useState('A preparar a descolagem…');
   const [cineSubtitle, setCineSubtitle] = useState('');
   const [cineProgress, setCineProgress] = useState(0);
   const [cineStepLabel, setCineStepLabel] = useState<string>('');
@@ -714,7 +714,7 @@ export default function InstallWizardPage() {
       provisioningTimerRef.current = setInterval(poll, 4000);
       provisioningTimeoutRef.current = setTimeout(() => {
         setSupabaseProvisioning(false);
-        setSupabaseResolveError('Projeto ainda está subindo. Aguarde.');
+        setSupabaseResolveError('O projecto ainda está a arrancar. Aguarde.');
         if (provisioningTimerRef.current) clearInterval(provisioningTimerRef.current);
       }, 210_000);
     } catch (err) {
@@ -789,7 +789,7 @@ export default function InstallWizardPage() {
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
     }
 
-    throw new Error('Timeout aguardando projeto pausar (3min)');
+    throw new Error('Tempo esgotado à espera de que o projecto pausasse (3min)');
   };
   
   const pauseProject = async (projectRef: string) => {
@@ -846,7 +846,7 @@ export default function InstallWizardPage() {
     const ref = supabaseProjectRef.trim() || inferProjectRef(url);
     
     if (!pat || (!url && !ref)) {
-      if (mode === 'manual') setSupabaseResolveError('Informe o PAT e selecione um projeto.');
+      if (mode === 'manual') setSupabaseResolveError('Indique o PAT e seleccione um projecto.');
       return;
     }
     
@@ -902,11 +902,11 @@ export default function InstallWizardPage() {
       if (warnings.length > 0 && !hasDbUrl && isOnlyDbWarnings) {
         resolveAttemptsRef.current += 1;
         if (resolveAttemptsRef.current < 6 && mode === 'auto') {
-          setSupabaseResolveError(`Aguardando banco ficar pronto… (${resolveAttemptsRef.current}/6)`);
+          setSupabaseResolveError(`A aguardar que a base de dados fique pronta… (${resolveAttemptsRef.current}/6)`);
           resolveTimerRef.current = setTimeout(() => void resolveKeys('auto'), 2000 * resolveAttemptsRef.current);
           return;
         }
-        setSupabaseResolveError('Banco ainda não está pronto.');
+        setSupabaseResolveError('A base de dados ainda não está pronta.');
       } else if (warnings.length > 0 && !isOnlyDbWarnings) {
         setSupabaseResolveError(`Alguns itens não foram resolvidos: ${warnings.join(' | ')}`);
       } else {
@@ -929,8 +929,8 @@ export default function InstallWizardPage() {
     setResult(null);
     setShowInstallOverlay(true);
     setCinePhase('preparing');
-    setCineMessage('Analisando destino');
-    setCineSubtitle('Verificando estado do projeto...');
+    setCineMessage('A analisar destino');
+    setCineSubtitle('A verificar o estado do projecto...');
     setCineProgress(0);
     
 
@@ -988,9 +988,9 @@ export default function InstallWizardPage() {
             ].filter(Boolean).length;
             
             if (skippedCount >= 3) {
-              setCineSubtitle('Projeto detectado! Instalação rápida...');
+              setCineSubtitle('Projecto detectado! Instalação rápida...');
             } else if (skippedCount >= 1) {
-              setCineSubtitle('Otimizando rota de instalação...');
+              setCineSubtitle('A optimizar a rota de instalação...');
             }
           }
         }
@@ -1002,7 +1002,7 @@ export default function InstallWizardPage() {
       
       // Contagem regressiva épica
       setCineMessage('3');
-      setCineSubtitle('Motores acionados');
+      setCineSubtitle('Motores accionados');
       await new Promise((r) => setTimeout(r, 1000));
       setCineMessage('2');
       setCineSubtitle('Sistemas online');
@@ -1010,7 +1010,7 @@ export default function InstallWizardPage() {
       setCineMessage('1');
       setCineSubtitle('Ignição');
       await new Promise((r) => setTimeout(r, 800));
-      setCineMessage('Decolagem!');
+      setCineMessage('Descolagem!');
       setCineSubtitle('');
       await new Promise((r) => setTimeout(r, 600));
       
@@ -1052,7 +1052,7 @@ export default function InstallWizardPage() {
         try {
           chunk = await reader.read();
         } catch (readErr) {
-          throw new Error('Conexão instável durante a instalação. Recarregue a página e retome a partir do ponto salvo.');
+          throw new Error('Ligação instável durante a instalação. Recarregue a página e retome a partir do ponto guardado.');
         }
         const { done, value } = chunk;
         if (done) break;
@@ -1081,7 +1081,7 @@ export default function InstallWizardPage() {
               } else {
                 setCineStepLabel('');
               }
-              setCineMessage(event.title || 'Processando...');
+              setCineMessage(event.title || 'A processar...');
               setCineSubtitle(event.subtitle || '');
               setCineProgress(event.progress || 0);
             } else if (event.type === 'vercel_deploy') {
@@ -1108,7 +1108,7 @@ export default function InstallWizardPage() {
             } else if (event.type === 'complete' && event.ok) {
               setCineProgress(100);
               setCineMessage(event.title || `Missão cumprida, ${firstName}!`);
-              setCineSubtitle('Aterrissagem confirmada');
+              setCineSubtitle('Aterragem confirmada');
               await new Promise((r) => setTimeout(r, 800));
               setCinePhase('success');
               setCineSubtitle(event.subtitle || 'Bem-vindo ao novo mundo.');
@@ -1158,8 +1158,8 @@ export default function InstallWizardPage() {
     setRunError(null);
     setCinePhase('running');
     setCineMessage('Etapa final');
-    setCineStepLabel('Aguardando redeploy na Vercel (etapa final)');
-    setCineSubtitle('Verificando status do deploy…');
+    setCineStepLabel('A aguardar redeploy na Vercel (etapa final)');
+    setCineSubtitle('A verificar o estado do deploy…');
     setCineProgress(Math.max(0, Math.min(99, cineProgress || 0)));
 
     try {
@@ -1179,12 +1179,12 @@ export default function InstallWizardPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.error || 'O redeploy ainda está finalizando. Aguarde e tente novamente.');
+        throw new Error(data?.error || 'O redeploy ainda está a finalizar. Aguarde e tente novamente.');
       }
 
       setCineProgress(100);
       setCineMessage(`Missão cumprida, ${firstName}!`);
-      setCineSubtitle('Aterrissagem confirmada');
+      setCineSubtitle('Aterragem confirmada');
       await new Promise((r) => setTimeout(r, 600));
       setCinePhase('success');
       setCineSubtitle('Bem-vindo ao novo mundo.');
@@ -1241,15 +1241,15 @@ export default function InstallWizardPage() {
     }
 
     if (lower.includes('invalid installer token')) {
-      help.steps.push('O Installer Token informado está incorreto.');
-      help.steps.push('Volte ao início do wizard e cole o token correto (se sua instalação exigir token).');
+      help.steps.push('O Installer Token indicado está incorrecto.');
+      help.steps.push('Volte ao início do wizard e cole o token correcto (se a sua instalação exigir token).');
       help.primaryAction = { label: 'Voltar ao início do Wizard', run: () => router.push('/install/start') };
       help.secondaryAction = { label: 'Limpar dados e recomeçar', run: clearInstallerLocalData };
       return help;
     }
 
     if (lower.includes('installer disabled')) {
-      help.steps.push('O instalador foi desativado neste projeto.');
+      help.steps.push('O instalador foi desactivado neste projecto.');
       help.steps.push('Se já está instalado, entre pelo /login.');
       help.primaryAction = { label: 'Ir para Login', run: () => (window.location.href = '/login') };
       return help;
@@ -1274,16 +1274,16 @@ export default function InstallWizardPage() {
 
     // Supabase token
     if (lower.includes('supabase') && (lower.includes('unauthorized') || lower.includes('token'))) {
-      help.steps.push('Confirme que você colou o token do Supabase (começa com `sbp_`).');
+      help.steps.push('Confirme que colou o token do Supabase (começa com `sbp_`).');
       help.steps.push('Se expirou, gere um novo em Supabase → Account → Access Tokens.');
       help.primaryAction = { label: 'Voltar ao início do Wizard', run: () => router.push('/install/start') };
       return help;
     }
 
     // SSE / rede instável
-    if (lower.includes('conexão instável') || lower.includes('network')) {
-      help.steps.push('Recarregue a página (o wizard tenta retomar do ponto salvo).');
-      help.steps.push('Se estiver em rede instável, tente outra conexão.');
+    if (lower.includes('ligação instável') || lower.includes('network')) {
+      help.steps.push('Recarregue a página (o wizard tenta retomar do ponto guardado).');
+      help.steps.push('Se estiver em rede instável, tente outra ligação.');
       help.primaryAction = { label: 'Recarregar', run: () => window.location.reload() };
       return help;
     }
@@ -1374,8 +1374,8 @@ export default function InstallWizardPage() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-6">
                       <Sparkles className="w-8 h-8 text-emerald-400" />
                   </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Conectar Supabase</h1>
-                    <p className="text-slate-400 mb-6">Cole seu token de acesso para continuar.</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">Ligar ao Supabase</h1>
+                    <p className="text-slate-400 mb-6">Cole o seu token de acesso para continuar.</p>
                     <input type="password" value={supabaseAccessToken} onChange={(e) => setSupabaseAccessToken(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent mb-4" placeholder="sbp_..." autoFocus />
                     <a href="https://supabase.com/dashboard/account/tokens" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 mb-6">Gerar token <ExternalLink className="w-4 h-4" /></a>
                     {supabaseOrgsError && <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-red-400 text-sm">{supabaseOrgsError}</div>}
@@ -1387,8 +1387,8 @@ export default function InstallWizardPage() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mb-6">
                       <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
                         </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Preparando seu projeto</h1>
-                    <p className="text-slate-400">Verificando sua conta Supabase…</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">A preparar o seu projecto</h1>
+                    <p className="text-slate-400">A verificar a sua conta Supabase…</p>
                   </motion.div>
                 )}
                 
@@ -1403,14 +1403,14 @@ export default function InstallWizardPage() {
                         {needSpaceReason === 'global_limit' || supabasePreflight?.freeGlobalLimitHit
                           ? (
                             <>
-                              Você atingiu o limite do plano Free no Supabase (máximo de 2 projetos ativos por usuário).<br />
-                              Pause 1 projeto para continuar:
+                              Atingiu o limite do plano Free no Supabase (máximo de 2 projectos activos por utilizador).<br />
+                              Pause 1 projecto para continuar:
                             </>
                           )
                           : (
                             <>
-                              Seu plano permite 2 projetos ativos.<br />
-                              Pause 1 projeto para continuar:
+                              O seu plano permite 2 projectos activos.<br />
+                              Pause 1 projecto para continuar:
                             </>
                           )}
                       </p>
@@ -1421,7 +1421,7 @@ export default function InstallWizardPage() {
                         <div className="flex items-center gap-3 text-amber-400">
                           <Loader2 className="w-5 h-5 animate-spin shrink-0" />
                           <div className="text-sm">
-                            <div>O projeto está sendo pausado. Isso pode levar até ~3 minutos.</div>
+                            <div>O projecto está a ser pausado. Isto pode levar até ~3 minutos.</div>
                             <div className="text-amber-200/80 mt-1">
                               {pauseStartedAt ? `Tempo: ${Math.max(0, Math.round((Date.now() - pauseStartedAt) / 1000))}s` : null}
                               {pauseAttempts ? ` • Tentativas: ${pauseAttempts}` : null}
@@ -1452,7 +1452,7 @@ export default function InstallWizardPage() {
 
                         <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-slate-400">
                           <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-                          <span>Você pode reativar a qualquer momento no painel do Supabase.</span>
+                          <span>Pode reactivar a qualquer momento no painel do Supabase.</span>
                         </div>
                       </>
                     )}
@@ -1519,7 +1519,7 @@ export default function InstallWizardPage() {
                         className="mb-6"
                       >
                         <h1 className="text-2xl font-bold text-white mb-2">
-                          {provisioningMessages[provisioningMsgIndex]?.title || 'Preparando...'}
+                          {provisioningMessages[provisioningMsgIndex]?.title || 'A preparar...'}
                         </h1>
                         <p className="text-slate-400">
                           {provisioningMessages[provisioningMsgIndex]?.subtitle || ''}
@@ -1606,14 +1606,14 @@ export default function InstallWizardPage() {
                     {supabaseResolving ? (
                       <>
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mb-6"><Loader2 className="w-8 h-8 text-cyan-400 animate-spin" /></div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Configurando chaves</h1>
+                        <h1 className="text-2xl font-bold text-white mb-2">A configurar chaves</h1>
                         <p className="text-slate-400">Aguarde um momento…</p>
                       </>
                     ) : supabaseResolvedOk ? (
                       <>
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-6"><CheckCircle2 className="w-8 h-8 text-emerald-400" /></div>
                         <h1 className="text-2xl font-bold text-white mb-2">Supabase configurado</h1>
-                        <p className="text-slate-400 mb-8">Projeto pronto para usar.</p>
+                        <p className="text-slate-400 mb-8">Projecto pronto a usar.</p>
                         <button onClick={goNext} className="w-full py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-white font-semibold text-lg transition-all shadow-lg shadow-cyan-500/25">Continuar</button>
                       </>
                     ) : supabaseResolveError ? (
@@ -1626,8 +1626,8 @@ export default function InstallWizardPage() {
                     ) : (
                       <>
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mb-6"><Loader2 className="w-8 h-8 text-cyan-400 animate-spin" /></div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Finalizando</h1>
-                        <p className="text-slate-400">Resolvendo configurações…</p>
+                        <h1 className="text-2xl font-bold text-white mb-2">A finalizar</h1>
+                        <p className="text-slate-400">A resolver as configurações…</p>
                       </>
                     )}
                   </motion.div>
@@ -1640,10 +1640,10 @@ export default function InstallWizardPage() {
             <motion.div key="step-launch" variants={sceneVariants} initial="initial" animate="animate" exit="exit" transition={sceneTransition} className="text-center">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-teal-400 mb-6"><Sparkles className="w-10 h-10 text-white" /></div>
               <h1 className="text-3xl font-bold text-white mb-2">Tudo pronto, {firstName}!</h1>
-              <p className="text-slate-400 mb-8">Sua jornada está prestes a começar.</p>
+              <p className="text-slate-400 mb-8">A sua jornada está prestes a começar.</p>
               {!validateInstallerPassword(adminPassword).ok && (
                 <div className="mb-6 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-4 text-left">
-                  <div className="text-amber-200 font-medium">Só falta fortalecer sua senha</div>
+                  <div className="text-amber-200 font-medium">Só falta reforçar a sua palavra-passe</div>
                   <div className="text-slate-400 text-sm mt-1">Use 8+ caracteres com pelo menos 1 letra e 1 número.</div>
                   <div className="mt-3 flex gap-2">
                     <button
@@ -1656,21 +1656,21 @@ export default function InstallWizardPage() {
                       }}
                       className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-sm font-semibold"
                     >
-                      Gerar senha sugerida
+                      Gerar palavra-passe sugerida
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowChangePasswordModal(true)}
                       className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm"
                     >
-                      Ajustar senha
+                      Ajustar palavra-passe
                     </button>
                   </div>
                 </div>
               )}
 
               <button onClick={runInstaller} disabled={!canInstall || installing} className="w-full py-5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-white font-bold text-xl transition-all shadow-xl shadow-cyan-500/30 disabled:opacity-50">
-                {installing ? <span className="flex items-center justify-center gap-3"><Loader2 className="w-6 h-6 animate-spin" />Iniciando…</span> : '🚀 Iniciar viagem'}
+                {installing ? <span className="flex items-center justify-center gap-3"><Loader2 className="w-6 h-6 animate-spin" />A iniciar…</span> : '🚀 Iniciar viagem'}
               </button>
               {runError && !showInstallOverlay && <div className="mt-4 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-red-400 text-sm">{runError}</div>}
             </motion.div>
@@ -1717,7 +1717,7 @@ export default function InstallWizardPage() {
             
             <div className="relative text-center px-4 max-w-md">
               {/* Contagem regressiva - números gigantes */}
-              {cinePhase === 'preparing' && ['3', '2', '1', 'Decolagem!'].includes(cineMessage) && (
+              {cinePhase === 'preparing' && ['3', '2', '1', 'Descolagem!'].includes(cineMessage) && (
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={cineMessage}
@@ -1728,7 +1728,7 @@ export default function InstallWizardPage() {
                     className="mb-8"
                   >
                     <span className={`font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-cyan-400 ${
-                      cineMessage === 'Decolagem!' ? 'text-6xl' : 'text-[120px] leading-none'
+                      cineMessage === 'Descolagem!' ? 'text-6xl' : 'text-[120px] leading-none'
                     }`}>
                       {cineMessage}
                     </span>
@@ -1737,7 +1737,7 @@ export default function InstallWizardPage() {
               )}
               
               {/* Ícone central - só mostra quando não é contagem */}
-              {!(cinePhase === 'preparing' && ['3', '2', '1', 'Decolagem!'].includes(cineMessage)) && (
+              {!(cinePhase === 'preparing' && ['3', '2', '1', 'Descolagem!'].includes(cineMessage)) && (
                 <div className="relative inline-flex items-center justify-center w-32 h-32 mb-8">
                   {cinePhase === 'preparing' || cinePhase === 'running' ? (
                     <>
@@ -1828,7 +1828,7 @@ export default function InstallWizardPage() {
               )}
               
               {/* Título principal - esconde durante contagem */}
-              {!(cinePhase === 'preparing' && ['3', '2', '1', 'Decolagem!'].includes(cineMessage)) && (
+              {!(cinePhase === 'preparing' && ['3', '2', '1', 'Descolagem!'].includes(cineMessage)) && (
                 <AnimatePresence mode="wait">
                   <motion.h1 
                     key={cineMessage} 
@@ -1882,8 +1882,8 @@ export default function InstallWizardPage() {
                   className="space-y-6"
                 >
                   <p className="text-slate-300">
-                    Seu novo mundo está pronto.<br />
-                    <span className="text-slate-500 text-sm">Tudo está pronto — você já pode entrar. (Se parecer desatualizado, recarregue a página.)</span>
+                    O seu novo mundo está pronto.<br />
+                    <span className="text-slate-500 text-sm">Está tudo pronto — já pode entrar. (Se parecer desactualizado, recarregue a página.)</span>
                   </p>
                   <button 
                     onClick={() => {
@@ -1999,8 +1999,8 @@ export default function InstallWizardPage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mb-4">
                   <Sparkles className="w-8 h-8 text-cyan-300" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Trocar senha</h2>
-                <p className="text-slate-400">Vamos garantir seu acesso antes de concluir a missão.</p>
+                <h2 className="text-2xl font-bold text-white mb-2">Mudar palavra-passe</h2>
+                <p className="text-slate-400">Vamos garantir o seu acesso antes de concluir a missão.</p>
               </div>
 
               <div className="space-y-3">
@@ -2009,7 +2009,7 @@ export default function InstallWizardPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white text-center text-lg placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent"
-                  placeholder="Nova senha"
+                  placeholder="Nova palavra-passe"
                   autoFocus
                 />
                 <input
@@ -2020,7 +2020,7 @@ export default function InstallWizardPage() {
                     if (e.key === 'Enter') void applyNewInstallerPassword();
                   }}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white text-center text-lg placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent"
-                  placeholder="Confirmar senha"
+                  placeholder="Confirmar palavra-passe"
                 />
 
                 <button
@@ -2028,7 +2028,7 @@ export default function InstallWizardPage() {
                   onClick={() => setShowNewPassword((v) => !v)}
                   className="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 text-sm transition-all"
                 >
-                  {showNewPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  {showNewPassword ? 'Ocultar palavra-passe' : 'Mostrar palavra-passe'}
                 </button>
 
                 {changePasswordError && (
@@ -2053,7 +2053,7 @@ export default function InstallWizardPage() {
                     onClick={() => void applyNewInstallerPassword()}
                     className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-white font-semibold transition-all"
                   >
-                    Salvar
+                    Guardar
                   </button>
                 </div>
               </div>

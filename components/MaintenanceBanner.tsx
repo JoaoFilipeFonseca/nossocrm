@@ -31,7 +31,7 @@ interface MaintenanceBannerProps {
  */
 export const MaintenanceBanner: React.FC<MaintenanceBannerProps> = ({
   show = true,
-  message = '🔒 Funcionalidades de IA temporariamente desativadas para atualizações de segurança. Voltarão em breve.',
+  message = '🔒 Funcionalidades de IA temporariamente desactivadas para actualizações de segurança. Voltarão em breve.',
   onDismiss,
 }) => {
   const [dismissed, setDismissed] = React.useState(false);

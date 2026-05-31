@@ -320,7 +320,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
       // ignore
     }
 
-    addToast('Criando board...', 'info');
+    addToast('A criar board...', 'info');
     onClose(); // close immediately for UX
 
     try {
@@ -370,7 +370,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
               {editingBoard && onSwitchEditingBoard && availableBoards.length > 1 && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Editando board
+                    A editar board
                   </label>
                   <div className="relative">
                     <select
@@ -482,7 +482,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
                   </select>
                   {selectedTemplate && (
                     <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                      ✨ Template aplicado! Você pode editar os campos abaixo.
+                      ✨ Template aplicado! Pode editar os campos abaixo.
                     </p>
                   )}
                 </div>
@@ -491,7 +491,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
               {/* Linked Lifecycle Stage */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  🎯 Gerencia Contatos no Estágio
+                  🎯 Gere Contactos no Estágio
                 </label>
                 <select
                   value={linkedLifecycleStage}
@@ -504,7 +504,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
                   ))}
                 </select>
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                  Novos negócios de contatos neste estágio aparecerão automaticamente aqui.
+                  Novos negócios de contactos neste estágio aparecerão automaticamente aqui.
                 </p>
               </div>
 
@@ -739,7 +739,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
                       {/* Lifecycle Automation */}
                       <div className="pl-9">
                         <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
-                          Promove contato para:
+                          Promove contacto para:
                         </label>
                         <div className="relative">
                           <select
@@ -779,7 +779,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({
                 disabled={!name.trim()}
                 className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors focus-visible-ring"
               >
-                {editingBoard ? 'Salvar Alterações' : 'Criar Board'}
+                {editingBoard ? 'Guardar Alterações' : 'Criar Board'}
               </button>
           </div>
         </div>

@@ -150,7 +150,7 @@ export const ProductsCatalogManager: React.FC = () => {
   };
 
   const remove = async (p: Product) => {
-    const ok = window.confirm(`Excluir "${p.name}"? Isso não remove itens já usados em deals históricos.`);
+    const ok = window.confirm(`Eliminar "${p.name}"? Isto não remove itens já usados em deals históricos.`);
     if (!ok) return;
     setLoading(true);
     setError(null);
@@ -218,7 +218,7 @@ export const ProductsCatalogManager: React.FC = () => {
             <input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Curta e objetiva"
+              placeholder="Curta e objectiva"
               className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40"
             />
           </div>
@@ -240,7 +240,7 @@ export const ProductsCatalogManager: React.FC = () => {
         <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4">
           {sorted.length === 0 ? (
             <div className="text-sm text-slate-500 dark:text-slate-400 py-6">
-              Nenhum produto cadastrado ainda.
+              Nenhum produto registado ainda.
             </div>
           ) : (
             <div className="space-y-2">
@@ -312,8 +312,8 @@ export const ProductsCatalogManager: React.FC = () => {
                             type="button"
                             onClick={saveEdit}
                             className="px-2 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
-                            title="Salvar"
-                            aria-label="Salvar alterações"
+                            title="Guardar"
+                            aria-label="Guardar alterações"
                             disabled={loading}
                           >
                             <Save className="h-4 w-4 text-primary-600" />
@@ -345,8 +345,8 @@ export const ProductsCatalogManager: React.FC = () => {
                         type="button"
                         onClick={() => toggleActive(p, !isActive)}
                         className="px-2 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
-                        title={isActive ? 'Desativar' : 'Ativar'}
-                        aria-label={isActive ? 'Desativar produto' : 'Ativar produto'}
+                        title={isActive ? 'Desactivar' : 'Activar'}
+                        aria-label={isActive ? 'Desactivar produto' : 'Activar produto'}
                         disabled={loading}
                       >
                         {isActive ? <ToggleRight className="h-4 w-4 text-green-600" /> : <ToggleLeft className="h-4 w-4 text-red-500" />}
@@ -355,8 +355,8 @@ export const ProductsCatalogManager: React.FC = () => {
                         type="button"
                         onClick={() => remove(p)}
                         className="px-2 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        title="Excluir"
-                        aria-label="Excluir produto"
+                        title="Eliminar"
+                        aria-label="Eliminar produto"
                         disabled={loading}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />

@@ -30,7 +30,7 @@ const mock = {
     cta: 'Executar agora',
   },
   copilot: {
-    title: 'Próxima melhor ação',
+    title: 'Próxima melhor acção',
     suggestion: 'Envie uma mensagem curta de agradecimento e já ofereça 2 horários para kickoff.',
     action: 'Gerar mensagem',
   },
@@ -135,7 +135,7 @@ export default function DealJobsMockClient() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <Target className="h-4 w-4" />
-                    Próxima ação
+                    Próxima acção
                   </div>
                   <h2 className="mt-2 text-base font-semibold text-slate-100">
                     {mock.nextAction.title}

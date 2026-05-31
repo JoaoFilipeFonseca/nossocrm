@@ -54,11 +54,11 @@ export const InboxBriefing: React.FC<InboxBriefingProps> = ({
           {isLoading ? (
             <div className="flex items-center gap-2 text-slate-400">
               <Loader2 className="animate-spin" size={16} />
-              <span className="text-sm">Analisando seu dia...</span>
+              <span className="text-sm">A analisar o seu dia...</span>
             </div>
           ) : (
             <p className="text-slate-200 leading-relaxed">
-              {briefing || 'Vamos começar o dia! Confira suas actividades abaixo.'}
+              {briefing || 'Vamos começar o dia! Veja as suas actividades abaixo.'}
             </p>
           )}
         </div>

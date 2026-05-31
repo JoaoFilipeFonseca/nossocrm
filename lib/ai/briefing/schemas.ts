@@ -93,7 +93,7 @@ const AlertSchema = z.object({
 const RecommendedApproachSchema = z.object({
   opening: z.string().describe('Sugestão de abertura ou abordagem inicial em português'),
   keyQuestions: z.array(z.string()).describe('Perguntas-chave para fazer em português'),
-  objectionsToAnticipate: z.array(z.string()).describe('Objeções potenciais para se preparar em português'),
+  objectionsToAnticipate: z.array(z.string()).describe('Objecções potenciais para se preparar em português'),
   suggestedNextStep: z.string().describe('Próximo passo recomendado para este deal em português'),
 });
 

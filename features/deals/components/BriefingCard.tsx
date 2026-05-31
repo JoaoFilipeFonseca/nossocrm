@@ -112,7 +112,7 @@ export function BriefingCard({
             onClick={onRefresh}
             disabled={isRefreshing}
             className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors disabled:opacity-50"
-            title="Atualizar briefing"
+            title="Actualizar briefing"
           >
             <RefreshCw
               className={cn('w-4 h-4', isRefreshing && 'animate-spin')}

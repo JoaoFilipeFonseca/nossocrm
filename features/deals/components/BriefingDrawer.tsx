@@ -114,7 +114,7 @@ function BriefingEmpty({ onGenerate }: { onGenerate: () => void }) {
       </h4>
       <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-4">
         Gere um briefing com insights de IA para se preparar antes da próxima
-        interação com este lead.
+        interacção com este lead.
       </p>
       <button
         onClick={onGenerate}
@@ -219,7 +219,7 @@ export function BriefingDrawer({
                   <div className="flex flex-col items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 text-primary-600 dark:text-primary-400 animate-spin mb-4" />
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Analisando histórico e gerando briefing...
+                      A analisar histórico e a gerar briefing...
                     </p>
                   </div>
                 ) : error ? (

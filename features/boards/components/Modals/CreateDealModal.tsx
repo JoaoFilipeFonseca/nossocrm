@@ -107,7 +107,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
             <div className="fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
                 <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-5">
                     <p className="text-slate-700 dark:text-slate-300 text-center">
-                        Nenhum board selecionado ou board sem estágios.
+                        Nenhum board seleccionado ou board sem estágios.
                     </p>
                     <button
                         onClick={onClose}
@@ -225,7 +225,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                     <div>
                         <div className="flex items-center gap-2 mb-3">
                             <label className="text-xs font-bold text-slate-500 uppercase">
-                                Contato
+                                Contacto
                             </label>
                             {!selectedContact && (
                                 <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 ml-auto">
@@ -238,7 +238,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                         }`}
                                     >
-                                        Buscar
+                                        Procurar
                                     </button>
                                     <button
                                         type="button"
@@ -408,7 +408,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                         {isSubmitting ? (
                             <>
                                 <Loader2 size={18} className="animate-spin" />
-                                Criando...
+                                A criar...
                             </>
                         ) : (
                             'Criar Negócio'

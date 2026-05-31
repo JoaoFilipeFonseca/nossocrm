@@ -219,7 +219,7 @@ export const WebhooksSection: React.FC = () => {
       await loadInboundEvents(sourceId);
       addToast('Pronto: URL e Secret gerados.', 'success');
     } catch (e: any) {
-      addToast(e?.message || 'Erro ao ativar entrada de leads', 'error');
+      addToast(e?.message || 'Erro ao activar entrada de leads', 'error');
     } finally {
       setLoading(false);
     }
@@ -239,10 +239,10 @@ export const WebhooksSection: React.FC = () => {
         })
         .eq('id', activeInbound.id);
       if (error) throw error;
-      addToast('Destino atualizado.', 'success');
+      addToast('Destino actualizado.', 'success');
       await loadWebhooks();
     } catch (e: any) {
-      addToast(e?.message || 'Erro ao atualizar destino', 'error');
+      addToast(e?.message || 'Erro ao actualizar destino', 'error');
     } finally {
       setLoading(false);
     }
@@ -306,7 +306,7 @@ export const WebhooksSection: React.FC = () => {
           .single();
         if (error) throw error;
         setEndpoint(data as any);
-        addToast('Follow-up atualizado!', 'success');
+        addToast('Follow-up actualizado!', 'success');
       } else {
         const secret = generateSecret();
         const { data, error } = await supabase
@@ -329,7 +329,7 @@ export const WebhooksSection: React.FC = () => {
       setIsFollowUpOpen(false);
       setFollowUpUrl('');
     } catch (e: any) {
-      addToast(e?.message || 'Erro ao salvar follow-up', 'error');
+      addToast(e?.message || 'Erro ao guardar follow-up', 'error');
     } finally {
       setLoading(false);
     }
@@ -359,10 +359,10 @@ export const WebhooksSection: React.FC = () => {
         .update({ active: nextActive })
         .eq('id', activeInbound.id);
       if (error) throw error;
-      addToast(nextActive ? 'Entrada de leads ativada!' : 'Entrada de leads desativada.', 'success');
+      addToast(nextActive ? 'Entrada de leads activada!' : 'Entrada de leads desactivada.', 'success');
       await loadWebhooks();
     } catch (e: any) {
-      addToast(e?.message || 'Erro ao atualizar status do webhook', 'error');
+      addToast(e?.message || 'Erro ao actualizar status do webhook', 'error');
     } finally {
       setLoading(false);
     }
@@ -381,7 +381,7 @@ export const WebhooksSection: React.FC = () => {
       addToast('Configuração de entrada removida.', 'success');
       await loadWebhooks();
     } catch (e: any) {
-      addToast(e?.message || 'Erro ao excluir webhook', 'error');
+      addToast(e?.message || 'Erro ao eliminar webhook', 'error');
     } finally {
       setLoading(false);
     }
@@ -397,10 +397,10 @@ export const WebhooksSection: React.FC = () => {
         .update({ active: nextActive })
         .eq('id', endpoint.id);
       if (error) throw error;
-      addToast(nextActive ? 'Follow-up ativado!' : 'Follow-up desativado.', 'success');
+      addToast(nextActive ? 'Follow-up activado!' : 'Follow-up desactivado.', 'success');
       await loadWebhooks();
     } catch (e: any) {
-      addToast(e?.message || 'Erro ao atualizar follow-up', 'error');
+      addToast(e?.message || 'Erro ao actualizar follow-up', 'error');
     } finally {
       setLoading(false);
     }
@@ -420,7 +420,7 @@ export const WebhooksSection: React.FC = () => {
         .single();
       if (error) throw error;
       setEndpoint(data as any);
-      addToast('Secret do follow-up regenerado. Atualize no seu n8n/Make/WhatsApp.', 'success');
+      addToast('Secret do follow-up regenerado. Actualize no seu n8n/Make/WhatsApp.', 'success');
     } catch (e: any) {
       addToast(e?.message || 'Erro ao regenerar secret', 'error');
     } finally {
@@ -441,7 +441,7 @@ export const WebhooksSection: React.FC = () => {
       setEndpoint(null);
       addToast('Follow-up removido.', 'success');
     } catch (e: any) {
-      addToast(e?.message || 'Erro ao excluir follow-up', 'error');
+      addToast(e?.message || 'Erro ao eliminar follow-up', 'error');
     } finally {
       setLoading(false);
     }
@@ -483,7 +483,7 @@ export const WebhooksSection: React.FC = () => {
                 </p>
               </div>
               <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase ${hasInbound ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300'}`}>
-                {hasInbound ? 'Ativo' : 'Desativado'}
+                {hasInbound ? 'Activo' : 'Desactivado'}
               </span>
             </div>
 
@@ -529,7 +529,7 @@ export const WebhooksSection: React.FC = () => {
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-60"
                   >
                     <Power className="h-4 w-4" />
-                    {activeInbound.active ? 'Desativar' : 'Ativar'}
+                    {activeInbound.active ? 'Desactivar' : 'Activar'}
                   </button>
                 </div>
 
@@ -577,7 +577,7 @@ export const WebhooksSection: React.FC = () => {
                 </p>
               </div>
               <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase ${endpoint?.active ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300'}`}>
-                {endpoint?.active ? 'Ativo' : 'Desativado'}
+                {endpoint?.active ? 'Activo' : 'Desactivado'}
               </span>
             </div>
 
@@ -618,7 +618,7 @@ export const WebhooksSection: React.FC = () => {
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-60"
                   >
                     <Power className="h-4 w-4" />
-                    {endpoint.active ? 'Desativar' : 'Ativar'}
+                    {endpoint.active ? 'Desactivar' : 'Activar'}
                   </button>
                   <button
                     onClick={handleRegenerateOutboundSecret}
@@ -702,8 +702,8 @@ export const WebhooksSection: React.FC = () => {
           {quickStartTab === 'outbound' ? (
         <div className="space-y-4">
               <div className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-                <b>Follow-up</b> envia um aviso quando um lead muda de etapa. Você cola uma URL (n8n/Make/WhatsApp) e
-                valida o Secret no seu lado.
+                <b>Follow-up</b> envia um aviso quando um lead muda de etapa. Cola uma URL (n8n/Make/WhatsApp) e
+                valida o Secret do seu lado.
               </div>
               <div className="p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10">
                 <div className="flex items-center justify-between gap-3">
@@ -823,7 +823,7 @@ export const WebhooksSection: React.FC = () => {
                           Atual: <b>{inboundBoardName}</b> → <b>{inboundStageLabel}</b>
                         </>
                       ) : (
-                        <>Você vai gerar uma URL única e um Secret (senha) para esse destino.</>
+                        <>Vai gerar uma URL única e um Secret (palavra-passe) para este destino.</>
                       )}
                     </div>
 
@@ -836,7 +836,7 @@ export const WebhooksSection: React.FC = () => {
                           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors disabled:opacity-60"
             >
                           <Pencil className="h-4 w-4" />
-                          Salvar destino
+                          Guardar destino
             </button>
                       ) : (
             <button
@@ -883,7 +883,7 @@ export const WebhooksSection: React.FC = () => {
 
           <div className="space-y-2">
                           <div className="flex items-center justify-between gap-2">
-                            <div className="text-xs font-bold text-slate-600 dark:text-slate-300">Secret (senha)</div>
+                            <div className="text-xs font-bold text-slate-600 dark:text-slate-300">Secret (palavra-passe)</div>
               <button
                               type="button"
                               onClick={() => copy(activeInbound.secret, 'qsSecret')}
@@ -924,7 +924,7 @@ export const WebhooksSection: React.FC = () => {
                     ) : (
                       <div className="flex items-center justify-between gap-3">
                         <div className="text-sm text-slate-700 dark:text-slate-200">
-                          Gere sua URL e Secret para começar.
+                          Gere o seu URL e Secret para começar.
                         </div>
                         <button
                           type="button"
@@ -1018,7 +1018,7 @@ export const WebhooksSection: React.FC = () => {
               {inboundStep === 3 ? (
                 <div className="space-y-4">
                   <div className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-                    Envie um evento de teste para confirmar que está tudo certo. Isso cria/atualiza um lead de teste no
+                    Envie um evento de teste para confirmar que está tudo certo. Isto cria/actualiza um lead de teste no
                     funil.
                   </div>
 
@@ -1156,7 +1156,7 @@ export const WebhooksSection: React.FC = () => {
               disabled={loading || !followUpUrl.trim()}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
-              {endpoint?.id ? 'Salvar' : 'Conectar'}
+              {endpoint?.id ? 'Guardar' : 'Conectar'}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -1170,7 +1170,7 @@ export const WebhooksSection: React.FC = () => {
         title="Eliminar webhook de entrada?"
         message={
           <div>
-            Isso remove apenas a <b>configuração</b> do webhook (URL/secret param de entrada). Leads já criados no CRM não serão apagados.
+            Isto remove apenas a <b>configuração</b> do webhook (URL/secret param de entrada). Leads já criados no CRM não serão apagados.
           </div>
         }
         confirmText="Eliminar"
@@ -1185,7 +1185,7 @@ export const WebhooksSection: React.FC = () => {
         title="Eliminar follow-up (webhook de saída)?"
         message={
           <div>
-            Isso remove apenas a <b>configuração</b> do follow-up. O CRM não enviará mais notificações quando o lead mudar de etapa.
+            Isto remove apenas a <b>configuração</b> do follow-up. O CRM não enviará mais notificações quando o lead mudar de etapa.
           </div>
         }
         confirmText="Eliminar"

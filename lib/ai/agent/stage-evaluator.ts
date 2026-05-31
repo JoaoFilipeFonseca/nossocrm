@@ -141,13 +141,13 @@ export async function evaluateStageAdvancement(
       .map((c, i) => `${i + 1}. ${c}`)
       .join('\n');
 
-    const systemPrompt = `Você é um especialista em qualificação de leads de vendas.
+    const systemPrompt = `É um especialista em qualificação de leads de vendas.
 
 Analise o histórico da conversa e avalie se os critérios de avanço foram satisfeitos.
 
 REGRAS DE AVALIAÇÃO:
 - "met: true" APENAS se há evidência EXPLÍCITA na conversa
-- "confidence" deve refletir a clareza da evidência:
+- "confidence" deve reflectir a clareza da evidência:
   - 0.9-1.0: Afirmação explícita e clara do lead
   - 0.7-0.8: Evidência forte mas indireta
   - 0.5-0.6: Evidência fraca ou implícita
@@ -159,13 +159,13 @@ REGRAS DE AVALIAÇÃO:
 CRITÉRIOS PARA ESTE ESTÁGIO:
 ${criteriaList}
 
-${stageConfig.stage_goal ? `OBJETIVO DO ESTÁGIO: ${stageConfig.stage_goal}` : ''}`;
+${stageConfig.stage_goal ? `OBJECTIVO DO ESTÁGIO: ${stageConfig.stage_goal}` : ''}`;
 
     const userPrompt = `
 CONTEXTO DO LEAD:
 - Nome: ${context.contact?.name || 'Desconhecido'}
 - Empresa: ${context.contact?.company || 'Não informada'}
-- Estágio atual: ${context.deal?.stage_name || 'Desconhecido'}
+- Estágio actual: ${context.deal?.stage_name || 'Desconhecido'}
 
 HISTÓRICO DA CONVERSA:
 ${historyText}

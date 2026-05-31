@@ -128,7 +128,7 @@ function buildExecutionHeader(opts: {
 
   const ctx = opts.context;
   if (ctx) {
-    const originLabel = ctx.origin === 'nextBestAction' ? 'Próxima ação' : 'Ação rápida';
+    const originLabel = ctx.origin === 'nextBestAction' ? 'Próxima acção' : 'Acção rápida';
     lines.push(`Origem: ${originLabel}`);
     lines.push(`Geração: ${ctx.source === 'template' ? 'Template' : ctx.source === 'generated' ? 'Gerado' : 'Manual'}`);
     if (ctx.template) {
@@ -220,7 +220,7 @@ function TemplatePickerModal({
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
           <div className="min-w-0">
             <div className="text-sm font-semibold text-slate-100 truncate">{title}</div>
-            <div className="text-[11px] text-slate-500">Escolha um script persistido e eu preencho a mensagem com variáveis do deal/contato.</div>
+            <div className="text-[11px] text-slate-500">Escolha um script persistido e eu preencho a mensagem com variáveis do deal/contacto.</div>
           </div>
           <button
             type="button"
@@ -240,7 +240,7 @@ function TemplatePickerModal({
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Buscar por título ou texto…"
+                  placeholder="Procurar por título ou texto…"
                   className="w-full rounded-xl border border-white/10 bg-white/3 px-9 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
                 />
               </div>
@@ -1019,7 +1019,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
       try {
         await updateDeal(selectedDeal.id, { customFields: nextCustomFields });
       } catch (e) {
-        pushToast(errorMessage(e, 'Não foi possível salvar o checklist.'), 'danger');
+        pushToast(errorMessage(e, 'Não foi possível guardar o checklist.'), 'danger');
       }
     },
     [pushToast, selectedDeal, updateDeal]
@@ -1057,10 +1057,10 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
             completed: true,
             user: actor,
           });
-          pushToast('WhatsApp registrado', 'success');
+          pushToast('WhatsApp registado', 'success');
           setMessageLogContext(null);
         } catch (e) {
-          pushToast(errorMessage(e, 'Não foi possível registrar o WhatsApp.'), 'danger');
+          pushToast(errorMessage(e, 'Não foi possível registar o WhatsApp.'), 'danger');
         }
         return;
       }
@@ -1079,10 +1079,10 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
           completed: true,
           user: actor,
         });
-        pushToast('Email registrado', 'success');
+        pushToast('Email registado', 'success');
         setMessageLogContext(null);
       } catch (e) {
-        pushToast(errorMessage(e, 'Não foi possível registrar o email.'), 'danger');
+        pushToast(errorMessage(e, 'Não foi possível registar o email.'), 'danger');
       }
     },
     [addActivity, actor, messageLogContext, messageLogDedupe, pushToast, selectedDeal]
@@ -1150,9 +1150,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
           user: actor,
         });
 
-        pushToast('Ligação registrada', 'success');
+        pushToast('Ligação registada', 'success');
       } catch (e) {
-        pushToast(errorMessage(e, 'Não foi possível registrar a ligação.'), 'danger');
+        pushToast(errorMessage(e, 'Não foi possível registar a ligação.'), 'danger');
       }
     },
     [addActivity, actor, pushToast, selectedDeal]
@@ -1223,7 +1223,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
       try {
         await moveDeal(selectedDeal, nextStageId);
         const next = selectedBoard.stages.find((s) => s.id === nextStageId);
-        pushToast(`Etapa: ${next?.label ?? 'Atualizada'}`, 'success');
+        pushToast(`Etapa: ${next?.label ?? 'Actualizada'}`, 'success');
 
         // Log na timeline (best-effort)
         try {
@@ -1232,14 +1232,14 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
             dealTitle: selectedDeal.title,
             type: 'STATUS_CHANGE',
             title: 'Moveu para',
-            description: next?.label ?? 'Etapa atualizada',
+            description: next?.label ?? 'Etapa actualizada',
             date: new Date().toISOString(),
             completed: true,
             user: actor,
           });
         } catch {
           // Não bloqueia o fluxo principal
-          pushToast('Etapa atualizada (sem log)', 'neutral');
+          pushToast('Etapa actualizada (sem log)', 'neutral');
         }
       } catch (e) {
         pushToast(errorMessage(e, 'Não foi possível mover etapa.'), 'danger');
@@ -1462,13 +1462,13 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                 >
                   <span className="inline-flex items-center gap-1">
                     <Sparkles className="h-3.5 w-3.5" />
-                    {aiLoading ? 'Analisando…' : 'Reanalisar'}
+                    {aiLoading ? 'A analisar…' : 'Reanalisar'}
                   </span>
                 </button>
               </div>
             </Panel>
 
-            <Panel title="Próxima ação" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />} className="shrink-0">
+            <Panel title="Próxima acção" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />} className="shrink-0">
               <div className="text-sm font-semibold text-slate-100">{nextBestAction.action}</div>
               <div className="mt-1 text-xs text-slate-400">{nextBestAction.reason}</div>
               <div className="mt-2 text-[11px] text-slate-500">
@@ -1741,7 +1741,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Buscar"
+                    placeholder="Procurar"
                     className="w-44 bg-transparent text-xs text-slate-200 outline-none placeholder:text-slate-600"
                   />
                 </div>
@@ -1834,14 +1834,14 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                           dealTitle: deal.title,
                           type: 'NOTE',
                           title: 'WhatsApp',
-                          description: `${header}\n\n---\n\nMensagem enviada (registrado fora do CRM).`,
+                          description: `${header}\n\n---\n\nMensagem enviada (registada fora do CRM).`,
                           date: new Date().toISOString(),
                           completed: true,
                           user: actor,
                         });
-                        pushToast('WhatsApp registrado', 'success');
+                        pushToast('WhatsApp registado', 'success');
                       } catch (e) {
-                        pushToast(errorMessage(e, 'Não foi possível registrar o WhatsApp.'), 'danger');
+                        pushToast(errorMessage(e, 'Não foi possível registar o WhatsApp.'), 'danger');
                       }
                     }}
                   >
@@ -1863,14 +1863,14 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                           dealTitle: deal.title,
                           type: 'EMAIL',
                           title: 'Email',
-                          description: `${header}\nAssunto: Email\n\n---\n\nEnviado (registrado fora do CRM).`,
+                          description: `${header}\nAssunto: Email\n\n---\n\nEnviado (registado fora do CRM).`,
                           date: new Date().toISOString(),
                           completed: true,
                           user: actor,
                         });
-                        pushToast('Email registrado', 'success');
+                        pushToast('Email registado', 'success');
                       } catch (e) {
-                        pushToast(errorMessage(e, 'Não foi possível registrar o email.'), 'danger');
+                        pushToast(errorMessage(e, 'Não foi possível registar o email.'), 'danger');
                       }
                     }}
                   >
@@ -1887,14 +1887,14 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                           dealTitle: deal.title,
                           type: 'CALL',
                           title: 'Ligação',
-                          description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nRealizada (registrado fora do CRM).',
+                          description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nRealizada (registada fora do CRM).',
                           date: new Date().toISOString(),
                           completed: true,
                           user: actor,
                         });
-                        pushToast('Ligação registrada', 'success');
+                        pushToast('Ligação registada', 'success');
                       } catch (e) {
-                        pushToast(errorMessage(e, 'Não foi possível registrar a ligação.'), 'danger');
+                        pushToast(errorMessage(e, 'Não foi possível registar a ligação.'), 'danger');
                       }
                     }}
                   >
@@ -1916,9 +1916,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                           completed: true,
                           user: actor,
                         });
-                        pushToast('Reunião registrada', 'success');
+                        pushToast('Reunião registada', 'success');
                       } catch (e) {
-                        pushToast(errorMessage(e, 'Não foi possível registrar a reunião.'), 'danger');
+                        pushToast(errorMessage(e, 'Não foi possível registar a reunião.'), 'danger');
                       }
                     }}
                   >
@@ -1935,14 +1935,14 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                           dealTitle: deal.title,
                           type: 'TASK',
                           title: 'Tarefa',
-                          description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nCriada (registrado fora do CRM).',
+                          description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nCriada (registada fora do CRM).',
                           date: new Date().toISOString(),
                           completed: true,
                           user: actor,
                         });
-                        pushToast('Tarefa registrada', 'success');
+                        pushToast('Tarefa registada', 'success');
                       } catch (e) {
-                        pushToast(errorMessage(e, 'Não foi possível registrar a tarefa.'), 'danger');
+                        pushToast(errorMessage(e, 'Não foi possível registar a tarefa.'), 'danger');
                       }
                     }}
                   >
@@ -1970,7 +1970,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                     onClick={async () => {
                       const text = noteDraftTimeline.trim();
                       if (!text) {
-                        pushToast('Escreva uma nota antes de salvar', 'danger');
+                        pushToast('Escreva uma nota antes de guardar', 'danger');
                         return;
                       }
 
@@ -1989,11 +1989,11 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                         setNoteDraftTimeline('');
                         pushToast('Nota salva', 'success');
                       } catch (e) {
-                        pushToast(errorMessage(e, 'Não foi possível salvar a nota.'), 'danger');
+                        pushToast(errorMessage(e, 'Não foi possível guardar a nota.'), 'danger');
                       }
                     }}
                   >
-                    Salvar
+                    Guardar
                   </button>
                 </div>
               </div>
@@ -2164,7 +2164,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
 
                     <div className="mt-4">
                       {isNotesLoading ? (
-                        <div className="text-sm text-slate-400">Carregando…</div>
+                        <div className="text-sm text-slate-400">A carregar…</div>
                       ) : notes.length === 0 ? (
                         <div className="text-sm text-slate-400">Sem notas ainda.</div>
                       ) : (
@@ -2205,7 +2205,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                         <FileText className="h-4 w-4" /> Scripts (persistidos)
                       </div>
-                      <div className="text-[11px] text-slate-500">{isScriptsLoading ? 'Carregando…' : `${scripts.length} itens`}</div>
+                      <div className="text-[11px] text-slate-500">{isScriptsLoading ? 'A carregar…' : `${scripts.length} itens`}</div>
                     </div>
 
                     <div className="mt-3 space-y-2">
@@ -2244,7 +2244,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                         <Inbox className="h-4 w-4" /> Arquivos (storage)
                       </div>
-                      <div className="text-[11px] text-slate-500">{isFilesLoading ? 'Carregando…' : `${files.length} itens`}</div>
+                      <div className="text-[11px] text-slate-500">{isFilesLoading ? 'A carregar…' : `${files.length} itens`}</div>
                     </div>
 
                     <div className="mt-3">
@@ -2263,7 +2263,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
 
                     <div className="mt-3 space-y-2">
                       {files.length === 0 && !isFilesLoading ? (
-                        <div className="text-sm text-slate-400">Nenhum arquivo.</div>
+                        <div className="text-sm text-slate-400">Nenhum ficheiro.</div>
                       ) : (
                         files.map((f) => (
                           <div key={f.id} className="rounded-2xl border border-white/10 bg-white/3 p-3">
@@ -2287,7 +2287,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                                   type="button"
                                   className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-2 text-rose-200 hover:bg-rose-500/15"
                                   onClick={() => void deleteFile.mutate({ fileId: f.id, filePath: f.file_path })}
-                                  title="Excluir"
+                                  title="Eliminar"
                                 >
                                   <X className="h-4 w-4" />
                                 </button>
@@ -2307,7 +2307,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                 <span>Contexto</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="text-[11px] font-semibold text-slate-500">{crmLoading ? 'Sincronizando…' : 'Pronto'}</div>
+                <div className="text-[11px] font-semibold text-slate-500">{crmLoading ? 'A sincronizar…' : 'Pronto'}</div>
                 <button
                   type="button"
                   className="rounded-lg border border-white/10 bg-white/2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:bg-white/5"

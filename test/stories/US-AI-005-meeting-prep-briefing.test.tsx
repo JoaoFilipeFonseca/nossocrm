@@ -274,7 +274,7 @@ describe('Story — US-AI-005: Meeting Prep Briefing', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByText(/Analisando histórico/i)).toBeInTheDocument();
+      expect(screen.getByText(/A analisar histórico/i)).toBeInTheDocument();
     });
 
     it('renders briefing content when loaded', async () => {
@@ -464,7 +464,7 @@ describe('Story — US-AI-006: AI Extracted Fields', () => {
       render(<AIExtractedFields data={mockExtractedData} />);
 
       // Should show "Atualizado em" with date
-      expect(screen.getByText(/Atualizado em/)).toBeInTheDocument();
+      expect(screen.getByText(/Actualizado em/)).toBeInTheDocument();
     });
 
     it('displays reasoning on hover/tooltip', () => {

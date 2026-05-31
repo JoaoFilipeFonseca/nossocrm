@@ -24,7 +24,7 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
   onCreateNew,
   selectedContact,
   selectedCompany,
-  placeholder = 'Buscar contacto (nome, telefone ou email)...'
+  placeholder = 'Procurar contacto (nome, telefone ou email)...'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -201,7 +201,7 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
             </div>
           ) : (
             <div className="p-3 text-sm text-slate-500 dark:text-slate-400 text-center">
-              Nenhum contato encontrado
+              Nenhum contacto encontrado
             </div>
           )}
           
@@ -220,7 +220,7 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
             </div>
             <div>
               <p className="font-medium text-primary-600 dark:text-primary-400">
-                Criar novo contato
+                Criar novo contacto
               </p>
               {searchTerm && (
                 <p className="text-xs text-slate-500 dark:text-slate-400">

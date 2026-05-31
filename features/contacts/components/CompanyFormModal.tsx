@@ -103,7 +103,7 @@ export const CompanyFormModal: React.FC<CompanyFormModalProps> = ({
         />
 
         <SubmitButton isLoading={isSubmitting}>
-          {editingCompany ? 'Salvar Alterações' : 'Criar Empresa'}
+          {editingCompany ? 'Guardar Alterações' : 'Criar Empresa'}
         </SubmitButton>
       </ModalForm>
     </Modal>

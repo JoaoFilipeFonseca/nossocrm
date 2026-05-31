@@ -205,19 +205,19 @@ export const useContactsController = () => {
         { id: editingCompany.id, updates: { ...data } },
         {
           onSuccess: () => {
-            (addToast || showToast)('Empresa atualizada!', 'success');
+            (addToast || showToast)('Empresa actualizada!', 'success');
             setIsCompanyModalOpen(false);
             setEditingCompany(null);
           },
           onError: (error: Error) => {
-            (addToast || showToast)(`Erro ao atualizar empresa: ${error.message}`, 'error');
+            (addToast || showToast)(`Erro ao actualizar empresa: ${error.message}`, 'error');
           },
         }
       );
     } else {
       // Close immediately for better UX (same pattern as contact creation)
       setIsCompanyModalOpen(false);
-      (addToast || showToast)('Criando empresa...', 'info');
+      (addToast || showToast)('A criar empresa...', 'info');
 
       createCompanyMutation.mutate(
         { name: data.name, industry: data.industry || '', website: data.website || '' } as any,
@@ -239,12 +239,12 @@ export const useContactsController = () => {
     if (!deleteCompanyId) return;
     // Close confirm modal immediately to avoid "stuck" feeling
     setDeleteCompanyId(null);
-    (addToast || showToast)('Excluindo empresa...', 'info');
+    (addToast || showToast)('A eliminar empresa...', 'info');
     try {
       await deleteCompanyMutation.mutateAsync(deleteCompanyId);
-      (addToast || showToast)('Empresa excluída com sucesso', 'success');
+      (addToast || showToast)('Empresa eliminada com sucesso', 'success');
     } catch (e) {
-      (addToast || showToast)(`Erro ao excluir empresa: ${(e as Error).message}`, 'error');
+      (addToast || showToast)(`Erro ao eliminar empresa: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -266,11 +266,11 @@ export const useContactsController = () => {
           { id: deleteId },
           {
             onSuccess: () => {
-              (addToast || showToast)('Contacto excluído com sucesso', 'success');
+              (addToast || showToast)('Contacto eliminado com sucesso', 'success');
               setDeleteId(null);
             },
             onError: (error: Error) => {
-              (addToast || showToast)(`Erro ao excluir: ${error.message}`, 'error');
+              (addToast || showToast)(`Erro ao eliminar: ${error.message}`, 'error');
             },
           }
         );
@@ -286,11 +286,11 @@ export const useContactsController = () => {
         { id: deleteWithDeals.id, forceDeleteDeals: true },
         {
           onSuccess: () => {
-            (addToast || showToast)(`Contacto e ${deleteWithDeals.dealCount} negócio(s) excluídos`, 'success');
+            (addToast || showToast)(`Contacto e ${deleteWithDeals.dealCount} negócio(s) eliminados`, 'success');
             setDeleteWithDeals(null);
           },
           onError: (error: Error) => {
-            (addToast || showToast)(`Erro ao excluir: ${error.message}`, 'error');
+            (addToast || showToast)(`Erro ao eliminar: ${error.message}`, 'error');
           },
         }
       );
@@ -353,13 +353,13 @@ export const useContactsController = () => {
 
     if (successCount > 0) {
       (addToast || showToast)(
-        `${successCount} ${viewMode === 'companies' ? 'empresa(s)' : 'contacto(s)'} excluído(s)`,
+        `${successCount} ${viewMode === 'companies' ? 'empresa(s)' : 'contacto(s)'} eliminado(s)`,
         'success'
       );
     }
     if (errorCount > 0) {
       (addToast || showToast)(
-        `Falha ao excluir ${errorCount} ${viewMode === 'companies' ? 'empresa(s)' : 'contacto(s)'}`,
+        `Falha ao eliminar ${errorCount} ${viewMode === 'companies' ? 'empresa(s)' : 'contacto(s)'}`,
         'error'
       );
     }
@@ -379,7 +379,7 @@ export const useContactsController = () => {
     // (TanStack Query does not support onMutate in mutate() call options.)
     if (!editingContact) {
       setIsModalOpen(false);
-      (addToast || showToast)('Criando contacto...', 'info');
+      (addToast || showToast)('A criar contacto...', 'info');
     }
 
     // Find or create company
@@ -424,7 +424,7 @@ export const useContactsController = () => {
         },
         {
           onSuccess: () => {
-            (addToast || showToast)('Contacto atualizado!', 'success');
+            (addToast || showToast)('Contacto actualizado!', 'success');
             setIsModalOpen(false);
           },
           onSettled: () => setIsSubmittingContact(false),

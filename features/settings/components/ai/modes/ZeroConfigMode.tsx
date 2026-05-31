@@ -83,12 +83,12 @@ export function ZeroConfigMode({ config }: ZeroConfigModeProps) {
               isActive ? 'text-green-800 dark:text-green-200' : 'text-slate-700 dark:text-slate-300'
             )}
           >
-            {isActive ? 'AI Agent Ativo' : 'AI Agent Inativo'}
+            {isActive ? 'AI Agent Activo' : 'AI Agent Inactivo'}
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {isActive
-              ? 'O agente está respondendo automaticamente usando BANT.'
-              : 'Ative o AI nas configurações para começar.'}
+              ? 'O agente está a responder automaticamente usando BANT.'
+              : 'Active o AI nas configurações para começar.'}
           </p>
         </div>
         {isActive && <CheckCircle2 className="h-6 w-6 text-green-500" />}

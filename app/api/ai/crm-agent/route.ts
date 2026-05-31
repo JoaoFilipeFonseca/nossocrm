@@ -490,12 +490,12 @@ export async function POST(req: Request) {
                     .eq('organization_id', organizationId);
 
                 if (error) {
-                    return { success: false, message: `Erro ao atualizar valor: ${error.message}` };
+                    return { success: false, message: `Erro ao actualizar valor: ${error.message}` };
                 }
 
                 return {
                     success: true,
-                    message: `Valor do deal "${deal.title}" atualizado de €${(deal.value || 0).toLocaleString('pt-PT')} para €${newValue.toLocaleString('pt-PT')}`,
+                    message: `Valor do deal "${deal.title}" actualizado de €${(deal.value || 0).toLocaleString('pt-PT')} para €${newValue.toLocaleString('pt-PT')}`,
                 };
             },
         }),

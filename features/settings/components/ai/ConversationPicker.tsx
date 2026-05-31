@@ -97,10 +97,10 @@ export function ConversationPicker({
       <div className="flex items-center justify-between">
         <div>
           <h4 className="font-medium text-slate-900 dark:text-white">
-            Selecione Conversas de Sucesso
+            Seleccione Conversas de Sucesso
           </h4>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Escolha {minRequired}-{maxAllowed} conversas que representam seu estilo de vendas
+            Escolha {minRequired}-{maxAllowed} conversas que representam o seu estilo de vendas
           </p>
         </div>
         <Badge
@@ -121,7 +121,7 @@ export function ConversationPicker({
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar por contacto ou deal..."
+          placeholder="Procurar por contacto ou deal..."
           className={cn(
             'w-full pl-10 pr-4 py-2 rounded-lg border',
             'bg-white dark:bg-slate-800',
@@ -161,7 +161,7 @@ export function ConversationPicker({
       {/* Tip */}
       {selectedIds.length > 0 && selectedIds.length < minRequired && (
         <p className="text-xs text-amber-600 dark:text-amber-400">
-          Selecione pelo menos {minRequired - selectedIds.length} mais
+          Seleccione pelo menos {minRequired - selectedIds.length} mais
         </p>
       )}
     </div>

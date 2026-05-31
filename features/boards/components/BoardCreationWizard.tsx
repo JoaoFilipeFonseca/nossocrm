@@ -772,7 +772,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
       {
         role: 'ai',
         content:
-          'O que você gostaria de ajustar neste board? Posso adicionar etapas, mudar nomes ou sugerir novas automações.',
+          'O que gostaria de ajustar neste board? Posso adicionar etapas, mudar nomes ou sugerir novas automações.',
       },
     ]);
   };
@@ -819,18 +819,18 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
           <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
           <div
             className="relative z-10 w-[min(520px,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-5 shadow-2xl"
-            aria-label={installProgress && installProgress.total === 1 ? 'Criando board' : 'Instalando funil'}
+            aria-label={installProgress && installProgress.total === 1 ? 'A criar board' : 'A instalar funil'}
           >
             <div className="flex items-start gap-3">
               <Loader2 className="mt-0.5 animate-spin text-primary-500" size={22} />
               <div className="min-w-0 flex-1">
                 <div className="text-base font-semibold text-slate-900 dark:text-white">
-                  {installProgress && installProgress.total === 1 ? 'Criando board…' : 'Instalando funil…'}
+                  {installProgress && installProgress.total === 1 ? 'A criar board…' : 'A instalar funil…'}
                 </div>
                 <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                   {installProgress
-                    ? `Criando board ${installProgress.current}/${installProgress.total}${installProgress.currentBoardName ? ` — ${installProgress.currentBoardName}` : ''}`
-                    : 'Preparando…'}
+                    ? `A criar board ${installProgress.current}/${installProgress.total}${installProgress.currentBoardName ? ` — ${installProgress.currentBoardName}` : ''}`
+                    : 'A preparar…'}
                 </div>
               </div>
             </div>
@@ -941,7 +941,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
                     <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 p-3 rounded-xl rounded-bl-none flex items-center gap-2">
                       <Loader2 size={14} className="animate-spin text-primary-500" />
                       <span className="text-xs text-slate-500">
-                        Pensando...
+                        A pensar...
                       </span>
                     </div>
                   </div>
@@ -982,7 +982,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
                 {selectMode === 'home' ? (
                   <div className="mx-auto w-full">
                     <h3 className="text-base font-bold text-slate-900 dark:text-white text-center">
-                      Como você quer começar?
+                      Como quer começar?
                     </h3>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 text-center">
                       Escolha um caminho. O resto aparece depois.
@@ -1004,7 +1004,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
                             Criar com IA
                           </span>
                           <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                            Em 1 frase, eu monto o board pra você.
+                            Em 1 frase, eu monto o board para si.
                           </span>
                         </div>
                       </div>
@@ -1452,7 +1452,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
                   )}
 
                   <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-                    💡 A IA vai criar um board personalizado para você!
+                    💡 A IA vai criar um board personalizado para si!
                   </p>
                 </div>
               </div>
@@ -1472,7 +1472,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
                 {previewBoard && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/20 p-3 rounded-lg mb-4 flex items-center gap-2 text-blue-700 dark:text-blue-300">
                     <span className="text-lg">👁️</span>
-                    <span className="text-sm font-medium">Visualizando Sugestão (Não salvo)</span>
+                    <span className="text-sm font-medium">A visualizar Sugestão (Não guardado)</span>
                   </div>
                 )}
 
@@ -1572,7 +1572,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
                 {isGenerating ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    Gerando...
+                    A gerar...
                   </>
                 ) : (
                   <>

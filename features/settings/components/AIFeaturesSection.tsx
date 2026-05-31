@@ -18,11 +18,11 @@ type FeatureItem = {
 
 const FEATURES: FeatureItem[] = [
   { key: 'ai_chat_agent', title: 'Chat do agente (Pilot)', description: 'Chat principal com ferramentas do CRM.', promptKey: 'agent_crm_base_instructions' },
-  { key: 'ai_sales_script', title: 'Script de vendas', description: 'Geração de script (Inbox / ações).', promptKey: 'task_inbox_sales_script' },
+  { key: 'ai_sales_script', title: 'Script de vendas', description: 'Geração de script (Inbox / acções).', promptKey: 'task_inbox_sales_script' },
   { key: 'ai_daily_briefing', title: 'Briefing diário', description: 'Resumo diário de prioridades.', promptKey: 'task_inbox_daily_briefing' },
-  { key: 'ai_deal_analyze', title: 'Análise de deal (coach)', description: 'Sugere próxima ação e urgência.', promptKey: 'task_deals_analyze' },
+  { key: 'ai_deal_analyze', title: 'Análise de deal (coach)', description: 'Sugere próxima acção e urgência.', promptKey: 'task_deals_analyze' },
   { key: 'ai_email_draft', title: 'Rascunho de e-mail', description: 'Gera email profissional para o deal.', promptKey: 'task_deals_email_draft' },
-  { key: 'ai_objection_responses', title: 'Objeções (3 respostas)', description: 'Gera alternativas para contornar objeções.', promptKey: 'task_deals_objection_responses' },
+  { key: 'ai_objection_responses', title: 'Objecções (3 respostas)', description: 'Gera alternativas para contornar objecções.', promptKey: 'task_deals_objection_responses' },
   { key: 'ai_board_generate_structure', title: 'Boards: gerar estrutura', description: 'Cria estágios e automações sugeridas.', promptKey: 'task_boards_generate_structure' },
   { key: 'ai_board_generate_strategy', title: 'Boards: gerar estratégia', description: 'Define meta/KPI/persona do board.', promptKey: 'task_boards_generate_strategy' },
   { key: 'ai_board_refine', title: 'Boards: refinar com IA', description: 'Refina o board via chat/instruções.', promptKey: 'task_boards_refine' },
@@ -54,9 +54,9 @@ export const AIFeaturesSection: React.FC = () => {
     setSavingKey(key);
     try {
       await setAIFeatureFlagMut.mutateAsync({ key, enabled });
-      showToast(enabled ? 'Função ativada' : 'Função desativada', 'success');
+      showToast(enabled ? 'Função activada' : 'Função desactivada', 'success');
     } catch (e: any) {
-      showToast(e?.message || 'Falha ao salvar', 'error');
+      showToast(e?.message || 'Falha ao guardar', 'error');
     } finally {
       setSavingKey(null);
     }
@@ -124,11 +124,11 @@ export const AIFeaturesSection: React.FC = () => {
         body: JSON.stringify({ key: editingFeature.promptKey, content: promptDraft }),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.error || `Falha ao salvar prompt (HTTP ${res.status})`);
-      showToast('Prompt salvo!', 'success');
+      if (!res.ok) throw new Error(data?.error || `Falha ao guardar prompt (HTTP ${res.status})`);
+      showToast('Prompt guardado!', 'success');
       closePromptEditor();
     } catch (e: any) {
-      showToast(e?.message || 'Falha ao salvar prompt', 'error');
+      showToast(e?.message || 'Falha ao guardar prompt', 'error');
     } finally {
       setPromptSaving(false);
     }
@@ -209,8 +209,8 @@ export const AIFeaturesSection: React.FC = () => {
                       type="button"
                       onClick={() => toggle(f.key, !enabled)}
                       className="px-2 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={enabled ? 'Desativar' : 'Ativar'}
-                      aria-label={enabled ? `Desativar ${f.title}` : `Ativar ${f.title}`}
+                      title={enabled ? 'Desactivar' : 'Activar'}
+                      aria-label={enabled ? `Desactivar ${f.title}` : `Activar ${f.title}`}
                       disabled={!isAdmin || saving}
                     >
                       {enabled ? (
@@ -300,7 +300,7 @@ export const AIFeaturesSection: React.FC = () => {
                   }`}
                 >
                   {promptSaving ? <Loader2 size={16} className="animate-spin" /> : null}
-                  Salvar
+                  Guardar
                 </button>
               </div>
             </div>

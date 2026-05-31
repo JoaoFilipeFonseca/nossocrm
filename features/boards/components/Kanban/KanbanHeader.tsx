@@ -126,7 +126,7 @@ export const KanbanHeader: React.FC<KanbanHeaderProps> = ({
                                     Automações Sugeridas
                                 </h4>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                    Dicas da IA para otimizar este processo.
+                                    Dicas da IA para optimizar este processo.
                                 </p>
                             </div>
                             <div className="p-2">

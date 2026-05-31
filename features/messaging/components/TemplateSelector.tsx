@@ -347,7 +347,7 @@ export function TemplateSelector({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar template..."
+                placeholder="Procurar template..."
                 className={cn(
                   'w-full pl-9 pr-3 py-2 text-sm rounded-lg border',
                   'bg-[var(--color-bg)] text-[var(--color-text-primary)]',

@@ -365,7 +365,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
         },
         post: {
           tags: ['Companies'],
-          summary: 'Criar/atualizar empresa (upsert)',
+          summary: 'Criar/actualizar empresa (upsert)',
           security: [{ ApiKeyAuth: [] }],
           requestBody: {
             required: true,
@@ -413,7 +413,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
         },
         patch: {
           tags: ['Companies'],
-          summary: 'Atualizar empresa',
+          summary: 'Actualizar empresa',
           security: [{ ApiKeyAuth: [] }],
           parameters: [{ name: 'companyId', in: 'path', required: true, schema: { type: 'string' } }],
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } },
@@ -458,7 +458,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
         },
         post: {
           tags: ['Contacts'],
-          summary: 'Criar/atualizar contacto (upsert)',
+          summary: 'Criar/actualizar contacto (upsert)',
           security: [{ ApiKeyAuth: [] }],
           requestBody: {
             required: true,
@@ -508,7 +508,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
         },
         patch: {
           tags: ['Contacts'],
-          summary: 'Atualizar contacto',
+          summary: 'Actualizar contacto',
           security: [{ ApiKeyAuth: [] }],
           parameters: [{ name: 'contactId', in: 'path', required: true, schema: { type: 'string' } }],
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } },
@@ -579,7 +579,7 @@ export function getPublicApiOpenApiDocument(): OpenApiDocument {
         },
         patch: {
           tags: ['Deals'],
-          summary: 'Atualizar deal',
+          summary: 'Actualizar deal',
           security: [{ ApiKeyAuth: [] }],
           parameters: [{ name: 'dealId', in: 'path', required: true, schema: { type: 'string' } }],
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } },

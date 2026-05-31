@@ -51,9 +51,9 @@ export const OFFICIAL_JOURNEYS: Record<
         strategy: {
           agentPersona: {
             name: 'Closer',
-            role: 'Fechamento',
+            role: 'Fecho',
             behavior:
-              'Venda consultiva e objetiva. Foque em clareza da transformação, prova, urgência e remoção de objeções. Sem enrolação.',
+              'Venda consultiva e objectiva. Foque-se na clareza da transformação, prova, urgência e remoção de objecções. Sem rodeios.',
           },
           goal: {
             description: 'Maximizar conversão de MQL → Matriculado.',
@@ -66,7 +66,7 @@ export const OFFICIAL_JOURNEYS: Record<
       },
       {
         slug: 'onboarding',
-        name: '3. Onboarding do Aluno (Ativação)',
+        name: '3. Onboarding do Aluno (Activação)',
         columns: [
           { name: 'Boas-vindas', color: 'bg-blue-500', linkedLifecycleStage: 'CUSTOMER' },
           { name: 'Setup (Acessos)', color: 'bg-purple-500', linkedLifecycleStage: 'CUSTOMER' },
@@ -76,13 +76,13 @@ export const OFFICIAL_JOURNEYS: Record<
         strategy: {
           agentPersona: {
             name: 'CS Educacional',
-            role: 'Ativação e Retenção Inicial',
+            role: 'Activação e Retenção Inicial',
             behavior:
-              'Seja didático e acolhedor. Garanta que o aluno complete o setup e tenha o primeiro resultado rápido. Reduza abandono e reembolso.',
+              'Seja didáctico e acolhedor. Garanta que o aluno completa o setup e tem o primeiro resultado rápido. Reduza abandono e reembolso.',
           },
           goal: {
-            description: 'Garantir ativação rápida (primeiro resultado) e reduzir abandono.',
-            kpi: 'Ativação',
+            description: 'Garantir activação rápida (primeiro resultado) e reduzir abandono.',
+            kpi: 'Activação',
             targetValue: '70',
             type: 'percentage',
           },
@@ -119,7 +119,7 @@ export const OFFICIAL_JOURNEYS: Record<
             name: 'Closer de Upsell',
             role: 'Expansão / Upgrade',
             behavior:
-              'Ofereça o próximo passo certo (mentoria, high ticket, upgrade). Baseie-se em sinais de engajamento e resultados obtidos.',
+              'Ofereça o próximo passo certo (mentoria, high ticket, upgrade). Baseie-se em sinais de envolvimento e resultados obtidos.',
           },
           goal: {
             description: 'Gerar receita de expansão (LTV).',
@@ -212,7 +212,7 @@ export const OFFICIAL_JOURNEYS: Record<
             name: 'Expansion AM',
             role: 'Expansão / Upsell',
             behavior:
-              'Trate expansão como venda consultiva para clientes ativos. Valide uso/valor, descubra novas dores e construa business case. Seja objetivo e pragmático.',
+              'Trate expansão como venda consultiva para clientes activos. Valide uso/valor, descubra novas dores e construa business case. Seja objectivo e pragmático.',
           },
           goal: {
             description: 'Gerar receita de expansão com previsibilidade.',

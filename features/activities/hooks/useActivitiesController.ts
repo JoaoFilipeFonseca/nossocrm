@@ -139,10 +139,10 @@ export const useActivitiesController = () => {
   };
 
   const handleDeleteActivity = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta actividade?')) {
+    if (window.confirm('Tem a certeza que pretende eliminar esta actividade?')) {
       deleteActivityMutation.mutate(id, {
         onSuccess: () => {
-          showToast('Actividade excluída com sucesso', 'success');
+          showToast('Actividade eliminada com sucesso', 'success');
         },
       });
     }

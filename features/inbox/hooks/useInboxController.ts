@@ -354,7 +354,7 @@ export const useInboxController = () => {
       } catch (error: any) {
         if (isMounted) {
           // Fallback message if AI proxy fails
-          const fallback = `Você tem ${overdueActivities.length} actividades atrasadas, ${stalledDeals.length} negócios parados e ${upsellDeals.length} oportunidades de upsell.`;
+          const fallback = `Tem ${overdueActivities.length} actividades atrasadas, ${stalledDeals.length} negócios parados e ${upsellDeals.length} oportunidades de upsell.`;
           setBriefing(fallback);
         }
       } finally {
@@ -518,7 +518,7 @@ export const useInboxController = () => {
 
   const seedInboxDebug = useCallback(async () => {
     if (!isDebugMode()) {
-      showToast('Ative o Debug Mode para usar o Seed Inbox.', 'info');
+      showToast('Active o Debug Mode para usar o Seed Inbox.', 'info');
       return;
     }
     if (!supabase || !profile?.id || !activeBoardId || !activeBoard?.stages?.length) {

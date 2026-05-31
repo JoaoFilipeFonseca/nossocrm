@@ -248,7 +248,7 @@ export function StageAIConfig({ boardId, stages, goalStageId }: StageAIConfigPro
             <Sparkles className="h-4 w-4 flex-shrink-0" />
             <span>
               {Object.keys(generatedPreview).length} prompts gerados pela IA.
-              Revise abaixo e clique em &quot;Salvar Todos&quot;.
+              Revise abaixo e clique em &quot;Guardar Todos&quot;.
             </span>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -260,8 +260,8 @@ export function StageAIConfig({ boardId, stages, goalStageId }: StageAIConfigPro
                   : 'text-red-600 dark:text-red-400'
               )}>
                 {batchSaveResult.success === batchSaveResult.total
-                  ? 'Salvos!'
-                  : `${batchSaveResult.success}/${batchSaveResult.total} salvos`}
+                  ? 'Guardados!'
+                  : `${batchSaveResult.success}/${batchSaveResult.total} guardados`}
               </span>
             )}
             <Button
@@ -286,7 +286,7 @@ export function StageAIConfig({ boardId, stages, goalStageId }: StageAIConfigPro
               ) : (
                 <>
                   <Check className="h-3.5 w-3.5" />
-                  Salvar Todos
+                  Guardar Todos
                 </>
               )}
             </Button>
@@ -363,7 +363,7 @@ function GeneratePromptsDialog({
       </div>
 
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-        Descreva seu negócio e processo de vendas. A IA vai gerar prompts profissionais
+        Descreva o seu negócio e processo de vendas. A IA vai gerar prompts profissionais
         para cada um dos {stageCount} estágios do funil.
       </p>
 
@@ -620,7 +620,7 @@ function StageConfigRow({
                 )}
               />
               <p className="text-xs text-slate-400">
-                Define o objetivo principal que o AI deve perseguir neste estágio.
+                Define o objectivo principal que o AI deve perseguir neste estágio.
               </p>
             </div>
 
@@ -675,9 +675,9 @@ function StageConfigRow({
             {/* Notify Team Toggle */}
             <div className="flex items-center justify-between py-3 border-t border-slate-200 dark:border-slate-700">
               <div className="space-y-0.5">
-                <Label htmlFor={`notify-team-${stage.id}`}>Notificar time (Handoff)</Label>
+                <Label htmlFor={`notify-team-${stage.id}`}>Notificar equipa (Handoff)</Label>
                 <p className="text-xs text-muted-foreground">
-                  Quando ativo, o agente não responde e notifica o time por Telegram.
+                  Quando activo, o agente não responde e notifica a equipa por Telegram.
                 </p>
               </div>
               <Switch
@@ -708,7 +708,7 @@ function StageConfigRow({
                 onClick={handleSave}
                 disabled={!hasChanges || isSaving}
               >
-                {isSaving ? 'A guardar...' : 'Salvar'}
+                {isSaving ? 'A guardar...' : 'Guardar'}
               </Button>
             </div>
           </div>

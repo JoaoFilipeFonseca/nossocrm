@@ -150,8 +150,8 @@ function IntroStep({ onStart }: IntroStepProps) {
           Ensine a IA com suas conversas
         </h3>
         <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-          Selecione 2-10 conversas bem-sucedidas e a IA vai aprender seu estilo de vendas,
-          perguntas de qualificação e técnicas de fechamento.
+          Seleccione 2-10 conversas bem-sucedidas e a IA vai aprender o seu estilo de vendas,
+          perguntas de qualificação e técnicas de fecho.
         </p>
       </div>
 
@@ -160,7 +160,7 @@ function IntroStep({ onStart }: IntroStepProps) {
         <FeatureCard
           icon={<Sparkles className="h-5 w-5" />}
           title="Estilo Personalizado"
-          description="Aprende seu tom e forma de comunicação"
+          description="Aprende o seu tom e forma de comunicação"
         />
         <FeatureCard
           icon={<Brain className="h-5 w-5" />}
@@ -275,13 +275,13 @@ function LearningStep() {
         Aprendendo com suas conversas...
       </h3>
       <p className="text-slate-500 dark:text-slate-400 text-center max-w-sm">
-        A IA está analisando as conversas selecionadas para extrair padrões de vendas,
+        A IA está a analisar as conversas seleccionadas para extrair padrões de vendas,
         critérios de qualificação e técnicas de comunicação.
       </p>
 
       <div className="flex items-center gap-2 mt-6 text-sm text-slate-400">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Isso pode levar alguns segundos
+        Isto pode levar alguns segundos
       </div>
     </div>
   );

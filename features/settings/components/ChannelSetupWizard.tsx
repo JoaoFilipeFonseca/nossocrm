@@ -95,7 +95,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         key: 'token',
         label: 'Token',
         type: 'password',
-        placeholder: 'Seu token de API',
+        placeholder: 'O seu token de API',
         required: true,
         helpText: 'Token de autenticação da sua instância.',
       },
@@ -110,7 +110,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     ],
     setupUrl: 'https://developer.z-api.io/',
     setupInstructions: [
-      '1. Acesse developer.z-api.io e crie uma conta',
+      '1. Aceda a developer.z-api.io e crie uma conta',
       '2. Crie uma nova instância no painel',
       '3. Copie o Instance ID e Token gerados',
       '4. Cole os dados nos campos abaixo',
@@ -118,7 +118,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   },
   'whatsapp:evolution': {
     name: 'Evolution API',
-    description: 'Conexão não-oficial via WhatsApp Web usando Evolution API self-hosted.',
+    description: 'Ligação não-oficial via WhatsApp Web usando Evolution API self-hosted.',
     official: false,
     fields: [
       {
@@ -133,7 +133,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         key: 'apiKey',
         label: 'API Key',
         type: 'password',
-        placeholder: 'Sua chave de API global',
+        placeholder: 'A sua chave de API global',
         required: true,
         helpText: 'Chave de autenticação configurada no servidor Evolution API.',
       },
@@ -148,10 +148,10 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     ],
     setupUrl: 'https://doc.evolution-api.com/',
     setupInstructions: [
-      '1. Instale ou acesse seu servidor Evolution API',
+      '1. Instale ou aceda ao seu servidor Evolution API',
       '2. Crie uma instância no painel ou via API',
       '3. Copie a URL do servidor e a API Key',
-      '4. Após salvar, configure o webhook apontando para a URL exibida',
+      '4. Após guardar, configure o webhook apontando para a URL apresentada',
     ],
   },
   'whatsapp:meta-cloud': {
@@ -187,7 +187,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         key: 'appSecret',
         label: 'App Secret',
         type: 'password',
-        placeholder: 'Seu App Secret do Meta',
+        placeholder: 'O seu App Secret do Meta',
         required: false,
         helpText: 'Encontrado em Configurações > Básico no Meta for Developers. Necessário para verificar assinaturas de webhook.',
       },
@@ -203,7 +203,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     ],
     setupUrl: 'https://developers.facebook.com/docs/whatsapp/cloud-api/get-started',
     setupInstructions: [
-      '1. Acesse developers.facebook.com e crie um app de negócios',
+      '1. Aceda a developers.facebook.com e crie um app de negócios',
       '2. Adicione o produto "WhatsApp" ao seu app',
       '3. Configure um número de telefone de teste ou produção',
       '4. Gere um token de acesso permanente',
@@ -289,8 +289,8 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     ],
     setupUrl: 'https://resend.com/docs/getting-started',
     setupInstructions: [
-      '1. Acesse resend.com e crie uma conta',
-      '2. Verifique seu domínio de email',
+      '1. Aceda a resend.com e crie uma conta',
+      '2. Verifique o seu domínio de email',
       '3. Gere uma API Key em API Keys',
       '4. Cole a chave e configure o remetente abaixo',
     ],
@@ -470,7 +470,7 @@ function CredentialsStep({
           Configurar {config.name}
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Preencha as credenciais para conectar sua conta.
+          Preencha as credenciais para ligar a sua conta.
         </p>
       </div>
 
@@ -519,7 +519,7 @@ function CredentialsStep({
             className="w-full px-4 py-2.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl
               focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-white"
           >
-            <option value="">Selecione uma unidade...</option>
+            <option value="">Seleccione uma unidade...</option>
             {businessUnits.map((unit) => (
               <option key={unit.id} value={unit.id}>
                 {unit.name}
@@ -698,7 +698,7 @@ function TestStep({
           Testar conexão
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Verifique se as credenciais estão corretas antes de salvar.
+          Verifique se as credenciais estão correctas antes de guardar.
         </p>
       </div>
 
@@ -776,7 +776,7 @@ function TestStep({
         <div className="p-4 rounded-xl bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
           <p className="text-xs text-yellow-700 dark:text-yellow-300">
             <strong>Nota:</strong> Certifique-se de que a instância já está criada e
-            conectada no servidor Evolution API antes de salvar.
+            conectada no servidor Evolution API antes de guardar.
           </p>
         </div>
       )}
@@ -807,7 +807,7 @@ function TestStep({
             </>
           ) : (
             <>
-              Salvar canal
+              Guardar canal
               <Check className="w-4 h-4" />
             </>
           )}
@@ -832,18 +832,18 @@ const WEBHOOK_INSTRUCTIONS: Record<string, { label: string; steps: string[]; doc
   'z-api': {
     label: 'Z-API',
     steps: [
-      'Acesse o painel da Z-API (developer.z-api.io)',
-      'Vá em sua instância → Configurações',
+      'Aceda ao painel da Z-API (developer.z-api.io)',
+      'Vá à sua instância → Configurações',
       'Cole a URL abaixo no campo "Webhook URL"',
-      'Salve as configurações',
+      'Guarde as configurações',
     ],
     docsUrl: 'https://developer.z-api.io/webhooks/introduction',
   },
   'meta-cloud': {
     label: 'Meta Cloud API',
     steps: [
-      'Acesse o Meta for Developers (developers.facebook.com)',
-      'Vá no seu App → WhatsApp → Configuração',
+      'Aceda ao Meta for Developers (developers.facebook.com)',
+      'Vá ao seu App → WhatsApp → Configuração',
       'Em "Webhook", clique "Editar" e cole a URL abaixo',
       'No campo "Verify Token", use o token configurado nas credenciais',
       'Inscreva-se nos campos: messages, message_deliveries, message_reads',
@@ -853,8 +853,8 @@ const WEBHOOK_INSTRUCTIONS: Record<string, { label: string; steps: string[]; doc
   'meta': {
     label: 'Instagram (Meta)',
     steps: [
-      'Acesse o Meta for Developers (developers.facebook.com)',
-      'Vá no seu App → Messenger → Configurações',
+      'Aceda ao Meta for Developers (developers.facebook.com)',
+      'Vá ao seu App → Messenger → Configurações',
       'Em "Webhooks", cole a URL abaixo',
       'Inscreva-se no campo: messages',
     ],
@@ -863,21 +863,21 @@ const WEBHOOK_INSTRUCTIONS: Record<string, { label: string; steps: string[]; doc
   'evolution': {
     label: 'Evolution API',
     steps: [
-      'Acesse o painel da sua instância Evolution API',
-      'Vá em Instâncias → sua instância → Webhooks',
+      'Aceda ao painel da sua instância Evolution API',
+      'Vá a Instâncias → a sua instância → Webhooks',
       'Cole a URL abaixo no campo "Webhook URL"',
-      'Ative os eventos: MESSAGES_UPSERT, MESSAGES_UPDATE, CONNECTION_UPDATE',
-      'Salve as configurações',
+      'Active os eventos: MESSAGES_UPSERT, MESSAGES_UPDATE, CONNECTION_UPDATE',
+      'Guarde as configurações',
     ],
     docsUrl: 'https://doc.evolution-api.com/v2/pt/webhooks/webhook',
   },
   'resend': {
     label: 'Resend',
     steps: [
-      'Acesse o dashboard do Resend (resend.com)',
-      'Vá em Webhooks → Add Webhook',
+      'Aceda ao dashboard do Resend (resend.com)',
+      'Vá a Webhooks → Add Webhook',
       'Cole a URL abaixo',
-      'Selecione os eventos: email.sent, email.delivered, email.opened, email.bounced',
+      'Seleccione os eventos: email.sent, email.delivered, email.opened, email.bounced',
     ],
     docsUrl: 'https://resend.com/docs/dashboard/webhooks/introduction',
   },
@@ -1105,7 +1105,7 @@ export function ChannelSetupWizard({
       if (isCredentialsValid) {
         setTestResult({
           success: true,
-          message: 'Credenciais validadas. Pronto para salvar.',
+          message: 'Credenciais validadas. Pronto para guardar.',
         });
       } else {
         setTestResult({

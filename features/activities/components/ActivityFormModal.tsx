@@ -175,7 +175,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
             type="submit"
             className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-2.5 rounded-lg mt-2 shadow-lg shadow-primary-600/20 transition-all"
           >
-            {editingActivity ? 'Salvar Alterações' : 'Criar Actividade'}
+            {editingActivity ? 'Guardar Alterações' : 'Criar Actividade'}
           </button>
         </form>
       </div>

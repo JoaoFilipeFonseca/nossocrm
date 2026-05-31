@@ -226,18 +226,18 @@ export const DataStorageSettings: React.FC = () => {
                         <div className="space-y-4">
                             <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
                                 <p className="text-sm text-red-700 dark:text-red-300 mb-2">
-                                    <strong>⚠️ ATENÇÃO:</strong> Esta ação vai excluir permanentemente:
+                                    <strong>⚠️ ATENÇÃO:</strong> Esta acção vai eliminar permanentemente:
                                 </p>
                                 <ul className="text-sm text-red-600 dark:text-red-400 list-disc list-inside space-y-1">
                                     <li>{stats.deals} negócios</li>
-                                    <li>{stats.contacts} contatos</li>
+                                    <li>{stats.contacts} contactos</li>
                                     <li>{stats.companies} empresas de clientes</li>
                                     <li>{stats.activities} actividades</li>
-                                    <li>{stats.boards} boards (e seus stages)</li>
+                                    <li>{stats.boards} boards (e os seus stages)</li>
                                     <li>Todas as tags e produtos</li>
                                 </ul>
                                 <p className="text-sm text-red-700 dark:text-red-300 mt-3 font-medium">
-                                    Total: {totalRecords} registros serão apagados!
+                                    Total: {totalRecords} registos serão apagados!
                                 </p>
                             </div>
 

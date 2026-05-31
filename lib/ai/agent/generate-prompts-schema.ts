@@ -28,10 +28,10 @@ const GeneratedStagePromptSchema = z.object({
     ),
   stageGoal: z
     .string()
-    .describe('Objetivo principal do estágio em 1-2 frases curtas'),
+    .describe('Objectivo principal do estágio em 1-2 frases curtas'),
   advancementCriteria: z
     .array(z.string())
-    .describe('Lista de 3 a 5 critérios objetivos para avançar o lead ao próximo estágio'),
+    .describe('Lista de 3 a 5 critérios objectivos para avançar o lead ao próximo estágio'),
   suggestedMaxMessages: z
     .number()
     .optional()

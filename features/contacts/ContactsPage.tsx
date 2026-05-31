@@ -123,13 +123,13 @@ export const ContactsPage: React.FC = () => {
                 <div className="flex items-center justify-between bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg px-4 py-3">
                     <div className="flex items-center gap-3">
                         <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
-                            {controller.selectedIds.size} {controller.viewMode === 'people' ? 'contacto(s)' : 'empresa(s)'} selecionado(s)
+                            {controller.selectedIds.size} {controller.viewMode === 'people' ? 'contacto(s)' : 'empresa(s)'} seleccionado(s)
                         </span>
                         <button
                             onClick={controller.clearSelection}
                             className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
                         >
-                            Limpar seleção
+                            Limpar selecção
                         </button>
                     </div>
                     <div className="flex items-center gap-2">
@@ -208,7 +208,7 @@ export const ContactsPage: React.FC = () => {
                 onClose={() => controller.setDeleteId(null)}
                 onConfirm={controller.confirmDelete}
                 title="Eliminar Contacto"
-                message="Tem certeza que deseja excluir este contacto? Esta ação não pode ser desfeita."
+                message="Tem a certeza que pretende eliminar este contacto? Esta acção não pode ser desfeita."
                 confirmText="Eliminar"
                 variant="danger"
             />
@@ -218,7 +218,7 @@ export const ContactsPage: React.FC = () => {
                 onClose={() => controller.setDeleteCompanyId(null)}
                 onConfirm={controller.confirmDeleteCompany}
                 title="Eliminar Empresa"
-                message="Tem certeza que deseja excluir esta empresa? Esta ação não pode ser desfeita."
+                message="Tem a certeza que pretende eliminar esta empresa? Esta acção não pode ser desfeita."
                 confirmText="Eliminar"
                 variant="danger"
             />
@@ -231,7 +231,7 @@ export const ContactsPage: React.FC = () => {
                 title="Contacto com Negócios"
                 message={
                     <div className="space-y-3">
-                        <p>Este contato possui {controller.deleteWithDeals?.dealCount || 0} negócio(s) vinculado(s):</p>
+                        <p>Este contacto possui {controller.deleteWithDeals?.dealCount || 0} negócio(s) vinculado(s):</p>
                         <ul className="text-left bg-slate-100 dark:bg-slate-800/50 rounded-lg p-3 space-y-1 max-h-32 overflow-y-auto">
                             {controller.deleteWithDeals?.deals.map((deal) => (
                                 <li key={deal.id} className="text-sm">
@@ -244,7 +244,7 @@ export const ContactsPage: React.FC = () => {
                                 </li>
                             ))}
                         </ul>
-                        <p className="text-red-500 dark:text-red-400 font-medium">Ao excluir, todos os negócios também serão excluídos.</p>
+                        <p className="text-red-500 dark:text-red-400 font-medium">Ao eliminar, todos os negócios também serão eliminados.</p>
                     </div>
                 }
                 confirmText="Eliminar Tudo"

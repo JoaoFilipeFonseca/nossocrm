@@ -79,7 +79,7 @@ export function AdvancedMode({ config }: AdvancedModeProps) {
       {/* Board Selector */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-          Selecione um Board
+          Seleccione um Board
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {activeBoards.map((board) => (
@@ -112,7 +112,7 @@ export function AdvancedMode({ config }: AdvancedModeProps) {
       {!selectedBoard && (
         <div className="text-center py-8 text-slate-500 dark:text-slate-400">
           <Settings2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p className="text-sm">Selecione um board acima para configurar os estágios.</p>
+          <p className="text-sm">Seleccione um board acima para configurar os estágios.</p>
         </div>
       )}
     </div>

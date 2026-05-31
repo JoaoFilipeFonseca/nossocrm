@@ -1,5 +1,5 @@
 export type PromptCatalogItem = {
-  /** Key estável usado pelo código para buscar o prompt */
+  /** Key estável usado pelo código para procurar o prompt */
   key: string;
   /** Nome humano na UI */
   title: string;
@@ -37,10 +37,10 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
   },
   {
     key: 'task_deals_objection_responses',
-    title: 'Deals · Respostas de objeção (3 opções)',
+    title: 'Deals · Respostas de objecção (3 opções)',
     usedBy: ['app/api/ai/tasks/deals/objection-responses', 'app/api/ai/actions → generateObjectionResponse'],
     defaultTemplate:
-      `Objeção: "{{objection}}" no deal "{{dealTitle}}".\n` +
+      `Objecção: "{{objection}}" no deal "{{dealTitle}}".\n` +
       `Gere 3 respostas práticas (Empática, Valor, Pergunta). Português europeu (pt-PT).`,
     notes: 'Variáveis: objection, dealTitle.',
   },
@@ -58,10 +58,10 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
   },
   {
     key: 'task_deals_analyze',
-    title: 'Deals · Análise (coach) para próxima ação',
+    title: 'Deals · Análise (coach) para próxima acção',
     usedBy: ['app/api/ai/tasks/deals/analyze', 'app/api/ai/actions → analyzeLead'],
     defaultTemplate:
-      `Você é um coach de vendas analisando um deal de CRM. Seja DIRETO e ACIONÁVEL.\n` +
+      `É um coach de vendas a analisar um deal de CRM. Seja DIRECTO e ACCIONÁVEL.\n` +
       `DEAL:\n` +
       `- Título: {{dealTitle}}\n` +
       `- Valor: {{dealValue} €}\n` +
@@ -69,7 +69,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
       `- Probabilidade: {{probability}}%\n` +
       `RETORNE:\n` +
       `1. action: Verbo no infinitivo + complemento curto (máx 50 chars).\n` +
-      `2. reason: Por que fazer isso AGORA (máx 80 chars).\n` +
+      `2. reason: Porquê fazer isto AGORA (máx 80 chars).\n` +
       `3. actionType: CALL, MEETING, EMAIL, TASK ou WHATSAPP\n` +
       `4. urgency: low, medium, high\n` +
       `5. probabilityScore: 0-100\n` +
@@ -105,17 +105,17 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
       `{{historyContext}}\n` +
       `Se for conversa, retorne board: null.`,
     notes:
-      'Variáveis: userInstruction, boardContext (texto), historyContext (texto). Deixe claro quando não for pra alterar board.',
+      'Variáveis: userInstruction, boardContext (texto), historyContext (texto). Deixe claro quando não for para alterar board.',
   },
   {
     key: 'agent_crm_base_instructions',
     title: 'Agente · System prompt base (CRM Pilot)',
     usedBy: ['lib/ai/crmAgent → BASE_INSTRUCTIONS', 'app/api/ai/chat'],
     defaultTemplate:
-      `Você é o Foco Imo Pilot, um assistente de vendas inteligente. 🚀\n` +
+      `És o Foco Imo Pilot, um assistente de vendas inteligente. 🚀\n` +
       `\n` +
       `PERSONALIDADE:\n` +
-      `- Seja proativo, amigável e analítico\n` +
+      `- Sê proactivo, amigável e analítico\n` +
       `- Use emojis com moderação (máximo 2 por resposta)\n` +
       `- Respostas naturais (evite listas robóticas)\n` +
       `- Máximo 2 parágrafos por resposta\n` +
@@ -125,7 +125,7 @@ export const PROMPT_CATALOG: PromptCatalogItem[] = [
       `- Se der erro, informe de forma amigável\n` +
       `- Não mostre IDs/UUIDs para o utilizador final\n`,
     notes:
-      'Importante: esse prompt é “sensível”. Mudanças ruins degradam o agente e podem quebrar fluxos. Ideal ter versionamento e botão “reset”.',
+      'Importante: este prompt é “sensível”. Mudanças más degradam o agente e podem quebrar fluxos. Ideal ter versionamento e botão “reset”.',
   },
 ];
 

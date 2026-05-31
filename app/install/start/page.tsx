@@ -33,12 +33,12 @@ async function hashPassword(password: string): Promise<string> {
 
 type Screen = 'identity' | 'vercel' | 'supabase' | 'validating' | 'ready' | 'locked';
 
-// Configuração de cada tela
+// Configuração de cada ecrã
 const SCREENS = {
   identity: {
     badge: 'Capítulo 1',
-    title: 'Quem é você?',
-    subtitle: 'Antes de explorar novos mundos, precisamos saber quem está no comando.',
+    title: 'Quem é?',
+    subtitle: 'Antes de explorar novos mundos, precisamos de saber quem está no comando.',
     icon: User,
     gradient: 'from-violet-500/20 to-fuchsia-500/20',
     accentColor: 'violet',
@@ -46,7 +46,7 @@ const SCREENS = {
   vercel: {
     badge: 'Capítulo 2',
     title: 'Sistema de Deploy',
-    subtitle: 'Conecte com a Vercel para preparar sua nave.',
+    subtitle: 'Ligue à Vercel para preparar a sua nave.',
     icon: Rocket,
     gradient: 'from-cyan-500/20 to-blue-500/20',
     accentColor: 'cyan',
@@ -54,7 +54,7 @@ const SCREENS = {
   supabase: {
     badge: 'Capítulo 3',
     title: 'Base de Dados',
-    subtitle: 'Conecte com o Supabase para armazenar suas descobertas.',
+    subtitle: 'Ligue ao Supabase para guardar as suas descobertas.',
     icon: Database,
     gradient: 'from-emerald-500/20 to-teal-500/20',
     accentColor: 'emerald',
@@ -155,14 +155,14 @@ export default function InstallStartPage() {
                 }),
               });
               const unlockData = await unlockRes.json().catch(() => null);
-              if (!unlockRes.ok) throw new Error(unlockData?.error || 'Falha ao destravar instalador');
+              if (!unlockRes.ok) throw new Error(unlockData?.error || 'Falha ao desbloquear o instalador');
 
               const res2 = await fetch(`/api/installer/meta?t=${Date.now()}`, { cache: 'no-store' });
               const data2 = await res2.json();
               if (!cancelled) setMeta(data2);
             } catch (unlockErr) {
               console.error('[start] Auto-unlock failed:', unlockErr);
-              if (!cancelled) setUnlockError(unlockErr instanceof Error ? unlockErr.message : 'Falha ao destravar instalador');
+              if (!cancelled) setUnlockError(unlockErr instanceof Error ? unlockErr.message : 'Falha ao desbloquear o instalador');
             } finally {
               if (!cancelled) setUnlockingInstaller(false);
             }
@@ -245,7 +245,7 @@ export default function InstallStartPage() {
         setScreen('vercel');
       }
     } else {
-      setError('Senha incorreta');
+      setError('Palavra-passe incorrecta');
     }
     
     setIsLoading(false);
@@ -258,11 +258,11 @@ export default function InstallStartPage() {
     const confirm = confirmPassword;
     
     if (!name || name.length < 2) {
-      setError('Digite seu nome');
+      setError('Introduza o seu nome');
       return;
     }
     if (!email || !email.includes('@')) {
-      setError('Digite um e-mail válido');
+      setError('Introduza um e-mail válido');
       return;
     }
     const pwCheck = validateInstallerPassword(pass);
@@ -271,7 +271,7 @@ export default function InstallStartPage() {
       return;
     }
     if (pass !== confirm) {
-      setError('As senhas não conferem');
+      setError('As palavras-passe não coincidem');
       return;
     }
     
@@ -374,7 +374,7 @@ export default function InstallStartPage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
           <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-4" />
-          <p className="text-slate-500 text-sm">Iniciando sistemas...</p>
+          <p className="text-slate-500 text-sm">A iniciar sistemas...</p>
         </motion.div>
       </div>
     );
@@ -387,8 +387,8 @@ export default function InstallStartPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-6">
             <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Destravando instalador…</h1>
-          <p className="text-slate-400">Ajustando variáveis e preparando o redeploy na Vercel.</p>
+          <h1 className="text-2xl font-bold text-white mb-2">A desbloquear o instalador…</h1>
+          <p className="text-slate-400">A ajustar variáveis e a preparar o redeploy na Vercel.</p>
           {unlockError && (
             <div className="mt-4 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-red-400 text-sm">
               {unlockError}
@@ -457,7 +457,7 @@ export default function InstallStartPage() {
               </div>
               
               <h1 className="text-3xl font-bold text-white mb-3">Sessão protegida</h1>
-              <p className="text-slate-400 mb-8">Digite sua senha para continuar de onde parou.</p>
+              <p className="text-slate-400 mb-8">Introduza a sua palavra-passe para continuar de onde parou.</p>
               
               <input
                 ref={inputRef}
@@ -466,7 +466,7 @@ export default function InstallStartPage() {
                 onChange={(e) => setUnlockPassword(e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, handleUnlock)}
                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white text-center text-lg placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-transparent mb-4"
-                placeholder="Sua senha"
+                placeholder="A sua palavra-passe"
                 autoFocus
               />
               
@@ -526,7 +526,7 @@ export default function InstallStartPage() {
                 transition={{ delay: 0.2 }}
                 className="text-3xl font-bold text-white text-center mb-3"
               >
-                Quem é você?
+                Quem é?
               </motion.h1>
               <motion.p 
                 initial={{ opacity: 0 }}
@@ -534,7 +534,7 @@ export default function InstallStartPage() {
                 transition={{ delay: 0.25 }}
                 className="text-slate-400 text-center mb-8"
               >
-                Antes de explorar novos mundos, precisamos saber quem está no comando.
+                Antes de explorar novos mundos, precisamos de saber quem está no comando.
               </motion.p>
               
               {/* Form */}
@@ -551,7 +551,7 @@ export default function InstallStartPage() {
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-transparent"
-                    placeholder="Seu nome"
+                    placeholder="O seu nome"
                     autoFocus
                   />
                 </div>
@@ -562,7 +562,7 @@ export default function InstallStartPage() {
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-transparent"
-                    placeholder="Seu e-mail"
+                    placeholder="O seu e-mail"
                   />
                 </div>
                 
@@ -572,7 +572,7 @@ export default function InstallStartPage() {
                     value={userPassword}
                     onChange={(e) => setUserPassword(e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-12 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:border-transparent"
-                    placeholder="Crie uma senha"
+                    placeholder="Crie uma palavra-passe"
                   />
                   <button
                     type="button"
@@ -594,7 +594,7 @@ export default function InstallStartPage() {
                     }}
                     className="text-violet-300/90 hover:text-violet-200 underline underline-offset-4"
                   >
-                    Usar senha sugerida
+                    Usar palavra-passe sugerida
                   </button>
                   <button
                     type="button"
@@ -641,10 +641,10 @@ export default function InstallStartPage() {
                           ? 'border-emerald-500/50' 
                           : 'border-white/10'
                     }`}
-                    placeholder="Confirme a senha"
+                    placeholder="Confirme a palavra-passe"
                   />
                   {confirmPassword && confirmPassword !== userPassword && (
-                    <p className="text-red-400 text-sm mt-2">As senhas não conferem</p>
+                    <p className="text-red-400 text-sm mt-2">As palavras-passe não coincidem</p>
                   )}
                 </div>
                 
@@ -712,7 +712,7 @@ export default function InstallStartPage() {
                 transition={{ delay: 0.25 }}
                 className="text-slate-400 text-center mb-8"
               >
-                Conecte com a Vercel para preparar sua nave.
+                Ligue à Vercel para preparar a sua nave.
               </motion.p>
               
               {/* Form */}
@@ -738,7 +738,7 @@ export default function InstallStartPage() {
                   value={vercelToken}
                   onChange={(e) => { setVercelToken(e.target.value); setError(''); }}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent text-center"
-                  placeholder="Cole seu token da Vercel"
+                  placeholder="Cole o seu token da Vercel"
                   autoFocus
                 />
                 
@@ -790,8 +790,8 @@ export default function InstallStartPage() {
                   <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Verificando conexão</h2>
-              <p className="text-slate-400">Conectando com a Vercel...</p>
+              <h2 className="text-2xl font-bold text-white mb-2">A verificar ligação</h2>
+              <p className="text-slate-400">A ligar à Vercel...</p>
             </motion.div>
           )}
           
@@ -855,7 +855,7 @@ export default function InstallStartPage() {
                 transition={{ delay: 0.25 }}
                 className="text-slate-400 text-center mb-8"
               >
-                Último passo! Conecte com o Supabase.
+                Último passo! Ligue ao Supabase.
               </motion.p>
               
               {/* Form */}
@@ -871,7 +871,7 @@ export default function InstallStartPage() {
                   value={supabaseToken}
                   onChange={(e) => { setSupabaseToken(e.target.value); setError(''); }}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-transparent text-center"
-                  placeholder="Cole seu token do Supabase"
+                  placeholder="Cole o seu token do Supabase"
                   autoFocus
                 />
                 
@@ -913,7 +913,7 @@ export default function InstallStartPage() {
               </motion.div>
               
               <h1 className="text-3xl font-bold text-white mb-3">Tudo pronto, {firstName}!</h1>
-              <p className="text-slate-400 mb-4">Preparando a sequência de lançamento...</p>
+              <p className="text-slate-400 mb-4">A preparar a sequência de lançamento...</p>
               
               <div className="flex items-center justify-center gap-1">
                 {[0, 1, 2].map((i) => (

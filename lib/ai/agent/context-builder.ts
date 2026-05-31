@@ -280,7 +280,7 @@ export function formatContextForPrompt(context: LeadContext): string {
   }
 
   // Objetivo do estágio
-  lines.push('## Objetivo Atual');
+  lines.push('## Objectivo Actual');
   lines.push(`Estágio: ${context.stage.name}`);
   if (context.stage.goal) lines.push(`Meta: ${context.stage.goal}`);
   if (context.stage.advancement_criteria.length > 0) {

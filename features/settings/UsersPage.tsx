@@ -401,7 +401,7 @@ export const UsersPage: React.FC = () => {
                     </div>
                     <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">Nenhum membro ainda</h3>
                     <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto">
-                        Comece convidando membros da sua equipe para colaborar no CRM.
+                        Comece por convidar membros da sua equipa para colaborar no CRM.
                     </p>
                     <button
                         onClick={() => setIsModalOpen(true)}
@@ -437,7 +437,7 @@ export const UsersPage: React.FC = () => {
                                         Gerar Convite
                                     </h2>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                                        Crie links de acesso para sua equipe
+                                        Crie links de acesso para a sua equipa
                                     </p>
                                 </div>
                             </div>
@@ -495,7 +495,7 @@ export const UsersPage: React.FC = () => {
                                 ) : (
                                     <div className="text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
                                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                                            Nenhum link ativo
+                                            Nenhum link activo
                                         </p>
                                     </div>
                                 )}
@@ -624,8 +624,8 @@ export const UsersPage: React.FC = () => {
                 onConfirm={confirmDeleteUser}
                 title={userToDelete?.status === 'pending' ? 'Cancelar Convite' : 'Remover Utilizador'}
                 message={userToDelete?.status === 'pending'
-                    ? `Tem certeza que deseja cancelar o convite para ${userToDelete?.email}?`
-                    : `Tem certeza que deseja remover ${userToDelete?.email} da equipa?`
+                    ? `Tem a certeza de que deseja cancelar o convite para ${userToDelete?.email}?`
+                    : `Tem a certeza de que deseja remover ${userToDelete?.email} da equipa?`
                 }
                 confirmText={userToDelete?.status === 'pending' ? 'Cancelar Convite' : 'Remover'}
                 cancelText="Voltar"

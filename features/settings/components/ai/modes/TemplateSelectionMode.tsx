@@ -104,7 +104,7 @@ export function TemplateSelectionMode({ config }: TemplateSelectionModeProps) {
       <div>
         <h4 className="font-medium text-slate-900 dark:text-white mb-1">Escolha uma Metodologia</h4>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Selecione a metodologia de vendas que o AI Agent deve seguir. Cada template define
+          Seleccione a metodologia de vendas que o AI Agent deve seguir. Cada template define
           estágios, critérios e prompts específicos.
         </p>
       </div>

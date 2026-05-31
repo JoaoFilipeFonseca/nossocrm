@@ -108,7 +108,7 @@ export const SelectBoardModal: React.FC<SelectBoardModalProps> = ({
         {/* Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
           <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-            O deal será criado no primeiro estágio do board selecionado
+            O deal será criado no primeiro estágio do board seleccionado
           </p>
         </div>
         </div>

@@ -130,7 +130,7 @@ export const MergeContactsModal: React.FC<MergeContactsModalProps> = ({
                         <span className="font-mono">{group.match_value}</span>
                       </span>
                       <span className="text-xs text-slate-400 ml-auto">
-                        {group.group_size} contatos
+                        {group.group_size} contactos
                       </span>
                     </div>
 
@@ -209,14 +209,14 @@ export const MergeContactsModal: React.FC<MergeContactsModalProps> = ({
                         {isMergingThis ? (
                           <>
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Mesclando...
+                            A mesclar...
                           </>
                         ) : (
                           <>
                             <GitMerge className="w-4 h-4" />
                             {selectedTarget
-                              ? `Mesclar ${group.group_size - 1} contacto${group.group_size - 1 !== 1 ? 's' : ''} no selecionado`
-                              : 'Selecione o contacto principal'}
+                              ? `Mesclar ${group.group_size - 1} contacto${group.group_size - 1 !== 1 ? 's' : ''} no seleccionado`
+                              : 'Seleccione o contacto principal'}
                           </>
                         )}
                       </button>

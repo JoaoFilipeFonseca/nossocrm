@@ -355,24 +355,24 @@ export function UIChat({
         const parsed = parseProviderError(msg);
 
         if (parsed.isToolApproval) {
-            return 'Existe uma confirmação pendente acima. Aprove ou negue a ação anterior antes de enviar uma nova mensagem.';
+            return 'Existe uma confirmação pendente acima. Aprove ou recuse a acção anterior antes de enviar uma nova mensagem.';
         }
 
         if (parsed.isAuth) {
-            return 'Falha de autenticação com o provedor de IA. Confira a chave em Configurações → Inteligência Artificial.';
+            return 'Falha de autenticação com o fornecedor de IA. Verifique a chave em Configurações → Inteligência Artificial.';
         }
 
         if (parsed.isModelNotFound) {
-            return 'Modelo não encontrado para o provedor configurado. Confira o provedor/modelo em Configurações → Inteligência Artificial.';
+            return 'Modelo não encontrado para o fornecedor configurado. Verifique o fornecedor/modelo em Configurações → Inteligência Artificial.';
         }
 
         if (parsed.isRateLimit) {
-            return 'A IA está limitando requisições (rate limit). Aguarde alguns segundos e tente novamente.';
+            return 'A IA está a limitar pedidos (rate limit). Aguarde alguns segundos e tente novamente.';
         }
 
         if (parsed.isOpenAIServerError) {
             const id = parsed.requestId ? ` (ID: ${parsed.requestId})` : '';
-            return `A OpenAI parece estar instável no momento (erro interno). Tente novamente em alguns segundos. Se persistir, troque para um modelo mais estável (ex.: gpt-4o) em Configurações → IA${id}.`;
+            return `A OpenAI parece estar instável neste momento (erro interno). Tente novamente em alguns segundos. Se persistir, mude para um modelo mais estável (ex.: gpt-4o) em Configurações → IA${id}.`;
         }
 
         // Fallback: manter a mensagem original (útil p/ debug), mas sem deixar 100% “crua”.
@@ -390,17 +390,17 @@ export function UIChat({
                     {
                         label: '🧾 Diagnóstico do Deal',
                         prompt:
-                            'Faça um diagnóstico completo deste deal usando o contexto do cockpit (notas, atividades e ficheiros). Liste riscos, próximos passos e um plano de follow-up para 7 dias.',
+                            'Faça um diagnóstico completo deste deal usando o contexto do cockpit (notas, actividades e ficheiros). Liste riscos, próximos passos e um plano de follow-up para 7 dias.',
                     },
                     {
-                        label: '👉 Próxima ação',
+                        label: '👉 Próxima acção',
                         prompt:
-                            'Qual a próxima melhor ação para avançar este deal agora? Seja específico e use o histórico do cockpit para justificar.',
+                            'Qual a próxima melhor acção para avançar este deal agora? Seja específico e use o histórico do cockpit para justificar.',
                     },
                     {
                         label: '✍️ Mensagem WhatsApp',
                         prompt:
-                            'Escreva uma mensagem curta de follow-up para WhatsApp para este contacto, baseada no estágio atual e no histórico do cockpit. Traga 2 variações.',
+                            'Escreva uma mensagem curta de follow-up para WhatsApp para este contacto, baseada na fase actual e no histórico do cockpit. Traga 2 variações.',
                     },
                     {
                         label: '✅ Tarefas da semana',
@@ -417,7 +417,7 @@ export function UIChat({
                 quickActions: [
                     { label: '📊 Analisar Pipeline', prompt: 'Analise meu pipeline de vendas' },
                     { label: '⏰ Deals Parados', prompt: 'Quais deals estão parados há mais de 7 dias?' },
-                    { label: '🔍 Buscar', prompt: 'Buscar deals por: ' },
+                    { label: '🔍 Procurar', prompt: 'Procurar deals por: ' },
                 ],
             };
         }
@@ -425,8 +425,8 @@ export function UIChat({
         return {
             subtitle: 'Deals • Contactos • Tarefas',
             quickActions: [
-                { label: '🔍 Buscar deals', prompt: 'Buscar deals por: ' },
-                { label: '👤 Buscar contactos', prompt: 'Buscar contactos por: ' },
+                { label: '🔍 Procurar deals', prompt: 'Procurar deals por: ' },
+                { label: '👤 Procurar contactos', prompt: 'Procurar contactos por: ' },
                 { label: '✅ Próximas tarefas', prompt: 'Quais tarefas eu deveria priorizar hoje?' },
             ],
         };
@@ -535,7 +535,7 @@ export function UIChat({
             }
         }
 
-        return lines.length > 0 ? lines : ['Confirma essa ação?'];
+        return lines.length > 0 ? lines : ['Confirma esta acção?'];
     };
 
     // Floating minimized button
@@ -730,7 +730,7 @@ export function UIChat({
                                                         detailLines.find((l) => l.startsWith('Motivo: '))?.replace(/^Motivo:\s*/, 'Motivo: ') ||
                                                         detailLines.find((l) => l.startsWith('Valor final: '))?.replace(/^Valor final:\s*/, 'Valor final: ') ||
                                                         detailLines[0] ||
-                                                        'Confirma essa ação?';
+                                                        'Confirma esta acção?';
 
                                                     return {
                                                         toolPart,
@@ -1002,7 +1002,7 @@ export function UIChat({
                                                                                                 const value = e.target.checked;
                                                                                                 setSelectedApprovalsById((prev) => ({ ...prev, [p.id]: value }));
                                                                                             }}
-                                                                                            aria-label="Selecionar ação"
+                                                                                            aria-label="Seleccionar acção"
                                                                                         />
                                                                                         <div className="min-w-0 flex-1">
                                                                                             <div className="flex items-start justify-between gap-2">
@@ -1064,13 +1064,13 @@ export function UIChat({
                                                                     onClick={() => approveItems(selectedIds, true)}
                                                                     className="px-3 py-2 text-xs rounded-lg transition-all border border-amber-500/30 text-amber-100 hover:bg-amber-500/10"
                                                                 >
-                                                                    Aprovar selecionadas
+                                                                    Aprovar seleccionadas
                                                                 </button>
                                                                 <button
                                                                     onClick={() => approveItems(selectedIds, false)}
                                                                     className="px-3 py-2 text-xs rounded-lg transition-all border border-amber-500/30 text-amber-100 hover:bg-amber-500/10"
                                                                 >
-                                                                    Negar selecionadas
+                                                                    Recusar seleccionadas
                                                                 </button>
                                                             </>
                                                         )}
@@ -1141,7 +1141,7 @@ export function UIChat({
                                             <div key={index} className="mt-2 p-3 bg-amber-900/30 border border-amber-600/50 rounded-lg">
                                                 <div className="flex items-center gap-2 text-sm text-amber-200 mb-2">
                                                     <Wrench className="w-4 h-4" />
-                                                    <span className="font-medium">Confirmar ação: {toolTitle}</span>
+                                                    <span className="font-medium">Confirmar acção: {toolTitle}</span>
                                                 </div>
                                                 <div className="text-xs text-amber-200/80 mb-3 space-y-1">
                                                     {summaryLines.map((line, i) => (
@@ -1220,7 +1220,7 @@ export function UIChat({
             < form onSubmit={handleSubmit} className="p-3 border-t border-slate-700/50" >
                 {hasPendingApprovals && (
                     <div className="mb-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[12px] text-amber-100">
-                        Você tem {pendingApprovalIds.length} confirmação{pendingApprovalIds.length === 1 ? '' : 'ões'} pendente{pendingApprovalIds.length === 1 ? '' : 's'}. Aprove ou negue acima para continuar.
+                        Tem {pendingApprovalIds.length} confirmação{pendingApprovalIds.length === 1 ? '' : 'ões'} pendente{pendingApprovalIds.length === 1 ? '' : 's'}. Aprove ou recuse acima para continuar.
                     </div>
                 )}
 

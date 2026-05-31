@@ -92,7 +92,7 @@ export const requiredSelect = (field: string) =>
   z
     .string({ message: msg('SELECTION_REQUIRED', { field }) })
     .min(1, msg('SELECTION_REQUIRED', { field }))
-    .max(100, 'Seleção inválida');
+    .max(100, 'Selecção inválida');
 
 /**
  * Função pública `requiredDate` do projeto.

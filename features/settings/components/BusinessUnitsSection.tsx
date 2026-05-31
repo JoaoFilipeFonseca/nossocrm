@@ -140,8 +140,8 @@ function UnitCard({
           disabled={isLoading || (unit.channelCount ?? 0) > 0}
           title={
             (unit.channelCount ?? 0) > 0
-              ? 'Remova os canais antes de excluir'
-              : 'Excluir unidade'
+              ? 'Remova os canais antes de eliminar'
+              : 'Eliminar unidade'
           }
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
             bg-white dark:bg-white/5 border border-red-200 dark:border-red-500/20
@@ -370,7 +370,7 @@ function UnitFormModal({
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                {isEditing ? 'Salvar' : 'Criar Unidade'}
+                {isEditing ? 'Guardar' : 'Criar Unidade'}
               </>
             )}
           </button>
@@ -599,7 +599,7 @@ export function BusinessUnitsSection() {
           unitId: editingUnit.id,
           input: input as UpdateBusinessUnitInput,
         });
-        addToast('Unidade atualizada com sucesso!', 'success');
+        addToast('Unidade actualizada com sucesso!', 'success');
       } else {
         await createMutation.mutateAsync(input as CreateBusinessUnitInput);
         addToast('Unidade criada com sucesso!', 'success');
@@ -608,7 +608,7 @@ export function BusinessUnitsSection() {
       setEditingUnit(null);
     } catch (error) {
       addToast(
-        error instanceof Error ? error.message : 'Erro ao salvar unidade',
+        error instanceof Error ? error.message : 'Erro ao guardar unidade',
         'error'
       );
     }
@@ -667,7 +667,7 @@ export function BusinessUnitsSection() {
   return (
     <SettingsSection title="Unidades de Negócio" icon={Building2}>
       <p className="text-sm text-slate-600 dark:text-slate-300 mb-5 leading-relaxed">
-        Organize seus canais de comunicação e conversas por área de atuação
+        Organize os seus canais de comunicação e conversas por área de actuação
         (Vendas, Suporte, Marketing, etc.).
       </p>
 
@@ -747,8 +747,8 @@ export function BusinessUnitsSection() {
         title="Remover unidade de negócio?"
         message={
           <div>
-            Isso vai remover a unidade <b>{unitToDelete?.name}</b>. Os canais e
-            conversas associados não serão excluídos, mas ficarão sem unidade.
+            Isto vai remover a unidade <b>{unitToDelete?.name}</b>. Os canais e
+            conversas associados não serão eliminados, mas ficarão sem unidade.
           </div>
         }
         confirmText="Remover"

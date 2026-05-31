@@ -68,7 +68,7 @@ const MODE_OPTIONS: ModeOption[] = [
     id: 'template',
     icon: <LayoutTemplate className="h-6 w-6" />,
     title: 'Escolher Metodologia',
-    description: 'Selecione entre BANT, SPIN, MEDDIC, GPCT ou crie a sua.',
+    description: 'Seleccione entre BANT, SPIN, MEDDIC, GPCT ou crie a sua.',
     features: [
       '5 metodologias pré-definidas',
       'Critérios específicos por metodologia',
@@ -80,10 +80,10 @@ const MODE_OPTIONS: ModeOption[] = [
     id: 'auto_learn',
     icon: <Brain className="h-6 w-6" />,
     title: 'Ensinar com Exemplos',
-    description: 'A IA aprende seu estilo analisando conversas de sucesso.',
+    description: 'A IA aprende o seu estilo ao analisar conversas de sucesso.',
     features: [
       'Aprende com 2-10 conversas',
-      'Extrai seu estilo de vendas',
+      'Extrai o seu estilo de vendas',
       'Critérios personalizados automáticos',
       'Melhora com o tempo',
     ],
@@ -144,7 +144,7 @@ export function AIOnboarding({ onComplete }: AIOnboardingProps) {
           <Bot className="h-8 w-8 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-          Configure seu AI Agent
+          Configure o seu AI Agent
         </h2>
         <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
           Escolha como quer que o agente responda automaticamente aos seus leads.

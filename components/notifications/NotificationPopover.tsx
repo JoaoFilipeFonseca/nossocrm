@@ -117,7 +117,7 @@ export const NotificationPopover = () => {
                                     <CheckCircle2 className="w-6 h-6 text-green-500" />
                                 </div>
                                 <p className="font-medium text-slate-900 dark:text-white">Tudo limpo!</p>
-                                <p className="text-sm">Você não tem notificações.</p>
+                                <p className="text-sm">Não tem notificações.</p>
                             </div>
                         ) : (
                             <ul className="divide-y divide-slate-100 dark:divide-white/5">

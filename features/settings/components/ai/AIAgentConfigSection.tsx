@@ -95,7 +95,7 @@ export function AIAgentConfigSection() {
         <Alert>
           <Sparkles className="h-4 w-4" />
           <AlertDescription>
-            Configure uma chave de API acima para ativar o AI Agent.
+            Configure uma chave de API acima para activar o AI Agent.
             O agente responderá automaticamente às mensagens dos leads.
           </AlertDescription>
         </Alert>
@@ -127,7 +127,7 @@ export function AIAgentConfigSection() {
         {showAdvanced && (
           <div className="px-4 pb-4 space-y-4 border-t border-slate-100 dark:border-white/5 pt-4">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Escolha a metodologia de qualificação que o agente usa por padrão em todos os funis.
+              Escolha a metodologia de qualificação que o agente usa por omissão em todos os funis.
             </p>
 
             {/* Mode Selector */}
@@ -277,9 +277,9 @@ function HITLConfigSection() {
           </h3>
           <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
             {isAutonomous ? (
-              <span><strong>Modo Autônomo:</strong> Leads avançam automaticamente quando a IA tem ≥70% de confiança.</span>
+              <span><strong>Modo Autónomo:</strong> Leads avançam automaticamente quando a IA tem ≥70% de confiança.</span>
             ) : (
-              <span><strong>Modo Supervisionado:</strong> Você aprova avanços quando a IA tem 70-85% de confiança.</span>
+              <span><strong>Modo Supervisionado:</strong> Aprova avanços quando a IA tem 70-85% de confiança.</span>
             )}
           </p>
         </div>

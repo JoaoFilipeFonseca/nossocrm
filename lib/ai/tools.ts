@@ -35,7 +35,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
             normalized.includes('forbidden');
 
         const hint = looksLikeAuth
-            ? ' Dica: verifique se `SUPABASE_SERVICE_ROLE_KEY` está configurada e corresponde ao mesmo projeto do `NEXT_PUBLIC_SUPABASE_URL`.'
+            ? ' Dica: verifique se `SUPABASE_SERVICE_ROLE_KEY` está configurada e corresponde ao mesmo projecto do `NEXT_PUBLIC_SUPABASE_URL`.'
             : '';
 
         return `Falha ao consultar o Supabase. ${msg || 'Erro desconhecido.'}${hint}`;
@@ -57,7 +57,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
             return {
                 ok: false as const,
                 error:
-                    'O board selecionado não pertence à sua organização no backend da IA. Se você acabou de trocar de organização/board, recarregue a página. Se persistir, verifique se a IA está apontando para o mesmo projeto Supabase do app.'
+                    'O board seleccionado não pertence à sua organização no backend da IA. Se acabou de trocar de organização/board, recarregue a página. Se persistir, verifique se a IA está a apontar para o mesmo projecto Supabase do app.'
             };
         }
 
@@ -166,7 +166,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 console.log('[AI] 🚀 analyzePipeline EXECUTED!', { targetBoardId });
 
                 if (!targetBoardId) {
-                    return { error: 'Nenhum board selecionado. Vá para um board ou especifique qual.' };
+                    return { error: 'Nenhum board seleccionado. Vá para um board ou especifique qual.' };
                 }
 
                 const { data: deals } = await supabase
@@ -220,7 +220,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 console.log('[AI] 📊 getBoardMetrics EXECUTED!');
 
                 if (!targetBoardId) {
-                    return { error: 'Nenhum board selecionado.' };
+                    return { error: 'Nenhum board seleccionado.' };
                 }
 
                 const { data: deals } = await supabase
@@ -393,7 +393,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 });
 
                 if (!targetBoardId) {
-                    return { error: 'Nenhum board selecionado.' };
+                    return { error: 'Nenhum board seleccionado.' };
                 }
 
                 // Segurança + compat: valida board no tenant e permite ler deals legados com organization_id NULL.
@@ -510,10 +510,10 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
             },
         }),
         listStagnantDeals: tool({
-            description: 'Lista deals parados/estagnados há mais de X dias sem atualização',
+            description: 'Lista deals parados/estagnados há mais de X dias sem actualização',
             inputSchema: z.object({
                 boardId: z.string().optional(),
-                daysStagnant: z.number().int().positive().optional().default(7).describe('Dias sem atualização'),
+                daysStagnant: z.number().int().positive().optional().default(7).describe('Dias sem actualização'),
                 limit: z.number().int().positive().optional().default(10),
             }),
             execute: async ({ boardId, daysStagnant, limit }) => {
@@ -521,7 +521,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 console.log('[AI] ⏰ listStagnantDeals EXECUTED!');
 
                 if (!targetBoardId) {
-                    return { error: 'Nenhum board selecionado.' };
+                    return { error: 'Nenhum board seleccionado.' };
                 }
 
                 const boardGuard = await ensureBoardBelongsToOrganization(targetBoardId);
@@ -570,7 +570,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 const targetBoardId = boardId || context.boardId;
 
                 if (!targetBoardId) {
-                    return { error: 'Nenhum board selecionado.' };
+                    return { error: 'Nenhum board seleccionado.' };
                 }
 
                 const now = new Date().toISOString();
@@ -736,7 +736,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 console.log('[AI] ➕ createDeal EXECUTED!', title);
 
                 if (!targetBoardId) {
-                    return { error: 'Nenhum board selecionado.' };
+                    return { error: 'Nenhum board seleccionado.' };
                 }
 
                 const { data: stages } = await supabase
@@ -812,7 +812,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
         }),
 
         updateDeal: tool({
-            description: 'Atualiza campos de um deal existente. Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
+            description: 'Actualiza campos de um deal existente. Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
             inputSchema: z.object({
                 dealId: z.string().optional().describe('ID do deal (usa contexto se não fornecido)'),
                 title: z.string().optional().describe('Novo título'),
@@ -843,7 +843,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     return { success: false, error: error.message };
                 }
 
-                return { success: true, message: 'Deal atualizado com sucesso!' };
+                return { success: true, message: 'Deal actualizado com sucesso!' };
             },
         }),
 
@@ -853,7 +853,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 dealId: z.string().optional().describe('ID do deal (opcional se fornecer outros identificadores)'),
                 dealTitle: z.string().optional().describe('Título/nome do deal para buscar'),
                 stageName: z.string().optional().describe('Nome do estágio onde o deal está (ex: "Proposta")'),
-                wonValue: z.number().optional().describe('Valor final do fechamento'),
+                wonValue: z.number().optional().describe('Valor final do fecho'),
             }),
             needsApproval: !bypassApproval,
             execute: async ({ dealId, dealTitle, stageName, wonValue }) => {
@@ -1119,7 +1119,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
 
                 const targetBoardId = boardId || context.boardId;
                 if (!targetBoardId) {
-                    return { error: 'Nenhum board selecionado. Vá para um board ou informe qual.' };
+                    return { error: 'Nenhum board seleccionado. Vá para um board ou informe qual.' };
                 }
 
                 const boardGuard = await ensureBoardBelongsToOrganization(targetBoardId);
@@ -1442,7 +1442,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
         }),
 
         updateContact: tool({
-            description: 'Atualiza campos de um contacto. Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
+            description: 'Actualiza campos de um contacto. Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
             inputSchema: z.object({
                 contactId: z.string(),
                 name: z.string().optional(),
@@ -1477,7 +1477,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                     .maybeSingle();
                 if (error) return { error: formatSupabaseFailure(error) };
                 if (!data) return { error: 'Contacto não encontrado nesta organização.' };
-                return { success: true, contact: data, message: `Contacto "${data.name}" atualizado.` };
+                return { success: true, contact: data, message: `Contacto "${data.name}" actualizado.` };
             },
         }),
 
@@ -1541,7 +1541,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
             }),
             execute: async ({ boardId }) => {
                 const targetBoardId = boardId || context.boardId;
-                if (!targetBoardId) return { error: 'Nenhum board selecionado.' };
+                if (!targetBoardId) return { error: 'Nenhum board seleccionado.' };
                 const guard = await ensureBoardBelongsToOrganization(targetBoardId);
                 if (!guard.ok) return { error: guard.error };
 
@@ -1558,7 +1558,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
         }),
 
         updateStage: tool({
-            description: 'Atualiza um estágio (nome/label/cor/ordem). Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
+            description: 'Actualiza um estágio (nome/label/cor/ordem). Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
             inputSchema: z.object({
                 stageId: z.string(),
                 name: z.string().optional(),
@@ -1586,7 +1586,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
 
                 if (error) return { error: formatSupabaseFailure(error) };
                 if (!data) return { error: 'Estágio não encontrado nesta organização.' };
-                return { success: true, stage: data, message: `Estágio atualizado: ${data.name}` };
+                return { success: true, stage: data, message: `Estágio actualizado: ${data.name}` };
             },
         }),
 
@@ -1599,7 +1599,7 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
             needsApproval: !bypassApproval,
             execute: async ({ boardId, orderedStageIds }) => {
                 const targetBoardId = boardId || context.boardId;
-                if (!targetBoardId) return { error: 'Nenhum board selecionado.' };
+                if (!targetBoardId) return { error: 'Nenhum board seleccionado.' };
                 const guard = await ensureBoardBelongsToOrganization(targetBoardId);
                 if (!guard.ok) return { error: guard.error };
 

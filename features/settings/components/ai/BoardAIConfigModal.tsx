@@ -63,7 +63,7 @@ const STEPS: { id: Step; label: string; icon: typeof Bot }[] = [
   { id: 'context',  label: 'Contexto',  icon: Bot },
   { id: 'goal',     label: 'Objetivo',  icon: Target },
   { id: 'stages',   label: 'Estágios',  icon: LayoutList },
-  { id: 'activate', label: 'Ativar',    icon: Zap },
+  { id: 'activate', label: 'Activar',    icon: Zap },
 ];
 
 const TONE_OPTIONS: { id: Tone; label: string; desc: string }[] = [
@@ -107,7 +107,7 @@ const GOAL_CATEGORIES: { id: GoalCategory; label: string; emoji: string; what: s
     label: 'Filtragem',
     emoji: '🔍',
     what: 'Entender a necessidade do contacto e classificar se é um lead qualificado antes de envolver a equipa.',
-    limits: 'Não fazer promoção do produto. Ser neutro e objetivo. Não criar expectativas de resposta imediata da equipa.',
+    limits: 'Não fazer promoção do produto. Ser neutro e objectivo. Não criar expectativas de resposta imediata da equipa.',
   },
 ];
 
@@ -188,7 +188,7 @@ function ContextStep({
           Descrição do negócio
         </Label>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          O que sua empresa faz? O agente usará isso para se apresentar naturalmente.
+          O que faz a sua empresa? O agente usará isto para se apresentar naturalmente.
         </p>
         <Textarea
           value={description}
@@ -372,7 +372,7 @@ function GoalStep({
       {/* Categorias */}
       <div className="space-y-2">
         <Label className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-          Qual é o foco principal desse agente?
+          Qual é o foco principal deste agente?
         </Label>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           {GOAL_CATEGORIES.map((cat) => (
@@ -404,14 +404,14 @@ function GoalStep({
           {isGeneratingGoal && (
             <span className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400">
               <span className="w-3 h-3 border border-violet-400 border-t-transparent rounded-full animate-spin" />
-              Adaptando para seu negócio...
+              A adaptar ao seu negócio...
             </span>
           )}
         </div>
         <Textarea
           value={agentGoal}
           onChange={(e) => onAgentGoalChange(e.target.value)}
-          placeholder="Selecione uma categoria acima ou descreva o objetivo do agente..."
+          placeholder="Seleccione uma categoria acima ou descreva o objectivo do agente..."
           rows={3}
           className="resize-none"
         />
@@ -504,7 +504,7 @@ function StagesStep({
       {/* Stage list */}
       <div className="space-y-2">
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Ative o AI em cada estágio do funil. Estágios desativados continuam com atendimento humano.
+          Active o AI em cada estágio do funil. Estágios desactivados continuam com atendimento humano.
         </p>
 
         {sortedStages.map((stage) => {
@@ -592,7 +592,7 @@ function ActivateStep({ agentMode, onAgentModeChange, stages, goalStageId, onGoa
           Modo de operação
         </Label>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Recomendamos começar em <strong>Observar</strong> para validar o comportamento antes de ativar respostas automáticas.
+          Recomendamos começar em <strong>Observar</strong> para validar o comportamento antes de activar respostas automáticas.
         </p>
 
         <div className="grid grid-cols-2 gap-3">
@@ -611,7 +611,7 @@ function ActivateStep({ agentMode, onAgentModeChange, stages, goalStageId, onGoa
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Recomendado</Badge>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Processa e registra o que faria, mas não envia mensagens.
+              Processa e regista o que faria, mas não envia mensagens.
             </p>
           </button>
 
@@ -642,7 +642,7 @@ function ActivateStep({ agentMode, onAgentModeChange, stages, goalStageId, onGoa
             O agente para de responder quando o lead chegar em...
           </Label>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            A partir desse estágio, o atendimento passa para a equipe humana.
+            A partir deste estágio, o atendimento passa para a equipa humana.
           </p>
           <select
             value={goalStageId ?? ''}
@@ -793,7 +793,7 @@ export function BoardAIConfigModal({
 
   function handleGoalNext() {
     if (!agentGoal.trim()) {
-      addToast('Defina o objetivo do agente antes de continuar.', 'error');
+      addToast('Defina o objectivo do agente antes de continuar.', 'error');
       return;
     }
     setCurrentStep('stages');
@@ -831,7 +831,7 @@ export function BoardAIConfigModal({
       addToast('Agente configurado com sucesso!', 'success');
       onClose();
     } catch {
-      addToast('Erro ao salvar configuração.', 'error');
+      addToast('Erro ao guardar configuração.', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -937,8 +937,8 @@ export function BoardAIConfigModal({
         {currentStep === 'activate' && (
           <Button size="sm" onClick={handleSave} disabled={isSaving}>
             {isSaving
-              ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Salvando...</>
-              : <><Zap className="w-4 h-4 mr-1" /> Ativar Agente</>}
+              ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> A guardar...</>
+              : <><Zap className="w-4 h-4 mr-1" /> Activar Agente</>}
           </Button>
         )}
       </div>

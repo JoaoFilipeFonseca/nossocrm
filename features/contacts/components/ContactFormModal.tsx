@@ -103,7 +103,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
                       setIsCreatingBatch(false);
                     }
                   }}
-                  label={isCreatingBatch ? 'Criando...' : 'Fake x10'}
+                  label={isCreatingBatch ? 'A criar...' : 'Fake x10'}
                   variant="secondary"
                   className="ml-1"
                   disabled={isCreatingBatch}
@@ -202,7 +202,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
               disabled={isSubmitting}
             className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-2.5 rounded-lg mt-2 shadow-lg shadow-primary-600/20 transition-all"
           >
-            {isSubmitting ? 'Criando...' : (editingContact ? 'Salvar Alterações' : 'Criar Contacto')}
+            {isSubmitting ? 'A criar...' : (editingContact ? 'Guardar Alterações' : 'Criar Contacto')}
           </button>
         
             {editingContact?.id && (

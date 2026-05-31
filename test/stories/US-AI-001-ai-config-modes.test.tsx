@@ -171,7 +171,7 @@ describe('Story — US-AI-001: AI Configuration Mode Selection', () => {
       );
 
       // Header
-      expect(screen.getByText('Configure seu AI Agent')).toBeTruthy();
+      expect(screen.getByText('Configure o seu AI Agent')).toBeTruthy();
 
       // All 4 modes
       expect(screen.getByText('Começar Automático')).toBeTruthy();
@@ -342,7 +342,7 @@ describe('Story — US-AI-002: Mode Switching Workflow', () => {
 
     // Verify initial state
     await runStorySteps(user, [
-      { kind: 'expectText', text: 'Configure seu AI Agent' },
+      { kind: 'expectText', text: 'Configure o seu AI Agent' },
       { kind: 'expectNotText', text: /Application error/i },
     ]);
 

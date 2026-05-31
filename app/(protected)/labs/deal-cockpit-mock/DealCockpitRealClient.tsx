@@ -108,7 +108,7 @@ function buildExecutionHeader(opts: {
 
   const ctx = opts.context;
   if (ctx) {
-    const originLabel = ctx.origin === 'nextBestAction' ? 'Próxima ação' : 'Ação rápida';
+    const originLabel = ctx.origin === 'nextBestAction' ? 'Próxima acção' : 'Acção rápida';
     lines.push(`Origem: ${originLabel}`);
     lines.push(`Geração: ${ctx.source === 'template' ? 'Template' : ctx.source === 'generated' ? 'Gerado' : 'Manual'}`);
     if (ctx.template) {
@@ -200,7 +200,7 @@ function TemplatePickerModal({
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
           <div className="min-w-0">
             <div className="text-sm font-semibold text-slate-100 truncate">{title}</div>
-            <div className="text-[11px] text-slate-500">Escolha um script persistido e eu preencho a mensagem com variáveis do deal/contato.</div>
+            <div className="text-[11px] text-slate-500">Escolha um script persistido e eu preencho a mensagem com variáveis do deal/contacto.</div>
           </div>
           <button
             type="button"
@@ -220,7 +220,7 @@ function TemplatePickerModal({
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Buscar por título ou texto…"
+                  placeholder="Procurar por título ou texto…"
                   className="w-full rounded-xl border border-white/10 bg-white/3 px-9 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
                 />
               </div>
@@ -250,7 +250,7 @@ function TemplatePickerModal({
 
             <div className="h-105 overflow-auto rounded-2xl border border-white/10 bg-white/2">
               {isLoading ? (
-                <div className="p-4 text-sm text-slate-400">Carregando scripts…</div>
+                <div className="p-4 text-sm text-slate-400">A carregar scripts…</div>
               ) : filtered.length === 0 ? (
                 <div className="p-4 text-sm text-slate-400">Nenhum template encontrado.</div>
               ) : (
@@ -459,38 +459,38 @@ function buildSuggestedWhatsAppMessage(opts: {
   const { contact, deal, actionType, action, reason } = opts;
 
   const firstName = contact?.name?.split(' ')[0] || '';
-  const greeting = firstName ? `Oi ${firstName}, tudo bem?` : 'Oi, tudo bem?';
+  const greeting = firstName ? `Olá ${firstName}, tudo bem?` : 'Olá, tudo bem?';
   const r = normalizeReason(reason);
   const dealTitle = deal?.title?.trim();
   const dealCtx = dealTitle ? ` sobre ${dealTitle}` : '';
 
   const { a, b } = proposeTwoSlots();
-  const reasonSentence = r ? `\n\nPensei nisso porque ${r.charAt(0).toLowerCase()}${r.slice(1)}.` : '';
+  const reasonSentence = r ? `\n\nPensei nisto porque ${r.charAt(0).toLowerCase()}${r.slice(1)}.` : '';
 
   if (actionType === 'MEETING') {
     return (
       `${greeting}` +
-      `\n\nQueria marcar um papo rápido (15 min)${dealCtx} pra alinharmos os próximos passos.` +
+      `\n\nQueria marcar uma conversa rápida (15 min)${dealCtx} para alinharmos os próximos passos.` +
       `${reasonSentence}` +
-      `\n\nVocê consegue ${formatSlot(a)} ou ${formatSlot(b)}? Se preferir, me diga um horário bom pra você.`
+      `\n\nConsegue ${formatSlot(a)} ou ${formatSlot(b)}? Se preferir, diga-me um horário que lhe seja conveniente.`
     );
   }
 
   if (actionType === 'CALL') {
     return (
       `${greeting}` +
-      `\n\nPodemos fazer uma ligação rapidinha${dealCtx}?` +
+      `\n\nPodemos fazer uma ligação breve${dealCtx}?` +
       `${reasonSentence}` +
-      `\n\nVocê prefere ${formatSlot(a)} ou ${formatSlot(b)}?`
+      `\n\nPrefere ${formatSlot(a)} ou ${formatSlot(b)}?`
     );
   }
 
   if (actionType === 'TASK') {
     return (
       `${greeting}` +
-      `\n\nSó pra alinharmos${dealCtx}: ${action.trim()}.` +
+      `\n\nSó para alinharmos${dealCtx}: ${action.trim()}.` +
       `${reasonSentence}` +
-      `\n\nPode me confirmar quando conseguir?`
+      `\n\nPode confirmar-me quando conseguir?`
     );
   }
 
@@ -523,8 +523,8 @@ function buildSuggestedEmailBody(opts: {
       `\n\nQueria marcar uma conversa rápida (15 min) para alinharmos próximos passos.` +
       `${dealSentence}` +
       `${reasonSentence}` +
-      `\n\nVocê teria disponibilidade em ${formatSlot(a)} ou ${formatSlot(b)}?` +
-      `\n\nAbs,`
+      `\n\nTem disponibilidade em ${formatSlot(a)} ou ${formatSlot(b)}?` +
+      `\n\nCumprimentos,`
     );
   }
 
@@ -535,7 +535,7 @@ function buildSuggestedEmailBody(opts: {
       `${dealSentence}` +
       `${reasonSentence}` +
       `\n\nSugestões de horário: ${formatSlot(a)} ou ${formatSlot(b)}.` +
-      `\n\nAbs,`
+      `\n\nCumprimentos,`
     );
   }
 
@@ -545,7 +545,7 @@ function buildSuggestedEmailBody(opts: {
       `\n\n${action.trim()}.` +
       `${dealSentence}` +
       `${reasonSentence}` +
-      `\n\nAbs,`
+      `\n\nCumprimentos,`
     );
   }
 
@@ -1094,7 +1094,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
           completed: true,
           user: actor,
         });
-        pushToast('WhatsApp registrado', 'success');
+        pushToast('WhatsApp registado', 'success');
         setMessageLogContext(null);
         return;
       }
@@ -1112,7 +1112,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
         completed: true,
         user: actor,
       });
-      pushToast('Email registrado', 'success');
+      pushToast('Email registado', 'success');
       setMessageLogContext(null);
     },
     [addActivity, actor, messageLogContext, messageLogDedupe, pushToast, selectedDeal]
@@ -1169,7 +1169,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
       user: actor,
     });
 
-    pushToast('Ligação registrada', 'success');
+    pushToast('Ligação registada', 'success');
   }, [addActivity, actor, pushToast, selectedDeal]);
 
   const handleExecuteNext = useCallback(async () => {
@@ -1244,14 +1244,14 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
             dealTitle: selectedDeal.title,
             type: 'STATUS_CHANGE',
             title: 'Moveu para',
-            description: next?.label ?? 'Etapa atualizada',
+            description: next?.label ?? 'Etapa actualizada',
             date: new Date().toISOString(),
             completed: true,
             user: actor,
           });
         } catch {
           // Não bloqueia o fluxo principal
-          pushToast('Etapa atualizada (sem log)', 'neutral');
+          pushToast('Etapa actualizada (sem log)', 'neutral');
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Não foi possível mover etapa.';
@@ -1273,7 +1273,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
             Não encontrei nenhum deal carregado no contexto.
           </div>
           <div className="mt-2 text-xs text-slate-500">
-            Dica: abra o app normal (Boards) para carregar dados. Quando houver deals carregados, você consegue trocar aqui mesmo pelo seletor no topo.
+            Dica: abra a app normal (Boards) para carregar dados. Quando houver deals carregados, pode trocar aqui mesmo pelo selector no topo.
           </div>
         </div>
       </div>
@@ -1406,11 +1406,11 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
               </div>
             </Panel>
 
-            <Panel title="Próxima ação" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />} className="shrink-0">
+            <Panel title="Próxima acção" icon={<BadgeCheck className="h-4 w-4 text-cyan-300" />} className="shrink-0">
               <div className="text-sm font-semibold text-slate-100">{nextBestAction.action}</div>
               <div className="mt-1 text-xs text-slate-400">{nextBestAction.reason}</div>
               <div className="mt-2 text-[11px] text-slate-500">
-                Aqui EXECUTA (e tenta registrar o que dá). No rodapé da timeline você REGISTRA actividades rápidas que aconteceram fora do CRM.
+                Aqui EXECUTA (e tenta registar o que dá). No rodapé da timeline REGISTA actividades rápidas que aconteceram fora do CRM.
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -1666,7 +1666,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Buscar"
+                    placeholder="Procurar"
                     className="w-44 bg-transparent text-xs text-slate-200 outline-none placeholder:text-slate-600"
                   />
                 </div>
@@ -1738,12 +1738,12 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                         dealTitle: deal.title,
                         type: 'NOTE',
                         title: 'WhatsApp',
-                        description: `${header}\n\n---\n\nMensagem enviada (registrado fora do CRM).`,
+                        description: `${header}\n\n---\n\nMensagem enviada (registada fora do CRM).`,
                         date: new Date().toISOString(),
                         completed: true,
                         user: actor,
                       });
-                      pushToast('WhatsApp registrado', 'success');
+                      pushToast('WhatsApp registado', 'success');
                     }}
                   >
                     <MessageCircle className="h-4 w-4" /> WhatsApp
@@ -1763,12 +1763,12 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                         dealTitle: deal.title,
                         type: 'EMAIL',
                         title: 'Email',
-                        description: `${header}\nAssunto: Email\n\n---\n\nEnviado (registrado fora do CRM).`,
+                        description: `${header}\nAssunto: Email\n\n---\n\nEnviado (registado fora do CRM).`,
                         date: new Date().toISOString(),
                         completed: true,
                         user: actor,
                       });
-                      pushToast('Email registrado', 'success');
+                      pushToast('Email registado', 'success');
                     }}
                   >
                     <Inbox className="h-4 w-4" /> Email
@@ -1783,12 +1783,12 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                         dealTitle: deal.title,
                         type: 'CALL',
                         title: 'Ligação',
-                        description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nRealizada (registrado fora do CRM).',
+                        description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nRealizada (registada fora do CRM).',
                         date: new Date().toISOString(),
                         completed: true,
                         user: actor,
                       });
-                      pushToast('Ligação registrada', 'success');
+                      pushToast('Ligação registada', 'success');
                     }}
                   >
                     <Phone className="h-4 w-4" /> Ligação
@@ -1803,12 +1803,12 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                         dealTitle: deal.title,
                         type: 'MEETING',
                         title: 'Reunião',
-                        description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nRegistrada fora do CRM.',
+                        description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nRegistada fora do CRM.',
                         date: new Date().toISOString(),
                         completed: true,
                         user: actor,
                       });
-                      pushToast('Reunião registrada', 'success');
+                      pushToast('Reunião registada', 'success');
                     }}
                   >
                     <CalendarClock className="h-4 w-4" /> Reunião
@@ -1823,12 +1823,12 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                         dealTitle: deal.title,
                         type: 'TASK',
                         title: 'Tarefa',
-                        description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nCriada (registrado fora do CRM).',
+                        description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nCriada (registada fora do CRM).',
                         date: new Date().toISOString(),
                         completed: true,
                         user: actor,
                       });
-                      pushToast('Tarefa registrada', 'success');
+                      pushToast('Tarefa registada', 'success');
                     }}
                   >
                     <ActivityIcon className="h-4 w-4" /> Tarefa
@@ -1855,7 +1855,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                     onClick={async () => {
                       const text = noteDraftTimeline.trim();
                       if (!text) {
-                        pushToast('Escreva uma nota antes de salvar', 'danger');
+                        pushToast('Escreva uma nota antes de guardar', 'danger');
                         return;
                       }
 
@@ -1871,10 +1871,10 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                       });
 
                       setNoteDraftTimeline('');
-                      pushToast('Nota salva', 'success');
+                      pushToast('Nota guardada', 'success');
                     }}
                   >
-                    Salvar
+                    Guardar
                   </button>
                 </div>
               </div>
@@ -1887,7 +1887,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                 bodyClassName="min-h-0 flex-1 overflow-auto"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-[11px] text-slate-500">Checklist persistido por deal (salvo em customFields).</div>
+                  <div className="text-[11px] text-slate-500">Checklist persistido por deal (guardado em customFields).</div>
                   <button
                     type="button"
                     className="rounded-lg border border-white/10 bg-white/2 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:bg-white/5"
@@ -1961,7 +1961,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                   </button>
                 </div>
 
-                <div className="mt-2 text-[11px] text-slate-600">Dica: isso fica no deal atual e aparece igual quando você trocar de deal.</div>
+                <div className="mt-2 text-[11px] text-slate-600">Dica: isto fica no deal actual e aparece igual quando trocar de deal.</div>
               </Panel>
             </div>
           </div>
@@ -2017,7 +2017,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                         placeholder="Escreva uma nota persistida…"
                       />
                       <div className="mt-2 flex items-center justify-between gap-2">
-                        <div className="text-[11px] text-slate-500">Salva em deal_notes.</div>
+                        <div className="text-[11px] text-slate-500">Guardada em deal_notes.</div>
                         <button
                           type="button"
                           className="rounded-xl bg-white px-4 py-2 text-xs font-semibold text-slate-900 hover:bg-slate-100 disabled:opacity-50"
@@ -2027,17 +2027,17 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                             if (!content) return;
                             await createNote.mutateAsync(content);
                             setDealNoteDraft('');
-                            pushToast('Nota persistida salva', 'success');
+                            pushToast('Nota persistida guardada', 'success');
                           }}
                         >
-                          {createNote.isPending ? 'Salvando…' : 'Adicionar'}
+                          {createNote.isPending ? 'A guardar…' : 'Adicionar'}
                         </button>
                       </div>
                     </div>
 
                     <div className="mt-4">
                       {isNotesLoading ? (
-                        <div className="text-sm text-slate-400">Carregando…</div>
+                        <div className="text-sm text-slate-400">A carregar…</div>
                       ) : notes.length === 0 ? (
                         <div className="text-sm text-slate-400">Sem notas ainda.</div>
                       ) : (
@@ -2059,7 +2059,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                                   <button
                                     type="button"
                                     className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-200 hover:bg-rose-500/15"
-                                    title="Excluir"
+                                    title="Eliminar"
                                     onClick={() => void deleteNote.mutate(n.id)}
                                   >
                                     <X className="h-3.5 w-3.5" />
@@ -2078,7 +2078,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                         <FileText className="h-4 w-4" /> Scripts (persistidos)
                       </div>
-                      <div className="text-[11px] text-slate-500">{isScriptsLoading ? 'Carregando…' : `${scripts.length} itens`}</div>
+                      <div className="text-[11px] text-slate-500">{isScriptsLoading ? 'A carregar…' : `${scripts.length} itens`}</div>
                     </div>
 
                     <div className="mt-3 space-y-2">
@@ -2117,7 +2117,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                         <Inbox className="h-4 w-4" /> Arquivos (storage)
                       </div>
-                      <div className="text-[11px] text-slate-500">{isFilesLoading ? 'Carregando…' : `${files.length} itens`}</div>
+                      <div className="text-[11px] text-slate-500">{isFilesLoading ? 'A carregar…' : `${files.length} itens`}</div>
                     </div>
 
                     <div className="mt-3">
@@ -2136,7 +2136,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
 
                     <div className="mt-3 space-y-2">
                       {files.length === 0 && !isFilesLoading ? (
-                        <div className="text-sm text-slate-400">Nenhum arquivo.</div>
+                        <div className="text-sm text-slate-400">Nenhum ficheiro.</div>
                       ) : (
                         files.map((f) => (
                           <div key={f.id} className="rounded-2xl border border-white/10 bg-white/3 p-3">
@@ -2160,7 +2160,7 @@ export default function DealCockpitRealClient({ dealId }: { dealId?: string }) {
                                   type="button"
                                   className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-2 text-rose-200 hover:bg-rose-500/15"
                                   onClick={() => void deleteFile.mutate({ fileId: f.id, filePath: f.file_path })}
-                                  title="Excluir"
+                                  title="Eliminar"
                                 >
                                   <X className="h-4 w-4" />
                                 </button>

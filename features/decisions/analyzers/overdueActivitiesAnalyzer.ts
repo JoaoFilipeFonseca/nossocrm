@@ -11,8 +11,8 @@ const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
 
 export const overdueActivitiesConfig: AnalyzerConfig = {
   id: 'overdue_activities',
-  name: 'Atividades Atrasadas',
-  description: 'Detecta atividades não concluídas que já passaram da data',
+  name: 'Actividades Atrasadas',
+  description: 'Detecta actividades não concluídas que já passaram da data',
   enabled: true,
   params: {
     criticalDaysOverdue: 3,
@@ -35,7 +35,7 @@ function generateReasoning(activity: Activity, daysOverdue: number, deal?: DealV
     parts.push(`Esta actividade está vinculada ao deal "${deal.title}" (${deal.value.toLocaleString('pt-PT')} €).`);
     
     if (deal.probability >= 60) {
-      parts.push('O deal está em estágio avançado, então este atraso pode impactar o fechamento.');
+      parts.push('O deal está em estágio avançado, portanto este atraso pode afectar o fecho.');
     }
   }
   
@@ -107,7 +107,7 @@ function generateSuggestedActions(activity: Activity, deal?: DealView): {
       payload: {
         channel: 'whatsapp',
         recipient: deal?.contactName,
-        messageTemplate: `Olá! Não consegui falar com você ${activity.type === 'CALL' ? 'por telefone' : 'na reunião'} no dia ${PT_BR_DATE_FORMATTER.format(new Date(activity.date))}. Podemos remarcar?`,
+        messageTemplate: `Olá! Não consegui falar consigo ${activity.type === 'CALL' ? 'por telefone' : 'na reunião'} no dia ${PT_BR_DATE_FORMATTER.format(new Date(activity.date))}. Podemos remarcar?`,
         dealId: activity.dealId,
         contactId: deal?.contactId,
       },

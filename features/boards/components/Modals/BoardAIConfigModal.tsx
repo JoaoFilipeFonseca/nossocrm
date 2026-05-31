@@ -64,11 +64,11 @@ export const BoardAIConfigModal: React.FC<BoardAIConfigModalProps> = ({
           </div>
           <div>
             <h3 className="font-medium text-slate-900 dark:text-white">
-              AI Agent Autônomo
+              AI Agent Autónomo
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               Configure prompts específicos para cada estágio. O AI responderá automaticamente
-              aos leads seguindo as instruções definidas, com objetivo de avançar no funil.
+              aos leads de acordo com as instruções definidas, com o objectivo de avançar no funil.
             </p>
           </div>
         </div>

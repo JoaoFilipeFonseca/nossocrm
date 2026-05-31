@@ -449,7 +449,7 @@ async function fetchUnresolvedConversations(
 
       return {
         id: conv.id,
-        contactName: conv.external_contact_name || 'Contato',
+        contactName: conv.external_contact_name || 'Contacto',
         lastMessage: messageText.substring(0, 100),
         lastMessageAt: conv.last_message_at,
         unreadCount: conv.unread_count,

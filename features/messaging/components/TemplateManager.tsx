@@ -287,7 +287,7 @@ export function TemplateManager({ channelId, channelName, className }: TemplateM
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar templates..."
+            placeholder="Procurar templates..."
             className={cn(
               'w-full pl-9 pr-3 py-2 text-sm rounded-lg border',
               'bg-[var(--color-bg)] text-[var(--color-text-primary)]',
@@ -334,7 +334,7 @@ export function TemplateManager({ channelId, channelName, className }: TemplateM
           <p className="text-sm text-[var(--color-text-muted)]">
             {search || statusFilter !== 'all'
               ? 'Nenhum template encontrado com esses filtros'
-              : 'Nenhum template sincronizado. Clique em "Sincronizar" para buscar templates do Meta.'}
+              : 'Nenhum template sincronizado. Clique em "Sincronizar" para procurar templates do Meta.'}
           </p>
         </div>
       ) : (

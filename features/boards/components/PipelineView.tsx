@@ -310,8 +310,8 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
             Bem-vindo ao seu CRM
           </h2>
           <p className="text-slate-500 dark:text-slate-400 max-w-md mb-8">
-            Você ainda não tem nenhum board criado. Comece criando seu primeiro fluxo de trabalho
-            para organizar seus negócios.
+            Ainda não tem nenhum board criado. Comece por criar o seu primeiro fluxo de trabalho
+            para organizar os seus negócios.
           </p>
           <button
             onClick={() => setIsWizardOpen(true)}

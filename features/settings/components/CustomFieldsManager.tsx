@@ -117,7 +117,7 @@ export const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({
               className={editingId ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-600/20' : undefined}
             >
               {editingId ? <Check size={16} /> : <Plus size={16} />}
-              {editingId ? 'Salvar' : 'Criar'}
+              {editingId ? 'Guardar' : 'Criar'}
             </Button>
           </div>
         </div>

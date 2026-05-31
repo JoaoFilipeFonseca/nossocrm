@@ -157,10 +157,10 @@ export const ApiKeysSection: React.FC = () => {
         .eq('id', id)
         .not('revoked_at', 'is', null);
       if (error) throw error;
-      addToast('Chave excluída.', 'success');
+      addToast('Chave eliminada.', 'success');
       await loadKeys();
     } catch (e: any) {
-      addToast(e?.message || 'Erro ao excluir chave', 'error');
+      addToast(e?.message || 'Erro ao eliminar chave', 'error');
     } finally {
       setDeletingId(null);
     }
@@ -168,7 +168,7 @@ export const ApiKeysSection: React.FC = () => {
 
   const openDeleteConfirm = (k: ApiKeyRow) => {
     if (!k.revoked_at) {
-      addToast('Você só pode excluir chaves revogadas.', 'warning');
+      addToast('Só pode eliminar chaves revogadas.', 'warning');
       return;
     }
     setDeleteTarget(k);
@@ -321,7 +321,7 @@ export const ApiKeysSection: React.FC = () => {
       if (action === 'create_deal') {
         if (!selectedBoardKey) {
           addToast('Escolha um board com key (slug) para criar deal.', 'warning');
-          setActionTestResult({ ok: false, message: 'Selecione um board com key.' });
+          setActionTestResult({ ok: false, message: 'Seleccione um board com key.' });
           return;
         }
         const res = await fetch(dealsUrl, {
@@ -363,8 +363,8 @@ export const ApiKeysSection: React.FC = () => {
 
       if (action === 'move_stage') {
         if (!selectedToStageId) {
-          addToast('Selecione a etapa de destino.', 'warning');
-          setActionTestResult({ ok: false, message: 'Selecione uma etapa.' });
+          addToast('Seleccione a etapa de destino.', 'warning');
+          setActionTestResult({ ok: false, message: 'Seleccione uma etapa.' });
           return;
         }
         if (!selectedToStageLabel) {
@@ -373,8 +373,8 @@ export const ApiKeysSection: React.FC = () => {
           return;
         }
         if (!selectedBoardKey && !selectedBoardId) {
-          addToast('Selecione um board.', 'warning');
-          setActionTestResult({ ok: false, message: 'Selecione um board.' });
+          addToast('Seleccione um board.', 'warning');
+          setActionTestResult({ ok: false, message: 'Seleccione um board.' });
           return;
         }
         const phone = identityPhone.trim();
@@ -426,7 +426,7 @@ export const ApiKeysSection: React.FC = () => {
             Chave da integração (independente do assistente)
           </div>
           <div className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-            A chave é da sua conta. O assistente só usa ela para montar o “copiar/colar” e testar.
+            A chave é da sua conta. O assistente só a usa para montar o “copiar/colar” e testar.
           </div>
 
           <div className="flex gap-2">
@@ -483,7 +483,7 @@ export const ApiKeysSection: React.FC = () => {
                 value={apiKeyToken}
                 onChange={(e) => setApiKeyToken(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white font-mono text-xs"
-                placeholder="ncrm_… (fica só em memória, não é salvo)"
+                placeholder="ncrm_… (fica só em memória, não é guardado)"
               />
               <button
                 type="button"
@@ -536,7 +536,7 @@ export const ApiKeysSection: React.FC = () => {
               <div className="text-xs text-slate-600 dark:text-slate-300 mb-3">
                 <span className="font-semibold text-slate-700 dark:text-slate-200">*</span> Obrigatório: <span className="font-semibold text-slate-700 dark:text-slate-200">Email</span> <span className="font-semibold">ou</span>{' '}
                 <span className="font-semibold text-slate-700 dark:text-slate-200">Telefone</span>. <span className="font-semibold text-slate-700 dark:text-slate-200">Nome</span> é obrigatório apenas ao{' '}
-                <span className="font-semibold text-slate-700 dark:text-slate-200">criar</span> um contato novo.
+                <span className="font-semibold text-slate-700 dark:text-slate-200">criar</span> um contacto novo.
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -622,7 +622,7 @@ export const ApiKeysSection: React.FC = () => {
                   onChange={(e) => setSelectedBoardId(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white"
                 >
-                  <option value="">Selecione…</option>
+                  <option value="">Seleccione…</option>
                   {boardsFromContext.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name}{b.key ? ` — ${b.key}` : ' — (sem key)'}
@@ -693,7 +693,7 @@ export const ApiKeysSection: React.FC = () => {
                     onChange={(e) => setSelectedToStageId(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white"
                   >
-                    <option value="">Selecione…</option>
+                    <option value="">Seleccione…</option>
                     {stagesForBoard.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.label}
@@ -740,7 +740,7 @@ export const ApiKeysSection: React.FC = () => {
           Passo 3 — Copiar e testar
         </div>
         <div className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-          Este é o “copiar/colar” que seu usuário precisa. Se funcionar aqui, funciona no n8n.
+          Este é o “copiar/colar” de que precisa. Se funcionar aqui, funciona no n8n.
         </div>
 
         <div className="flex flex-wrap gap-2 mb-3">
@@ -826,7 +826,7 @@ export const ApiKeysSection: React.FC = () => {
             className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-white text-sm font-semibold inline-flex items-center gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${loadingKeys ? 'animate-spin' : ''}`} />
-            Atualizar
+            Actualizar
           </button>
         </div>
 
@@ -845,7 +845,7 @@ export const ApiKeysSection: React.FC = () => {
                       {k.revoked_at ? (
                         <span className="ml-2 text-xs font-semibold text-rose-600 dark:text-rose-400">revogada</span>
                       ) : (
-                        <span className="ml-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">ativa</span>
+                        <span className="ml-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">activa</span>
                       )}
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
@@ -864,7 +864,7 @@ export const ApiKeysSection: React.FC = () => {
                         className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-rose-50 dark:hover:bg-rose-500/10 disabled:opacity-60 text-rose-700 dark:text-rose-300 text-sm font-semibold inline-flex items-center gap-2"
                       >
                         <Trash2 className="h-4 w-4" />
-                        {deletingId === k.id ? 'Excluindo…' : 'Excluir'}
+                        {deletingId === k.id ? 'A eliminar…' : 'Eliminar'}
                       </button>
                     ) : (
                       <button
@@ -892,10 +892,10 @@ export const ApiKeysSection: React.FC = () => {
           if (!deleteTarget) return;
           void deleteRevokedKey(deleteTarget.id);
         }}
-        title="Excluir chave revogada?"
+        title="Eliminar chave revogada?"
         message={
           <div className="space-y-2">
-            <div>Essa chave será removida permanentemente.</div>
+            <div>Esta chave será removida permanentemente.</div>
             <div className="text-xs text-slate-500 dark:text-slate-400">
               {deleteTarget ? (
                 <>
@@ -905,7 +905,7 @@ export const ApiKeysSection: React.FC = () => {
             </div>
           </div>
         }
-        confirmText="Excluir"
+        confirmText="Eliminar"
         cancelText="Cancelar"
         variant="danger"
       />

@@ -207,7 +207,7 @@ export function MessagingMetricsSection({ period }: { period: PeriodFilter }) {
             </div>
             <div>
               <p className="font-medium text-slate-700 dark:text-slate-200">
-                Nenhuma mensagem registrada neste período
+                Nenhuma mensagem registada neste período
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 As métricas aparecerão quando mensagens forem enviadas pelo sistema.

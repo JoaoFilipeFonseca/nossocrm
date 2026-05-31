@@ -47,7 +47,7 @@ export const BOARD_TEMPLATES: Record<BoardTemplateType, BoardTemplate> = {
       name: 'SDR Bot',
       role: 'Pré-vendas e Qualificação',
       behavior:
-        'Seja rápido e objetivo. Seu foco é qualificar o lead fazendo perguntas chave sobre orçamento, autoridade, necessidade e tempo (BANT). Se o lead for qualificado, mova para MQL.',
+        'Seja rápido e objectivo. O seu foco é qualificar o lead fazendo perguntas chave sobre orçamento, autoridade, necessidade e tempo (BANT). Se o lead for qualificado, mova para MQL.',
     },
     goal: {
       description: 'Qualificar leads frios e identificar oportunidades reais.',
@@ -60,10 +60,10 @@ export const BOARD_TEMPLATES: Record<BoardTemplateType, BoardTemplate> = {
 
   SALES: {
     name: 'Pipeline de Vendas',
-    description: 'MQL até fechamento ou perda',
+    description: 'MQL até ao fecho ou perda',
     emoji: '💰',
     linkedLifecycleStage: 'MQL',
-    tags: ['Vendas', 'CRM', 'Fechamento'],
+    tags: ['Vendas', 'CRM', 'Fecho'],
     stages: [
       { label: 'Descoberta', color: 'bg-blue-500', linkedLifecycleStage: 'MQL' },
       { label: 'Proposta', color: 'bg-purple-500', linkedLifecycleStage: 'PROSPECT' },
@@ -77,7 +77,7 @@ export const BOARD_TEMPLATES: Record<BoardTemplateType, BoardTemplate> = {
       name: 'Closer Bot',
       role: 'Executivo de Vendas',
       behavior:
-        'Atue como um consultor experiente. Foque em entender a dor do cliente, apresentar a solução de valor e negociar termos. Use gatilhos mentais de urgência e escassez quando apropriado.',
+        'Actue como um consultor experiente. Foque-se em perceber a dor do cliente, apresentar a solução de valor e negociar termos. Use gatilhos mentais de urgência e escassez quando apropriado.',
     },
     goal: {
       description: 'Maximizar a receita recorrente mensal (MRR).',
@@ -90,27 +90,27 @@ export const BOARD_TEMPLATES: Record<BoardTemplateType, BoardTemplate> = {
 
   ONBOARDING: {
     name: 'Onboarding de Clientes',
-    description: 'Ativação e implementação de novos clientes',
+    description: 'Activação e implementação de novos clientes',
     emoji: '🚀',
     linkedLifecycleStage: 'CUSTOMER',
     tags: ['CS', 'Implementação', 'Sucesso'],
     stages: [
       { label: 'Kickoff', color: 'bg-blue-500', linkedLifecycleStage: 'CUSTOMER' },
       { label: 'Implementação', color: 'bg-purple-500', linkedLifecycleStage: 'CUSTOMER' },
-      { label: 'Treinamento', color: 'bg-yellow-500', linkedLifecycleStage: 'CUSTOMER' },
+      { label: 'Formação', color: 'bg-yellow-500', linkedLifecycleStage: 'CUSTOMER' },
       { label: 'Go Live', color: 'bg-green-500', linkedLifecycleStage: 'CUSTOMER' },
     ],
     // For onboarding boards, we treat the final milestone as "Won" to enable handoff automations.
     defaultWonStageLabel: 'Go Live',
     agentPersona: {
       name: 'CS Manager',
-      role: 'Gerente de Sucesso do Cliente',
+      role: 'Gestor de Sucesso do Cliente',
       behavior:
-        'Seja acolhedor e didático. Guie o cliente passo a passo na configuração da ferramenta. Garanta que ele veja valor rápido (First Value).',
+        'Seja acolhedor e didáctico. Guie o cliente passo a passo na configuração da ferramenta. Garanta que ele veja valor rápido (First Value).',
     },
     goal: {
-      description: 'Garantir que o cliente complete a configuração inicial em até 7 dias.',
-      kpi: 'Clientes Ativados',
+      description: 'Garantir que o cliente completa a configuração inicial em até 7 dias.',
+      kpi: 'Clientes Activados',
       targetValue: '20',
       type: 'number',
     },
@@ -133,9 +133,9 @@ export const BOARD_TEMPLATES: Record<BoardTemplateType, BoardTemplate> = {
     defaultLostStageLabel: 'Churn',
     agentPersona: {
       name: 'Account Manager',
-      role: 'Gerente de Contas',
+      role: 'Gestor de Contas',
       behavior:
-        'Monitore a saúde da conta com sinais objetivos (uso, tickets, engajamento). Aja proativamente para evitar churn e garantir valor contínuo.',
+        'Monitorize a saúde da conta com sinais objectivos (uso, tickets, envolvimento). Aja proactivamente para evitar churn e garantir valor contínuo.',
     },
     goal: {
       description: 'Reduzir churn e manter saúde da base (GRR).',

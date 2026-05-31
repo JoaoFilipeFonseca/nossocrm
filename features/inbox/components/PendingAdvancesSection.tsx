@@ -246,7 +246,7 @@ export function PendingAdvancesStatCard({ count, onClick }: PendingAdvancesStatC
             </span>
           </div>
           <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {count > 0 ? 'Aguardando sua decisão' : 'Nenhuma pendência'}
+            {count > 0 ? 'A aguardar a sua decisão' : 'Nenhuma pendência'}
           </div>
         </div>
         <div className={`text-2xl font-bold ${count > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-slate-900 dark:text-white'}`}>

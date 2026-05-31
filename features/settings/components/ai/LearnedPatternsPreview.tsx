@@ -52,7 +52,7 @@ export function LearnedPatternsPreview({
       <div className="text-center py-8 text-slate-500 dark:text-slate-400">
         <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
         <p className="text-sm">Nenhum padrão aprendido ainda</p>
-        <p className="text-xs mt-1">Selecione conversas para começar o aprendizado</p>
+        <p className="text-xs mt-1">Seleccione conversas para começar a aprendizagem</p>
       </div>
     );
   }

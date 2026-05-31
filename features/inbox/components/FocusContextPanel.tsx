@@ -927,7 +927,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                     <p className="text-lg font-mono font-bold text-emerald-400">{deal.probability || 50}%</p>
                                 </div>
                                 <div className="text-center">
-                                    <span className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold block">Ativ</span>
+                                    <span className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold block">Activ</span>
                                     <p className="text-lg font-mono font-bold text-blue-400">{activities.length}</p>
                                 </div>
                             </div>
@@ -988,7 +988,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                                     contact.status === 'INACTIVE' ? 'bg-slate-500/10 text-slate-400 border-slate-500/20' :
                                                         'bg-red-500/10 text-red-400 border-red-500/20'
                                                     }`}>
-                                                    {contact.status === 'ACTIVE' ? 'Ativo' : contact.status === 'INACTIVE' ? 'Inativo' : 'Churned'}
+                                                    {contact.status === 'ACTIVE' ? 'Activo' : contact.status === 'INACTIVE' ? 'Inactivo' : 'Churned'}
                                                 </span>
                                             )}
                                             {contact.totalValue && contact.totalValue > 0 && (
@@ -1041,7 +1041,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-slate-600">Atualizado</span>
+                                    <span className="text-slate-600">Actualizado</span>
                                     <p className="text-slate-400">
                                         {new Date(deal.updatedAt).toLocaleDateString('pt-PT')}
                                     </p>
@@ -1221,7 +1221,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                             Nenhuma actividade
                                         </p>
                                         <p className="text-sm text-slate-500 max-w-[200px]">
-                                            Comece adicionando uma nota ou agendando uma ação.
+                                            Comece por adicionar uma nota ou agendar uma acção.
                                         </p>
                                     </div>
                                 ) : (
@@ -1461,7 +1461,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                         <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Notas do Deal</span>
                                         {createNote.isPending && (
                                             <span className="text-[10px] text-primary-400 flex items-center gap-1">
-                                                <Loader2 size={10} className="animate-spin" /> Salvando...
+                                                <Loader2 size={10} className="animate-spin" /> A guardar...
                                             </span>
                                         )}
                                     </div>
@@ -1480,7 +1480,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                             }}
                                         />
                                         <div className="flex justify-between items-center mt-2">
-                                            <span className="text-[10px] text-slate-600">⌘+Enter para salvar</span>
+                                            <span className="text-[10px] text-slate-600">⌘+Enter para guardar</span>
                                             <button
                                                 onClick={handleNoteSubmit}
                                                 disabled={!note.trim() || createNote.isPending}
@@ -1628,12 +1628,12 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            if (confirm('Excluir este script?')) {
+                                                                            if (confirm('Eliminar este script?')) {
                                                                                 deleteScript.mutate(script.id);
                                                                             }
                                                                         }}
                                                                         className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
-                                                                        title="Excluir"
+                                                                        title="Eliminar"
                                                                     >
                                                                         <Trash2 size={12} />
                                                                     </button>
@@ -1676,7 +1676,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                             )}
                                         </div>
                                         <p className="text-sm font-medium text-white">
-                                            {uploadFile.isPending ? 'Enviando...' : 'Adicionar ficheiro'}
+                                            {uploadFile.isPending ? 'A enviar...' : 'Adicionar ficheiro'}
                                         </p>
                                         <p className="text-xs text-slate-500">Clique ou arraste (máx 10MB)</p>
                                     </div>
@@ -1688,7 +1688,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
 
                                     <div className="space-y-2">
                                         {files.length === 0 && !isFilesLoading ? (
-                                            <p className="text-sm text-slate-600 text-center py-4">Nenhum arquivo ainda</p>
+                                            <p className="text-sm text-slate-600 text-center py-4">Nenhum ficheiro ainda</p>
                                         ) : (
                                             files.map((file) => {
                                                 const ext = file.file_name.split('.').pop()?.toUpperCase() || 'FILE';

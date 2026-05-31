@@ -524,7 +524,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   const confirmDeleteDeal = () => {
     if (deleteId) {
       deleteDeal(deleteId);
-      addToast('Negócio excluído com sucesso', 'success');
+      addToast('Negócio eliminado com sucesso', 'success');
       setDeleteId(null);
       onClose();
     }
@@ -732,8 +732,8 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                 <button
                   onClick={() => setDeleteId(deal.id)}
                   className="ml-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                  title="Excluir Negócio"
-                  aria-label="Excluir negócio"
+                  title="Eliminar Negócio"
+                  aria-label="Eliminar negócio"
                 >
                   <Trash2 size={24} aria-hidden="true" />
                 </button>
@@ -773,7 +773,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
               />
             ) : (
               <div className="mt-4 rounded-lg border border-slate-200/60 bg-slate-50 px-4 py-3 text-xs text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-                Board não encontrado para este negócio. Algumas ações (mover estágio) podem ficar indisponíveis.
+                Board não encontrado para este negócio. Algumas acções (mover estágio) podem ficar indisponíveis.
               </div>
             )}
           </div>
@@ -792,7 +792,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                 ) : null}
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
-                    <User size={14} /> Contato Principal
+                    <User size={14} /> Contacto Principal
                   </h3>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">
@@ -1187,7 +1187,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     <div className="space-y-3 pl-4 border-l border-slate-200 dark:border-slate-800">
                       {dealActivities.length === 0 && (
                         <p className="text-sm text-slate-500 italic pl-4">
-                          Nenhuma actividade registrada.
+                          Nenhuma actividade registada.
                         </p>
                       )}
                       {dealActivities.map(activity => (
@@ -1391,7 +1391,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-1.5 py-0.5 rounded">
-                                Atuando como
+                                A actuar como
                               </span>
                             </div>
                             <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
@@ -1520,9 +1520,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
           isOpen={Boolean(deleteId)}
           onClose={() => setDeleteId(null)}
           onConfirm={confirmDeleteDeal}
-          title="Excluir Negócio"
-          message="Tem certeza que deseja excluir este negócio? Esta ação não pode ser desfeita."
-          confirmText="Excluir"
+          title="Eliminar Negócio"
+          message="Tem a certeza que pretende eliminar este negócio? Esta acção não pode ser desfeita."
+          confirmText="Eliminar"
           variant="danger"
         />
 

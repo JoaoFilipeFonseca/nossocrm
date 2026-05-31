@@ -59,7 +59,7 @@ export function ScheduleModal({
     isOpen,
     onClose,
     onSave,
-    contactName = 'Contato',
+    contactName = 'Contacto',
     initialType = 'CALL',
     initialTitle,
     initialDescription,

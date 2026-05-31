@@ -553,7 +553,7 @@ export function getMessagePreview(content: MessageContent): string {
     case 'location':
       return content.name || '[Localização]';
     case 'contact':
-      return content.contacts[0]?.name.formattedName || '[Contato]';
+      return content.contacts[0]?.name.formattedName || '[Contacto]';
     case 'template':
       return `[Template: ${content.templateName}]`;
     case 'interactive':

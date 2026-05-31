@@ -129,7 +129,7 @@ const WEBHOOK_CONFIGS: Record<string, {
 }> = {
   'z-api': {
     title: 'Configurar Webhooks no Z-API',
-    where: 'Acesse developer.z-api.io → Sua instância → aba "Webhooks e configurações gerais"',
+    where: 'Aceda a developer.z-api.io → A sua instância → aba "Webhooks e configurações gerais"',
     docsUrl: 'https://developer.z-api.io/webhooks/introduction',
     fields: [
       { label: 'Ao receber (Receive)', description: 'Recebe mensagens dos leads no CRM — obrigatório pra funcionar', required: true },
@@ -140,13 +140,13 @@ const WEBHOOK_CONFIGS: Record<string, {
       { label: 'Presença do chat', description: 'Mostra "online" e "a escrever..." no ecrã de mensagens' },
     ],
     toggles: [
-      'Ative "Notificar as enviadas por mim também" — senão mensagens enviadas pelo telemóvel não aparecem no CRM',
-      'Cole a mesma URL em todos os campos (exceto Presença do chat). O sistema identifica o tipo de evento automaticamente.',
+      'Active "Notificar as enviadas por mim também" — senão mensagens enviadas pelo telemóvel não aparecem no CRM',
+      'Cole a mesma URL em todos os campos (excepto Presença do chat). O sistema identifica o tipo de evento automaticamente.',
     ],
   },
   'meta-cloud': {
     title: 'Configurar Webhook no Meta for Developers',
-    where: 'Acesse developers.facebook.com → Seu App → WhatsApp → Configuração → Webhook',
+    where: 'Aceda a developers.facebook.com → O seu App → WhatsApp → Configuração → Webhook',
     docsUrl: 'https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/set-up',
     fields: [
       { label: 'Callback URL', description: 'Cole a URL abaixo no campo de webhook', required: true },
@@ -155,7 +155,7 @@ const WEBHOOK_CONFIGS: Record<string, {
   },
   'meta': {
     title: 'Configurar Webhook no Meta for Developers',
-    where: 'Acesse developers.facebook.com → Seu App → Messenger → Configurações → Webhooks',
+    where: 'Aceda a developers.facebook.com → O seu App → Messenger → Configurações → Webhooks',
     docsUrl: 'https://developers.facebook.com/docs/messenger-platform/webhooks',
     fields: [
       { label: 'Callback URL', description: 'Cole a URL abaixo', required: true },
@@ -164,12 +164,12 @@ const WEBHOOK_CONFIGS: Record<string, {
   },
   'resend': {
     title: 'Configurar Webhook no Resend',
-    where: 'Acesse resend.com → Dashboard → Webhooks → Add Webhook',
+    where: 'Aceda a resend.com → Dashboard → Webhooks → Add Webhook',
     docsUrl: 'https://resend.com/docs/dashboard/webhooks/introduction',
     fields: [
       { label: 'Endpoint URL', description: 'Cole a URL abaixo', required: true },
     ],
-    toggles: ['Selecione os eventos: email.sent, email.delivered, email.opened, email.bounced'],
+    toggles: ['Seleccione os eventos: email.sent, email.delivered, email.opened, email.bounced'],
   },
 };
 
@@ -609,7 +609,7 @@ function ChannelCard({
                       className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm text-slate-900 dark:text-white disabled:opacity-50"
                     >
-                      <option value="">Selecione um funil</option>
+                      <option value="">Seleccione um funil</option>
                       {boards.map((board) => (
                         <option key={board.id} value={board.id}>
                           {board.name}
@@ -743,7 +743,7 @@ export function ChannelsSection() {
       }
       // No toast for inline changes - feels smoother
     } catch {
-      addToast('Erro ao salvar configuração de entrada de leads', 'error');
+      addToast('Erro ao guardar configuração de entrada de leads', 'error');
     }
   };
 
@@ -854,7 +854,7 @@ export function ChannelsSection() {
         title="Remover canal?"
         message={
           <div>
-            Isso vai remover o canal <b>{channelToDelete?.name}</b>. As conversas
+            Isto vai remover o canal <b>{channelToDelete?.name}</b>. As conversas
             existentes serão mantidas, mas novas mensagens não serão recebidas.
           </div>
         }

@@ -614,7 +614,7 @@ export const boardsService = {
       // Update stages if provided
       if (updates.stages) {
         if (!organizationId) {
-          return { error: new Error('Organização não identificada para atualizar estágios deste board. Recarregue a página e tente novamente.') };
+          return { error: new Error('Organização não identificada para actualizar estágios deste board. Recarregue a página e tente novamente.') };
         }
         // 1. Upsert provided stages (Update existing + Insert new)
         // We MUST include the ID to update existing records
@@ -720,7 +720,7 @@ export const boardsService = {
       if (!canDelete) {
         return {
           error: new Error(
-            `Não é possível excluir este board. Existem ${dealCount} negócio(s) vinculado(s). Mova ou exclua os negócios primeiro.`
+            `Não é possível eliminar este board. Existem ${dealCount} negócio(s) associado(s). Mova ou elimine os negócios primeiro.`
           ),
         };
       }
@@ -869,7 +869,7 @@ export const boardsService = {
       if (count && count > 0) {
         return {
           error: new Error(
-            `Não é possível excluir este estágio. Existem ${count} deal(s) nele. Mova os deals para outro estágio primeiro.`
+            `Não é possível eliminar este estágio. Existem ${count} deal(s) nele. Mova os deals para outro estágio primeiro.`
           )
         };
       }

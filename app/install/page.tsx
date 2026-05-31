@@ -73,7 +73,7 @@ export default function InstallEntryPage() {
       >
         <Loader2 className="w-6 h-6 text-cyan-300 animate-spin" />
         <div className="text-xs text-slate-500 dark:text-slate-400">
-          Preparando a rota…
+          A preparar a rota…
         </div>
       </motion.div>
     </div>

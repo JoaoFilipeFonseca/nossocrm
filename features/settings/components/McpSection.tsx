@@ -219,8 +219,8 @@ export const McpSection: React.FC = () => {
               </div>
               <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                 {testResult?.ok
-                  ? 'Seu MCP está respondendo. Copie a URL e conecte no seu cliente MCP.'
-                  : 'Um clique: cria uma API key e testa a conexão.'}
+                  ? 'O seu MCP está a responder. Copie o URL e ligue no seu cliente MCP.'
+                  : 'Um clique: cria uma API key e testa a ligação.'}
               </div>
               <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                 Endpoint: <span className="font-mono">{endpointPath}</span>
@@ -325,7 +325,7 @@ export const McpSection: React.FC = () => {
           {showHaveKey && (
             <div className="px-4 pb-4">
               <div className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-                Cole a chave (não é salva). Autenticação: <span className="font-mono">Authorization: Bearer {'<API_KEY>'}</span>.
+                Cole a chave (não é guardada). Autenticação: <span className="font-mono">Authorization: Bearer {'<API_KEY>'}</span>.
               </div>
           <div className="flex flex-wrap gap-2 items-center">
                 <input
@@ -333,7 +333,7 @@ export const McpSection: React.FC = () => {
                   onChange={(e) => setApiKey(e.target.value)}
                   ref={apiKeyInputRef}
                   className="min-w-[260px] flex-1 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white font-mono text-xs"
-                  placeholder="Cole aqui sua API key"
+                  placeholder="Cole aqui a sua API key"
                 />
                 <button
                   type="button"
