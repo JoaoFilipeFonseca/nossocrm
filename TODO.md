@@ -12,6 +12,28 @@
 
 ---
 
+## 🎯 PRIORIZAÇÃO (proposta aprovada pelo João 31/05/2026 — ajustável)
+
+> Lógica: anúncios prestes a religar → leads a entrar. O que mede/converte/protege
+> essas leads agora vale mais. 1 utilizador → RBAC não urgente. Diferenciador = CONTACT-360.
+> **Arranque imediato: Q-1.**
+
+**🥇 P1 — a seguir (ordem de execução):**
+1. **Q-1** Sweep PT-BR→PT-PT (protege cada mensagem a leads novas) ← ARRANQUE
+2. **NS-1** Custos + ROI no dashboard (núcleo "os números")
+3. **MA-DRILLDOWN** dados por criativo (qual criativo dá dinheiro)
+4. **CT-1 + CT-2** card de contacto rico + atribuição read-only (fundação CONTACT-360)
+
+**🥈 P2 — logo a seguir:**
+5. NS-2 CONTACT-360-AI · 6. MSG-1 WhatsApp/SMS próprio · 7. DASH-2 lead scoring ·
+8. MSG-3 email tracking · 9. INT-1 portais imobiliários · 10. IMO-3/4/5 · 11. MKT-STUDIO
+
+**🥉 P3 — depois / diferido:**
+12. INT-2 Google Calendar · AUTO-1..6 · DASH-1 polish · UX-1 NAV-IA · IA-1..6 · MSG-4 · MA-OFFLINE · MA-BACKFILL-ASYNC · MA-CAPI ·
+13. Diferidos por dependência/escala: IMO-1 portal cliente · IMO-2 CPCV digital (~6 meses) · Q-3 RBAC (só com 2.º utilizador) · Q-4 audit alargado
+
+---
+
 ## ✅ JÁ FEITO (não re-propor — verificado em código/BD a 31/05/2026)
 
 - **Magic Inbox** (`raw_intel`) + **KB do Pilot** (`ai_kb_facts`).
