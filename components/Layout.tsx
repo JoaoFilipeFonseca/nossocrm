@@ -50,7 +50,8 @@ import {
   Archive,
   Zap,
   Activity,
-  Megaphone
+  Megaphone,
+  Menu
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -59,7 +60,7 @@ import { prefetchRoute, RouteName } from '@/lib/prefetch';
 import { isDebugMode, enableDebugMode, disableDebugMode } from '@/lib/debug';
 import { SkipLink } from '@/lib/a11y';
 import { useResponsiveMode } from '@/hooks/useResponsiveMode';
-import { BottomNav, MoreMenuSheet, NavigationRail } from '@/components/navigation';
+import { NavigationRail, MobileNavDrawer } from '@/components/navigation';
 import { useUnreadCount } from '@/lib/query/hooks/useConversationsQuery';
 
 // Lazy load AI Assistant (deprecated - using UIChat now)
@@ -185,7 +186,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { mode } = useResponsiveMode();
-  const isMobile = mode === 'mobile';
   const isTablet = mode === 'tablet';
   const isDesktop = mode === 'desktop';
   
@@ -196,7 +196,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const showBack = !_TOP_LEVEL.has(_pn);
   const handleBack = () => { try { _router.back(); } catch (e) { _router.push('/dashboard'); } };
 const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   // Hydration safety: `isDebugMode()` reads localStorage. On SSR it is always false.
   // Initialize deterministically and sync on mount to avoid hydration mismatch warnings.
   const [debugEnabled, setDebugEnabled] = useState(false);
@@ -234,15 +234,16 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     };
   }, []);
 
-  // Expose bottom nav height so the content can pad itself and avoid being covered.
+  // Sem BottomNav: a navegação mobile vive na gaveta (hambúrguer). Sem barra
+  // inferior, não há altura a reservar — evita espaço morto no fundo do conteúdo.
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    document.documentElement.style.setProperty('--app-bottom-nav-height', isMobile ? '56px' : '0px');
-  }, [isMobile]);
+    document.documentElement.style.setProperty('--app-bottom-nav-height', '0px');
+  }, []);
 
-  // Close "More" menu when route changes.
+  // Fecha a gaveta de navegação ao mudar de rota.
   useEffect(() => {
-    setIsMoreOpen(false);
+    setIsDrawerOpen(false);
   }, [pathname]);
 
   // Track the last clicked menu item to maintain highlight during Suspense transitions
@@ -506,10 +507,21 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
           </div>
 
           {/* Header */}
-          <header className="h-16 glass border-b border-[var(--color-border-subtle)] flex items-center justify-between px-6 z-40 shrink-0" role="banner">
-            <h1 className="text-lg font-semibold font-display text-slate-900 dark:text-white">
-              {getPageTitle(pathname)}
-            </h1>
+          <header className="h-16 glass border-b border-[var(--color-border-subtle)] flex items-center justify-between px-4 md:px-6 z-40 shrink-0" role="banner">
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                onClick={() => setIsDrawerOpen(true)}
+                aria-label="Abrir menu"
+                aria-expanded={isDrawerOpen}
+                className="md:hidden p-2 -ml-1 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors active:scale-95 focus-visible-ring"
+              >
+                <Menu size={22} aria-hidden="true" />
+              </button>
+              <h1 className="text-lg font-semibold font-display text-slate-900 dark:text-white truncate">
+                {getPageTitle(pathname)}
+              </h1>
+            </div>
             <div className="flex items-center gap-4">
               <button
                 type="button"
@@ -575,8 +587,13 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
       {/* Mobile app shell */}
       <div className="fixed top-2 right-2 z-50 md:hidden text-[10px] font-mono text-slate-500 bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded-md backdrop-blur-sm border border-slate-200 dark:border-slate-700">{process.env.NEXT_PUBLIC_BUILD_TAG || 'dev'}</div>
-      <BottomNav onOpenMore={() => setIsMoreOpen(true)} />
-      <MoreMenuSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} />
+      <MobileNavDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        isAdmin={profile?.role === 'admin'}
+        userLabel={profile?.nickname || profile?.first_name || profile?.email?.split('@')[0] || 'Utilizador'}
+        userEmail={profile?.email || undefined}
+      />
 
       {/* Voice capture FAB — sempre visível em qualquer página protegida */}
       <VoiceCaptureFAB />
