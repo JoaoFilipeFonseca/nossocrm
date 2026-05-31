@@ -19,8 +19,8 @@
 > **Arranque imediato: Q-1.**
 
 **🥇 P1 — a seguir (ordem de execução):**
-1. **Q-1** Sweep PT-BR→PT-PT (protege cada mensagem a leads novas) ← ARRANQUE
-2. **NS-1** Custos + ROI no dashboard (núcleo "os números")
+1. ~~**Q-1** Sweep PT-BR→PT-PT~~ ✅ **FEITO (01/06, commit `964ac65`)** — copy visível limpa (features/components/app/lib/prompts/templates/install). Resta **Q-2** (comentários/JSDoc + lib/ai rules + fixtures de teste) — não-visível, P3.
+2. **NS-1** Custos + ROI no dashboard (núcleo "os números") ← PRÓXIMO
 3. **MA-DRILLDOWN** dados por criativo (qual criativo dá dinheiro)
 4. **CT-1 + CT-2** card de contacto rico + atribuição read-only (fundação CONTACT-360)
 
@@ -194,8 +194,17 @@
 
 ### K. Qualidade / dívida
 
-- **Q-1 · Défice sistémico PT-BR→PT-PT** `[POR FAZER]` `P?` 🔴
-  Muito além de "atividade": registrar/registro, Buscar, você/seu, Salvar, selecionada, "Tem certeza que deseja excluir", R$/BRL/Oi/Abs. Sessão dedicada com glossário + sub-agente. Confirmar no nossocrm com grep. (origem: défice B-007)
+- **Q-1 · Sweep PT-BR→PT-PT (copy visível)** `[FEITO]` (01/06, commit `964ac65`)
+  ~130 ficheiros, ~970 substituições em texto visível ao utilizador/lead (features/components/app/lib/prompts/templates/install) + consent LGPD→RGPD. 4 sub-agentes em paralelo, glossário fixo, regras de segurança (nunca identificadores/enums/rotas). tsc 0, vitest 407/5.
+
+- **Q-2 · Resto do sweep PT-BR/AO90 (não-visível)** `[POR FAZER]` `P3`
+  Comentários/JSDoc, `lib/ai/global-rules.ts` + `lib/ai/knowledge/imobiliario-pt.ts` (definem os termos a banir — rever com cuidado), fixtures de prompt em `app/api/test/**` e `app/(app)/test/`. Não vaza para cliente; baixa urgência.
+
+- **Q-BUG-IA · Erros de sentido em `lib/ai/crmAgent.ts`** `[POR FAZER]` `P2`
+  Detectado no sweep: ~linha 250 "Português europeu (PT-PT), NUNCA europeu" e ~284 "Mistures pt-PT com pt-PT" — ambos deviam dizer "brasileiro"/"pt-BR". Bug lógico na instrução à IA (não ortografia). Confirmar e corrigir.
+
+- **B-LINT · 2 erros eslint pré-existentes (MA-EDIT 31 Mai)** `[POR FAZER]` `P3`
+  `features/settings/components/MetaAdsSection.tsx` linhas 199/383: `<a href="/api/integrations/meta/oauth/start">` → erro `no-html-link-for-pages` (é redirect OAuth, não página; resolver com `<a>`+eslint-disable justificado ou rota). `features/meta-ads/AnunciosPage.tsx` 355/467: directivas `eslint-disable` não usadas (remover). Bloqueiam `npm run lint`/precheck.
 
 - **Q-2 · B-007 resto do sweep "deal"→"negócio" no UI** `[POR FAZER]` `P?`
   Labels DealDetailModal, Cockpit, board headers, toasts. Não tocar identificadores. (origem: CAPTURE B-007)
