@@ -57,6 +57,12 @@
 - **Reaproveitar (não rebuildar):** Brand Kit, `creative_archive`/`/criativos`, `/avaliar`, portal/LPs, atribuição omnicanal.
 - **Esforço:** muito alto (épico de vários sub-épicos, cada um com Plan-First). **Impacto:** muito alto (diferenciador). **Sequência:** depois da recepção de leads estar pronta (mede o retorno de tudo o que se cria). Confirmar prioridades sub-módulo a sub-módulo com o João.
 
+### TODO-CONSOLIDATE · Salvar o backlog antigo do todo.md (pedido João 31/05)
+- **Pedido João:** "grava tudo na memória para não perdermos nada... existe um todo.md com muita coisa já."
+- **Situação:** `nossocrm/.claude/TODO.md` NÃO existe. O todo.md grande é **`crm/.claude/TODO.md` = 1744 linhas** (pasta IRMÃ `crm`, projecto antigo) + `portal-app/TODO.md`. Está em disco (não perdido), mas é stale e pode ter ideias ainda válidas.
+- **Tarefa (sessão dedicada, contexto cheio):** ler `crm/.claude/TODO.md` + `portal-app/TODO.md` por secções → extrair só o que ainda é relevante para o nossocrm → integrar em CAPTURE.md/memória (sem duplicar com MA-*, M-*, B-* já cá) → marcar o original como arquivado. NÃO cabe num contexto já gasto (1744 linhas).
+- **Regra reforçada:** ideias novas = capturar aqui, nunca implementar logo.
+
 ### MA-BACKFILL-ASYNC · Backfill plurianual de Insights via API async (futuro)
 - O sync por janelas de 90d + lookback até ~36,5 meses cobre contas normais. Mas a Meta devolve "(#1) reduce the amount of data" para janelas grandes com `level=ad` + `time_increment=1` quando o volume é alto. Para contas com MUITOS anos/anúncios, o caminho robusto é a **Marketing API async** (`POST /act_x/insights` → `report_run_id` → polling → fetch paginado). Não urgente: a conta do João só tem dados desde 28/02/2026 (já todos ingeridos). Ticket quando houver uma conta com histórico longo.
 
