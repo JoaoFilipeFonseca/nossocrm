@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2 } from 'lucide-react';
+import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2, ChevronDown, ChevronRight, Route as RouteIcon } from 'lucide-react';
 
 export interface AdPerformanceRow {
   ad_id: string;
@@ -274,6 +274,8 @@ export const AnunciosPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <LeadRoutingPanel />
 
       {error ? (
         <div className="rounded-md bg-rose-50 text-rose-700 p-4 text-sm">Erro ao carregar: {error}</div>
@@ -709,3 +711,137 @@ function Kpi({ label, value, highlight }: { label: string; value: string; highli
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Encaminhamento de leads por campanha (R2). Cada campanha aponta para um
+// board+etapa; quando entra uma lead, cai logo no pipeline certo. Sem destino,
+// a lead entra só como contacto e o Telegram avisa para atribuir.
+// ---------------------------------------------------------------------------
+interface RoutingCampaign {
+  campaign_id: string;
+  campaign_name: string | null;
+  board_id: string | null;
+  stage_id: string | null;
+}
+interface RoutingBoard {
+  id: string;
+  name: string;
+  stages: { id: string; name: string }[];
+}
+
+const LeadRoutingPanel: React.FC = () => {
+  const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [campaigns, setCampaigns] = useState<RoutingCampaign[]>([]);
+  const [boards, setBoards] = useState<RoutingBoard[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    fetch('/api/meta-ads/routing', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.campaigns) setCampaigns(j.campaigns);
+        if (j.boards) setBoards(j.boards);
+        setLoaded(true);
+      })
+      .catch(() => { /* painel opcional */ })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { if (open && !loaded) load(); }, [open, loaded, load]);
+
+  const save = useCallback((camp: RoutingCampaign, boardId: string | null, stageId: string | null) => {
+    setSavingId(camp.campaign_id);
+    // optimismo local
+    setCampaigns((prev) => prev.map((c) => c.campaign_id === camp.campaign_id ? { ...c, board_id: boardId, stage_id: stageId } : c));
+    fetch('/api/meta-ads/routing', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ campaign_id: camp.campaign_id, campaign_name: camp.campaign_name, board_id: boardId, stage_id: stageId }),
+    })
+      .catch(() => { /* recarrega em caso de erro */ load(); })
+      .finally(() => setSavingId(null));
+  }, [load]);
+
+  const pendentes = campaigns.filter((c) => !c.board_id).length;
+
+  return (
+    <div className="mb-6 rounded-lg border border-slate-200">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
+      >
+        <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
+          <RouteIcon className="h-4 w-4 text-violet-600" />
+          Encaminhamento de leads (por campanha)
+          {loaded && pendentes > 0 && (
+            <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+              {pendentes} por definir
+            </span>
+          )}
+        </span>
+        {open ? <ChevronDown className="h-4 w-4 text-slate-400" /> : <ChevronRight className="h-4 w-4 text-slate-400" />}
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-100 p-4">
+          <p className="text-xs text-slate-500 mb-3">
+            Cada campanha define o intuito (comprador, proprietário, arrendamento). A lead nova cai logo no board escolhido.
+            Sem destino, fica como contacto e o Telegram avisa para atribuíres.
+          </p>
+          {loading ? (
+            <div className="flex items-center gap-2 text-sm text-slate-500 py-4 justify-center">
+              <Loader2 className="w-4 h-4 animate-spin" /> A carregar campanhas...
+            </div>
+          ) : campaigns.length === 0 ? (
+            <p className="text-sm text-slate-400">Sem campanhas com dados ainda.</p>
+          ) : (
+            <div className="space-y-2">
+              {campaigns.map((c) => {
+                const board = boards.find((b) => b.id === c.board_id);
+                return (
+                  <div key={c.campaign_id} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg border border-slate-100 p-2.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-slate-800 truncate">{c.campaign_name || c.campaign_id}</div>
+                      {!c.board_id && <div className="text-xs text-amber-600">Por definir</div>}
+                    </div>
+                    <select
+                      value={c.board_id ?? ''}
+                      onChange={(e) => {
+                        const bid = e.target.value || null;
+                        const firstStage = bid ? boards.find((b) => b.id === bid)?.stages[0]?.id ?? null : null;
+                        save(c, bid, firstStage);
+                      }}
+                      className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm bg-white focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
+                      aria-label={`Board de destino da campanha ${c.campaign_name || c.campaign_id}`}
+                    >
+                      <option value="">— Sem destino —</option>
+                      {boards.map((b) => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
+                    {board && board.stages.length > 0 && (
+                      <select
+                        value={c.stage_id ?? ''}
+                        onChange={(e) => save(c, c.board_id, e.target.value || null)}
+                        className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm bg-white focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
+                        aria-label="Etapa de entrada"
+                      >
+                        {board.stages.map((s) => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    )}
+                    {savingId === c.campaign_id && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};

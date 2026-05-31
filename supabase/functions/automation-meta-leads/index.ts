@@ -18,8 +18,9 @@
  *     Página, e busca os dados do formulário via Graph API (field_data +
  *     linhagem do anúncio).
  *  2. Cria `lead` + `contacto` com `attribution` (linhagem) e as respostas.
- *  3. Se existir `integration_inbound_sources` activo, cria um negócio no
- *     board/etapa configurados.
+ *  3. Encaminha por campanha (`meta_lead_routing`): cria o negócio no board+etapa
+ *     definidos para a campanha do anúncio. Sem destino, fica só o contacto.
+ *  3b. Alerta Telegram de lead nova (regra inegociável) com nome/anúncio/destino.
  *  4. Publica o evento `lead.meta_ads` (idempotente por leadgen_id) para o
  *     motor de automações do CRM.
  */
@@ -27,6 +28,22 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const GRAPH_VERSION = "v21.0";
 const GRAPH = `https://graph.facebook.com/${GRAPH_VERSION}`;
+const APP_URL = "https://crm-joao.vercel.app";
+
+// Alerta Telegram de lead nova (regra: Telegram só para leads novas). Best-effort.
+async function notifyTelegram(token: string, chatId: string, htmlText: string) {
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text: htmlText, parse_mode: "HTML", disable_web_page_preview: true }),
+    });
+  } catch (_e) { /* não bloqueia a recepção */ }
+}
+
+function esc(s: string | null | undefined): string {
+  return (s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -293,21 +310,28 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
     await supabase.from("leads").update({ converted_to_contact_id: contactId }).eq("id", newLead.id);
   }
 
-  // 3) negócio opcional via integration_inbound_sources
-  if (contactId) {
-    const { data: inbound } = await supabase
-      .from("integration_inbound_sources")
-      .select("entry_board_id, entry_stage_id, active")
+  // 3) negócio via encaminhamento por campanha (meta_lead_routing).
+  // A campanha define o intuito (comprador/vendedor/arrendamento) e aponta o
+  // board+etapa. Sem regra para a campanha, fica só o contacto e o Telegram
+  // avisa "campanha sem destino" para o João atribuir.
+  let boardName: string | null = null;
+  let routed = false;
+  const campaignId = attribution.campaign_id;
+  if (contactId && campaignId) {
+    const { data: routing } = await supabase
+      .from("meta_lead_routing")
+      .select("board_id, stage_id, boards(name)")
       .eq("organization_id", orgId)
-      .eq("active", true)
+      .eq("campaign_id", campaignId)
       .maybeSingle();
-    if (inbound?.entry_board_id) {
-      let stageId = inbound.entry_stage_id as string | null;
+    if (routing?.board_id) {
+      boardName = (routing.boards as { name?: string } | null)?.name ?? null;
+      let stageId = routing.stage_id as string | null;
       if (!stageId) {
         const { data: firstStage } = await supabase
           .from("board_stages")
           .select("id")
-          .eq("board_id", inbound.entry_board_id)
+          .eq("board_id", routing.board_id)
           .order("order", { ascending: true })
           .limit(1)
           .maybeSingle();
@@ -316,7 +340,7 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
       if (stageId) {
         await supabase.from("deals").insert({
           organization_id: orgId,
-          board_id: inbound.entry_board_id,
+          board_id: routing.board_id,
           stage_id: stageId,
           status: stageId,
           contact_id: contactId,
@@ -325,8 +349,33 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
           source: "meta_ads",
           attribution,
         });
+        routed = true;
       }
     }
+  }
+
+  // 3b) Alerta Telegram de lead nova (regra inegociável).
+  const { data: orgSettings } = await supabase
+    .from("organization_settings")
+    .select("telegram_crm_bot_token, telegram_crm_chat_id")
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  const tgToken = orgSettings?.telegram_crm_bot_token as string | undefined;
+  const tgChat = orgSettings?.telegram_crm_chat_id as string | undefined;
+  if (tgToken && tgChat) {
+    const destinoLinha = routed
+      ? `🎯 Destino: <b>${esc(boardName ?? "board")}</b>`
+      : `⚠️ <b>Campanha sem destino</b> — atribui o board em /anuncios`;
+    const contacto = [phone ? `📞 ${esc(phone)}` : null, email ? `✉️ ${esc(email)}` : null].filter(Boolean).join("  ");
+    const texto =
+      `🟢 <b>Lead nova — Meta Ads</b>\n` +
+      `👤 <b>${esc(leadName)}</b>\n` +
+      (contacto ? `${contacto}\n` : "") +
+      `📣 Anúncio: <b>${esc(attribution.ad_name ?? attribution.ad_id ?? "—")}</b>\n` +
+      `📦 Campanha: ${esc(attribution.campaign_name ?? "—")}\n` +
+      `${destinoLinha}\n\n` +
+      `Abrir: ${APP_URL}/boards`;
+    await notifyTelegram(tgToken, tgChat, texto);
   }
 
   // 4) evento para o motor de automações (idempotente por leadgen_id)
