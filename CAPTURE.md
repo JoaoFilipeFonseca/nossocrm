@@ -77,6 +77,17 @@
 - **Notas de implementação:** o CRM já tem em contacts: name/email/phone/source/notes/attribution. NOVOS campos → provavelmente `custom_fields` (jsonb) no contacto (deals já têm custom_fields) ou colunas dedicadas para os mais usados (aniversário, follow_up, last_activity_date, disc, family, pets, triggers). Referred By/Referred = relação contacto↔contacto. Documentos = bucket privado (padrão imovel-documentos). Aniversário pode alimentar alertas. DISC pode ligar a copy/abordagem IA.
 - **Decisões com o João:** quais campos viram coluna vs custom_field; superfície (precisa de página/painel de contacto — hoje só há ContactFormModal, ver c4.2). **Esforço:** médio. **Plan-First dedicado.** (Imagem descrita aqui porque o screenshot não fica no repo.)
 
+### ⭐ CONTACT-360-AI · Perfil 360° da pessoa + IA que relaciona tudo → falar exactamente para aquela pessoa (visão-núcleo João 31/05)
+- **Visão João:** "se tiver todos os itens no card, conheço a pessoa de verdade. Base = nome/email/contacto + se proprietário ou comprador; à medida que junto mais dados, fico com tudo sobre a pessoa, e com a IA a ver e relacionar tudo consigo falar exactamente para aquela pessoa. Quero isto." + **meta: "preciso que penses mais à frente, diferente de tudo e todos no imobiliário."**
+- **Base:** estende CONTACT-CARD-NOTION (card rico) + atribuição Meta Ads + histórico (mensagens/chamadas/timeline). Enriquecimento PROGRESSIVO: começa mínimo (nome/contacto/tipo) e cresce.
+- **Pensar à frente (extensões diferenciadoras):**
+  1. **Auto-enriquecimento:** a IA extrai dados do card a partir de cada interacção (WhatsApp/SMS/chamada transcrita/email) — "tem 2 filhos", "tem cão", "quer mudar de casa em 2026" → preenche Family/Pets/Triggers sozinho. O João nunca digita; só confirma.
+  2. **Camada de relação (graph):** Referred By/Referred = rede de indicações; ver quem trouxe quem, clusters de família/amigos, e o valor de cada "embaixador".
+  3. **Próxima melhor acção por pessoa:** IA cruza DISC (cor) + family + triggers + última actividade + aniversário → sugere "o que dizer agora e como" (tom DISC), e o **momento certo** (aniversário, fim de contrato, evento de vida) → outreach proactivo no canal certo.
+  4. **Copy hiper-pessoal:** toda a geração de mensagem (já existe pipeline) passa a usar o perfil 360° → não é "olá, tudo bem", é falar à medida daquela pessoa concreta.
+  5. **Diferenciador:** a maioria dos consultores tem uma lista de contactos morta. Aqui o contacto é um perfil vivo que a IA mantém e activa. É o fosso competitivo.
+- **Esforço:** épico transversal (assenta em CONTACT-CARD-NOTION + MSG-WHATSAPP-PROPRIO + IA já existente). Por fases. Plan-First dedicado. **NÃO implementar sem ordem.**
+
 ### TODO-CONSOLIDATE · Salvar o backlog antigo do todo.md (pedido João 31/05)
 - **Pedido João:** "grava tudo na memória para não perdermos nada... existe um todo.md com muita coisa já."
 - **Situação:** `nossocrm/.claude/TODO.md` NÃO existe. O todo.md grande é **`crm/.claude/TODO.md` = 1744 linhas** (pasta IRMÃ `crm`, projecto antigo) + `portal-app/TODO.md`. Está em disco (não perdido), mas é stale e pode ter ideias ainda válidas.
