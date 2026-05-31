@@ -108,6 +108,8 @@ export const AnunciosPage: React.FC = () => {
   const [editing, setEditing] = useState<AdPerformanceRow | null>(null);
   const [statuses, setStatuses] = useState<Map<string, AdStatus>>(new Map());
 
+  const [campaignBoard, setCampaignBoard] = useState<Map<string, string>>(new Map());
+
   const loadStatuses = useCallback(() => {
     fetch('/api/meta-ads/statuses', { cache: 'no-store' })
       .then((r) => r.json())
@@ -118,7 +120,22 @@ export const AnunciosPage: React.FC = () => {
       .catch(() => { /* coluna de estado é opcional */ });
   }, []);
 
-  useEffect(() => { loadStatuses(); }, [loadStatuses]);
+  // Mapa campanha -> board de destino (para o chip "Destino" na tabela).
+  const loadRouting = useCallback(() => {
+    fetch('/api/meta-ads/routing', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        const boards = new Map((j.boards ?? []).map((b: { id: string; name: string }) => [b.id, b.name]));
+        const m = new Map<string, string>();
+        for (const c of (j.campaigns ?? []) as { campaign_id: string; board_id: string | null }[]) {
+          if (c.board_id && boards.has(c.board_id)) m.set(c.campaign_id, boards.get(c.board_id) as string);
+        }
+        setCampaignBoard(m);
+      })
+      .catch(() => { /* chip opcional */ });
+  }, []);
+
+  useEffect(() => { loadStatuses(); loadRouting(); }, [loadStatuses, loadRouting]);
 
   const loadAnalyses = useCallback(() => {
     fetch('/api/meta-ads/analyses', { cache: 'no-store' })
@@ -228,7 +245,7 @@ export const AnunciosPage: React.FC = () => {
             <Brain className="h-4 w-4" /> {analyzing ? 'A analisar...' : 'Analisar agora'}
           </button>
           <button
-            onClick={() => load(days)}
+            onClick={() => { load(days); loadStatuses(); loadRouting(); }}
             className="text-slate-500 hover:text-slate-900 inline-flex items-center gap-1 text-sm px-2 py-1.5"
             aria-label="Recarregar"
           >
@@ -359,6 +376,17 @@ export const AnunciosPage: React.FC = () => {
                             })()}
                           </div>
                           {r.campaign_name && <div className="text-xs text-slate-400 truncate max-w-[220px]">{r.campaign_name}</div>}
+                          {r.campaign_id && (
+                            campaignBoard.has(r.campaign_id) ? (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1 mt-0.5" title="Board de destino das leads desta campanha">
+                                → {campaignBoard.get(r.campaign_id)}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center text-[10px] text-amber-600 mt-0.5" title="Sem board de destino definido para esta campanha">
+                                → destino por definir
+                              </span>
+                            )
+                          )}
                         </div>
                       </div>
                     </td>
@@ -452,6 +480,7 @@ export const AnunciosPage: React.FC = () => {
             load(days);
             loadAnalyses();
             loadStatuses();
+            loadRouting();
           }}
         />
       )}
