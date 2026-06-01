@@ -33,6 +33,15 @@ const AssistantSchema = z.object({
     whatsapp: z.string(),
     email: z.object({ assunto: z.string(), corpo: z.string() }),
   }),
+  sugestoes: z
+    .array(
+      z.object({
+        campo: z.enum(['disc', 'triggers', 'quarter', 'familyMembers', 'pets', 'address']),
+        valor: z.string(),
+        rotulo: z.string(),
+      }),
+    )
+    .max(6),
 });
 
 const DISC_LABEL: Record<string, string> = {
@@ -133,6 +142,7 @@ Com base APENAS nos dados abaixo sobre uma pessoa do CRM, produz, em português 
 4) "mensagens": uma mensagem pronta a enviar, à medida desta pessoa:
    - "whatsapp": texto curto e caloroso, com um CTA que peça resposta (convidar a responder/marcar), nunca só "clica aqui". Trata por "você". Usa "Quando lhe for oportuno" em vez de "quando lhe der jeito". Nunca proponhas Domingos.
    - "email": { "assunto", "corpo" } no mesmo tom, um pouco mais completo.
+5) "sugestoes": campos da ficha que consegues inferir COM EVIDÊNCIA nos dados abaixo (NÃO inventes). Para cada: "campo" (um de: disc, triggers, quarter, familyMembers, pets, address), "valor" (texto curto; para disc usa SÓ a letra D, I, S ou C; para triggers um único trigger por sugestão), "rotulo" (frase curta para o consultor, ex.: "Novo trigger: Crédito aprovado"). NÃO sugiras um campo que já esteja preenchido com esse valor. Se não houver nada com evidência clara, devolve lista vazia.
 
 Regras absolutas:
 - Português europeu pré acordo ortográfico (1990), sem brasileirismos.

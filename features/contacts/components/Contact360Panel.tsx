@@ -1,14 +1,19 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, RotateCw, Copy, Check, Pencil } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Sparkles, RotateCw, Copy, Check, Pencil, X } from 'lucide-react';
 import { toWhatsAppPhone } from '@/lib/phone';
+
+type SuggestionField = 'disc' | 'triggers' | 'quarter' | 'familyMembers' | 'pets' | 'address';
+interface Suggestion { campo: SuggestionField; valor: string; rotulo: string }
 
 interface AssistantResult {
   retrato: string;
   sinais: string[];
   proximaAccao: { titulo: string; porque: string; confianca: 'alta' | 'media' | 'baixa' };
   mensagens: { whatsapp: string; email: { assunto: string; corpo: string } };
+  sugestoes?: Suggestion[];
 }
 
 interface Contact360PanelProps {
@@ -23,7 +28,12 @@ const CONF_META: Record<string, { label: string; cls: string }> = {
   baixa: { label: 'confiança baixa', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
 };
 
+const FIELD_ICON: Record<SuggestionField, string> = {
+  disc: '🎨', triggers: '⚡', quarter: '🗓️', familyMembers: '👨‍👩‍👧', pets: '🐾', address: '📍',
+};
+
 export function Contact360Panel({ contactId, phone, email }: Contact360PanelProps) {
+  const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<AssistantResult | null>(null);
@@ -32,6 +42,8 @@ export function Contact360Panel({ contactId, phone, email }: Contact360PanelProp
   const [emailBody, setEmailBody] = React.useState('');
   const [editing, setEditing] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  const [suggestions, setSuggestions] = React.useState<Suggestion[]>([]);
+  const [busyField, setBusyField] = React.useState<string | null>(null);
 
   const analyze = async () => {
     setLoading(true);
@@ -44,12 +56,35 @@ export function Contact360Panel({ contactId, phone, email }: Contact360PanelProp
       setData(a);
       setWaText(a.mensagens.whatsapp);
       setEmailBody(a.mensagens.email.corpo);
+      setSuggestions(a.sugestoes ?? []);
       setEditing(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao analisar.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const acceptSuggestion = async (s: Suggestion) => {
+    const key = `${s.campo}:${s.valor}`;
+    setBusyField(key);
+    try {
+      const res = await fetch(`/api/contacts/${contactId}/enrich`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ campo: s.campo, valor: s.valor }),
+      });
+      if (res.ok) {
+        setSuggestions((prev) => prev.filter((x) => !(x.campo === s.campo && x.valor === s.valor)));
+        router.refresh(); // actualiza o cartão "Sobre a pessoa"
+      }
+    } finally {
+      setBusyField(null);
+    }
+  };
+
+  const ignoreSuggestion = (s: Suggestion) => {
+    setSuggestions((prev) => prev.filter((x) => !(x.campo === s.campo && x.valor === s.valor)));
   };
 
   const copyCurrent = async () => {
@@ -172,6 +207,35 @@ export function Contact360Panel({ contactId, phone, email }: Contact360PanelProp
               </div>
             </div>
           </div>
+
+          {/* 3 — Auto-enriquecimento */}
+          {suggestions.length > 0 && (
+            <div className="p-5 border-t border-slate-100 dark:border-white/5">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">3 · Sugestões para a ficha</span>
+                <span className="text-[11px] text-slate-400">a IA detectou nas interacções</span>
+              </div>
+              <ul className="space-y-2">
+                {suggestions.map((s) => {
+                  const key = `${s.campo}:${s.valor}`;
+                  return (
+                    <li key={key} className="flex items-center justify-between gap-3 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 px-3 py-2">
+                      <span className="text-sm text-slate-700 dark:text-slate-200 min-w-0 truncate"><span aria-hidden>{FIELD_ICON[s.campo]}</span> {s.rotulo}</span>
+                      <span className="flex gap-1.5 shrink-0">
+                        <button onClick={() => acceptSuggestion(s)} disabled={busyField === key} className="text-xs font-semibold px-2 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50">
+                          {busyField === key ? '...' : 'Aceitar'}
+                        </button>
+                        <button onClick={() => ignoreSuggestion(s)} disabled={busyField === key} className="text-xs px-2 py-1 rounded-md bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-white/10 inline-flex items-center gap-1">
+                          <X size={12} /> Ignorar
+                        </button>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="text-[11px] text-slate-400 mt-2">Nada muda na ficha sem a tua validação. Ao aceitar, grava nos campos da pessoa.</p>
+            </div>
+          )}
         </>
       )}
     </div>

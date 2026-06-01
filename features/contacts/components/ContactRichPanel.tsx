@@ -64,6 +64,17 @@ export function ContactRichPanel({
   const [birthDate, setBirthDate] = React.useState(initialBirthDate ?? '');
   const [triggersText, setTriggersText] = React.useState((initialCustomFields.triggers ?? []).join(', '));
 
+  // Re-sincroniza com o servidor (após router.refresh, ex.: sugestão do 360-AI
+  // aceite) quando NÃO está em edição — sem clobber das edições em curso.
+  const initialSig = JSON.stringify({ initialCustomFields, initialNotes, initialBirthDate });
+  React.useEffect(() => {
+    if (editing) return;
+    setCf(initialCustomFields);
+    setNotes(initialNotes);
+    setBirthDate(initialBirthDate ?? '');
+    setTriggersText((initialCustomFields.triggers ?? []).join(', '));
+  }, [initialSig]);
+
   const setField = <K extends keyof ContactCustomFields>(k: K, v: ContactCustomFields[K]) =>
     setCf((prev) => ({ ...prev, [k]: v }));
 

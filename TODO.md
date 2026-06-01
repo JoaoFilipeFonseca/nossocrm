@@ -100,6 +100,9 @@
 - **CT-AUTO · Auto-preenchimento de campos CT-1 + automações de follow-up** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
   Quando uma lead/contacto entra (manual OU via anúncio), o CRM sabe o dia → **preencher automaticamente** `custom_fields.quarter` (Trimestre, ex. Q3 2026) e `lastActivityDate` (data de entrada), sem o João tocar. Depois **criar automações** (no engine `/automacoes`): definir `followUpDate` por regra, lembretes "follow up hoje", e cadências (ex.: se sem actividade há X dias → criar tarefa). Campos já existem (`custom_fields`, migração `20260601120000`). Pontos a decidir: trigger BD vs preencher no webhook `automation-meta-leads` + no `contactsService.create`; regras de cálculo do Trimestre; defaults de follow up. Liga ao engine de automações e a [[regra-automacoes-no-crm]].
 
+- **CT-TIMELINE · Timeline unificada de interações no contacto (tudo ligado)** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
+  Dentro do contacto: **mensagens, chamadas, emails e tudo** registado, mesmo o que não passa pelo CRM directo (ex.: email enviado pela conta RE/MAX) → poder **colar e definir data/hora manualmente** para ter todas as interações ao detalhe. "Tudo ligado: abrir aquela lead onde quer que seja (pipeline, ficha) e ter SEMPRE o contexto completo." **Dados base já existem** (`deal_activities` com tipos call/meeting/visit/whatsapp/email + `contact_id`). **Falta:** timeline na ficha `/contacts/[id]` (e ligada ao pipeline) + **entrada manual** com data/hora editável + colar conteúdo. Alimenta directamente o CONTACT-360-AI (quanto mais contexto, melhor a IA). Liga a [[reference-timeline-leads]] e a MSG-1.
+
 ### C. Mensagens / canais
 
 - **MSG-1 · MSG-WHATSAPP-PROPRIO — SMS+WhatsApp número próprio (sem Meta)** `[POR FAZER]` `P?`
