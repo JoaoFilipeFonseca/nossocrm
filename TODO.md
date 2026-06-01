@@ -21,7 +21,8 @@
 **🥇 P1 — a seguir (ordem de execução):**
 1. ~~**Q-1** Sweep PT-BR→PT-PT~~ ✅ **FEITO (01/06, commit `964ac65`)** — copy visível limpa (features/components/app/lib/prompts/templates/install). Resta **Q-2** (comentários/JSDoc + lib/ai rules + fixtures de teste) — não-visível, P3.
 2. ~~**NS-1** Custos + ROI no dashboard~~ ✅ **FEITO (01/06)** — hub `/financeiro` (Visão de Gestor + Despesas) + ficha por angariação no negócio
-2b. **MA-DRILLDOWN** dados por criativo (qual criativo dá dinheiro) ← PRÓXIMO
+2b. ~~**MA-DRILLDOWN** dados por criativo~~ ✅ **Fase 1 FEITA (01/06)** — drill-down por anúncio (criativo+copy+métricas+leads/negócios). Falta árvore Campanha→Conjunto→Anúncio (P2).
+2c. **CT-1 + CT-2** card de contacto rico + atribuição read-only ← PRÓXIMO
 3. **MA-DRILLDOWN** dados por criativo (qual criativo dá dinheiro)
 4. **CT-1 + CT-2** card de contacto rico + atribuição read-only (fundação CONTACT-360)
 
@@ -90,7 +91,8 @@
 
 ### D. Meta Ads / Marketing (evolução do épico)
 
-- **MA-DRILLDOWN · Atribuição/controlo ao nível do criativo** `[POR FAZER]` `P?`
+- **MA-DRILLDOWN · Atribuição/controlo ao nível do criativo** `[EM CURSO]` `P1`
+  **Fase 1 FEITA (01/06, verificada em produção):** botão "Ver dados" por anúncio no /anuncios → drawer `AdDrilldownDrawer` (`/api/meta-ads/ad/[id]/drilldown`) com criativo+copy (busca à Meta via `getAdCreativeCopy`, cacheia em `ad_creatives.title/body/cta_type`), métricas vitalícias, e listas de **leads (contacts) e negócios (deals) atribuídos** por `attribution.ad_id`. Verificado live: métricas reais (25,11€/59 leads), listas vazias (campanhas em pausa). **Falta Fase 2 (P2):** vista em **árvore Campanha→Conjunto→Anúncio**; e melhorar extracção de copy para criativos dinâmicos (asset_feed_spec.titles/bodies — hoje só lê creative.title/body/object_story_spec). Detalhe original abaixo.
   Drill-down por anúncio (lista de leads/negócios + € efectivo), guardar+mostrar copy/headline/CTA do criativo (`ad_creatives` ganha title/body/cta), vista em árvore Campanha→Conjunto→Anúncio. Núcleo: medir qual criativo dá dinheiro. (origem: CAPTURE MA-DRILLDOWN)
 
 - **MKT-STUDIO · Estúdio de marketing completo no CRM** `[POR FAZER]` `P?`
