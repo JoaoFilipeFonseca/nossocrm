@@ -131,6 +131,44 @@ export async function getContactReferrals(id: string): Promise<ContactReferrals>
   return empty;
 }
 
+export interface ContactComment {
+  id: string;
+  body: string;
+  createdAt: string;
+  authorId: string | null;
+  authorName: string;
+}
+
+export async function getContactComments(id: string): Promise<ContactComment[]> {
+  const supabase = await createClient();
+  // Nota: author_id é FK para auth.users (não profiles), por isso não dá para
+  // fazer embed PostgREST; buscamos os nomes dos autores numa 2.ª query.
+  const { data, error } = await supabase
+    .from('contact_comments')
+    .select('id, body, created_at, author_id')
+    .eq('contact_id', id)
+    .order('created_at', { ascending: false });
+  if (error || !data) return [];
+
+  const rows = data as Array<{ id: string; body: string; created_at: string; author_id: string | null }>;
+  const authorIds = [...new Set(rows.map((r) => r.author_id).filter((x): x is string => !!x))];
+  const names = new Map<string, string>();
+  if (authorIds.length > 0) {
+    const { data: profs } = await supabase.from('profiles').select('id, name').in('id', authorIds);
+    for (const p of (profs ?? []) as Array<{ id: string; name: string | null }>) {
+      if (p.name && p.name.trim()) names.set(p.id, p.name);
+    }
+  }
+
+  return rows.map((r) => ({
+    id: r.id,
+    body: r.body,
+    createdAt: r.created_at,
+    authorId: r.author_id,
+    authorName: (r.author_id && names.get(r.author_id)) || 'Utilizador',
+  }));
+}
+
 /** Conta negócios do contacto (para o resumo lateral). */
 export async function getContactDealsSummary(id: string): Promise<{ count: number; openCount: number }> {
   const supabase = await createClient();

@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Phone, Mail, MessageCircle } from 'lucide-react';
-import { getContactById, getContactReferrals, getContactDealsSummary } from '@/lib/contacts/detail';
+import { getContactById, getContactReferrals, getContactDealsSummary, getContactComments } from '@/lib/contacts/detail';
+import { createClient } from '@/lib/supabase/server';
 import { MetaAttribution } from '@/components/MetaAttribution';
 import ContactFilesPanel from '@/features/contacts/components/ContactFilesPanel';
 import { ContactRichPanel } from '@/features/contacts/components/ContactRichPanel';
+import { ContactComments } from '@/features/contacts/components/ContactComments';
 import { toWhatsAppPhone } from '@/lib/phone';
 import type { ContactCustomFields, DiscProfile } from '@/types';
 
@@ -25,10 +27,19 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
   const contact = await getContactById(id);
   if (!contact) notFound();
 
-  const [referrals, dealsSummary] = await Promise.all([
+  const [referrals, dealsSummary, comments] = await Promise.all([
     getContactReferrals(id),
     getContactDealsSummary(id),
+    getContactComments(id),
   ]);
+
+  // Utilizador actual (para permitir apagar só os próprios comentários).
+  let currentUserId: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    currentUserId = user?.id ?? null;
+  } catch { /* opcional */ }
 
   const cf: ContactCustomFields = contact.customFields ?? {};
   const disc = cf.disc ? DISC_META[cf.disc] : null;
@@ -120,6 +131,9 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-3">Documentos</h2>
             <ContactFilesPanel contactId={contact.id} />
           </div>
+
+          {/* Comentários */}
+          <ContactComments contactId={contact.id} initialComments={comments} currentUserId={currentUserId} />
         </div>
 
         {/* LATERAL */}
