@@ -269,7 +269,7 @@
 ### M. Pendentes do smoke test 22/05 (verificar se ainda aplicam)
 
 - 94.9% deals com `value=0` → auto-value batch IA.
-- React #418 hydration em `/imoveis/[id]`.
+- React #418 hydration (transversal ao shell — confirmado igual em `/dashboard`, `/imoveis/[id]` e `/contacts/[id]`) + sintoma derivado `TypeError $RS parentNode` nas páginas de detalhe (streaming). Não-fatal; mesma causa-raiz (hydration mismatch no shell). Tratar de uma vez.
 - Imóvel `ID-1234567` sem morada (seed/teste).
 - Modelos "Antigravity"/"Nano Banana" no selector → filtrar em `GOOGLE_EXCLUDED_PATTERNS`.
 
