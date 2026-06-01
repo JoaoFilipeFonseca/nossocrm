@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Building2, Mail, Phone, Plus, Calendar, Pencil, Trash2, Globe, MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, GitMerge, Users } from 'lucide-react';
 import { Contact, Company, ContactSortableColumn } from '@/types';
 import { StageBadge } from './ContactsStageTabs';
@@ -257,7 +258,13 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                                             </button>
                                             <div>
                                                 <span className="font-semibold text-slate-900 dark:text-white block">
-                                                    {contact.name}
+                                                    <Link
+                                                        href={`/contacts/${contact.id}`}
+                                                        className="hover:text-primary-600 hover:underline focus-visible:underline"
+                                                        title={`Abrir ficha de ${contact.name || 'contacto'}`}
+                                                    >
+                                                        {contact.name}
+                                                    </Link>
                                                     {duplicateContactIds?.has(contact.id) && (
                                                         <span className="inline-flex items-center gap-1 ml-2 px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-full align-middle">
                                                             <GitMerge size={10} />
