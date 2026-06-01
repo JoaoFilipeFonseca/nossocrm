@@ -159,7 +159,20 @@ ${contextText}`;
     );
     const out = result.output as z.infer<typeof AssistantSchema>;
 
-    return NextResponse.json({ ok: true, assistant: out });
+    // Fase 3 — guarda a análise (best-effort; não falha a resposta).
+    let analyzedAt: string | null = null;
+    try {
+      const { data: saved } = await admin
+        .from('contact_ai_analyses')
+        .insert({ organization_id: orgId, contact_id: contactId, created_by: user.id, result: out })
+        .select('created_at')
+        .single();
+      analyzedAt = saved?.created_at ?? null;
+    } catch (e) {
+      console.error('[contact-360] guardar análise falhou:', e instanceof Error ? e.message : e);
+    }
+
+    return NextResponse.json({ ok: true, assistant: out, analyzedAt });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
     console.error('[contact-360] falhou:', msg);

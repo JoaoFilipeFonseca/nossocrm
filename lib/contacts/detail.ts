@@ -182,6 +182,25 @@ export async function getContactDealsSummary(id: string): Promise<{ count: numbe
   return { count: rows.length, openCount };
 }
 
+/** Última análise do Assistente 360 guardada (Fase 3). */
+export interface LastContactAnalysis {
+  result: unknown;
+  createdAt: string;
+}
+
+export async function getLastContactAnalysis(id: string): Promise<LastContactAnalysis | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('contact_ai_analyses')
+    .select('result, created_at')
+    .eq('contact_id', id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return { result: (data as { result: unknown }).result, createdAt: (data as { created_at: string }).created_at };
+}
+
 /**
  * Contexto 360 do contacto para o Assistente IA (CONTACT-360-AI Fase 1).
  * Junta tudo o que já temos numa só leitura: campos ricos, atribuição,

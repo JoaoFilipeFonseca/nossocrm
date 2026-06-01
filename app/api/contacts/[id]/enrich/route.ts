@@ -70,6 +70,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .eq('id', contactId);
     if (uErr) return NextResponse.json({ error: uErr.message }, { status: 500 });
 
+    // Fase 3 — regista o "aceite" para aprendizagem (best-effort).
+    await supabase
+      .from('contact_ai_suggestion_events')
+      .insert({ organization_id: orgId, contact_id: contactId, created_by: user.id, campo, valor, action: 'accepted' });
+
     return NextResponse.json({ ok: true, customFields: cf });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';

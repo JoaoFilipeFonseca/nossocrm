@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Phone, Mail, MessageCircle } from 'lucide-react';
-import { getContactById, getContactReferrals, getContactDealsSummary, getContactComments } from '@/lib/contacts/detail';
+import { getContactById, getContactReferrals, getContactDealsSummary, getContactComments, getLastContactAnalysis } from '@/lib/contacts/detail';
 import { createClient } from '@/lib/supabase/server';
 import { MetaAttribution } from '@/components/MetaAttribution';
 import ContactFilesPanel from '@/features/contacts/components/ContactFilesPanel';
@@ -28,10 +28,11 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
   const contact = await getContactById(id);
   if (!contact) notFound();
 
-  const [referrals, dealsSummary, comments] = await Promise.all([
+  const [referrals, dealsSummary, comments, lastAnalysis] = await Promise.all([
     getContactReferrals(id),
     getContactDealsSummary(id),
     getContactComments(id),
+    getLastContactAnalysis(id),
   ]);
 
   // Utilizador actual (para permitir apagar só os próprios comentários).
@@ -115,7 +116,13 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
         {/* PRINCIPAL */}
         <div className="lg:col-span-2 space-y-5">
           {/* CONTACT-360-AI: Assistente 360 (Retrato + Próxima acção + mensagem) */}
-          <Contact360Panel contactId={contact.id} phone={contact.phone || null} email={contact.email || null} />
+          <Contact360Panel
+            contactId={contact.id}
+            phone={contact.phone || null}
+            email={contact.email || null}
+            initialAnalysis={(lastAnalysis?.result as never) ?? null}
+            initialAnalyzedAt={lastAnalysis?.createdAt ?? null}
+          />
 
           {/* CT-2: atribuição read-only */}
           <MetaAttribution attribution={contact.attribution} />

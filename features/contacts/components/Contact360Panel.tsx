@@ -20,6 +20,14 @@ interface Contact360PanelProps {
   contactId: string;
   phone: string | null;
   email: string | null;
+  initialAnalysis?: AssistantResult | null;
+  initialAnalyzedAt?: string | null;
+}
+
+function timeAgoPt(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString('pt-PT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Lisbon' });
 }
 
 const CONF_META: Record<string, { label: string; cls: string }> = {
@@ -32,17 +40,18 @@ const FIELD_ICON: Record<SuggestionField, string> = {
   disc: '🎨', triggers: '⚡', quarter: '🗓️', familyMembers: '👨‍👩‍👧', pets: '🐾', address: '📍',
 };
 
-export function Contact360Panel({ contactId, phone, email }: Contact360PanelProps) {
+export function Contact360Panel({ contactId, phone, email, initialAnalysis = null, initialAnalyzedAt = null }: Contact360PanelProps) {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [data, setData] = React.useState<AssistantResult | null>(null);
+  const [data, setData] = React.useState<AssistantResult | null>(initialAnalysis);
+  const [analyzedAt, setAnalyzedAt] = React.useState<string | null>(initialAnalyzedAt);
   const [tab, setTab] = React.useState<'whatsapp' | 'email'>('whatsapp');
-  const [waText, setWaText] = React.useState('');
-  const [emailBody, setEmailBody] = React.useState('');
+  const [waText, setWaText] = React.useState(initialAnalysis?.mensagens.whatsapp ?? '');
+  const [emailBody, setEmailBody] = React.useState(initialAnalysis?.mensagens.email.corpo ?? '');
   const [editing, setEditing] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
-  const [suggestions, setSuggestions] = React.useState<Suggestion[]>([]);
+  const [suggestions, setSuggestions] = React.useState<Suggestion[]>(initialAnalysis?.sugestoes ?? []);
   const [busyField, setBusyField] = React.useState<string | null>(null);
 
   const analyze = async () => {
@@ -54,6 +63,7 @@ export function Contact360Panel({ contactId, phone, email }: Contact360PanelProp
       if (!res.ok) throw new Error(body?.error || 'Falha ao analisar.');
       const a = body.assistant as AssistantResult;
       setData(a);
+      setAnalyzedAt(body.analyzedAt ?? null);
       setWaText(a.mensagens.whatsapp);
       setEmailBody(a.mensagens.email.corpo);
       setSuggestions(a.sugestoes ?? []);
@@ -85,6 +95,12 @@ export function Contact360Panel({ contactId, phone, email }: Contact360PanelProp
 
   const ignoreSuggestion = (s: Suggestion) => {
     setSuggestions((prev) => prev.filter((x) => !(x.campo === s.campo && x.valor === s.valor)));
+    // Regista o "ignorado" para aprendizagem (fire-and-forget).
+    fetch(`/api/contacts/${contactId}/suggestion-feedback`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ campo: s.campo, valor: s.valor }),
+    }).catch(() => {});
   };
 
   const copyCurrent = async () => {
@@ -107,6 +123,9 @@ export function Contact360Panel({ contactId, phone, email }: Contact360PanelProp
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary-600" />
           <h2 className="text-sm font-bold text-primary-800 dark:text-primary-200">Assistente 360</h2>
+          {analyzedAt && !loading && (
+            <span className="text-[11px] text-primary-500 bg-white/70 dark:bg-white/10 px-1.5 py-0.5 rounded">análise de {timeAgoPt(analyzedAt)}</span>
+          )}
         </div>
         <button
           onClick={analyze}
