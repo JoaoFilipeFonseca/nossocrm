@@ -20,7 +20,8 @@
 
 **🥇 P1 — a seguir (ordem de execução):**
 1. ~~**Q-1** Sweep PT-BR→PT-PT~~ ✅ **FEITO (01/06, commit `964ac65`)** — copy visível limpa (features/components/app/lib/prompts/templates/install). Resta **Q-2** (comentários/JSDoc + lib/ai rules + fixtures de teste) — não-visível, P3.
-2. **NS-1** Custos + ROI no dashboard (núcleo "os números") ← PRÓXIMO
+2. ~~**NS-1** Custos + ROI no dashboard~~ ✅ **FEITO (01/06)** — hub `/financeiro` (Visão de Gestor + Despesas) + ficha por angariação no negócio
+2b. **MA-DRILLDOWN** dados por criativo (qual criativo dá dinheiro) ← PRÓXIMO
 3. **MA-DRILLDOWN** dados por criativo (qual criativo dá dinheiro)
 4. **CT-1 + CT-2** card de contacto rico + atribuição read-only (fundação CONTACT-360)
 
@@ -54,7 +55,7 @@
 
 ### A. Visão-núcleo / North Star ("CRM + IA = mais negócio com menos esforço")
 
-- **NS-1 · Gestão Financeira (custos + ROI + ganho líquido por angariação)** `[EM CURSO]` `P1`
+- **NS-1 · Gestão Financeira (custos + ROI + ganho líquido por angariação)** `[FEITO]` (01/06, HEAD `6f6c002`) — Fases 1-4 completas e verificadas em produção local. Falta só polish futuro: por canal + funil no gestor; comissão fixa pode querer significar "líquida directa" (hoje é bruta+split). `P3` para esses extras.
   Maqueta aprovada pelo João (visão de gestor + ficha por angariação). **Fase 1+2 FEITAS (01/06):** migração `expenses` (RLS CRUD, liga a deal/imóvel) + comissão por defeito na org (5%/50%); API `/api/expenses`; página `/despesas` (form+lista+total), nav desktop/tablet/mobile. Verificado em produção local. **Fase 3 FEITA (01/06):** hub `/financeiro` com separadores Visão de Gestor (API `/api/financeiro/summary`: comissões líquidas vs investimento→lucro/margem/retorno + leads/custo-lead + repartição) e Despesas. Verificado real (anúncios 871,89€, 819 leads, 1,06€/lead). **Falta Fase 4** (ficha por angariação no detalhe do negócio: comissão em **% OU € fixo** + parte do consultor + custos atribuídos àquele imóvel = **ganho líquido real**; ligar despesa a um negócio). Defaults já na org; override por deal em `deals.custom_fields` (commission_mode/commission_pct/commission_amount/consultant_share_pct) — a API summary já lê isto. Futuro: por canal + funil no gestor. Nota: hoje 0 negócios ganhos → comissões a 0; anúncios já reais.
   --- contexto original ---
   A "obsessão pelos números" do João: medir gasto Gemini/Claude/Vercel/Supabase/ads e mostrar **ROI = receita/custos**. NÃO existe (`ai_usage`/`cost_events` ausentes na BD). Núcleo da visão. (origem: North Star + Dashboard #3 + Fase 5.3 + #87/#98)
