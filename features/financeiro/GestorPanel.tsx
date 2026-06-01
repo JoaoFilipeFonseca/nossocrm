@@ -134,7 +134,94 @@ export function GestorPanel() {
               Cada despesa pode ser ligada a uma angariação para saberes o lucro real de cada negócio.
             </p>
           </div>
+
+          <FunnelSection />
         </>
+      )}
+    </div>
+  );
+}
+
+interface FunnelStage { label: string; reached: number; pct_total: number; conv_prev: number | null }
+interface FunnelData { boards: { id: string; name: string }[]; board_id: string | null; total: number; won_count: number; won_value_cents: number; stages: FunnelStage[] }
+
+function FunnelSection() {
+  const [data, setData] = useState<FunnelData | null>(null);
+  const [boardId, setBoardId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async (bid: string | null) => {
+    setLoading(true);
+    try {
+      const qs = bid ? `?board_id=${bid}` : '';
+      const res = await fetch(`/api/financeiro/funnel${qs}`, { cache: 'no-store' });
+      const json: FunnelData = await res.json();
+      setData(json);
+      if (!bid) setBoardId(json.board_id);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void load(null); }, [load]);
+
+  const onBoard = (id: string) => { setBoardId(id); void load(id); };
+  const max = data && data.stages.length ? Math.max(1, ...data.stages.map((s) => s.reached)) : 1;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-dark-card p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
+        <h2 className="text-base font-bold font-display text-slate-900 dark:text-white">Funil — de negócio a fechado</h2>
+        {data && data.boards.length > 0 && (
+          <select
+            value={boardId ?? ''}
+            onChange={(e) => onBoard(e.target.value)}
+            className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200"
+          >
+            {data.boards.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
+        )}
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Quantos negócios chegaram a cada etapa, e a conversão entre etapas (estado actual do pipeline)</p>
+
+      {loading || !data ? (
+        <p className="text-sm text-slate-500 dark:text-slate-400">A carregar...</p>
+      ) : data.stages.length === 0 || data.total === 0 ? (
+        <p className="text-sm text-slate-500 dark:text-slate-400">Ainda não há negócios neste pipeline.</p>
+      ) : (
+        <div className="space-y-2.5">
+          {data.stages.map((s, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <div
+                  className="h-9 rounded-lg flex items-center px-3 text-white text-sm font-bold whitespace-nowrap overflow-hidden"
+                  style={{
+                    width: `${Math.max(18, (s.reached / max) * 100)}%`,
+                    background: `hsl(217, 90%, ${Math.max(38, 62 - i * 5)}%)`,
+                  }}
+                >
+                  {s.reached} · {s.label}
+                </div>
+              </div>
+              <div className="w-28 shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                {i === 0
+                  ? `${(s.pct_total * 100).toFixed(0)}% do total`
+                  : s.conv_prev == null ? '—' : `${(s.conv_prev * 100).toFixed(0)}% da anterior`}
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-3 pt-1">
+            <div className="flex-1">
+              <div className="h-9 rounded-lg flex items-center px-3 bg-emerald-600 text-white text-sm font-bold"
+                style={{ width: `${Math.max(18, (data.won_count / max) * 100)}%` }}>
+                {data.won_count} fechados{data.won_value_cents > 0 ? ` · ${eur(data.won_value_cents)}` : ''}
+              </div>
+            </div>
+            <div className="w-28 shrink-0 text-xs text-slate-500 dark:text-slate-400">
+              {data.total > 0 ? `${((data.won_count / data.total) * 100).toFixed(1)}% conversão total` : '—'}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
