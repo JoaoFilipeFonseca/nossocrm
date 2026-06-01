@@ -177,6 +177,39 @@ export interface Contact {
 
   /** Linhagem do anúncio (Meta Ads) que gerou este contacto, quando aplicável. */
   attribution?: MetaAdAttribution | null;
+
+  /** Campos ricos estilo Notion (CT-1). Saco flexível guardado em contacts.custom_fields. */
+  customFields?: ContactCustomFields | null;
+}
+
+/** Perfil DISC do contacto (CT-1). */
+export type DiscProfile = 'D' | 'I' | 'S' | 'C';
+
+/**
+ * Campos ricos do card de contacto (CT-1, estilo Notion).
+ * Guardados em `contacts.custom_fields` (jsonb). Todos opcionais.
+ */
+export interface ContactCustomFields {
+  /** Morada e/ou nota de investimento (ex.: "Rua X, procura T3 até 220.000€"). */
+  address?: string;
+  /** Membros da família (texto livre). */
+  familyMembers?: string;
+  /** Animais de estimação (texto livre). */
+  pets?: string;
+  /** Gatilhos/sinais relevantes (ex.: "Mudança de casa", "Crédito aprovado"). */
+  triggers?: string[];
+  /** Perfil DISC (cor). */
+  disc?: DiscProfile | null;
+  /** Trimestre-alvo (ex.: "Q3 2026"). */
+  quarter?: string;
+  /** Precisa de acompanhamento? */
+  followUp?: boolean;
+  /** Data do próximo acompanhamento (ISO date). */
+  followUpDate?: string;
+  /** Data da última actividade relevante (ISO date) — campo manual estilo Notion. */
+  lastActivityDate?: string;
+  /** Nota da última actividade. */
+  lastActivityNote?: string;
 }
 
 // ITEM 3: Produtos e Serviços

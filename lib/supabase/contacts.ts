@@ -13,7 +13,7 @@
  */
 
 import { supabase } from './client';
-import { Contact, CRMCompany, OrganizationId, PaginationState, PaginatedResponse, ContactsServerFilters, MetaAdAttribution } from '@/types';
+import { Contact, CRMCompany, OrganizationId, PaginationState, PaginatedResponse, ContactsServerFilters, MetaAdAttribution, ContactCustomFields } from '@/types';
 import { sanitizeUUID, sanitizeText, sanitizeNumber } from './utils';
 import { normalizePhoneE164 } from '@/lib/phone';
 
@@ -83,6 +83,8 @@ export interface DbContact {
   ai_paused: boolean;
   /** Linhagem do anúncio (Meta Ads) que gerou o contacto, quando aplicável. */
   attribution: Record<string, unknown> | null;
+  /** Campos ricos estilo Notion (CT-1). */
+  custom_fields: Record<string, unknown> | null;
 }
 
 /**
@@ -137,6 +139,7 @@ const transformContact = (db: DbContact): Contact => ({
   updatedAt: db.updated_at,
   aiPaused: db.ai_paused ?? false,
   attribution: (db.attribution as MetaAdAttribution) || null,
+  customFields: (db.custom_fields as ContactCustomFields) || null,
 });
 
 /**
@@ -184,6 +187,9 @@ const transformContactToDb = (contact: Partial<Contact>): Partial<DbContact> => 
   if (contact.lastPurchaseDate !== undefined) db.last_purchase_date = contact.lastPurchaseDate || null;
   if (contact.totalValue !== undefined) db.total_value = contact.totalValue;
   if (contact.aiPaused !== undefined) db.ai_paused = contact.aiPaused;
+  if (contact.customFields !== undefined) {
+    db.custom_fields = (contact.customFields ?? {}) as Record<string, unknown>;
+  }
 
   return db;
 };
