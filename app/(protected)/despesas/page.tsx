@@ -1,8 +1,6 @@
-import type { Metadata } from 'next';
-import { DespesasPage } from '@/features/financeiro/DespesasPage';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = { title: 'Despesas | Foco Imo' };
-
+// As Despesas passaram a viver no hub Financeiro (separador Despesas).
 export default function Despesas() {
-  return <DespesasPage />;
+  redirect('/financeiro');
 }

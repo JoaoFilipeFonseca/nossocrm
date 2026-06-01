@@ -56,7 +56,7 @@ export interface SecondaryNavItem {
 export const SECONDARY_NAV: SecondaryNavItem[] = [
   { id: 'dashboard', label: 'Visão Geral', href: '/dashboard', icon: LayoutDashboard },
   { id: 'reports', label: 'Relatórios', href: '/reports', icon: BarChart3 },
-  { id: 'despesas', label: 'Despesas', href: '/despesas', icon: Wallet },
+  { id: 'despesas', label: 'Financeiro', href: '/financeiro', icon: Wallet },
   { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
   { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
   { id: 'automacoes', label: 'Automações', href: '/automacoes', icon: Zap },
@@ -90,7 +90,7 @@ export const FULL_NAV: FullNavItem[] = [
   { id: 'imoveis', label: 'Imóveis', href: '/imoveis', icon: Home },
   { id: 'activities', label: 'Actividades', href: '/activities', icon: CheckSquare },
   { id: 'reports', label: 'Relatórios', href: '/reports', icon: BarChart3 },
-  { id: 'despesas', label: 'Despesas', href: '/despesas', icon: Wallet },
+  { id: 'despesas', label: 'Financeiro', href: '/financeiro', icon: Wallet },
   { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
   { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
   { id: 'automacoes', label: 'Automações', href: '/automacoes', icon: Zap },
