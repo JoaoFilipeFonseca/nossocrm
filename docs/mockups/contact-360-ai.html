@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — CONTACT-360-AI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: { colors: {
+    primary: { 50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca' },
+  } } } }
+</script>
+<style> body { background:#f1f5f9; } </style>
+</head>
+<body class="text-slate-900">
+
+<div class="bg-amber-100 border-b border-amber-300 text-amber-900 text-xs text-center py-1.5 px-3">
+  MAQUETA — CONTACT-360-AI (assenta na ficha /contacts/[id] que já está live). Mostra as 3 capacidades juntas; construímos uma de cada vez.
+</div>
+
+<div class="max-w-3xl mx-auto p-4 sm:p-6 space-y-5">
+
+  <!-- mini-cabeçalho de contexto -->
+  <div class="flex items-center gap-3">
+    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center text-lg font-bold">A</div>
+    <div>
+      <div class="font-bold text-slate-900">Ana Margarida Silva</div>
+      <div class="text-xs text-slate-500">Proprietária · DISC: I · veio de Meta Ads (Penafiel Q2)</div>
+    </div>
+  </div>
+
+  <!-- PAINEL 360-AI -->
+  <div class="rounded-2xl border border-primary-200 bg-gradient-to-b from-primary-50 to-white shadow-sm overflow-hidden">
+    <!-- header -->
+    <div class="px-5 py-3 flex items-center justify-between border-b border-primary-100">
+      <div class="flex items-center gap-2">
+        <span class="text-base">✨</span>
+        <h2 class="text-sm font-bold text-primary-800">Assistente 360</h2>
+        <span class="text-[11px] text-primary-500 bg-white/70 px-1.5 py-0.5 rounded">analisado há 2 min</span>
+      </div>
+      <button class="text-xs font-semibold text-primary-600 hover:underline inline-flex items-center gap-1">↻ Reanalisar</button>
+    </div>
+
+    <!-- 1) RETRATO 360 -->
+    <div class="p-5 border-b border-slate-100">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">1 · Retrato</span>
+      </div>
+      <p class="text-sm text-slate-700 leading-relaxed">
+        A Ana é uma proprietária em fase de decisão. Quer vender a casa de Penafiel para comprar maior,
+        mais perto da escola dos filhos, e quer estar mudada antes de Setembro. Perfil DISC tipo I
+        (relacional, gosta de proximidade e confiança). Veio do anúncio de angariação e já fez uma visita
+        que correu bem. O marido decide em conjunto e ela prefere ser contactada ao fim da tarde.
+      </p>
+      <div class="flex flex-wrap gap-1.5 mt-3">
+        <span class="px-2 py-0.5 rounded-md text-xs bg-white border border-slate-200 text-slate-600">⏳ Urgência: mudar antes de Setembro</span>
+        <span class="px-2 py-0.5 rounded-md text-xs bg-white border border-slate-200 text-slate-600">🤝 Decisão a dois</span>
+        <span class="px-2 py-0.5 rounded-md text-xs bg-white border border-slate-200 text-slate-600">🕔 Fim de tarde</span>
+      </div>
+    </div>
+
+    <!-- 2) PRÓXIMA MELHOR ACÇÃO + MENSAGEM -->
+    <div class="p-5 border-b border-slate-100">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">2 · Próxima melhor acção</span>
+        <span class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">confiança alta</span>
+      </div>
+
+      <div class="rounded-xl bg-white border border-slate-200 p-3 mb-3">
+        <div class="text-sm font-semibold text-slate-900">Enviar hoje 2 alternativas de T3 e propor visita esta semana.</div>
+        <div class="text-xs text-slate-500 mt-1">Porquê: gostou da zona na visita, está em decisão e tem prazo curto. Janela ideal: fim de tarde.</div>
+      </div>
+
+      <!-- mensagem pronta -->
+      <div class="rounded-xl bg-white border border-slate-200 overflow-hidden">
+        <div class="flex items-center gap-1 px-2 pt-2">
+          <button class="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">WhatsApp</button>
+          <button class="text-xs font-medium px-2.5 py-1 rounded-md text-slate-500 hover:bg-slate-50">Email</button>
+          <span class="ml-auto text-[11px] text-slate-400 pr-1">no seu tom · PT-PT</span>
+        </div>
+        <div class="p-3 text-sm text-slate-700 leading-relaxed whitespace-pre-line">Olá Ana, foi um gosto mostrar-lhe a casa em Seroa.
+
+Separei 2 opções de T3 que encaixam no que procura e na zona das escolas. Quando lhe for oportuno, ao fim da tarde, podemos ver as duas e marcar visita ainda esta semana.
+
+Fico a aguardar o seu sinal.</div>
+        <div class="flex flex-wrap items-center gap-2 px-3 pb-3">
+          <button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-primary-600 text-white hover:bg-primary-500">Enviar por WhatsApp</button>
+          <button class="px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">Copiar</button>
+          <button class="px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">Editar</button>
+          <button class="px-3 py-1.5 rounded-lg text-sm font-medium text-primary-600 hover:underline">↻ Outra versão</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3) AUTO-ENRIQUECIMENTO -->
+    <div class="p-5">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">3 · Sugestões para a ficha</span>
+        <span class="text-[11px] text-slate-500">a IA detectou nas interacções</span>
+      </div>
+      <ul class="space-y-2">
+        <li class="flex items-center justify-between gap-3 rounded-lg bg-white border border-slate-200 px-3 py-2">
+          <span class="text-sm text-slate-700">⚡ Novo trigger: <b>Crédito aprovado</b></span>
+          <span class="flex gap-1.5 shrink-0">
+            <button class="text-xs font-semibold px-2 py-1 rounded-md bg-emerald-600 text-white">Aceitar</button>
+            <button class="text-xs px-2 py-1 rounded-md bg-slate-100 text-slate-500 border border-slate-200">Ignorar</button>
+          </span>
+        </li>
+        <li class="flex items-center justify-between gap-3 rounded-lg bg-white border border-slate-200 px-3 py-2">
+          <span class="text-sm text-slate-700">🗓️ Trimestre sugerido: <b>Q3 2026</b></span>
+          <span class="flex gap-1.5 shrink-0">
+            <button class="text-xs font-semibold px-2 py-1 rounded-md bg-emerald-600 text-white">Aceitar</button>
+            <button class="text-xs px-2 py-1 rounded-md bg-slate-100 text-slate-500 border border-slate-200">Ignorar</button>
+          </span>
+        </li>
+        <li class="flex items-center justify-between gap-3 rounded-lg bg-white border border-slate-200 px-3 py-2">
+          <span class="text-sm text-slate-700">🔔 Definir follow up para <b>5 Jun</b> (fim de tarde)</span>
+          <span class="flex gap-1.5 shrink-0">
+            <button class="text-xs font-semibold px-2 py-1 rounded-md bg-emerald-600 text-white">Aceitar</button>
+            <button class="text-xs px-2 py-1 rounded-md bg-slate-100 text-slate-500 border border-slate-200">Ignorar</button>
+          </span>
+        </li>
+      </ul>
+      <p class="text-[11px] text-slate-400 mt-2">Nada muda na ficha sem a tua validação. A IA aprende com o que aceitas e ignoras.</p>
+    </div>
+  </div>
+
+  <p class="text-xs text-slate-400 text-center">
+    Usa tudo o que já temos: DISC · família · triggers · aniversário · última actividade · grafo de indicações · atribuição do anúncio · negócios · comentários.
+    Reusa o motor IA do CRM (chaves na org, runWithFallback, Gemini + Claude) e as boas práticas Meta IA 2026.
+  </p>
+</div>
+</body>
+</html>

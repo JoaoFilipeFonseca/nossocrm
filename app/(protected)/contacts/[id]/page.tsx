@@ -7,6 +7,7 @@ import { MetaAttribution } from '@/components/MetaAttribution';
 import ContactFilesPanel from '@/features/contacts/components/ContactFilesPanel';
 import { ContactRichPanel } from '@/features/contacts/components/ContactRichPanel';
 import { ContactComments } from '@/features/contacts/components/ContactComments';
+import { Contact360Panel } from '@/features/contacts/components/Contact360Panel';
 import { toWhatsAppPhone } from '@/lib/phone';
 import type { ContactCustomFields, DiscProfile } from '@/types';
 
@@ -113,6 +114,9 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* PRINCIPAL */}
         <div className="lg:col-span-2 space-y-5">
+          {/* CONTACT-360-AI: Assistente 360 (Retrato + Próxima acção + mensagem) */}
+          <Contact360Panel contactId={contact.id} phone={contact.phone || null} email={contact.email || null} />
+
           {/* CT-2: atribuição read-only */}
           <MetaAttribution attribution={contact.attribution} />
 
@@ -161,16 +165,6 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          {/* Teaser CONTACT-360-AI */}
-          <div className="rounded-2xl border border-primary-200 bg-primary-50 p-5">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-bold text-primary-700 flex items-center gap-1.5">✨ Próxima melhor acção</h2>
-              <span className="text-[10px] uppercase tracking-wide font-bold text-primary-500 bg-white/70 px-1.5 py-0.5 rounded">Em breve</span>
-            </div>
-            <p className="text-sm text-primary-900/90 leading-relaxed">
-              A IA vai cruzar família, triggers, DISC e última actividade para sugerir a melhor mensagem, à medida desta pessoa.
-            </p>
-          </div>
         </div>
       </div>
     </div>

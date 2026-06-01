@@ -181,3 +181,62 @@ export async function getContactDealsSummary(id: string): Promise<{ count: numbe
   const openCount = rows.filter((d) => !d.is_won && !d.is_lost).length;
   return { count: rows.length, openCount };
 }
+
+/**
+ * Contexto 360 do contacto para o Assistente IA (CONTACT-360-AI Fase 1).
+ * Junta tudo o que já temos numa só leitura: campos ricos, atribuição,
+ * indicações, negócios, últimas actividades e comentários.
+ */
+export interface Contact360Context {
+  contact: Contact;
+  referrals: ContactReferrals;
+  deals: { open: number; won: number; lost: number; recent: { title: string; value: number; state: string }[] };
+  activities: { type: string; description: string | null; at: string }[];
+  comments: { author: string; body: string; at: string }[];
+}
+
+export async function getContact360Context(id: string): Promise<Contact360Context | null> {
+  const contact = await getContactById(id);
+  if (!contact) return null;
+  const supabase = await createClient();
+
+  const [referrals, comments, dealsRes, actsRes] = await Promise.all([
+    getContactReferrals(id),
+    getContactComments(id),
+    supabase
+      .from('deals')
+      .select('title, value, is_won, is_lost, created_at')
+      .eq('contact_id', id)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabase
+      .from('deal_activities')
+      .select('type, description, created_at')
+      .eq('contact_id', id)
+      .order('created_at', { ascending: false })
+      .limit(15),
+  ]);
+
+  const dealRows = (dealsRes.data ?? []) as Array<{ title: string | null; value: number | null; is_won: boolean | null; is_lost: boolean | null }>;
+  const deals = {
+    open: dealRows.filter((d) => !d.is_won && !d.is_lost).length,
+    won: dealRows.filter((d) => d.is_won).length,
+    lost: dealRows.filter((d) => d.is_lost).length,
+    recent: dealRows.slice(0, 5).map((d) => ({
+      title: d.title || 'Negócio',
+      value: d.value || 0,
+      state: d.is_won ? 'ganho' : d.is_lost ? 'perdido' : 'aberto',
+    })),
+  };
+
+  const activities = ((actsRes.data ?? []) as Array<{ type: string; description: string | null; created_at: string }>)
+    .map((a) => ({ type: a.type, description: a.description, at: a.created_at }));
+
+  return {
+    contact,
+    referrals,
+    deals,
+    activities,
+    comments: comments.map((c) => ({ author: c.authorName, body: c.body, at: c.createdAt })),
+  };
+}
