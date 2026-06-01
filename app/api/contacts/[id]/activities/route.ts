@@ -13,13 +13,15 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 
-const ALLOWED_TYPES = ['call', 'meeting', 'visit', 'whatsapp', 'email'] as const;
+const ALLOWED_TYPES = ['call', 'meeting', 'visit', 'whatsapp', 'email', 'note'] as const;
 
 const BodySchema = z
   .object({
     type: z.enum(ALLOWED_TYPES),
-    description: z.string().max(2000).nullable().optional(),
+    description: z.string().max(5000).nullable().optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
+    // CT-TIMELINE: data/hora em que a interação ocorreu (permite registo retroactivo).
+    occurredAt: z.string().datetime({ offset: true }).optional(),
   })
   .strict();
 
@@ -78,7 +80,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       description: parsed.data.description ?? null,
       metadata: {
         ...(parsed.data.metadata ?? {}),
-        via: parsed.data.metadata?.via || 'log-chq-quick-contact',
+        via: parsed.data.metadata?.via || (parsed.data.occurredAt ? 'timeline-manual' : 'log-chq-quick-contact'),
+        ...(parsed.data.occurredAt ? { occurred_at: parsed.data.occurredAt } : {}),
         logged_by: user.id,
       },
     };
@@ -94,6 +97,39 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     return NextResponse.json({ ok: true, activity: inserted });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/contacts/[id]/activities?activityId=...
+ * Apaga uma entrada MANUAL da timeline (via=timeline-manual). RLS confina à org.
+ */
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!isAllowedOrigin(request)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  try {
+    const { id: contactId } = await params;
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const activityId = request.nextUrl.searchParams.get('activityId');
+    if (!activityId) return NextResponse.json({ error: 'activityId em falta' }, { status: 400 });
+
+    // Só apaga entradas manuais deste contacto (não toca em actividade automática/sistema).
+    const { error: delError } = await supabase
+      .from('deal_activities')
+      .delete()
+      .eq('id', activityId)
+      .eq('contact_id', contactId)
+      .eq('metadata->>via', 'timeline-manual');
+    if (delError) return NextResponse.json({ error: delError.message }, { status: 500 });
+
+    return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido';
     return NextResponse.json({ error: msg }, { status: 500 });
