@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Phone, Mail, MessageCircle } from 'lucide-react';
-import { getContactById, getContactReferrals, getContactDealsSummary, getContactComments, getLastContactAnalysis } from '@/lib/contacts/detail';
+import { getContactById, getContactReferrals, getContactDealsSummary, getContactComments, getLastContactAnalysis, getContactTimeline } from '@/lib/contacts/detail';
 import { createClient } from '@/lib/supabase/server';
 import { MetaAttribution } from '@/components/MetaAttribution';
 import ContactFilesPanel from '@/features/contacts/components/ContactFilesPanel';
 import { ContactRichPanel } from '@/features/contacts/components/ContactRichPanel';
 import { ContactComments } from '@/features/contacts/components/ContactComments';
 import { Contact360Panel } from '@/features/contacts/components/Contact360Panel';
+import { ContactTimeline } from '@/features/contacts/components/ContactTimeline';
 import { toWhatsAppPhone } from '@/lib/phone';
 import type { ContactCustomFields, DiscProfile } from '@/types';
 
@@ -28,11 +29,12 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
   const contact = await getContactById(id);
   if (!contact) notFound();
 
-  const [referrals, dealsSummary, comments, lastAnalysis] = await Promise.all([
+  const [referrals, dealsSummary, comments, lastAnalysis, timeline] = await Promise.all([
     getContactReferrals(id),
     getContactDealsSummary(id),
     getContactComments(id),
     getLastContactAnalysis(id),
+    getContactTimeline(id),
   ]);
 
   // Utilizador actual (para permitir apagar só os próprios comentários).
@@ -136,6 +138,9 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             initialReferredBy={referrals.referredBy}
             initialReferred={referrals.referred}
           />
+
+          {/* CT-TIMELINE: histórico de interações */}
+          <ContactTimeline contactId={contact.id} initialEntries={timeline} />
 
           {/* Documentos (reusa ContactFilesPanel) */}
           <div className="bg-white dark:bg-dark-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-5">

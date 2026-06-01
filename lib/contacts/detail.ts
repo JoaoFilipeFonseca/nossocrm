@@ -182,6 +182,54 @@ export async function getContactDealsSummary(id: string): Promise<{ count: numbe
   return { count: rows.length, openCount };
 }
 
+/** Uma entrada da timeline de interações do contacto (CT-TIMELINE). */
+export interface TimelineEntry {
+  id: string;
+  type: string;
+  description: string | null;
+  at: string; // ISO (occurred_at se existir, senão created_at)
+  manual: boolean;
+  system: boolean;
+}
+
+const SYSTEM_TYPES = new Set(['stage_moved', 'created', 'deal_created']);
+
+export async function getContactTimeline(id: string, limit = 50): Promise<TimelineEntry[]> {
+  const supabase = await createClient();
+
+  // "Tudo ligado": inclui actividades ligadas ao contacto E às negociações
+  // desta pessoa (a actividade automática vive sobretudo ao nível do negócio).
+  const { data: deals } = await supabase.from('deals').select('id').eq('contact_id', id);
+  const dealIds = (deals ?? []).map((d) => (d as { id: string }).id);
+
+  let query = supabase
+    .from('deal_activities')
+    .select('id, type, description, created_at, metadata')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  query = dealIds.length > 0
+    ? query.or(`contact_id.eq.${id},deal_id.in.(${dealIds.join(',')})`)
+    : query.eq('contact_id', id);
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+  const entries = (data as Array<{ id: string; type: string; description: string | null; created_at: string; metadata: Record<string, unknown> | null }>).map((r) => {
+    const occurred = r.metadata && typeof r.metadata['occurred_at'] === 'string' ? (r.metadata['occurred_at'] as string) : null;
+    const via = r.metadata && typeof r.metadata['via'] === 'string' ? (r.metadata['via'] as string) : '';
+    return {
+      id: r.id,
+      type: r.type,
+      description: r.description,
+      at: occurred || r.created_at,
+      manual: via.startsWith('manual') || via === 'timeline-manual',
+      system: SYSTEM_TYPES.has(r.type),
+    };
+  });
+  // Ordena pela data efectiva (suporta entradas com data retroactiva).
+  entries.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+  return entries;
+}
+
 /** Última análise do Assistente 360 guardada (Fase 3). */
 export interface LastContactAnalysis {
   result: unknown;
