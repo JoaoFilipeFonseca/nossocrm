@@ -80,6 +80,9 @@
 - **NS-2 · CONTACT-360-AI — perfil 360° + IA que relaciona tudo** `[POR FAZER]` `P?`
   Visão-núcleo do João: "conhecer a pessoa de verdade", enriquecimento progressivo, IA cruza DISC+família+triggers+aniversário+última actividade → próxima melhor acção e copy hiper-pessoal. Meta: "pensa mais à frente, diferente de todos no imobiliário". Assenta em CONTACT-CARD-NOTION + MSG-WHATSAPP-PROPRIO + IA existente. Extensões: auto-enriquecimento por interacção, camada de relação (graph Referred By/Referred), próxima melhor acção, copy hiper-pessoal. (origem: CAPTURE CONTACT-360-AI)
 
+- **NS-3 · Custo total por imóvel (publicidade + visitas + combustível) e ROI por imóvel** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
+  "Quanto gastei com determinado imóvel a nível de publicidade, visitas, combustível." **Dados já existem** — `expenses` liga a `imovel_id` + `category` + `amount_cents`. **Falta:** vista de **rollup de custos por imóvel** (na ficha `/imoveis/[id]` e no /financeiro) + categorias específicas (combustível/deslocações/publicidade) + **juntar o gasto de anúncios atribuível** ao imóvel (via atribuição Meta) → custo total e, com a venda, ROI por imóvel. Liga a NS-1 (Gestão Financeira) e a MA-LTV-ATTRIBUTION.
+
 ### B. Contactos / dados ricos
 
 - **CT-1 · CONTACT-CARD-NOTION — campos do card de contacto do Notion** `[FEITO]` (01/06, HEAD `a24ebc3`, LIVE)
@@ -90,6 +93,9 @@
 
 - **CT-3 · Tag automática da linhagem (c4.3)** `[POR FAZER]` `P?`
   `contacts` não tem coluna `tags`. Mexe no modelo de tags + edge `automation-meta-leads` (aplicar "Meta Ads: <campanha>"). Ligado à regra origem-obrigatória.
+
+- **CT-AUTO · Auto-preenchimento de campos CT-1 + automações de follow-up** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
+  Quando uma lead/contacto entra (manual OU via anúncio), o CRM sabe o dia → **preencher automaticamente** `custom_fields.quarter` (Trimestre, ex. Q3 2026) e `lastActivityDate` (data de entrada), sem o João tocar. Depois **criar automações** (no engine `/automacoes`): definir `followUpDate` por regra, lembretes "follow up hoje", e cadências (ex.: se sem actividade há X dias → criar tarefa). Campos já existem (`custom_fields`, migração `20260601120000`). Pontos a decidir: trigger BD vs preencher no webhook `automation-meta-leads` + no `contactsService.create`; regras de cálculo do Trimestre; defaults de follow up. Liga ao engine de automações e a [[regra-automacoes-no-crm]].
 
 ### C. Mensagens / canais
 
@@ -116,9 +122,13 @@
 
 - **MKT-SOCIAL · Publicação social no CRM (Meta + LinkedIn) com ciclo de aprendizagem** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
   Compor publicações no CRM e publicar nas redes a partir daqui, **conteúdo pensado por plataforma**: **Meta** (Instagram + Facebook) num só clique com o mesmo conteúdo; **LinkedIn** como peça própria (rede diferente, linguagem/formato próprios — a IA adapta). Fotos carregadas OU geradas por IA (reusa `/criativos` + Brand Kit). Fluxo: rascunho → **pendente de validação do João** → 1 clique publica no(s) sítio(s) certo(s). **Histórico guardado no CRM**: o quê, onde, quando + **métricas** (visualizações, comentários, toda a interação) — "o que se faz no Meta e no LinkedIn, mas tudo aqui sem abrir 2 plataformas". A **IA analisa conteúdo+estratégia+resultados** e aprende (medir→aprender→melhorar): diz o que repetir/evitar/reenquadrar no mês seguinte. Alinhar copy/CTA com [[reference-meta-ia-2026-best-practices]] (criativo é o novo targeting; CTA a pedir DM). Teste "serve qualquer consultor": fácil, intuitivo, sem falhas. APIs prováveis: Meta Graph (IG/FB publishing) + LinkedIn API (revisão de permissões/escopos), tabelas `social_posts` + `social_post_metrics`, cron de recolha de métricas (em /automacoes). Liga a MKT-STUDIO (é o sub-épico "posts sociais" expandido) e ao analista IA existente (mesmo cérebro p/ orgânico).
+  **Nuance do João (01/06):** além de publicar, **importar/detectar o que já está postado** (orgânico histórico) e analisá-lo **ao mesmo nível dos anúncios Meta** — o CRM é o assistente de conteúdos: diz **quando faz sentido renovar/trocar** um conteúdo (com base nas métricas e no histórico do que resultou, por canal). Marca pessoal do João ("marca lendária") como fio condutor. Reusa [[joao-fonseca-brand]] (skill) + Brand Kit.
 
 - **MKT-BP-AUTOLEARN · Boas práticas Meta/IA sempre actualizadas (auto-aprendizagem)** `[POR FAZER]` `P?` (CAPTURE 01/06)
   A IA não fica presa ao doc `docs/meta-ia-2026-best-practices.md`: passo periódico (IA + web) que procura alterações/recomendações mais recentes e actualiza as práticas que alimentam o analista IA e a geração de copy. Fechar ciclo: resulta→continua, não resulta→repensa. Base: [[reference-meta-ia-2026-best-practices]].
+
+- **MA-LTV-ATTRIBUTION · Atribuição vitalícia "conta inglesa" (1 anúncio → N negócios ao longo do tempo)** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
+  Um anúncio que trouxe um comprador deve ser creditado pelo valor da venda dessa casa — **e** pelos negócios que daí derivam ao longo do tempo: (a) quem essa pessoa **referenciou** (já temos o grafo `contact_referrals` Indicado por/Indicou, construído no CT-1), (b) a **recompra/revenda futura** da própria pessoa (ex.: vende a casa dele 3 anos depois e volta a ele). Objectivo: "valor vitalício do anúncio" = soma de todos os negócios da linhagem (ex.: 1 anúncio → 3 negócios). **Fundação já existe:** `attribution` por anúncio (contacts/deals) + `contact_referrals` + princípio de [[feedback-medicao-vitalicia-e-ciclo]] + MA-DRILLDOWN Fase 1. **Falta o motor:** ao fechar um negócio, subir a cadeia (quem trouxe esta pessoa / que anúncio originou a linhagem) e creditar para cima; vista no drill-down do anúncio com o total vitalício + ramificações. Liga a MA-DRILLDOWN e ao financeiro (ROI vitalício por anúncio).
 
 - **MA-OFFLINE · Marketing offline rastreável (QR)** `[POR FAZER]` `P?`
   `offline_campaigns` (fotos+investimento), QR único → captura `?src=`, atribuição fonte `offline` lado a lado com Meta no dashboard. (origem: CAPTURE MA-OFFLINE)
@@ -139,6 +149,9 @@
 
 - **DASH-2 · Lead scoring engine** `[POR FAZER]` `P?`
   GHL "Manage Scoring": pontos por evento (+visita/+abriu email/−sem resposta 7d), score visível na DealCard. Não existe na BD. (origem: GHL Manage Scoring + #scoring)
+
+- **DASH-3 · Painel de actividade do consultor (métricas do que fiz)** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
+  "Quero saber quantas visitas fiz no ano, quantas reuniões com proprietários, quantas avaliações." **Dados já existem** em `deal_activities` (tipos call/meeting/visit/whatsapp/email). **Falta:** painel agregado por período (ano/mês) com contagens por tipo + **subtipos** que hoje não há (ex.: "reunião com proprietário", "reunião de avaliação") — decidir se via subtipo/tag no `metadata` ou novos tipos. Sai automático, sem trabalho extra do João. Liga a DASH-1 (Fase 5) e a /relatorios.
 
 ### F. Integrações
 
@@ -167,6 +180,9 @@
 
 - **IMO-5 · M-012 Checklist por mudança de estágio** `[POR FAZER]` `P?`
   `stage_checklists` por board+stage (documentos/acções obrigatórias), modal bloqueador com "Avançar mesmo assim" (audit). (origem: CAPTURE M-012)
+
+- **IMO-6 · Gestão de mandatos: validade do contrato + alertas + acções automáticas** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
+  Proprietários com contrato/mandato assinado: contar o **tempo de contrato** e **alertar "faltam X dias"** para a validade. **Dados já existem** — `imovel_mandatos` tem `data_inicio`, `data_fim`, `comissao_pct`, `activo`. **Falta:** contagem decrescente na ficha do imóvel + cron de alertas (Telegram/tarefa) a X dias do fim + **escalada automática** (ex.: a cada X tempo, se o imóvel **não tem propostas/visitas**, disparar acções/estratégia — liga a IMO-3 "imóvel parado → alerta IA"). Toda automação em [[regra-automacoes-no-crm]].
 
 ### H. Automação / engine (roadmap Pinheirinho)
 
