@@ -267,21 +267,16 @@ export async function getContact360Context(id: string): Promise<Contact360Contex
   if (!contact) return null;
   const supabase = await createClient();
 
-  const [referrals, comments, dealsRes, actsRes] = await Promise.all([
+  const [referrals, comments, timeline, dealsRes] = await Promise.all([
     getContactReferrals(id),
     getContactComments(id),
+    getContactTimeline(id, 15), // timeline unificada (contacto + negócios) — "tudo ligado"
     supabase
       .from('deals')
       .select('title, value, is_won, is_lost, created_at')
       .eq('contact_id', id)
       .order('created_at', { ascending: false })
       .limit(10),
-    supabase
-      .from('deal_activities')
-      .select('type, description, created_at')
-      .eq('contact_id', id)
-      .order('created_at', { ascending: false })
-      .limit(15),
   ]);
 
   const dealRows = (dealsRes.data ?? []) as Array<{ title: string | null; value: number | null; is_won: boolean | null; is_lost: boolean | null }>;
@@ -296,8 +291,9 @@ export async function getContact360Context(id: string): Promise<Contact360Contex
     })),
   };
 
-  const activities = ((actsRes.data ?? []) as Array<{ type: string; description: string | null; created_at: string }>)
-    .map((a) => ({ type: a.type, description: a.description, at: a.created_at }));
+  const activities = timeline
+    .filter((a) => !a.system)
+    .map((a) => ({ type: a.type, description: a.description, at: a.at }));
 
   return {
     contact,
