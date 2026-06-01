@@ -9,6 +9,22 @@
 > - **Prioridade:** `P?` = ainda por decidir com o João. Definimos juntos numa passagem dedicada.
 > - Regra de sessão: 1 objectivo de cada vez; ideias novas entram AQUI, não se implementam logo.
 > - Verificar SEMPRE contra código/BD antes de marcar `[FEITO]`.
+>
+> 🚨 **REGRA OBRIGATÓRIA E INEGOCIÁVEL (João, 01/06): TUDO funciona em MOBILE *e* DESKTOP.**
+> Nenhuma feature fica feita sem estar verificada em mobile (375/540) **e** desktop (e tablet 768
+> quando aplicável). Tripla verificação mobile + screenshot. Sem excepções.
+
+---
+
+## 🗓️ Registo da sessão 31 Mai → 01 Jun 2026 (o que ficou feito)
+- **NAV-MOBILE-DRAWER** ✅ — hambúrguer + gaveta esquerda no mobile (BottomNav removida).
+- **TODO-CONSOLIDATE** ✅ — este catálogo único (CAPTURE + todo.md antigo + memória).
+- **Q-1 PT-BR→PT-PT** ✅ — sweep exaustivo da copy visível; + Q-BUG-IA + B-LINT.
+- **NS-1 GESTÃO FINANCEIRA** ✅ — hub `/financeiro` (Visão de Gestor + Despesas) + funil de
+  conversão + ficha por angariação (comissão % ou € + ganho líquido real).
+- **MA-DRILLDOWN Fase 1** ✅ — drill-down por anúncio (criativo+copy+métricas+leads/negócios).
+- **Limpeza** ✅ — removidos BottomNav + MoreMenuSheet (mortos).
+- **Falta a seguir:** **CT-1 + CT-2** (card de contacto rico + atribuição = base do CONTACT-360-AI).
 
 ---
 
