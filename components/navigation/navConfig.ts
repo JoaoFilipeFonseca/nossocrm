@@ -18,6 +18,7 @@ import {
   Archive,
   Sparkles,
   Activity,
+  Wallet,
 } from 'lucide-react';
 
 export type PrimaryNavId = 'inbox' | 'messaging' | 'cruzamentos' | 'matches' | 'boards' | 'contacts' | 'imoveis' | 'activities' | 'more';
@@ -88,6 +89,7 @@ export const FULL_NAV: FullNavItem[] = [
   { id: 'imoveis', label: 'Imóveis', href: '/imoveis', icon: Home },
   { id: 'activities', label: 'Actividades', href: '/activities', icon: CheckSquare },
   { id: 'reports', label: 'Relatórios', href: '/reports', icon: BarChart3 },
+  { id: 'despesas', label: 'Despesas', href: '/despesas', icon: Wallet },
   { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
   { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
   { id: 'automacoes', label: 'Automações', href: '/automacoes', icon: Zap },

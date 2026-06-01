@@ -51,7 +51,8 @@ import {
   Zap,
   Activity,
   Megaphone,
-  Menu
+  Menu,
+  Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -87,6 +88,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/activities': 'Actividades',
   '/decisions': 'Decisões',
   '/reports': 'Relatórios',
+  '/despesas': 'Despesas',
   '/anuncios': 'Anúncios',
   '/criativos': 'Criativos',
   '/settings': 'Configurações',
@@ -330,6 +332,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
             { to: '/imoveis', icon: Home, label: 'Imóveis', prefetch: undefined, badge: undefined },
             { to: '/activities', icon: CheckSquare, label: 'Actividades', prefetch: 'activities' as const, badge: undefined },
             { to: '/reports', icon: BarChart3, label: 'Relatórios', prefetch: 'reports' as const, badge: undefined },
+            { to: '/despesas', icon: Wallet, label: 'Despesas', prefetch: undefined, badge: undefined },
             { to: '/anuncios', icon: Megaphone, label: 'Anúncios', prefetch: undefined, badge: undefined },
             { to: '/criativos', icon: Archive, label: 'Criativos', prefetch: undefined, badge: undefined },
             { to: '/automacoes', icon: Zap, label: 'Automações', prefetch: undefined, badge: undefined },
