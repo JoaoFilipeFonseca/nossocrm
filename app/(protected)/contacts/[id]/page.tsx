@@ -4,6 +4,7 @@ import { ArrowLeft, Phone, Mail, MessageCircle } from 'lucide-react';
 import { getContactById, getContactReferrals, getContactDealsSummary } from '@/lib/contacts/detail';
 import { MetaAttribution } from '@/components/MetaAttribution';
 import ContactFilesPanel from '@/features/contacts/components/ContactFilesPanel';
+import { ContactRichPanel } from '@/features/contacts/components/ContactRichPanel';
 import { toWhatsAppPhone } from '@/lib/phone';
 import type { ContactCustomFields, DiscProfile } from '@/types';
 
@@ -18,13 +19,6 @@ const DISC_META: Record<DiscProfile, { label: string; dot: string; chip: string 
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function formatPtDate(iso?: string | null): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Europe/Lisbon' });
-}
 
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -42,44 +36,6 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
   const stageLabel = contact.stage && !UUID_RE.test(contact.stage) ? contact.stage : null;
 
   const waPhone = contact.phone ? toWhatsAppPhone(contact.phone) : null;
-
-  // Linhas de propriedade (CT-1) — só as que têm valor.
-  const propRows: { icon: string; label: string; node: React.ReactNode }[] = [];
-  if (cf.address) propRows.push({ icon: '📍', label: 'Morada / Investimento', node: cf.address });
-  if (cf.familyMembers) propRows.push({ icon: '👨‍👩‍👧', label: 'Família', node: cf.familyMembers });
-  if (cf.pets) propRows.push({ icon: '🐾', label: 'Animais', node: cf.pets });
-  if (cf.triggers && cf.triggers.length > 0) {
-    propRows.push({
-      icon: '⚡',
-      label: 'Triggers',
-      node: (
-        <div className="flex flex-wrap gap-1.5">
-          {cf.triggers.map((t, i) => (
-            <span key={i} className="px-2 py-0.5 rounded-md text-xs bg-rose-50 text-rose-700 border border-rose-200">{t}</span>
-          ))}
-        </div>
-      ),
-    });
-  }
-  const birthLabel = formatPtDate(contact.birthDate);
-  if (birthLabel) propRows.push({ icon: '🎂', label: 'Aniversário', node: birthLabel });
-  if (cf.quarter) propRows.push({ icon: '🗓️', label: 'Trimestre', node: cf.quarter });
-  const lastActivity = formatPtDate(cf.lastActivityDate);
-  if (lastActivity) {
-    propRows.push({
-      icon: '⏱️',
-      label: 'Última actividade',
-      node: cf.lastActivityNote ? `${lastActivity} · ${cf.lastActivityNote}` : lastActivity,
-    });
-  }
-  if (cf.followUp) {
-    const fu = formatPtDate(cf.followUpDate);
-    propRows.push({
-      icon: '🔔',
-      label: 'Follow Up?',
-      node: <span className="text-emerald-700 font-medium">Sim{fu ? ` · próximo a ${fu}` : ''}</span>,
-    });
-  }
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6">
@@ -149,60 +105,15 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
           {/* CT-2: atribuição read-only */}
           <MetaAttribution attribution={contact.attribution} />
 
-          {/* CT-1: propriedades */}
-          <div className="bg-white dark:bg-dark-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm">
-            <div className="px-5 pt-4 pb-2">
-              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Sobre a pessoa</h2>
-            </div>
-            {propRows.length > 0 ? (
-              <div className="divide-y divide-slate-100 dark:divide-white/5">
-                {propRows.map((row) => (
-                  <div key={row.label} className="px-5 py-2.5 flex items-start gap-3 sm:gap-4">
-                    <div className="w-40 shrink-0 text-xs font-medium text-slate-500 flex items-center gap-2 pt-0.5">
-                      <span aria-hidden>{row.icon}</span> {row.label}
-                    </div>
-                    <div className="flex-1 text-sm text-slate-800 dark:text-slate-200">{row.node}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="px-5 pb-4 text-sm text-slate-500">Sem campos preenchidos ainda. A edição chega na próxima fase.</p>
-            )}
-
-            {/* Relações (Indicado por / Indicou) */}
-            {(referrals.referredBy.length > 0 || referrals.referred.length > 0) && (
-              <div className="border-t border-slate-100 dark:border-white/5 divide-y divide-slate-100 dark:divide-white/5">
-                {referrals.referredBy.length > 0 && (
-                  <div className="px-5 py-2.5 flex items-start gap-3 sm:gap-4">
-                    <div className="w-40 shrink-0 text-xs font-medium text-slate-500 flex items-center gap-2 pt-0.5"><span aria-hidden>🤝</span> Indicado por</div>
-                    <div className="flex-1 flex flex-wrap gap-1.5">
-                      {referrals.referredBy.map((r) => (
-                        <Link key={r.referralId} href={`/contacts/${r.contactId}`} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 text-xs font-medium">{r.name}</Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {referrals.referred.length > 0 && (
-                  <div className="px-5 py-2.5 flex items-start gap-3 sm:gap-4">
-                    <div className="w-40 shrink-0 text-xs font-medium text-slate-500 flex items-center gap-2 pt-0.5"><span aria-hidden>↪️</span> Indicou</div>
-                    <div className="flex-1 flex flex-wrap gap-1.5">
-                      {referrals.referred.map((r) => (
-                        <Link key={r.referralId} href={`/contacts/${r.contactId}`} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 text-xs font-medium">{r.name}</Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Notas */}
-          {contact.notes && (
-            <div className="bg-white dark:bg-dark-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-5">
-              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-2">Notas</h2>
-              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{contact.notes}</p>
-            </div>
-          )}
+          {/* CT-1: propriedades + relações + notas (editável) */}
+          <ContactRichPanel
+            contactId={contact.id}
+            initialCustomFields={cf}
+            initialNotes={contact.notes ?? ''}
+            initialBirthDate={contact.birthDate}
+            initialReferredBy={referrals.referredBy}
+            initialReferred={referrals.referred}
+          />
 
           {/* Documentos (reusa ContactFilesPanel) */}
           <div className="bg-white dark:bg-dark-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-5">
