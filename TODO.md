@@ -38,9 +38,9 @@
 1. ~~**Q-1** Sweep PT-BR→PT-PT~~ ✅ **FEITO (01/06, commit `964ac65`)** — copy visível limpa (features/components/app/lib/prompts/templates/install). Resta **Q-2** (comentários/JSDoc + lib/ai rules + fixtures de teste) — não-visível, P3.
 2. ~~**NS-1** Custos + ROI no dashboard~~ ✅ **FEITO (01/06)** — hub `/financeiro` (Visão de Gestor + Despesas) + ficha por angariação no negócio
 2b. ~~**MA-DRILLDOWN** dados por criativo~~ ✅ **Fase 1 FEITA (01/06)** — drill-down por anúncio (criativo+copy+métricas+leads/negócios). Falta árvore Campanha→Conjunto→Anúncio (P2).
-2c. **CT-1 + CT-2** card de contacto rico + atribuição read-only ← PRÓXIMO
-3. **MA-DRILLDOWN** dados por criativo (qual criativo dá dinheiro)
-4. **CT-1 + CT-2** card de contacto rico + atribuição read-only (fundação CONTACT-360)
+2c. ~~**CT-1 + CT-2** card de contacto rico + atribuição read-only~~ ✅ **FEITO (01/06, HEAD `a24ebc3`, LIVE)** — página `/contacts/[id]` (campos Notion editáveis + Indicado por/Indicou + atribuição read-only). Falta Fase 3 (comentários), `P2`.
+3. **CONTACT-360-AI** (NS-2) — assenta agora no CT-1/CT-2 ← próximo grande diferenciador
+4. **MA-DRILLDOWN Fase 2** · **MSG-WHATSAPP-PROPRIO** · **MKT-STUDIO**
 
 **🥈 P2 — logo a seguir:**
 5. NS-2 CONTACT-360-AI · 6. MSG-1 WhatsApp/SMS próprio · 7. DASH-2 lead scoring ·
@@ -82,11 +82,11 @@
 
 ### B. Contactos / dados ricos
 
-- **CT-1 · CONTACT-CARD-NOTION — campos do card de contacto do Notion** `[POR FAZER]` `P?`
-  Replicar campos do Notion: Address(Investment), Family Members, Pets, Triggers, Last Activity Date, Follow Up?, Referred By/Referred (relação contacto↔contacto), Notes ricas, DISC (cor), Quarter, Aniversário, Documentos, Comentários. Decidir coluna vs `custom_fields` jsonb; superfície (página /contacts/[id] ou bloco no ContactFormModal). Base do CONTACT-360-AI.
+- **CT-1 · CONTACT-CARD-NOTION — campos do card de contacto do Notion** `[FEITO]` (01/06, HEAD `a24ebc3`, LIVE)
+  Decisão: página dedicada **`/contacts/[id]`** + **`custom_fields jsonb`** (maqueta aprovada em `docs/mockups/ct1-ct2-contact-card.html`). Migração `20260601120000_contact_rich_fields` (`contacts.custom_fields` + `contact_referrals`). Campos editáveis: Morada/Investimento, Família, Animais, Triggers, DISC, Trimestre, Aniversário, Última actividade, Follow Up + **Indicado por/Indicou** (picker). Notas + Documentos (reusa `ContactFilesPanel`). APIs `PATCH /api/contacts/[id]` + `POST/DELETE /api/contacts/[id]/referrals`. Editor `features/contacts/components/ContactRichPanel.tsx`. **Falta Fase 3** (Comentários: tabela `contact_comments` + caixa na ficha) — opcional, `P2`.
 
-- **CT-2 · Painel de atribuição read-only no contacto (c4.2)** `[POR FAZER]` `P?`
-  Bloqueado por não existir detalhe/página de contacto read-only. Acrescentar `attribution` ao tipo `Contact` + mapeamento de leitura em `lib/supabase/contacts.ts`. Componente `MetaAttribution.tsx` já existe.
+- **CT-2 · Painel de atribuição read-only no contacto (c4.2)** `[FEITO]` (01/06, HEAD `a24ebc3`, LIVE)
+  Bloco `MetaAttribution` read-only no topo da ficha `/contacts/[id]`. `Contact.attribution` + mapeamento já existiam; loaders server-side em `lib/contacts/detail.ts`.
 
 - **CT-3 · Tag automática da linhagem (c4.3)** `[POR FAZER]` `P?`
   `contacts` não tem coluna `tags`. Mexe no modelo de tags + edge `automation-meta-leads` (aplicar "Meta Ads: <campanha>"). Ligado à regra origem-obrigatória.
