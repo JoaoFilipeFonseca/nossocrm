@@ -54,7 +54,9 @@
 
 ### A. Visão-núcleo / North Star ("CRM + IA = mais negócio com menos esforço")
 
-- **NS-1 · Custos operacionais + ROI no dashboard** `[POR FAZER]` `P?`
+- **NS-1 · Gestão Financeira (custos + ROI + ganho líquido por angariação)** `[EM CURSO]` `P1`
+  Maqueta aprovada pelo João (visão de gestor + ficha por angariação). **Fase 1+2 FEITAS (01/06):** migração `expenses` (RLS CRUD, liga a deal/imóvel) + comissão por defeito na org (5%/50%); API `/api/expenses`; página `/despesas` (form+lista+total), nav desktop/tablet/mobile. Verificado em produção local (criar/listar/eliminar OK, soft-delete, org certa). **Falta Fase 3** (painel Visão de Gestor: comissões líquidas vs investimento→lucro/margem/retorno, por canal, funil) e **Fase 4** (ficha por angariação no detalhe do negócio: comissão→parte→custos atribuídos=ganho líquido real). Nota: hoje 0 negócios ganhos → comissões começam a 0; gasto de anúncios já é real.
+  --- contexto original ---
   A "obsessão pelos números" do João: medir gasto Gemini/Claude/Vercel/Supabase/ads e mostrar **ROI = receita/custos**. NÃO existe (`ai_usage`/`cost_events` ausentes na BD). Núcleo da visão. (origem: North Star + Dashboard #3 + Fase 5.3 + #87/#98)
 
 - **NS-2 · CONTACT-360-AI — perfil 360° + IA que relaciona tudo** `[POR FAZER]` `P?`
