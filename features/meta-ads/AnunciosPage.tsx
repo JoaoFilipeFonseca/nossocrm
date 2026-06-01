@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2, ChevronDown, ChevronRight, Route as RouteIcon } from 'lucide-react';
+import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2, ChevronDown, ChevronRight, Route as RouteIcon, BarChart3 } from 'lucide-react';
+import { AdDrilldownDrawer } from './AdDrilldownDrawer';
 
 export interface AdPerformanceRow {
   ad_id: string;
@@ -106,6 +107,7 @@ export const AnunciosPage: React.FC = () => {
   const [analyzedAt, setAnalyzedAt] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [editing, setEditing] = useState<AdPerformanceRow | null>(null);
+  const [drilling, setDrilling] = useState<AdPerformanceRow | null>(null);
   const [statuses, setStatuses] = useState<Map<string, AdStatus>>(new Map());
 
   const [campaignBoard, setCampaignBoard] = useState<Map<string, string>>(new Map());
@@ -424,7 +426,16 @@ export const AnunciosPage: React.FC = () => {
                     <td className="px-3 py-2 text-right tabular-nums font-medium">
                       {roas === null ? '—' : <span className={roas >= 1 ? 'text-emerald-600' : 'text-slate-700'}>{roas.toFixed(2)}x</span>}
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-3 py-2 text-right whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => setDrilling(r)}
+                        className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 focus-visible:ring-2 focus-visible:ring-primary-400 outline-none mr-1"
+                        title="Ver dados deste anúncio (criativo, copy, leads e negócios)"
+                        aria-label={`Ver dados de ${r.ad_name || r.ad_id}`}
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => setEditing(r)}
@@ -467,6 +478,14 @@ export const AnunciosPage: React.FC = () => {
             <p className="text-center text-white text-sm mt-2">{lightbox.name}</p>
           </div>
         </div>
+      )}
+
+      {drilling && (
+        <AdDrilldownDrawer
+          adId={drilling.ad_id}
+          adNameFallback={drilling.ad_name || drilling.ad_id}
+          onClose={() => setDrilling(null)}
+        />
       )}
 
       {editing && (

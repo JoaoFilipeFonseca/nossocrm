@@ -120,6 +120,34 @@ export async function getAdLiveState(adId: string, token: string): Promise<AdLiv
   };
 }
 
+export interface AdCreativeCopy {
+  title: string | null;
+  body: string | null;
+  cta_type: string | null;
+}
+
+/**
+ * Lê a copy do criativo do anúncio (título, texto, CTA). Os campos podem vir
+ * directamente no creative ou dentro de object_story_spec.link_data (link ads).
+ */
+export async function getAdCreativeCopy(adId: string, token: string): Promise<AdCreativeCopy> {
+  const json = await graphGet(
+    `${adId}?fields=creative{title,body,call_to_action_type,object_story_spec}`,
+    token,
+  );
+  const creative = (json.creative ?? {}) as Record<string, unknown>;
+  const oss = (creative.object_story_spec ?? {}) as Record<string, unknown>;
+  const link = (oss.link_data ?? {}) as Record<string, unknown>;
+  const video = (oss.video_data ?? {}) as Record<string, unknown>;
+  const linkCta = (link.call_to_action ?? video.call_to_action ?? {}) as Record<string, unknown>;
+
+  const title = (creative.title as string) || (link.name as string) || (link.message as string) || null;
+  const body = (creative.body as string) || (link.message as string) || (video.message as string) || null;
+  const cta = (creative.call_to_action_type as string) || (linkCta.type as string) || null;
+
+  return { title: title || null, body: body || null, cta_type: cta || null };
+}
+
 /** Pausa ou reactiva o anúncio (nível anúncio). status: 'ACTIVE' | 'PAUSED'. */
 export async function setAdStatus(adId: string, token: string, status: 'ACTIVE' | 'PAUSED'): Promise<void> {
   await graphPost(adId, token, { status });
