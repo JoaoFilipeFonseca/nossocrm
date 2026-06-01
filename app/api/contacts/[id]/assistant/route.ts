@@ -134,7 +134,11 @@ Com base APENAS nos dados abaixo sobre uma pessoa do CRM, produz, em português 
    - "whatsapp": texto curto e caloroso, com um CTA que peça resposta (convidar a responder/marcar), nunca só "clica aqui". Trata por "você". Usa "Quando lhe for oportuno" em vez de "quando lhe der jeito". Nunca proponhas Domingos.
    - "email": { "assunto", "corpo" } no mesmo tom, um pouco mais completo.
 
-Regras absolutas: português europeu pré-AO, sem traços/hífens, sem brasileirismos, UTF-8. Se faltarem dados, mantém-te genérico mas útil; não inventes factos.
+Regras absolutas:
+- Português europeu pré acordo ortográfico (1990), sem brasileirismos.
+- Usa SEMPRE a acentuação e cedilhas correctas (ção, ã, á, é, í, ó, ú, à, ç). "Sem traços" refere-se APENAS a hífens e travessões (- ou —), NUNCA aos acentos. Mesmo que os dados de entrada venham sem acentos, escreve tu com os acentos correctos.
+- Não uses placeholders como "[Seu Nome]", "[Nome]" ou "[...]", nem assinatura final; termina a mensagem de forma natural (o consultor assina depois).
+- Se faltarem dados, mantém-te genérico mas útil; não inventes factos.
 
 DADOS DA PESSOA:
 ${contextText}`;
