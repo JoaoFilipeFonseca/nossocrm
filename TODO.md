@@ -16,7 +16,25 @@
 
 ---
 
-## 🗓️ Registo da sessão 31 Mai → 01 Jun 2026 (o que ficou feito)
+## 🗓️ Registo da sessão 01 Jun 2026 — SESSÃO 2 (o que ficou feito) — HEAD `261d3f1`
+A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núcleo:
+- **CT-1 + CT-2** ✅ LIVE — página `/contacts/[id]` (maqueta aprovada): campos ricos estilo Notion
+  (Morada/Família/Animais/Triggers/DISC/Trimestre/Aniversário/Última actividade/Follow Up) +
+  **Indicado por/Indicou** (grafo `contact_referrals`) + Notas + Documentos + **Comentários**
+  (`contact_comments`) + atribuição Meta read-only. Migração `20260601120000` (`custom_fields` jsonb).
+- **CONTACT-360-AI (NS-2)** ✅ LIVE — 3 fases: (1) Assistente 360 = Retrato + Próxima acção +
+  mensagem WhatsApp/Email no tom do João; (2) auto-enriquecimento (sugestões Aceitar/Ignorar →
+  grava em `custom_fields`); (3) memória (`contact_ai_analyses` + `contact_ai_suggestion_events`,
+  carrega última análise ao abrir). Endpoints `assistant`/`enrich`/`suggestion-feedback`.
+- **CT-TIMELINE** ✅ LIVE — 3 fases: ver histórico (contacto + negócios), registo manual com
+  data/hora editável (back-dating) + apagar, e liga ao 360-AI. Migração RLS DELETE em `deal_activities`.
+- **Meta IA 2026** ✅ — boas práticas gravadas (memória + `docs/meta-ia-2026-best-practices.md`).
+- **/saúde** — erros marcados resolvidos (cosmético; raiz #418 por corrigir, ver M + prompt de arranque).
+- **Capturado (POR FAZER):** #418 hydration (próximo), CT-AUTO, CT-TIMELINE-auto, IMO-6, DASH-3,
+  NS-3, MA-LTV (Valor vitalício do anúncio), MKT-SOCIAL, MKT-BP-AUTOLEARN.
+- **Lição registada:** seguir o plano até ao fim, não saltar para a ideia nova ([[feedback-seguir-plano-nao-saltar]]).
+
+## 🗓️ Registo da sessão 31 Mai → 01 Jun 2026 — SESSÃO 1 (o que ficou feito)
 - **NAV-MOBILE-DRAWER** ✅ — hambúrguer + gaveta esquerda no mobile (BottomNav removida).
 - **TODO-CONSOLIDATE** ✅ — este catálogo único (CAPTURE + todo.md antigo + memória).
 - **Q-1 PT-BR→PT-PT** ✅ — sweep exaustivo da copy visível; + Q-BUG-IA + B-LINT.
@@ -24,7 +42,6 @@
   conversão + ficha por angariação (comissão % ou € + ganho líquido real).
 - **MA-DRILLDOWN Fase 1** ✅ — drill-down por anúncio (criativo+copy+métricas+leads/negócios).
 - **Limpeza** ✅ — removidos BottomNav + MoreMenuSheet (mortos).
-- **Falta a seguir:** **CT-1 + CT-2** (card de contacto rico + atribuição = base do CONTACT-360-AI).
 
 ---
 
@@ -38,9 +55,11 @@
 1. ~~**Q-1** Sweep PT-BR→PT-PT~~ ✅ **FEITO (01/06, commit `964ac65`)** — copy visível limpa (features/components/app/lib/prompts/templates/install). Resta **Q-2** (comentários/JSDoc + lib/ai rules + fixtures de teste) — não-visível, P3.
 2. ~~**NS-1** Custos + ROI no dashboard~~ ✅ **FEITO (01/06)** — hub `/financeiro` (Visão de Gestor + Despesas) + ficha por angariação no negócio
 2b. ~~**MA-DRILLDOWN** dados por criativo~~ ✅ **Fase 1 FEITA (01/06)** — drill-down por anúncio (criativo+copy+métricas+leads/negócios). Falta árvore Campanha→Conjunto→Anúncio (P2).
-2c. ~~**CT-1 + CT-2** card de contacto rico + atribuição read-only~~ ✅ **FEITO (01/06, HEAD `a24ebc3`, LIVE)** — página `/contacts/[id]` (campos Notion editáveis + Indicado por/Indicou + atribuição read-only). Falta Fase 3 (comentários), `P2`.
-3. **CONTACT-360-AI** (NS-2) — assenta agora no CT-1/CT-2 ← próximo grande diferenciador
-4. **MA-DRILLDOWN Fase 2** · **MSG-WHATSAPP-PROPRIO** · **MKT-STUDIO**
+2c. ~~**CT-1 + CT-2** card de contacto rico + atribuição read-only~~ ✅ **FEITO (01/06, LIVE)** — página `/contacts/[id]` completa (Fases 1-3: campos Notion + Indicado por/Indicou + atribuição + comentários).
+2d. ~~**CONTACT-360-AI** (NS-2)~~ ✅ **FEITO (01/06, LIVE)** — Assistente 360 (retrato + próxima acção + mensagem) + auto-enriquecimento + memória/aprendizagem.
+2e. ~~**CT-TIMELINE**~~ ✅ **FEITO (01/06, LIVE)** — histórico de interações (ver + registo manual c/ data editável + liga ao 360).
+3. **#418 hydration** — corrigir de raiz (limpa /saúde + pára alertas Telegram). ← **PRÓXIMO** (ver prompt de arranque `prompt_arranque_418_hydration` na memória).
+4. **MKT-SOCIAL** (sessão própria) · **IMO-6** mandatos · **NS-3** custo por imóvel · **MA-LTV** valor vitalício do anúncio · **MA-DRILLDOWN Fase 2** · **MSG-WHATSAPP-PROPRIO** · **MKT-STUDIO**
 
 **🥈 P2 — logo a seguir:**
 5. NS-2 CONTACT-360-AI · 6. MSG-1 WhatsApp/SMS próprio · 7. DASH-2 lead scoring ·
@@ -133,7 +152,7 @@
 - **MKT-BP-AUTOLEARN · Boas práticas Meta/IA sempre actualizadas (auto-aprendizagem)** `[POR FAZER]` `P?` (CAPTURE 01/06)
   A IA não fica presa ao doc `docs/meta-ia-2026-best-practices.md`: passo periódico (IA + web) que procura alterações/recomendações mais recentes e actualiza as práticas que alimentam o analista IA e a geração de copy. Fechar ciclo: resulta→continua, não resulta→repensa. Base: [[reference-meta-ia-2026-best-practices]].
 
-- **MA-LTV-ATTRIBUTION · Atribuição vitalícia "conta inglesa" (1 anúncio → N negócios ao longo do tempo)** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
+- **MA-LTV-ATTRIBUTION · Valor vitalício do anúncio (1 anúncio → N negócios ao longo do tempo; ex-"conta inglesa")** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
   Um anúncio que trouxe um comprador deve ser creditado pelo valor da venda dessa casa — **e** pelos negócios que daí derivam ao longo do tempo: (a) quem essa pessoa **referenciou** (já temos o grafo `contact_referrals` Indicado por/Indicou, construído no CT-1), (b) a **recompra/revenda futura** da própria pessoa (ex.: vende a casa dele 3 anos depois e volta a ele). Objectivo: "valor vitalício do anúncio" = soma de todos os negócios da linhagem (ex.: 1 anúncio → 3 negócios). **Fundação já existe:** `attribution` por anúncio (contacts/deals) + `contact_referrals` + princípio de [[feedback-medicao-vitalicia-e-ciclo]] + MA-DRILLDOWN Fase 1. **Falta o motor:** ao fechar um negócio, subir a cadeia (quem trouxe esta pessoa / que anúncio originou a linhagem) e creditar para cima; vista no drill-down do anúncio com o total vitalício + ramificações. Liga a MA-DRILLDOWN e ao financeiro (ROI vitalício por anúncio).
 
 - **MA-OFFLINE · Marketing offline rastreável (QR)** `[POR FAZER]` `P?`
