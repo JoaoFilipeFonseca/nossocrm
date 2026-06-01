@@ -43,7 +43,7 @@ export const PRIMARY_NAV: PrimaryNavItem[] = [
   { id: 'more', label: 'Mais', icon: MoreHorizontal },
 ];
 
-export type SecondaryNavId = 'dashboard' | 'reports' | 'anuncios' | 'criativos' | 'automacoes' | 'automation_logs' | 'settings' | 'profile';
+export type SecondaryNavId = 'dashboard' | 'reports' | 'despesas' | 'anuncios' | 'criativos' | 'automacoes' | 'automation_logs' | 'settings' | 'profile';
 
 export interface SecondaryNavItem {
   id: SecondaryNavId;
@@ -56,6 +56,7 @@ export interface SecondaryNavItem {
 export const SECONDARY_NAV: SecondaryNavItem[] = [
   { id: 'dashboard', label: 'Visão Geral', href: '/dashboard', icon: LayoutDashboard },
   { id: 'reports', label: 'Relatórios', href: '/reports', icon: BarChart3 },
+  { id: 'despesas', label: 'Despesas', href: '/despesas', icon: Wallet },
   { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
   { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
   { id: 'automacoes', label: 'Automações', href: '/automacoes', icon: Zap },
