@@ -239,6 +239,7 @@ export interface ImovelCmi {
   data_cmi: string;          // data de celebração do contrato (date)
   data_fim: string | null;   // validade
   comissao_pct: number | null;
+  documento_id: string | null; // documento CMI carregado (imovel_documentos), opcional
   notas: string | null;
   activo: boolean;
   created_at: string;

@@ -111,8 +111,8 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 **AUD-B2 · 455 de 484 negócios com valor 0 (94%)** `P2` `[POR FAZER]`
   Já conhecido (secção M). Auto-value batch IA para estimar valor dos negócios sem valor.
 
-**AUD-A2 · Verificar "mandato" vs "CMI" no resto da app** `P2` `[POR FAZER]`
-  Agora que são conceitos distintos, varrer onde se diz "mandato" e devia ser CMI (briefings/IA, labels, prompts) para não confundir o consultor. Ligar documento CMI ao registo `imovel_cmi` (campo `documento_id`).
+**AUD-A2 · "mandato" vs "CMI" no resto da app** `P2` `[FEITO]` (02/06, migração `20260602190000`, LIVE)
+  ✅ **Sweep:** base de conhecimento da IA (`lib/ai/knowledge/imobiliario-pt.ts`) corrigida — "Angariação: mandato" → **"Angariação: CMI (Contrato de Mediação Imobiliária)"** (angariação = lado do vendedor). Ficha do imóvel desambiguada: secções **"CMI · …(vendedor)"** e **"Mandato (comprador)"** (modelo do João). Telegram (`handlers/imovel.ts` DOC_KINDS + prompt do `router.ts`) passou a aceitar o tipo **`cmi`** (faltava). ✅ **Ligação documento↔registo:** `imovel_cmi.documento_id` (FK→`imovel_documentos`, `on delete set null`, paridade com `imovel_mandato`); tipo `ImovelCmi.documento_id`; rotas POST/PATCH do CMI aceitam-no; `ImovelCmi.tsx` ganhou **selector "Documento do CMI"** (lista os documentos do imóvel do tipo `cmi`) + **"📄 Ver contrato"** (URL assinado) no registo. **Resta (AUD-D1 P2):** unificar o vocabulário de doc-kinds do Telegram (valores antigos `certidao/ftecnica/ce…`) à fonte única `DOCUMENTO_KINDS`.
 
 **Saudável (sem acção):** 0 erros de consola abertos · imóveis sem morada = 0 · só 19 TODO/FIXME no código · 0 advisors de nível ERROR. **Próxima passagem da auditoria:** percorrer cada fluxo no browser (Playwright) como consultor para apanhar gaps de UX/ligação que não aparecem em SQL.
 

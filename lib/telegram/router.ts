@@ -20,7 +20,7 @@ DOMINIO "imovel" (acoes sobre imovel activo):
   - "muda_estado" -> payload: {estado: "em_avaliacao|disponivel|reservado|cpcv|vendido|suspenso|anulado|retirado"}
   - "muda_preco" -> payload: {preco: 285000}  // sempre numero inteiro em euros
   - "add_dono" -> payload: {nome: "Nome Completo", percentagem: 50, residente: true|false|null}
-  - "attach_doc" -> payload: {kind: "caderneta|certidao|licenca_utilizacao|ftecnica|certificado_energetico|planta|mandato|outro"}
+  - "attach_doc" -> payload: {kind: "caderneta|certidao|licenca_utilizacao|ftecnica|certificado_energetico|planta|cmi|mandato|outro"}
 
 DOMINIO "deal" / "atividade" -> nao suportado nesta versao -> devolve domain="none"
 

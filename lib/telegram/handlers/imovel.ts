@@ -5,7 +5,7 @@ type Supabase = ReturnType<typeof createStaticAdminClient>;
 export type OrgCtx = { organization_id: string; telegram_active_imovel_id: string | null };
 
 const ESTADOS_VALIDOS = ['em_avaliacao', 'disponivel', 'reservado', 'cpcv', 'vendido', 'suspenso', 'anulado', 'retirado'] as const;
-const DOC_KINDS = ['caderneta', 'certidao', 'licenca_utilizacao', 'ftecnica', 'certificado_energetico', 'planta', 'mandato', 'outro'] as const;
+const DOC_KINDS = ['caderneta', 'certidao', 'licenca_utilizacao', 'ftecnica', 'certificado_energetico', 'planta', 'cmi', 'mandato', 'outro'] as const;
 
 function normaliza(s: string): string {
   return s.trim().toLowerCase()

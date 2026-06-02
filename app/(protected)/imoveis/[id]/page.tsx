@@ -238,13 +238,13 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
         <ImovelProprietarios imovelId={id} proprietarios={proprietarios} docsByProp={docsByProp} />
       </Section>
 
-      {/* CMI — Contrato de Mediação Imobiliária (lado do vendedor) */}
-      <Section title="CMI · Contrato de Mediação Imobiliária">
-        <ImovelCmi imovelId={id} cmis={cmis} nowISO={nowISO} acompanhamento={acompanhamento} />
+      {/* CMI — Contrato de Mediação Imobiliária (lado do vendedor/angariação) */}
+      <Section title="CMI · Contrato de Mediação Imobiliária (vendedor)">
+        <ImovelCmi imovelId={id} cmis={cmis} nowISO={nowISO} acompanhamento={acompanhamento} documentosCmi={documentos.filter((d) => d.kind === 'cmi')} />
       </Section>
 
-      {/* Mandato */}
-      <Section title="Mandato">
+      {/* Mandato — lado do comprador (modelo do João), distinto do CMI */}
+      <Section title="Mandato (comprador)">
         <ImovelMandatos imovelId={id} mandatos={mandatos} />
       </Section>
 

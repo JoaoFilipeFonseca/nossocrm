@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Clock, AlertTriangle, XCircle, HelpCircle } from 'lucide-react';
-import { type ImovelCmi, type CmiCountdownState, type ImovelAcompanhamento, CMI_TIPOS, cmiCountdown } from '@/lib/imoveis/shared';
+import { type ImovelCmi, type ImovelDocumento, type CmiCountdownState, type ImovelAcompanhamento, CMI_TIPOS, cmiCountdown } from '@/lib/imoveis/shared';
 
 interface Props {
   imovelId: string;
@@ -12,6 +12,8 @@ interface Props {
   nowISO: string;
   /** Sinais do imóvel (leads/visitas/propostas) — mostrados no CMI activo. */
   acompanhamento: ImovelAcompanhamento;
+  /** Documentos do imóvel do tipo CMI, para ligar ao registo. */
+  documentosCmi: ImovelDocumento[];
 }
 
 function Kpi({ n, l, bad }: { n: number; l: string; bad?: boolean }) {
@@ -92,7 +94,7 @@ function Countdown({ dataFim, nowISO }: { dataFim: string | null; nowISO: string
   );
 }
 
-export default function ImovelCmi({ imovelId, cmis, nowISO, acompanhamento }: Props) {
+export default function ImovelCmi({ imovelId, cmis, nowISO, acompanhamento, documentosCmi }: Props) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,8 +104,25 @@ export default function ImovelCmi({ imovelId, cmis, nowISO, acompanhamento }: Pr
     data_cmi: new Date().toISOString().slice(0, 10),
     data_fim: '',
     comissao_pct: '',
+    documento_id: '',
     notas: '',
   });
+
+  async function verContrato(docId: string) {
+    try {
+      const res = await fetch(`/api/imoveis/${imovelId}/documentos/${docId}`);
+      const json = await res.json();
+      if (res.ok && json.url) window.open(json.url, '_blank', 'noopener');
+      else setError(json.message ?? 'Erro a abrir o documento');
+    } catch {
+      setError('Erro a abrir o documento');
+    }
+  }
+
+  function docLabel(docId: string | null): string | null {
+    if (!docId) return null;
+    return documentosCmi.find((d) => d.id === docId)?.filename ?? 'Contrato CMI';
+  }
 
   async function addCmi(e: React.FormEvent) {
     e.preventDefault();
@@ -117,7 +136,7 @@ export default function ImovelCmi({ imovelId, cmis, nowISO, acompanhamento }: Pr
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message ?? 'Erro');
-      setForm({ ...form, data_fim: '', comissao_pct: '', notas: '' });
+      setForm({ ...form, data_fim: '', comissao_pct: '', documento_id: '', notas: '' });
       startTransition(() => router.refresh());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro');
@@ -160,6 +179,12 @@ export default function ImovelCmi({ imovelId, cmis, nowISO, acompanhamento }: Pr
                     {c.data_fim && ` · Validade: ${fmtDate(c.data_fim)}`}
                   </p>
                   {c.comissao_pct != null && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Comissão {c.comissao_pct}%</p>}
+                  {c.documento_id && (
+                    <button type="button" onClick={() => verContrato(c.documento_id!)}
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                      📄 Ver contrato{docLabel(c.documento_id) ? ` · ${docLabel(c.documento_id)}` : ''}
+                    </button>
+                  )}
                   {c.notas && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{c.notas}</p>}
                 </div>
                 <div className="flex items-center gap-2">
@@ -195,6 +220,12 @@ export default function ImovelCmi({ imovelId, cmis, nowISO, acompanhamento }: Pr
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Comissão (%)">
             <input type="number" step="0.1" value={form.comissao_pct} onChange={(e) => setForm({ ...form, comissao_pct: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Documento do CMI (opcional)">
+            <select value={form.documento_id} onChange={(e) => setForm({ ...form, documento_id: e.target.value })} className={inputCls}>
+              <option value="">{documentosCmi.length === 0 ? 'Sem documentos CMI carregados' : '— Ligar contrato —'}</option>
+              {documentosCmi.map((d) => <option key={d.id} value={d.id}>{d.filename}</option>)}
+            </select>
           </Field>
         </div>
         <Field label="Notas">

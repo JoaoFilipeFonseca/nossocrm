@@ -50,8 +50,8 @@ Mais-valias imobiliarias (IRS):
    28% taxa liberatoria.
 
 --- PROCESSO DE VENDA ---
-1. Angariacao: mandato (exclusivo recomendado), assinatura, recolha de
-   documentacao (caderneta, certidao, licenca, CE, FTH se novo).
+1. Angariacao: CMI - Contrato de Mediacao Imobiliaria (exclusivo recomendado),
+   assinatura, recolha de documentacao (caderneta, certidao, licenca, CE, FTH se novo).
 2. Avaliacao: CMA (Comparative Market Analysis) - cruzar idealista, Imovirtual,
    Confidencial Imobiliario, INE; preco/m2 da zona; absorcao recente.
 3. Marketing: fotos profissionais, video, virtual tour, descritivo, distribuicao

@@ -26,6 +26,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       data_cmi: body.data_cmi,
       data_fim: body.data_fim || null,
       comissao_pct: body.comissao_pct != null && body.comissao_pct !== '' ? Number(body.comissao_pct) : null,
+      documento_id: body.documento_id || null,
       notas: body.notas?.trim() || null,
       activo: body.activo !== false,
     };

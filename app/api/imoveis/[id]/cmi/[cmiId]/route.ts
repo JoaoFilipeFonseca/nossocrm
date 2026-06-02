@@ -11,7 +11,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
 
     const body = await request.json();
     const patch: Record<string, unknown> = {};
-    for (const k of ['tipo', 'data_cmi', 'data_fim', 'comissao_pct', 'notas', 'activo']) {
+    for (const k of ['tipo', 'data_cmi', 'data_fim', 'comissao_pct', 'documento_id', 'notas', 'activo']) {
       if (k in body) {
         if (k === 'comissao_pct') patch[k] = body[k] != null && body[k] !== '' ? Number(body[k]) : null;
         else if (k === 'activo') patch[k] = !!body[k];
