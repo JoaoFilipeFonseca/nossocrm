@@ -7,7 +7,7 @@ const MAX_BYTES = 25 * 1024 * 1024; // 25MB por doc
 const ALLOWED_KINDS = new Set([
   'caderneta', 'certidao_predial', 'licenca_utilizacao', 'fth',
   'ce', 'planta', 'memoria_descritiva', 'distrato_bancario',
-  'declaracao_condominio', 'preferencia', 'mandato', 'outro',
+  'declaracao_condominio', 'preferencia', 'cmi', 'mandato', 'outro',
 ]);
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {

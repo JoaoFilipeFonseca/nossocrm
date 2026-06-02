@@ -77,7 +77,7 @@ export type ImovelEventoKind =
 export type DocumentoKind =
   | 'caderneta' | 'certidao_predial' | 'licenca_utilizacao' | 'fth'
   | 'ce' | 'planta' | 'memoria_descritiva' | 'distrato_bancario'
-  | 'declaracao_condominio' | 'preferencia' | 'mandato' | 'outro';
+  | 'declaracao_condominio' | 'preferencia' | 'cmi' | 'mandato' | 'outro';
 
 export type ProprietarioDocKind =
   | 'cc' | 'bi' | 'nif' | 'comprovativo_morada'
@@ -382,6 +382,7 @@ const DOC_LABEL: Record<DocumentoKind, string> = {
   distrato_bancario: 'Distrato bancário',
   declaracao_condominio: 'Declaração não dívida condomínio',
   preferencia: 'Direito de preferência',
+  cmi: 'Contrato de Mediação (CMI)',
   mandato: 'Mandato',
   outro: 'Outro',
 };

@@ -28,6 +28,7 @@ const KIND_OPTIONS = [
   { v: 'distrato_bancario', l: 'Distrato bancário' },
   { v: 'declaracao_condominio', l: 'Declaração condomínio' },
   { v: 'preferencia', l: 'Direito de preferência' },
+  { v: 'cmi', l: 'Contrato de Mediação (CMI)' },
   { v: 'mandato', l: 'Mandato' },
   { v: 'outro', l: 'Outro' },
 ];
