@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { DOCUMENTO_KIND_VALUES } from '@/lib/imoveis/shared';
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25MB por doc
 
-const ALLOWED_KINDS = new Set([
-  'caderneta', 'certidao_predial', 'licenca_utilizacao', 'fth',
-  'ce', 'planta', 'memoria_descritiva', 'distrato_bancario',
-  'declaracao_condominio', 'preferencia', 'cmi', 'mandato', 'outro',
-]);
+// Allowlist derivada da fonte única em shared (AUD-D1) — nunca mais sai de sincronia.
+const ALLOWED_KINDS = new Set<string>(DOCUMENTO_KIND_VALUES);
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {

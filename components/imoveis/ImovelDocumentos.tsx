@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { DOCUMENTO_KINDS, documentoLabel } from '@/lib/imoveis/shared';
 
 interface Documento {
   id: string;
@@ -17,25 +18,6 @@ interface Props {
   documentos: Documento[];
 }
 
-const KIND_OPTIONS = [
-  { v: 'caderneta', l: 'Caderneta predial' },
-  { v: 'certidao_predial', l: 'Certidão registo predial' },
-  { v: 'licenca_utilizacao', l: 'Licença de utilização' },
-  { v: 'fth', l: 'Ficha técnica de habitação' },
-  { v: 'ce', l: 'Certificado energético' },
-  { v: 'planta', l: 'Planta' },
-  { v: 'memoria_descritiva', l: 'Memória descritiva' },
-  { v: 'distrato_bancario', l: 'Distrato bancário' },
-  { v: 'declaracao_condominio', l: 'Declaração condomínio' },
-  { v: 'preferencia', l: 'Direito de preferência' },
-  { v: 'cmi', l: 'Contrato de Mediação (CMI)' },
-  { v: 'mandato', l: 'Mandato' },
-  { v: 'outro', l: 'Outro' },
-];
-
-function kindLabel(kind: string) {
-  return KIND_OPTIONS.find((k) => k.v === kind)?.l ?? kind;
-}
 
 function formatBytes(b: number | null): string {
   if (!b) return '';
@@ -92,7 +74,7 @@ export default function ImovelDocumentos({ imovelId, documentos }: Props) {
           <label className="block text-xs font-medium uppercase tracking-wide text-slate-600 mb-1">Tipo</label>
           <select value={kind} onChange={(e) => setKind(e.target.value)}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm">
-            {KIND_OPTIONS.map((k) => <option key={k.v} value={k.v}>{k.l}</option>)}
+            {DOCUMENTO_KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
           </select>
         </div>
         <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={onUpload} className="hidden" />
@@ -114,7 +96,7 @@ export default function ImovelDocumentos({ imovelId, documentos }: Props) {
             <li key={d.id} className="flex items-center justify-between rounded-md border border-slate-200 p-3 hover:border-slate-300">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium">{kindLabel(d.kind)}</span>
+                  <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium">{documentoLabel(d.kind)}</span>
                   <button type="button" onClick={() => abrir(d.id)} className="text-sm font-medium text-slate-800 hover:underline truncate">
                     {d.filename}
                   </button>

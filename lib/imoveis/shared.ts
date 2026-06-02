@@ -74,10 +74,28 @@ export type ImovelEventoKind =
   | 'cpcv' | 'escritura' | 'mudanca_preco' | 'fotos_atualizadas'
   | 'retirado' | 'reactivado' | 'avaliacao' | 'nota';
 
-export type DocumentoKind =
-  | 'caderneta' | 'certidao_predial' | 'licenca_utilizacao' | 'fth'
-  | 'ce' | 'planta' | 'memoria_descritiva' | 'distrato_bancario'
-  | 'declaracao_condominio' | 'preferencia' | 'cmi' | 'mandato' | 'outro';
+// Fonte ÚNICA de verdade dos tipos de documento do imóvel (AUD-D1).
+// O dropdown (ImovelDocumentos), a allowlist da rota e o label derivam TODOS
+// daqui — adicionar um tipo é uma só linha e nunca mais fica a faltar num sítio
+// (foi essa duplicação em 3 sítios que fez o CMI ficar de fora dos Documentos).
+export const DOCUMENTO_KINDS = [
+  { value: 'caderneta', label: 'Caderneta predial' },
+  { value: 'certidao_predial', label: 'Certidão registo predial' },
+  { value: 'licenca_utilizacao', label: 'Licença de utilização' },
+  { value: 'fth', label: 'Ficha técnica de habitação' },
+  { value: 'ce', label: 'Certificado energético' },
+  { value: 'planta', label: 'Planta' },
+  { value: 'memoria_descritiva', label: 'Memória descritiva' },
+  { value: 'distrato_bancario', label: 'Distrato bancário' },
+  { value: 'declaracao_condominio', label: 'Declaração não dívida condomínio' },
+  { value: 'preferencia', label: 'Direito de preferência' },
+  { value: 'cmi', label: 'Contrato de Mediação (CMI)' },
+  { value: 'mandato', label: 'Mandato' },
+  { value: 'outro', label: 'Outro' },
+] as const;
+
+export type DocumentoKind = (typeof DOCUMENTO_KINDS)[number]['value'];
+export const DOCUMENTO_KIND_VALUES = DOCUMENTO_KINDS.map((k) => k.value) as DocumentoKind[];
 
 export type ProprietarioDocKind =
   | 'cc' | 'bi' | 'nif' | 'comprovativo_morada'
@@ -371,21 +389,6 @@ export function eventoLabel(kind: ImovelEventoKind): string {
   return EVENTO_LABEL[kind] ?? kind;
 }
 
-const DOC_LABEL: Record<DocumentoKind, string> = {
-  caderneta: 'Caderneta predial',
-  certidao_predial: 'Certidão registo predial',
-  licenca_utilizacao: 'Licença de utilização',
-  fth: 'Ficha técnica de habitação',
-  ce: 'Certificado energético',
-  planta: 'Planta',
-  memoria_descritiva: 'Memória descritiva',
-  distrato_bancario: 'Distrato bancário',
-  declaracao_condominio: 'Declaração não dívida condomínio',
-  preferencia: 'Direito de preferência',
-  cmi: 'Contrato de Mediação (CMI)',
-  mandato: 'Mandato',
-  outro: 'Outro',
-};
-export function documentoLabel(kind: DocumentoKind): string {
-  return DOC_LABEL[kind] ?? kind;
+export function documentoLabel(kind: DocumentoKind | string): string {
+  return DOCUMENTO_KINDS.find((k) => k.value === kind)?.label ?? kind;
 }
