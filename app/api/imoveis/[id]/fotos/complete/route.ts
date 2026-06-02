@@ -29,12 +29,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       const isPrincipal = !hasPrincipal;
       if (isPrincipal) hasPrincipal = true;
 
-      const { data: pub } = supabase.storage.from('imovel-fotos').getPublicUrl(u.path);
       rows.push({
         organization_id: profile.organization_id,
         imovel_id: imovelId,
         storage_path: u.path,
-        url_publica: pub?.publicUrl ?? null,
+        url_publica: null, // bucket privado (AUD-C2) → URL assinado é gerado na leitura
         ordem: maxOrdem,
         is_principal: isPrincipal,
         bytes: u.bytes ?? null,

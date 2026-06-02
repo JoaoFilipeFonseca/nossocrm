@@ -45,7 +45,20 @@ export async function listFotosByImovelId(imovelId: string): Promise<ImovelFoto[
     .eq('imovel_id', imovelId)
     .order('ordem', { ascending: true });
   if (error) throw error;
-  return (data ?? []) as ImovelFoto[];
+  const fotos = (data ?? []) as ImovelFoto[];
+
+  // Bucket imovel-fotos é privado (AUD-C2) → gerar URL assinado a partir do storage_path.
+  const paths = fotos.map((f) => f.storage_path).filter(Boolean) as string[];
+  if (paths.length > 0) {
+    const { data: signed } = await supabase.storage
+      .from('imovel-fotos')
+      .createSignedUrls(paths, 60 * 60); // 1 hora; a página re-assina a cada carregamento
+    const byPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+    for (const f of fotos) {
+      f.url_publica = (f.storage_path && byPath.get(f.storage_path)) || null;
+    }
+  }
+  return fotos;
 }
 
 export async function listDocumentosByImovelId(imovelId: string): Promise<ImovelDocumento[]> {

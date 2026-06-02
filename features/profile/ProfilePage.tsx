@@ -148,23 +148,21 @@ export const ProfilePage: React.FC = () => {
 
             if (uploadError) throw uploadError;
 
-            // Pega a URL pública
-            const { data: { publicUrl } } = sb.storage
+            // Bucket avatars é privado (AUD-C2) → gerar URL assinado de longa duração (1 ano)
+            const { data: signed, error: signError } = await sb.storage
                 .from('avatars')
-                .getPublicUrl(filePath);
+                .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+            if (signError || !signed?.signedUrl) throw signError ?? new Error('Erro a assinar URL do avatar');
 
-            // Adiciona timestamp para evitar cache
-            const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
-
-            // Atualiza o perfil com a URL do avatar
+            // Atualiza o perfil com a URL assinada do avatar
             const { error: updateError } = await sb
                 .from('profiles')
-                .update({ avatar_url: urlWithTimestamp })
+                .update({ avatar_url: signed.signedUrl })
                 .eq('id', profile.id);
 
             if (updateError) throw updateError;
 
-            setAvatarUrl(urlWithTimestamp);
+            setAvatarUrl(signed.signedUrl);
             if (refreshProfile) await refreshProfile();
             setMessage({ type: 'success', text: 'Foto atualizada!' });
         } catch (err: any) {

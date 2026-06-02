@@ -75,7 +75,6 @@ export async function downloadAndUploadPhotos(
     storage: {
       from: (bucket: string) => {
         upload: (path: string, body: ArrayBuffer | Uint8Array, opts?: { contentType?: string; upsert?: boolean }) => Promise<{ error: { message: string } | null }>;
-        getPublicUrl: (path: string) => { data: { publicUrl: string } | null };
       };
     };
     from: (table: string) => {
@@ -150,12 +149,11 @@ export async function downloadAndUploadPhotos(
       maxOrdem++;
       const isPrincipal = !hasPrincipal;
       if (isPrincipal) hasPrincipal = true;
-      const { data: pub } = supabase.storage.from('imovel-fotos').getPublicUrl(path);
       return {
         organization_id: organizationId,
         imovel_id: imovelId,
         storage_path: path,
-        url_publica: pub?.publicUrl ?? null,
+        url_publica: null, // bucket privado (AUD-C2) → URL assinado é gerado na leitura
         ordem: maxOrdem,
         is_principal: isPrincipal,
         bytes,

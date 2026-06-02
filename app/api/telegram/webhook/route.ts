@@ -877,13 +877,12 @@ async function downloadAndAttach(
       await sendTelegramMessage(token, chatId, `❌ Erro no upload: ${upErr.message}`.slice(0, 200)).catch(() => {});
       return NextResponse.json({ ok: false, handled: true });
     }
-    const { data: pub } = supabase.storage.from('imovel-fotos').getPublicUrl(storagePath);
     const { data: existing } = await supabase.from('imovel_fotos').select('ordem, is_principal').eq('imovel_id', imovelId);
     const maxOrdem = existing?.reduce((m, f) => Math.max(m, Number(f.ordem ?? 0)), -1) ?? -1;
     const hasPrincipal = existing?.some((f) => f.is_principal) ?? false;
     await supabase.from('imovel_fotos').insert({
       organization_id: org.organization_id, imovel_id: imovelId,
-      storage_path: storagePath, url_publica: pub?.publicUrl ?? null,
+      storage_path: storagePath, url_publica: null, // bucket privado (AUD-C2) → assinado na leitura
       ordem: maxOrdem + 1, is_principal: !hasPrincipal, bytes: buf.byteLength, origem: 'telegram',
     });
     const { data: count } = await supabase.from('imovel_fotos').select('id').eq('imovel_id', imovelId);

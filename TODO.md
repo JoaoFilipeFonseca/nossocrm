@@ -99,11 +99,11 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
   ✅ **Gap real corrigido (enforcement na criação manual):** `ContactFormModal` ganhou **Origem (select obrigatório**, 10 opções + Outro); **Telefone passou a obrigatório**, **Email a opcional** — alinhado à regra [[regra-lead-tag-proveniencia-obrigatoria]] (Nome+Telefone+Origem). Controlador propaga `source` em criar/editar. Verificado live (Origem required, Telefone required, Email opcional).
   **Resta (P2/P3):** (1) o 1 contacto com source NULL (trivial); (2) **outros caminhos de criação** que ainda não exigem origem — `ContactFormModalV2`, criar contacto a partir do negócio (CreateDealModal), import — aplicar a mesma regra; (3) considerar mover origem para enum tipado (`Contact['source']` hoje é casted de texto livre).
 
-**AUD-C1 · RLS `using(true)` em 11 políticas** `P2` `[POR FAZER]`
-  Advisor `rls_policy_always_true` ×11 — políticas que não filtram por org → risco multi-tenant/privacidade ([[regra-privacidade-dados-indecifraveis]]). **Rever** que tabelas são e se é intencional (algumas podem ser tabelas globais legítimas). Crítico antes de WL-1/2.º consultor.
+**AUD-C1 · RLS `using(true)` em 11 políticas** `P2` `[FEITO]` (02/06, migração `20260602170000`, LIVE)
+  ✅ As 11 fechadas e advisor `rls_policy_always_true` a **0** nessas tabelas. **Grupo A (9 `automation_*`, role `public`, write `using/with_check(true)`):** DROPadas — os escritores (edge functions + webhook Telegram) usam **service_role** que ignora RLS; as leituras da UI mantêm-se pelas políticas `*_select_own_org`. **Grupo B (`organizations` `FOR ALL` a authenticated lia/alterava TODAS as orgs):** rescoped a `id = get_user_org_id()` (signup intacto — org criada via trigger `handle_new_user` SECURITY DEFINER). **`client_errors` INSERT:** apertado a `organization_id = get_user_org_id()` (o reporter já gravava a org do perfil). Verificado: c1_remaining=0.
 
-**AUD-C2 · 3 buckets públicos permitem listagem** `P2` `[POR FAZER]`
-  Advisor `public_bucket_allows_listing` ×3 — contraria "sem buckets públicos". **Rever** quais e fechar/privar (ou confirmar que são assets públicos legítimos).
+**AUD-C2 · 3 buckets públicos → privados** `P2` `[FEITO]` (02/06, migração `20260602170000`, LIVE)
+  ✅ Decisão do João: **tudo privado** (sem exportação para portais). `avatars`, `imovel-fotos`, `messaging-media` passaram a `public=false`; políticas de listagem ampla substituídas por **leitura autenticada org-scoped** (1.º segmento do path = org). Código passou a servir por **URL assinado**: `listFotosByImovelId` assina 1h na leitura (galeria intacta); writers de fotos (complete/from-url/telegram) gravam `url_publica=null`; avatar e messaging-media assinam 1 ano no upload. Verificado: public_buckets=0, 0 listagens públicas, tsc/lint/vitest OK.
 
 **AUD-C3 · Hardening de funções SQL** `P3` `[POR FAZER]`
   `function_search_path_mutable` ×12 (pôr `set search_path`) + `security_definer_function_executable` a anon/authenticated ×77 (rever exposição) + `extension_in_public` ×3 + `auth_leaked_password_protection` desligado. Hardening, não urgente (1 user), mas faz antes de abrir a terceiros.

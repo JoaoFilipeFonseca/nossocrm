@@ -149,13 +149,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    // Bucket messaging-media é privado (AUD-C2) → URL assinado de longa duração (1 ano).
+    // Acessível sem auth (a Meta pode ir buscar o anexo) mas não listável nem permanente.
+    const { data: urlData, error: signError } = await supabase.storage
       .from('messaging-media')
-      .getPublicUrl(storagePath);
+      .createSignedUrl(storagePath, 60 * 60 * 24 * 365);
+
+    if (signError || !urlData?.signedUrl) {
+      console.error('[API] Media sign error:', signError);
+      return NextResponse.json({ error: 'Failed to sign media URL' }, { status: 500 });
+    }
 
     return NextResponse.json({
-      mediaUrl: urlData.publicUrl,
+      mediaUrl: urlData.signedUrl,
       mediaType,
       mimeType: file.type,
       fileName: file.name,
