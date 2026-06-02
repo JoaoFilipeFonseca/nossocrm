@@ -72,6 +72,41 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 
 ---
 
+## 🔎 AUDITORIA 02/06 — gaps e erros do que já está construído (lista única, evidência real)
+
+> Motivada pela preocupação do João após o gap do CMI nos Documentos. **Conclusão tranquilizadora:**
+> não há buraco crítico — 0 erros de consola abertos, **0 advisors ERROR** (107 são WARN), imóveis sem
+> morada = 0. O que existe são **gaps de costura de domínio**, **dados históricos sem origem** e um
+> **smell estrutural** (enums duplicados) que foi a causa-raiz do gap do CMI. Atacar por prioridade.
+
+**AUD-D1 · CAUSA-RAIZ do gap CMI — enums duplicados em 3 sítios** `P1` `[POR FAZER]`
+  Os tipos de documento vivem em **3 listas separadas** (`ImovelDocumentos.KIND_OPTIONS` + rota `ALLOWED_KINDS` + `shared.DocumentoKind`/`DOC_LABEL`); idem tipos CMI/mandato. Adicionar um valor obriga a lembrar os 3 → fácil esquecer um (foi o que aconteceu ao CMI). **Fix estrutural:** fonte única de verdade no `shared` e derivar dropdown + allowlist + label dela. Elimina a CLASSE inteira de "faltou no sítio X". Varrer outros enums duplicados (estados, kinds de evento, tipos de canal).
+
+**AUD-A1 · Negócios NÃO ligados a imóveis (0 de 484)** `P1` `[POR FAZER]`
+  `deals.imovel_id` está a **0 em todos os 484 negócios**. Quebra: CMI Acompanhamento (KPI "Negócios" sempre 0), ROI por imóvel (NS-3), valor vitalício (MA-LTV) e toda a relação imóvel↔negócio. Causa: criação/edição de negócio não pede/define o imóvel; importados do GHL sem ligação. **Fix:** selector de imóvel na criação/edição do negócio + backfill onde haja pista (título/morada). É a "costura" central imóvel↔negócio.
+
+**AUD-B1 · 485 de 485 contactos SEM origem/atribuição** `P1` `[POR FAZER]`
+  Viola a regra inegociável [[regra-lead-tag-proveniencia-obrigatoria]]. Os contactos históricos (GHL) não têm `attribution.source`; só as leads Meta novas têm. **Fix:** (1) confirmar que a criação MANUAL exige origem; (2) backfill dos 485 com origem `importacao_ghl` (ou similar); (3) Meta já preenche. Sem isto, dashboards de origem e medição vitalícia ficam cegos.
+
+**AUD-C1 · RLS `using(true)` em 11 políticas** `P2` `[POR FAZER]`
+  Advisor `rls_policy_always_true` ×11 — políticas que não filtram por org → risco multi-tenant/privacidade ([[regra-privacidade-dados-indecifraveis]]). **Rever** que tabelas são e se é intencional (algumas podem ser tabelas globais legítimas). Crítico antes de WL-1/2.º consultor.
+
+**AUD-C2 · 3 buckets públicos permitem listagem** `P2` `[POR FAZER]`
+  Advisor `public_bucket_allows_listing` ×3 — contraria "sem buckets públicos". **Rever** quais e fechar/privar (ou confirmar que são assets públicos legítimos).
+
+**AUD-C3 · Hardening de funções SQL** `P3` `[POR FAZER]`
+  `function_search_path_mutable` ×12 (pôr `set search_path`) + `security_definer_function_executable` a anon/authenticated ×77 (rever exposição) + `extension_in_public` ×3 + `auth_leaked_password_protection` desligado. Hardening, não urgente (1 user), mas faz antes de abrir a terceiros.
+
+**AUD-B2 · 455 de 484 negócios com valor 0 (94%)** `P2` `[POR FAZER]`
+  Já conhecido (secção M). Auto-value batch IA para estimar valor dos negócios sem valor.
+
+**AUD-A2 · Verificar "mandato" vs "CMI" no resto da app** `P2` `[POR FAZER]`
+  Agora que são conceitos distintos, varrer onde se diz "mandato" e devia ser CMI (briefings/IA, labels, prompts) para não confundir o consultor. Ligar documento CMI ao registo `imovel_cmi` (campo `documento_id`).
+
+**Saudável (sem acção):** 0 erros de consola abertos · imóveis sem morada = 0 · só 19 TODO/FIXME no código · 0 advisors de nível ERROR. **Próxima passagem da auditoria:** percorrer cada fluxo no browser (Playwright) como consultor para apanhar gaps de UX/ligação que não aparecem em SQL.
+
+---
+
 ## ✅ JÁ FEITO (não re-propor — verificado em código/BD a 31/05/2026)
 
 - **Magic Inbox** (`raw_intel`) + **KB do Pilot** (`ai_kb_facts`).
