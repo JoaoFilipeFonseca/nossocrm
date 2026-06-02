@@ -52,6 +52,15 @@ export function useInstallState(): InstallState {
   const [bipEvent, setBipEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [standalone, setStandalone] = useState<boolean>(() => detectStandalone());
   const [dismissedAt, setDismissedAt] = useState<number | null>(() => (typeof window === 'undefined' ? null : readDismissedAt()));
+  // Hidratação-safe: até montar, o hook reporta "não elegível" para que o
+  // banner renderize null no servidor E no primeiro render do cliente. Sem
+  // isto, em iOS o platformHint() dava 'ios' no cliente (elegível=true) mas
+  // 'unknown' no servidor (null) → mismatch React #418 transversal ao shell.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setStandalone(detectStandalone());
@@ -81,6 +90,7 @@ export function useInstallState(): InstallState {
   }, [dismissedAt]);
 
   const isEligible = useMemo(() => {
+    if (!mounted) return false;
     if (standalone) return false;
     const platform = platformHint();
     // Só mostra em mobile/tablet — desktop não precisa de PWA
@@ -89,7 +99,7 @@ export function useInstallState(): InstallState {
     if (bipEvent) return true;
     // iOS: no native prompt; show instructional banner (still eligible).
     return platform === 'ios';
-  }, [bipEvent, standalone]);
+  }, [mounted, bipEvent, standalone]);
 
   const canPrompt = useMemo(() => !!bipEvent, [bipEvent]);
 
