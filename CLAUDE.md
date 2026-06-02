@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚨 REGRA Nº1 DE TRABALHO COM O JOÃO (INEGOCIÁVEL — não saltar o plano)
+
+1. **Segue o plano declarado até ao fim.** Ao concluir uma peça/fase, continua a peça **seguinte do MESMO plano** (ver `TODO.md`), sem perguntar "e agora o quê?".
+2. **NÃO inicies nem proponhas ideias novas**, mesmo que sejam minhas — ideias novas **capturam-se no `TODO.md`**, nunca se executam já.
+3. **NÃO termines o turno a oferecer trabalho novo** ("queres que faça X a seguir?"). Este é o erro que o João mais aponta — está banido.
+4. Se o plano genuinamente exigir escolha do João, mostra **só as opções que já estão no plano/TODO** (não inventes alternativas) e pára.
+5. Só se desvia do plano com bloqueio real ou ordem explícita do João.
+(Reforçado por hook `UserPromptSubmit` global + memória `feedback_seguir_plano_nao_saltar`.)
+
+
 ## Commands
 
 ```bash
