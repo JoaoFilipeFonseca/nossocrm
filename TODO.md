@@ -58,7 +58,7 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 2c. ~~**CT-1 + CT-2** card de contacto rico + atribuição read-only~~ ✅ **FEITO (01/06, LIVE)** — página `/contacts/[id]` completa (Fases 1-3: campos Notion + Indicado por/Indicou + atribuição + comentários).
 2d. ~~**CONTACT-360-AI** (NS-2)~~ ✅ **FEITO (01/06, LIVE)** — Assistente 360 (retrato + próxima acção + mensagem) + auto-enriquecimento + memória/aprendizagem.
 2e. ~~**CT-TIMELINE**~~ ✅ **FEITO (01/06, LIVE)** — histórico de interações (ver + registo manual c/ data editável + liga ao 360).
-3. **#418 hydration** — corrigir de raiz (limpa /saúde + pára alertas Telegram). ← **PRÓXIMO** (ver prompt de arranque `prompt_arranque_418_hydration` na memória).
+3. ~~**#418 hydration**~~ ✅ **CORRIGIDO (02/06, `c1ab61f`), verificado em build de produção LOCAL.** Duas fontes no shell: tema (ThemeProvider lia localStorage no 1.º render → Sol/Lua divergente em modo claro) e InstallBanner (iOS elegível só no cliente). Fix: tema hydration-safe + script inline anti-flash no `<head>` + guarda `mounted` no useInstallState. Local: /dashboard+/contacts+/contacts/[id] mobile = 0 #418 e 0 `$RS`. ⚠️ **PENDENTE:** deploy Vercel ficou preso (>18 min sem promover) → João vê dashboard Vercel; quando LIVE, limpar `client_errors` (`update client_errors set resolved=true where resolved is distinct from true;`) e re-verificar.
 4. **MKT-SOCIAL** (sessão própria) · **IMO-6** mandatos · **NS-3** custo por imóvel · **MA-LTV** valor vitalício do anúncio · **MA-DRILLDOWN Fase 2** · **MSG-WHATSAPP-PROPRIO** · **MKT-STUDIO**
 
 **🥈 P2 — logo a seguir:**
@@ -285,6 +285,7 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 
 ### L. Bugs UI activos
 
+- **B-012 · Título de página "Contatos" em PT-BR** `[POR FAZER]` `P3` — o `<title>`/metadata da lista `/contacts` é "Contatos" (BR), devia ser "Contactos". Sweep Q-1 falhou metadata de páginas. Capturado 02/06 durante o fix #418. Verificar outros `metadata.title` PT-BR.
 - **B-009 · 2 FABs sobrepostos (mobile)** — marcado resolvido no CAPTURE (confirmar visualmente). `[PARCIAL]`
 - **B-002 · "manha" sem til em prompt WhatsApp** — mitigado em BD; rever a cada UPDATE. `[PARCIAL]`
 
