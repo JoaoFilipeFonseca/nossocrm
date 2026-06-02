@@ -94,8 +94,10 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
   5. Verificar live: ligar um negócio a um imóvel → KPI "Negócios" do CMI desse imóvel passa a 1.
   **Backfill (separado, cuidado):** os 484 são em grande parte leads/compradores do GHL sem imóvel específico → NÃO forçar; backfill só por pista forte (título/morada ↔ imóvel) e reversível. Provavelmente manual/assistido, não automático.
 
-**AUD-B1 · 485 de 485 contactos SEM origem/atribuição** `P1` `[POR FAZER]`
-  Viola a regra inegociável [[regra-lead-tag-proveniencia-obrigatoria]]. Os contactos históricos (GHL) não têm `attribution.source`; só as leads Meta novas têm. **Fix:** (1) confirmar que a criação MANUAL exige origem; (2) backfill dos 485 com origem `importacao_ghl` (ou similar); (3) Meta já preenche. Sem isto, dashboards de origem e medição vitalícia ficam cegos.
+**AUD-B1 · Origem dos contactos** `P1` `[FEITO o essencial — 02/06, HEAD `a6e3786`, LIVE+verificado]`
+  ⚠️ **Correcção de auditoria:** o achado "485 sem origem" era **FALSO POSITIVO** — verifiquei `attribution->>'source'` em vez da coluna **`contacts.source`**, que está preenchida em **484/485** (Facebook 127, Idealista 102, Form Calculadora 44, import_remax 41…). Só **1** contacto tem `source` NULL. A origem JÁ estava rastreada.
+  ✅ **Gap real corrigido (enforcement na criação manual):** `ContactFormModal` ganhou **Origem (select obrigatório**, 10 opções + Outro); **Telefone passou a obrigatório**, **Email a opcional** — alinhado à regra [[regra-lead-tag-proveniencia-obrigatoria]] (Nome+Telefone+Origem). Controlador propaga `source` em criar/editar. Verificado live (Origem required, Telefone required, Email opcional).
+  **Resta (P2/P3):** (1) o 1 contacto com source NULL (trivial); (2) **outros caminhos de criação** que ainda não exigem origem — `ContactFormModalV2`, criar contacto a partir do negócio (CreateDealModal), import — aplicar a mesma regra; (3) considerar mover origem para enum tipado (`Contact['source']` hoje é casted de texto livre).
 
 **AUD-C1 · RLS `using(true)` em 11 políticas** `P2` `[POR FAZER]`
   Advisor `rls_policy_always_true` ×11 — políticas que não filtram por org → risco multi-tenant/privacidade ([[regra-privacidade-dados-indecifraveis]]). **Rever** que tabelas são e se é intencional (algumas podem ser tabelas globais legítimas). Crítico antes de WL-1/2.º consultor.
