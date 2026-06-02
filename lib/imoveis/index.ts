@@ -1,6 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
-import type { Imovel, ImovelEvento, ImovelFoto, ImovelDocumento, ImovelProprietario, ImovelMandato, ImovelCmi, ImovelAcompanhamento, ProprietarioDocumento } from './shared';
+import type { Imovel, ImovelEvento, ImovelFoto, ImovelDocumento, ImovelProprietario, ImovelMandato, ImovelCmi, ImovelAcompanhamento, ImovelFinanceiro, ProprietarioDocumento } from './shared';
 
 export * from './shared';
 
@@ -130,6 +130,87 @@ export async function getImovelAcompanhamento(imovelId: string): Promise<ImovelA
     visitas: visitasRes.count ?? 0,
     propostas: propostasRes.count ?? 0,
     diasSemVisita,
+  };
+}
+
+// NS-3 — Custo & ROI por imóvel. Receita = comissão líquida dos negócios ganhos
+// ligados (mesmo cálculo do /financeiro). Custo = despesas ligadas + visitas
+// estimadas (nº visitas × custo/visita configurável na org). Tudo em cêntimos.
+export async function getImovelFinanceiro(imovelId: string): Promise<ImovelFinanceiro> {
+  const supabase = await createClient();
+  const numOf = (v: unknown): number => {
+    const n = typeof v === 'string' ? Number(v.replace(',', '.')) : typeof v === 'number' ? v : NaN;
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const { data: settings } = await supabase
+    .from('organization_settings')
+    .select('default_commission_pct, default_consultant_share_pct, default_visit_cost_cents')
+    .maybeSingle();
+  const defPct = numOf(settings?.default_commission_pct) || 5;
+  const defShare = numOf(settings?.default_consultant_share_pct) || 50;
+  const visitCost = Math.max(0, Math.round(numOf(settings?.default_visit_cost_cents)));
+
+  const { data: wonDeals } = await supabase
+    .from('deals')
+    .select('value, custom_fields')
+    .eq('imovel_id', imovelId)
+    .eq('is_won', true)
+    .is('deleted_at', null);
+  let receitaCents = 0;
+  let wonCount = 0;
+  for (const d of wonDeals ?? []) {
+    const cf = ((d as { custom_fields: Record<string, unknown> | null }).custom_fields) ?? {};
+    const value = numOf((d as { value: unknown }).value);
+    const mode = (cf['commission_mode'] as string) || 'pct';
+    const fixed = cf['commission_amount'] != null ? numOf(cf['commission_amount']) : null;
+    const pct = cf['commission_pct'] != null ? numOf(cf['commission_pct']) : defPct;
+    const gross = mode === 'fixed' && fixed != null ? fixed : value * (pct / 100);
+    const share = cf['consultant_share_pct'] != null ? numOf(cf['consultant_share_pct']) : defShare;
+    receitaCents += Math.round(gross * (share / 100) * 100);
+    wonCount += 1;
+  }
+
+  const { data: exps } = await supabase
+    .from('expenses')
+    .select('amount_cents, category')
+    .eq('imovel_id', imovelId)
+    .is('deleted_at', null);
+  let despesasCents = 0;
+  const byCat: Record<string, number> = {};
+  for (const e of exps ?? []) {
+    const c = Math.round(numOf((e as { amount_cents: unknown }).amount_cents));
+    despesasCents += c;
+    const cat = ((e as { category: string | null }).category) || 'Outros';
+    byCat[cat] = (byCat[cat] ?? 0) + c;
+  }
+  const despesas_por_categoria = Object.entries(byCat)
+    .map(([categoria, cents]) => ({ categoria, cents }))
+    .sort((a, b) => b.cents - a.cents);
+
+  const { count: visitasCount } = await supabase
+    .from('imovel_eventos')
+    .select('id', { count: 'exact', head: true })
+    .eq('imovel_id', imovelId)
+    .eq('kind', 'visita');
+  const visitas = visitasCount ?? 0;
+  const visitasCents = visitas * visitCost;
+
+  const custoTotal = despesasCents + visitasCents;
+  const lucro = receitaCents - custoTotal;
+  const roi = custoTotal > 0 ? receitaCents / custoTotal : null;
+
+  return {
+    receita_cents: receitaCents,
+    won_count: wonCount,
+    despesas_cents: despesasCents,
+    despesas_por_categoria,
+    visitas,
+    visita_custo_cents: visitCost,
+    visitas_cents: visitasCents,
+    custo_total_cents: custoTotal,
+    lucro_cents: lucro,
+    roi,
   };
 }
 

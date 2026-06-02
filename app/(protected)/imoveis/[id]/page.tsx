@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import {
   getImovelById, listEventosByImovelId, listDealsByImovelId,
   listFotosByImovelId, listDocumentosByImovelId,
-  listProprietariosByImovelId, listMandatosByImovelId, listCmisByImovelId, getImovelAcompanhamento, listProprietarioDocsByImovel,
+  listProprietariosByImovelId, listMandatosByImovelId, listCmisByImovelId, getImovelAcompanhamento, getImovelFinanceiro, listProprietarioDocsByImovel,
   formatPrecoEur, estadoChipClass, estadoLabel, eventoLabel, tipoLabel,
   CARACTERISTICAS_CATALOG,
 } from '@/lib/imoveis';
@@ -15,6 +15,7 @@ import ImovelDocumentos from '@/components/imoveis/ImovelDocumentos';
 import ImovelProprietarios from '@/components/imoveis/ImovelProprietarios';
 import ImovelMandatos from '@/components/imoveis/ImovelMandatos';
 import ImovelCmi from '@/components/imoveis/ImovelCmi';
+import ImovelFinanceiro from '@/components/imoveis/ImovelFinanceiro';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Imóvel | Foco Imo' };
@@ -34,7 +35,10 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
     listCmisByImovelId(id),
     listProprietarioDocsByImovel(id),
   ]);
-  const acompanhamento = await getImovelAcompanhamento(id);
+  const [acompanhamento, financeiro] = await Promise.all([
+    getImovelAcompanhamento(id),
+    getImovelFinanceiro(id),
+  ]);
   const nowISO = new Date().toISOString();
 
   // Telegram activo? + contagem de matches activos para este imovel
@@ -241,6 +245,11 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
       {/* CMI — Contrato de Mediação Imobiliária (lado do vendedor/angariação) */}
       <Section title="CMI · Contrato de Mediação Imobiliária (vendedor)">
         <ImovelCmi imovelId={id} cmis={cmis} nowISO={nowISO} acompanhamento={acompanhamento} documentosCmi={documentos.filter((d) => d.kind === 'cmi')} />
+      </Section>
+
+      {/* NS-3 — Custo & ROI por imóvel */}
+      <Section title="Custo & ROI deste imóvel">
+        <ImovelFinanceiro fin={financeiro} />
       </Section>
 
       {/* Mandato — lado do comprador (modelo do João), distinto do CMI */}

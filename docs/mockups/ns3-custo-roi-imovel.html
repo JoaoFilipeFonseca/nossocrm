@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — Custo & ROI por imóvel (NS-3)</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin:0; background:#f8fafc; color:#0f172a; }
+  .wrap { max-width:760px; margin:0 auto; padding:24px; }
+  .sec { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px; margin-bottom:18px; }
+  h2 { font-size:15px; margin:0 0 4px; }
+  .muted { color:#64748b; font-size:12px; }
+  .kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0; }
+  .kpi { border:1px solid #e2e8f0; border-radius:10px; padding:12px; }
+  .kpi .l { font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:.03em; }
+  .kpi .v { font-size:20px; font-weight:800; margin-top:3px; }
+  .kpi.rec { border-color:#bbf7d0; background:#f0fdf4; } .kpi.rec .v { color:#15803d; }
+  .kpi.cus { border-color:#fecaca; background:#fef2f2; } .kpi.cus .v { color:#b91c1c; }
+  .kpi.luc { border-color:#ddd6fe; background:#f5f3ff; } .kpi.luc .v { color:#6d28d9; }
+  .roi { display:inline-block; font-size:12px; font-weight:700; color:#15803d; background:#dcfce7; border:1px solid #bbf7d0; border-radius:999px; padding:2px 10px; margin-left:8px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
+  td { padding:7px 4px; border-top:1px solid #f1f5f9; }
+  td.r { text-align:right; font-variant-numeric:tabular-nums; }
+  .tag { font-size:11px; color:#475569; background:#f1f5f9; border-radius:6px; padding:1px 7px; }
+  .row-total td { font-weight:700; border-top:2px solid #e2e8f0; }
+  .visit-cfg { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; color:#334155; margin-top:8px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:10px; }
+  .visit-cfg input { width:70px; border:1px solid #cbd5e1; border-radius:7px; padding:4px 7px; font-size:13px; }
+  .note { font-size:12px; color:#64748b; margin-top:10px; }
+  @media (max-width:560px){ .kpis{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="muted">Ficha do imóvel › nova secção</p>
+  <div class="sec">
+    <h2>💰 Custo &amp; ROI deste imóvel <span class="roi">ROI 6,1x</span></h2>
+    <p class="muted">Quanto este imóvel custou (anúncios + despesas + visitas) face ao que rendeu (comissão líquida dos negócios ganhos ligados).</p>
+
+    <div class="kpis">
+      <div class="kpi rec"><div class="l">Rendeu (líquido)</div><div class="v">6.250 €</div></div>
+      <div class="kpi cus"><div class="l">Custou (total)</div><div class="v">1.018 €</div></div>
+      <div class="kpi luc"><div class="l">Lucro</div><div class="v">5.232 €</div></div>
+    </div>
+
+    <table>
+      <tr><td><b>Custos</b></td><td class="r"></td></tr>
+      <tr><td>Anúncios atribuídos <span class="tag">Meta</span></td><td class="r">512,40 €</td></tr>
+      <tr><td>Fotografia profissional <span class="tag">despesa</span></td><td class="r">180,00 €</td></tr>
+      <tr><td>Staging / home staging <span class="tag">despesa</span></td><td class="r">240,00 €</td></tr>
+      <tr><td>Visitas (combustível) <span class="tag">8 visitas × 10,75 €</span></td><td class="r">86,00 €</td></tr>
+      <tr class="row-total"><td>Custo total</td><td class="r">1.018,40 €</td></tr>
+    </table>
+
+    <div class="visit-cfg">
+      🚗 Custo por visita (combustível): <input value="10,75" /> € · aplica-se às <b>8 visitas</b> registadas deste imóvel.
+      <span class="muted">(podes também lançar custos exactos em Despesas)</span>
+    </div>
+
+    <table style="margin-top:14px;">
+      <tr><td><b>Rendimento</b></td><td class="r"></td></tr>
+      <tr><td>Moradia V4 · vendida <span class="tag">negócio ganho</span></td><td class="r">12.500 € bruto</td></tr>
+      <tr><td>Comissão líquida (parte do consultor 50%)</td><td class="r">6.250,00 €</td></tr>
+    </table>
+
+    <p class="note">ROI = rendeu ÷ custou. Se o imóvel ainda não vendeu, mostra só o custo acumulado (ex.: "já investiste 1.018 € neste imóvel, sem retorno ainda"). Liga ao financeiro (NS-1) e ao CMI.</p>
+  </div>
+</div>
+</body>
+</html>

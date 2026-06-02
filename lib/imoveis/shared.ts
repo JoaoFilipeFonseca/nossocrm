@@ -253,6 +253,20 @@ export interface ImovelAcompanhamento {
   diasSemVisita: number | null; // dias desde a última visita (null se nunca houve)
 }
 
+// NS-3 — Custo & ROI por imóvel. Tudo em cêntimos.
+export interface ImovelFinanceiro {
+  receita_cents: number;        // comissão líquida dos negócios ganhos ligados ao imóvel
+  won_count: number;            // nº de negócios ganhos ligados
+  despesas_cents: number;       // soma das despesas (expenses) ligadas ao imóvel
+  despesas_por_categoria: { categoria: string; cents: number }[];
+  visitas: number;              // nº de visitas registadas
+  visita_custo_cents: number;   // custo por visita (configurável na org)
+  visitas_cents: number;        // visitas × custo por visita
+  custo_total_cents: number;    // despesas + visitas
+  lucro_cents: number;          // receita − custo total
+  roi: number | null;           // receita ÷ custo total (null se custo 0)
+}
+
 export const CMI_TIPOS: Array<{ v: 'simples' | 'exclusivo'; l: string }> = [
   { v: 'exclusivo', l: 'Exclusivo' },
   { v: 'simples', l: 'Simples' },
