@@ -108,6 +108,8 @@ export interface DbDeal {
   automations_paused_reason?: string | null;
   /** Linhagem do anúncio (Meta Ads). Ver migração 20260529160000. */
   attribution?: Record<string, any> | null;
+  /** Imóvel associado ao negócio (AUD-A1). */
+  imovel_id?: string | null;
 }
 
 /**
@@ -184,6 +186,7 @@ const transformDeal = (db: DbDeal | DbDealWithItems, items?: DbDealItem[]): Deal
     automationsPausedAt: db.automations_paused_at || null,
     automationsPausedReason: db.automations_paused_reason || null,
     attribution: (db.attribution as import('@/types').MetaAdAttribution) || null,
+    imovelId: db.imovel_id || null,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
     items: filteredItems.map(i => ({
@@ -236,6 +239,7 @@ const transformDealToDb = (deal: Partial<Deal>): Partial<DbDeal> => {
   if (deal.ownerId !== undefined) db.owner_id = sanitizeUUID(deal.ownerId);
   if (deal.automationsPausedAt !== undefined) db.automations_paused_at = deal.automationsPausedAt;
   if (deal.automationsPausedReason !== undefined) db.automations_paused_reason = deal.automationsPausedReason;
+  if (deal.imovelId !== undefined) db.imovel_id = sanitizeUUID(deal.imovelId); // AUD-A1 (null desliga)
 
   return db;
 };

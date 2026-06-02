@@ -295,6 +295,8 @@ export interface Deal {
   lastStageChangeDate?: string; // For stagnation tracking
   lossReason?: string; // For win/loss analysis
   aiExtracted?: Record<string, any>; // AI-extracted BANT fields (zero config)
+  /** Imóvel associado a este negócio (AUD-A1). NULL = não ligado. */
+  imovelId?: string | null;
   /** Linhagem do anúncio (Meta Ads). Propagada da lead/contacto. */
   attribution?: MetaAdAttribution | null;
   /** Quando o humano interveio e pausou as automações deste deal. NULL = activas. (#124 pause-on-touch) */

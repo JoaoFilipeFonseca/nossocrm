@@ -22,6 +22,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { ConfirmDialog as ConfirmModal } from '@/components/ui/confirm-dialog';
 import { LossReasonModal } from '@/components/ui/LossReasonModal';
+import { DealImovelField } from '@/components/ui/ImovelSearchCombobox';
 import { useMoveDealSimple } from '@/lib/query/hooks';
 import { DEALS_VIEW_KEY } from '@/lib/query';
 import { MetaAttribution } from '@/components/MetaAttribution';
@@ -1165,6 +1166,17 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       <ContactInlineField icon={<Mail size={14} className="text-slate-400 flex-shrink-0" />} type="email" value={deal.contactEmail ?? ''} placeholder="Adicionar email" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { email: v } as any }); }} />
                       <ContactInlineField icon={<Phone size={14} className="text-slate-400 flex-shrink-0" />} type="tel" value={(deal as any).contactPhone ?? ''} placeholder="Adicionar telefone" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { phone: v } as any }); }} />
                     </div>
+                  </div>
+
+                  {/* Imóvel associado (AUD-A1) — liga o negócio ao imóvel */}
+                  <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Imóvel</span>
+                    </div>
+                    <DealImovelField
+                      imovelId={(deal as any).imovelId ?? null}
+                      onLink={(id) => updateDeal(deal.id, { imovelId: id })}
+                    />
                   </div>
                 </div>
               )}
