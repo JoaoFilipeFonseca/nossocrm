@@ -20,11 +20,11 @@ function fmtDate(iso: string | null): string {
 }
 
 const STATE_STYLE: Record<CmiCountdownState, { cls: string; bar: string }> = {
-  ok: { cls: 'bg-green-50 text-green-700 border-green-200', bar: '#22c55e' },
-  warn: { cls: 'bg-amber-50 text-amber-700 border-amber-200', bar: '#f59e0b' },
-  danger: { cls: 'bg-red-50 text-red-700 border-red-200', bar: '#ef4444' },
-  expired: { cls: 'bg-red-50 text-red-800 border-red-200', bar: '#ef4444' },
-  none: { cls: 'bg-slate-50 text-slate-500 border-slate-200', bar: '#cbd5e1' },
+  ok: { cls: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30', bar: '#22c55e' },
+  warn: { cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30', bar: '#f59e0b' },
+  danger: { cls: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30', bar: '#ef4444' },
+  expired: { cls: 'bg-red-50 text-red-800 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40', bar: '#ef4444' },
+  none: { cls: 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:border-white/10', bar: '#cbd5e1' },
 };
 
 function Countdown({ dataFim, nowISO }: { dataFim: string | null; nowISO: string }) {
@@ -54,7 +54,7 @@ function Countdown({ dataFim, nowISO }: { dataFim: string | null; nowISO: string
         </div>
       </div>
       {state !== 'none' && (
-        <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+        <div className="mt-2 h-1.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
           <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: st.bar }} />
         </div>
       )}
@@ -114,28 +114,28 @@ export default function ImovelCmi({ imovelId, cmis, nowISO }: Props) {
   return (
     <div className="space-y-4">
       {cmis.length === 0 ? (
-        <p className="text-sm text-slate-500">Sem CMI registado.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Sem CMI registado.</p>
       ) : (
         <ul className="space-y-2">
           {cmis.map((c) => (
-            <li key={c.id} className={`rounded-md border p-3 ${c.activo ? 'border-green-300 ring-1 ring-green-200' : 'border-slate-200'}`}>
+            <li key={c.id} className={`rounded-md border p-3 ${c.activo ? 'border-green-400 ring-1 ring-green-300/60 dark:border-green-500/50 dark:ring-green-500/30' : 'border-slate-200 dark:border-white/10'}`}>
               <div className="flex items-start justify-between gap-2 flex-wrap">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium capitalize">{c.tipo}</span>
-                    {c.activo && <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-2 py-0.5 text-xs font-medium">Activo</span>}
+                    <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300 px-2 py-0.5 text-xs font-medium capitalize">{c.tipo}</span>
+                    {c.activo && <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300 px-2 py-0.5 text-xs font-medium">Activo</span>}
                   </div>
-                  <p className="text-sm text-slate-700 mt-1">
+                  <p className="text-sm text-slate-700 dark:text-slate-200 mt-1">
                     Data do CMI: {fmtDate(c.data_cmi)}
                     {c.data_fim && ` · Validade: ${fmtDate(c.data_fim)}`}
                   </p>
-                  {c.comissao_pct != null && <p className="text-xs text-slate-500 mt-0.5">Comissão {c.comissao_pct}%</p>}
-                  {c.notas && <p className="text-sm text-slate-600 mt-1">{c.notas}</p>}
+                  {c.comissao_pct != null && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Comissão {c.comissao_pct}%</p>}
+                  {c.notas && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{c.notas}</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   {!c.activo && (
                     <button type="button" onClick={() => setActivo(c.id, true)}
-                      className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50">Tornar activo</button>
+                      className="rounded border border-slate-300 dark:border-white/15 px-2 py-1 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5">Tornar activo</button>
                   )}
                   <button type="button" onClick={() => removeCmi(c.id)} className="text-red-600 hover:text-red-700 text-xs">Remover</button>
                 </div>
@@ -146,8 +146,8 @@ export default function ImovelCmi({ imovelId, cmis, nowISO }: Props) {
         </ul>
       )}
 
-      <form onSubmit={addCmi} className="rounded-md border border-slate-200 p-4 space-y-3">
-        <h3 className="text-sm font-semibold">Adicionar CMI</h3>
+      <form onSubmit={addCmi} className="rounded-md border border-slate-200 dark:border-white/10 p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Adicionar CMI</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Field label="Tipo">
             <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} className={inputCls}>
@@ -179,12 +179,12 @@ export default function ImovelCmi({ imovelId, cmis, nowISO }: Props) {
   );
 }
 
-const inputCls = 'w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
+const inputCls = 'w-full rounded-md border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium uppercase tracking-wide text-slate-600 mb-1">{label}</span>
+      <span className="block text-xs font-medium uppercase tracking-wide text-slate-600 dark:text-slate-400 mb-1">{label}</span>
       {children}
     </label>
   );
