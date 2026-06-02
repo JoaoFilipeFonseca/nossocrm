@@ -226,6 +226,14 @@ export interface ImovelCmi {
   created_at: string;
 }
 
+// IMO-6 Fase 2 — sinais de acompanhamento do imóvel durante o CMI.
+export interface ImovelAcompanhamento {
+  leads: number;              // negócios ligados ao imóvel (deals.imovel_id)
+  visitas: number;            // eventos de visita
+  propostas: number;          // ofertas/propostas/contrapropostas
+  diasSemVisita: number | null; // dias desde a última visita (null se nunca houve)
+}
+
 export const CMI_TIPOS: Array<{ v: 'simples' | 'exclusivo'; l: string }> = [
   { v: 'exclusivo', l: 'Exclusivo' },
   { v: 'simples', l: 'Simples' },

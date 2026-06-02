@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import {
   getImovelById, listEventosByImovelId, listDealsByImovelId,
   listFotosByImovelId, listDocumentosByImovelId,
-  listProprietariosByImovelId, listMandatosByImovelId, listCmisByImovelId, listProprietarioDocsByImovel,
+  listProprietariosByImovelId, listMandatosByImovelId, listCmisByImovelId, getImovelAcompanhamento, listProprietarioDocsByImovel,
   formatPrecoEur, estadoChipClass, estadoLabel, eventoLabel, tipoLabel,
   CARACTERISTICAS_CATALOG,
 } from '@/lib/imoveis';
@@ -34,6 +34,7 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
     listCmisByImovelId(id),
     listProprietarioDocsByImovel(id),
   ]);
+  const acompanhamento = await getImovelAcompanhamento(id);
   const nowISO = new Date().toISOString();
 
   // Telegram activo? + contagem de matches activos para este imovel
@@ -239,7 +240,7 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
 
       {/* CMI — Contrato de Mediação Imobiliária (lado do vendedor) */}
       <Section title="CMI · Contrato de Mediação Imobiliária">
-        <ImovelCmi imovelId={id} cmis={cmis} nowISO={nowISO} />
+        <ImovelCmi imovelId={id} cmis={cmis} nowISO={nowISO} acompanhamento={acompanhamento} />
       </Section>
 
       {/* Mandato */}

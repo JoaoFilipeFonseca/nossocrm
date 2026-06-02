@@ -1,6 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
-import type { Imovel, ImovelEvento, ImovelFoto, ImovelDocumento, ImovelProprietario, ImovelMandato, ImovelCmi, ProprietarioDocumento } from './shared';
+import type { Imovel, ImovelEvento, ImovelFoto, ImovelDocumento, ImovelProprietario, ImovelMandato, ImovelCmi, ImovelAcompanhamento, ProprietarioDocumento } from './shared';
 
 export * from './shared';
 
@@ -97,6 +97,27 @@ export async function listCmisByImovelId(imovelId: string): Promise<ImovelCmi[]>
     .order('data_cmi', { ascending: false });
   if (error) throw error;
   return (data ?? []) as ImovelCmi[];
+}
+
+export async function getImovelAcompanhamento(imovelId: string): Promise<ImovelAcompanhamento> {
+  const supabase = await createClient();
+  const [dealsRes, visitasRes, propostasRes, ultimaVisitaRes] = await Promise.all([
+    supabase.from('deals').select('id', { count: 'exact', head: true }).eq('imovel_id', imovelId),
+    supabase.from('imovel_eventos').select('id', { count: 'exact', head: true }).eq('imovel_id', imovelId).eq('kind', 'visita'),
+    supabase.from('imovel_eventos').select('id', { count: 'exact', head: true }).eq('imovel_id', imovelId).in('kind', ['proposta', 'oferta', 'contraproposta']),
+    supabase.from('imovel_eventos').select('occurred_at').eq('imovel_id', imovelId).eq('kind', 'visita').order('occurred_at', { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  let diasSemVisita: number | null = null;
+  if (ultimaVisitaRes.data?.occurred_at) {
+    const last = new Date(ultimaVisitaRes.data.occurred_at).getTime();
+    diasSemVisita = Math.max(0, Math.floor((Date.now() - last) / 86_400_000));
+  }
+  return {
+    leads: dealsRes.count ?? 0,
+    visitas: visitasRes.count ?? 0,
+    propostas: propostasRes.count ?? 0,
+    diasSemVisita,
+  };
 }
 
 export async function listProprietarioDocs(propId: string): Promise<ProprietarioDocumento[]> {

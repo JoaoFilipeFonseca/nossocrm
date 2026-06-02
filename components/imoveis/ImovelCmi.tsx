@@ -3,13 +3,43 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Clock, AlertTriangle, XCircle, HelpCircle } from 'lucide-react';
-import { type ImovelCmi, type CmiCountdownState, CMI_TIPOS, cmiCountdown } from '@/lib/imoveis/shared';
+import { type ImovelCmi, type CmiCountdownState, type ImovelAcompanhamento, CMI_TIPOS, cmiCountdown } from '@/lib/imoveis/shared';
 
 interface Props {
   imovelId: string;
   cmis: ImovelCmi[];
   /** Data do servidor (ISO) para a contagem ser determinista em SSR↔hidratação. */
   nowISO: string;
+  /** Sinais do imóvel (leads/visitas/propostas) — mostrados no CMI activo. */
+  acompanhamento: ImovelAcompanhamento;
+}
+
+function Kpi({ n, l, bad }: { n: number; l: string; bad?: boolean }) {
+  return (
+    <div className={`flex-1 min-w-[88px] rounded-lg border px-3 py-2 ${bad ? 'border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10' : 'border-slate-200 dark:border-white/10'}`}>
+      <div className={`text-lg font-extrabold ${bad ? 'text-red-700 dark:text-red-300' : 'text-slate-900 dark:text-slate-100'}`}>{n}</div>
+      <div className="text-[10px] uppercase tracking-wide text-slate-400">{l}</div>
+    </div>
+  );
+}
+
+function Acompanhamento({ a }: { a: ImovelAcompanhamento }) {
+  return (
+    <div className="mt-3 border-t border-dashed border-slate-200 dark:border-white/10 pt-3">
+      <p className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-2">Acompanhamento</p>
+      <div className="flex gap-2 flex-wrap">
+        <Kpi n={a.leads} l="Negócios" bad={a.leads === 0} />
+        <Kpi n={a.visitas} l="Visitas" bad={a.visitas === 0} />
+        <Kpi n={a.propostas} l="Propostas" bad={a.propostas === 0} />
+      </div>
+      {a.diasSemVisita != null && a.diasSemVisita >= 14 && (
+        <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">Há {a.diasSemVisita} dias sem visitas — altura de agir (rever preço/fotos, reactivar anúncio).</p>
+      )}
+      {a.visitas === 0 && (
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Ainda sem visitas registadas neste imóvel.</p>
+      )}
+    </div>
+  );
 }
 
 function fmtDate(iso: string | null): string {
@@ -62,7 +92,7 @@ function Countdown({ dataFim, nowISO }: { dataFim: string | null; nowISO: string
   );
 }
 
-export default function ImovelCmi({ imovelId, cmis, nowISO }: Props) {
+export default function ImovelCmi({ imovelId, cmis, nowISO, acompanhamento }: Props) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,6 +171,7 @@ export default function ImovelCmi({ imovelId, cmis, nowISO }: Props) {
                 </div>
               </div>
               <Countdown dataFim={c.data_fim} nowISO={nowISO} />
+              {c.activo && <Acompanhamento a={acompanhamento} />}
             </li>
           ))}
         </ul>
