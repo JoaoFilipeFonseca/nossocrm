@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2, ChevronDown, ChevronRight, Route as RouteIcon, BarChart3 } from 'lucide-react';
+import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2, ChevronDown, ChevronRight, Route as RouteIcon, BarChart3, History } from 'lucide-react';
 import { AdDrilldownDrawer } from './AdDrilldownDrawer';
 
 export interface AdPerformanceRow {
@@ -115,6 +115,16 @@ export const AnunciosPage: React.FC = () => {
 
   const [campaignBoard, setCampaignBoard] = useState<Map<string, string>>(new Map());
   const [view, setView] = useState<'tabela' | 'arvore'>('tabela');
+  const [analystOpen, setAnalystOpen] = useState(true);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  // Estado do painel do analista persiste por dispositivo (lê após montar — evita mismatch SSR #418).
+  useEffect(() => {
+    try { const v = localStorage.getItem('analyst_panel_open'); if (v !== null) setAnalystOpen(v === '1'); } catch { /* ignore */ }
+  }, []);
+  const toggleAnalyst = useCallback(() => {
+    setAnalystOpen((o) => { const n = !o; try { localStorage.setItem('analyst_panel_open', n ? '1' : '0'); } catch { /* ignore */ } return n; });
+  }, []);
 
   const loadStatuses = useCallback(() => {
     fetch('/api/meta-ads/statuses', { cache: 'no-store' })
@@ -287,29 +297,49 @@ export const AnunciosPage: React.FC = () => {
         <Kpi label="ROAS" value={totalRoas === null ? '—' : `${totalRoas.toFixed(2)}x`} highlight />
       </div>
 
-      {recommendations.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-            <Brain className="h-4 w-4 text-violet-600" /> Recomendações do analista
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {recommendations.map((a) => {
-              const meta = VERDICT_META[a.verdict] ?? VERDICT_META.manter;
-              return (
-                <div key={a.ad_id} className={`rounded-lg border p-3 ${meta.panel}`}>
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-medium text-slate-900 text-sm truncate">{a.ad_name || a.ad_id}</span>
-                    <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border ${meta.cls}`}>{meta.label}</span>
-                  </div>
-                  {a.is_anomaly && <div className="text-xs font-medium text-rose-600 mb-1">⚠ Anomalia</div>}
-                  {a.reason && <p className="text-xs text-slate-600">{a.reason}</p>}
-                  {a.suggestion && <p className="text-xs text-slate-800 mt-1"><span className="font-medium">Sugestão:</span> {a.suggestion}</p>}
-                </div>
-              );
-            })}
-          </div>
+      <div className="mb-6 rounded-lg border border-slate-200">
+        <div className="w-full flex items-center justify-between gap-2 px-4 py-3">
+          <button type="button" onClick={toggleAnalyst} className="flex items-center gap-2 text-sm font-bold text-slate-700 min-w-0">
+            {analystOpen ? <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" /> : <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />}
+            <Brain className="h-4 w-4 text-violet-600 shrink-0" />
+            <span className="truncate">Recomendações do analista</span>
+            {recommendations.length > 0 && (
+              <span className="shrink-0 text-xs font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-full px-2 py-0.5">{recommendations.length}</span>
+            )}
+          </button>
+          <button type="button" onClick={() => setHistoryOpen(true)} className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-violet-600 border border-slate-200 rounded-lg px-2.5 py-1.5">
+            <History className="h-3.5 w-3.5" /> Histórico
+          </button>
         </div>
-      )}
+        {analystOpen && (
+          <div className="border-t border-slate-100 p-4">
+            {recommendations.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                Sem recomendações novas.{analyzedAt ? ` Última análise: ${analyzedAt}.` : ''} As recomendações ficam guardadas — vê o <button type="button" onClick={() => setHistoryOpen(true)} className="text-violet-600 hover:underline">histórico</button> para consultar as anteriores.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {recommendations.map((a) => {
+                  const meta = VERDICT_META[a.verdict] ?? VERDICT_META.manter;
+                  return (
+                    <div key={a.ad_id} className={`rounded-lg border p-3 ${meta.panel}`}>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="font-medium text-slate-900 text-sm truncate">{a.ad_name || a.ad_id}</span>
+                        <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border ${meta.cls}`}>{meta.label}</span>
+                      </div>
+                      {a.is_anomaly && <div className="text-xs font-medium text-rose-600 mb-1">⚠ Anomalia</div>}
+                      {a.reason && <p className="text-xs text-slate-600">{a.reason}</p>}
+                      {a.suggestion && <p className="text-xs text-slate-800 mt-1"><span className="font-medium">Sugestão:</span> {a.suggestion}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {historyOpen && <AnalystHistoryDrawer onClose={() => setHistoryOpen(false)} />}
 
       <LeadRoutingPanel />
 
@@ -705,6 +735,82 @@ const AdTree: React.FC<{
           </div>
         );
       })}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// MA-ANALYST-UX — gaveta com o histórico das recomendações do analista (série
+// diária de ad_analyses, agrupada por data, mais recente primeiro). As
+// recomendações ficam guardadas — aqui consultam-se mesmo depois de mudarem.
+// ---------------------------------------------------------------------------
+interface AnalystHistoryRow {
+  analyzed_at: string;
+  ad_id: string;
+  ad_name: string | null;
+  verdict: 'parar' | 'aumentar' | 'testar' | 'manter';
+  confidence: number | null;
+  reason: string | null;
+  suggestion: string | null;
+  is_anomaly: boolean;
+}
+
+const AnalystHistoryDrawer: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [rows, setRows] = useState<AnalystHistoryRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/meta-ads/analyses/history', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => setRows(Array.isArray(j.items) ? j.items : []))
+      .catch(() => { /* gaveta opcional */ })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const byDate = useMemo(() => {
+    const m = new Map<string, AnalystHistoryRow[]>();
+    for (const r of rows) {
+      if (!m.has(r.analyzed_at)) m.set(r.analyzed_at, []);
+      m.get(r.analyzed_at)!.push(r);
+    }
+    return [...m.entries()];
+  }, [rows]);
+
+  return (
+    <div className="fixed inset-0 z-[9998] flex justify-end bg-black/40" onClick={onClose} role="dialog" aria-modal="true" aria-label="Histórico das recomendações do analista">
+      <div className="w-full max-w-md h-full bg-white shadow-xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between gap-2 border-b border-slate-100 p-4 sticky top-0 bg-white">
+          <h3 className="font-semibold text-slate-900 flex items-center gap-2"><History className="h-4 w-4 text-violet-600" /> Histórico do analista</h3>
+          <button onClick={onClose} aria-label="Fechar" className="text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="p-4 space-y-5">
+          {loading ? (
+            <div className="flex items-center gap-2 text-sm text-slate-500 py-6 justify-center"><Loader2 className="w-4 h-4 animate-spin" /> A carregar histórico...</div>
+          ) : byDate.length === 0 ? (
+            <p className="text-sm text-slate-400">Ainda sem histórico de análises. Corre o analista para começar a guardar.</p>
+          ) : byDate.map(([date, items]) => (
+            <div key={date}>
+              <div className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">{date}</div>
+              <div className="space-y-2">
+                {items.map((r, i) => {
+                  const meta = VERDICT_META[r.verdict] ?? VERDICT_META.manter;
+                  return (
+                    <div key={`${r.ad_id}-${i}`} className="rounded-lg border border-slate-200 p-3">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="font-medium text-slate-900 text-sm truncate">{r.ad_name || r.ad_id}</span>
+                        <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border ${meta.cls}`}>{meta.label}</span>
+                      </div>
+                      {r.is_anomaly && <div className="text-xs font-medium text-rose-600 mb-1">⚠ Anomalia</div>}
+                      {r.reason && <p className="text-xs text-slate-600">{r.reason}</p>}
+                      {r.suggestion && <p className="text-xs text-slate-800 mt-1"><span className="font-medium">Sugestão:</span> {r.suggestion}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
