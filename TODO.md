@@ -219,6 +219,9 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 - **MKT-BP-AUTOLEARN · Boas práticas Meta/IA sempre actualizadas (auto-aprendizagem)** `[POR FAZER]` `P?` (CAPTURE 01/06)
   A IA não fica presa ao doc `docs/meta-ia-2026-best-practices.md`: passo periódico (IA + web) que procura alterações/recomendações mais recentes e actualiza as práticas que alimentam o analista IA e a geração de copy. Fechar ciclo: resulta→continua, não resulta→repensa. Base: [[reference-meta-ia-2026-best-practices]].
 
+- **MA-ANALYST-UX · Painel do analista colapsável + histórico das recomendações** `[POR FAZER]` `P?` (CAPTURE 03/06, ideia do João)
+  No `/anuncios`, o painel **"Recomendações do analista"** deve: (a) **minimizar/expandir** (colapsável, com o estado guardado); (b) deixar claro que as recomendações **não se apagam** — vivem em `ad_analyses` (upsert 1 row/dia por anúncio). (c) **Histórico** consultável: ver as recomendações ao longo do tempo por anúncio (a série já existe em `ad_analyses`; falta a **vista de histórico**) **mesmo depois de mudarem ou de o João as dispensar** — guardar/mostrar dispensadas em vez de só esconder. Liga ao analista IA existente (MA-B2.3).
+
 - **MA-LTV-ATTRIBUTION · Valor vitalício do anúncio (1 anúncio → N negócios ao longo do tempo; ex-"conta inglesa")** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
   Um anúncio que trouxe um comprador deve ser creditado pelo valor da venda dessa casa — **e** pelos negócios que daí derivam ao longo do tempo: (a) quem essa pessoa **referenciou** (já temos o grafo `contact_referrals` Indicado por/Indicou, construído no CT-1), (b) a **recompra/revenda futura** da própria pessoa (ex.: vende a casa dele 3 anos depois e volta a ele). Objectivo: "valor vitalício do anúncio" = soma de todos os negócios da linhagem (ex.: 1 anúncio → 3 negócios). **Fundação já existe:** `attribution` por anúncio (contacts/deals) + `contact_referrals` + princípio de [[feedback-medicao-vitalicia-e-ciclo]] + MA-DRILLDOWN Fase 1. **Falta o motor:** ao fechar um negócio, subir a cadeia (quem trouxe esta pessoa / que anúncio originou a linhagem) e creditar para cima; vista no drill-down do anúncio com o total vitalício + ramificações. Liga a MA-DRILLDOWN e ao financeiro (ROI vitalício por anúncio).
 
@@ -312,6 +315,9 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
   Cards diários: "4 deals há +10d em Proposta", "X faz anos amanhã", "lead Ana sem resposta há 5d". (origem: 4.4)
 
 ### I. UX / Navegação / Mobile
+
+- **PREFS-1 · Preferências do utilizador persistidas na conta (arranque + tema)** `[POR FAZER]` `P?` (CAPTURE 03/06, ideia do João)
+  Definir e **guardar na conta** (não só localStorage por dispositivo): (a) **página de arranque** (onde o CRM abre ao entrar — ex.: Dashboard, Negócios, Anúncios…) e (b) **tema claro/escuro**. Ao gravar, fica igual em **desktop e mobile até o João mudar**. Guardar em `profiles` (ou `organization_settings` por-user) e aplicar no arranque/login. ⚠️ **Tema:** respeitar o fix de hidratação #418 ([[estado-crm-foco-imo]]) — ler a preferência da conta sem mismatch SSR↔cliente (script inline + default determinista). Redireccionar para a página de arranque após login.
 
 - **UX-1 · NAV-IA — agrupar sidebar em 6 famílias** `[POR FAZER]` `P?`
   16 itens → 6 grupos colapsáveis (Início/Comunicação/CRM/Imóveis/Marketing/Sistema). Confirmar famílias com o João. Nota: aplicar também à nova gaveta mobile (FULL_NAV). (origem: CAPTURE NAV-IA)
