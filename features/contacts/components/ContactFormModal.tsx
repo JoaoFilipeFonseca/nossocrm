@@ -13,7 +13,22 @@ interface ContactFormData {
   phone: string;
   role: string;
   companyName: string;
+  source: string; // AUD-B1 — origem obrigatória (regra: toda lead tem proveniência)
 }
+
+// Origens manuais (filtráveis/reportáveis). "Outro" cobre os restantes casos.
+const ORIGEM_OPTIONS = [
+  'Telefone',
+  'Indicação',
+  'Conhecimento pessoal',
+  'Portal Idealista',
+  'Portal Imovirtual',
+  'Facebook / Instagram',
+  'Site',
+  'Loja / Walk-in',
+  'Publicidade / Cartaz',
+  'Outro',
+];
 
 interface ContactFormModalProps {
   isOpen: boolean;
@@ -70,6 +85,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
       phone: fake.phone,
       role: fake.role,
       companyName: fake.companyName,
+      source: 'Teste',
     });
   };
 
@@ -139,12 +155,10 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
           </div>
           <div>
             <label htmlFor="contact-email" className="block text-xs font-bold text-slate-500 uppercase mb-1">
-              Email <span aria-hidden="true">*</span>
+              Email <span className="text-slate-400 normal-case font-normal">(opcional)</span>
             </label>
             <input
               id="contact-email"
-              required
-              aria-required="true"
               type="email"
               className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="ana@empresa.com"
@@ -155,10 +169,12 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="contact-phone" className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                Telefone
+                Telefone <span aria-hidden="true">*</span>
               </label>
               <input
                 id="contact-phone"
+                required
+                aria-required="true"
                 type="text"
                 className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="+351912345678"
@@ -178,6 +194,24 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
               />
             </div>
           </div>
+          <div>
+            <label htmlFor="contact-source" className="block text-xs font-bold text-slate-500 uppercase mb-1">
+              Origem <span aria-hidden="true">*</span>
+            </label>
+            <select
+              id="contact-source"
+              required
+              aria-required="true"
+              className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
+              value={formData.source}
+              onChange={e => setFormData({ ...formData, source: e.target.value })}
+            >
+              <option value="" disabled>Como chegou este contacto?</option>
+              {ORIGEM_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+            <p className="text-[10px] text-slate-400 mt-1">Obrigatório — para saber de onde vêm os contactos (medição por canal).</p>
+          </div>
+
           <div>
             <label htmlFor="contact-company" className="block text-xs font-bold text-slate-500 uppercase mb-1">
               Empresa
