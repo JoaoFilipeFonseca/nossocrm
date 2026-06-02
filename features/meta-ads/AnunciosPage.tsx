@@ -9,6 +9,8 @@ export interface AdPerformanceRow {
   ad_name: string | null;
   campaign_id: string | null;
   campaign_name: string | null;
+  adset_id: string | null;
+  adset_name: string | null;
   spend: number;
   impressions: number;
   clicks: number;
@@ -111,6 +113,7 @@ export const AnunciosPage: React.FC = () => {
   const [statuses, setStatuses] = useState<Map<string, AdStatus>>(new Map());
 
   const [campaignBoard, setCampaignBoard] = useState<Map<string, string>>(new Map());
+  const [view, setView] = useState<'tabela' | 'arvore'>('tabela');
 
   const loadStatuses = useCallback(() => {
     fetch('/api/meta-ads/statuses', { cache: 'no-store' })
@@ -239,6 +242,19 @@ export const AnunciosPage: React.FC = () => {
               </button>
             ))}
           </div>
+          <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden" role="group" aria-label="Modo de visualização">
+            {([['tabela', 'Tabela'], ['arvore', 'Árvore']] as const).map(([v, label]) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  view === v ? 'bg-violet-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <button
             onClick={runAnalysis}
             disabled={analyzing}
@@ -307,6 +323,15 @@ export const AnunciosPage: React.FC = () => {
           <TrendingUp className="h-8 w-8 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500">Sem dados de anúncios neste período. As métricas são sincronizadas diariamente (gerível em Automações).</p>
         </div>
+      ) : view === 'arvore' ? (
+        <AdTree
+          rows={rows}
+          analyses={analyses}
+          statuses={statuses}
+          onDrill={setDrilling}
+          onEdit={setEditing}
+          onLightbox={setLightbox}
+        />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-slate-200">
           <table className="w-full text-sm">
@@ -501,6 +526,184 @@ export const AnunciosPage: React.FC = () => {
           }}
         />
       )}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// MA-DRILLDOWN Fase 2 — vista em árvore Campanha › Conjunto › Anúncio.
+// Agrupa as mesmas linhas da tabela e soma os totais (gasto/leads/CPL/ROAS) em
+// cada nível. Campanhas abertas por omissão; conjuntos fechados (drill ao clicar).
+// ---------------------------------------------------------------------------
+interface Rollup { spend: number; leads: number; won_deals: number; won_value: number; }
+function emptyRoll(): Rollup { return { spend: 0, leads: 0, won_deals: 0, won_value: 0 }; }
+function addRoll(acc: Rollup, r: AdPerformanceRow) {
+  acc.spend += r.spend || 0;
+  acc.leads += (r.crm_leads || r.meta_leads) || 0;
+  acc.won_deals += r.won_deals || 0;
+  acc.won_value += r.won_value || 0;
+}
+interface TreeAdset { id: string; name: string | null; roll: Rollup; ads: AdPerformanceRow[]; }
+interface TreeCampaign { id: string; name: string | null; roll: Rollup; adsets: TreeAdset[]; }
+
+function MetricCells({ roll, currency }: { roll: Rollup; currency: string }) {
+  const cpl = ratio(roll.spend, roll.leads);
+  const roas = ratio(roll.won_value, roll.spend);
+  return (
+    <>
+      <span className="w-[84px] shrink-0 text-right tabular-nums text-sm">{money(roll.spend, currency)}</span>
+      <span className="w-[58px] shrink-0 text-right tabular-nums text-sm text-slate-500 hidden sm:block">{num(roll.leads)}</span>
+      <span className="w-[76px] shrink-0 text-right tabular-nums text-sm">{cpl === null ? '—' : money(cpl, currency)}</span>
+      <span className="w-[58px] shrink-0 text-right tabular-nums text-sm hidden sm:block">
+        {roas === null ? <span className="text-slate-300">—</span> : <span className={roas >= 1 ? 'text-emerald-600 font-medium' : 'text-slate-700'}>{roas.toFixed(1)}x</span>}
+      </span>
+    </>
+  );
+}
+
+const AdTree: React.FC<{
+  rows: AdPerformanceRow[];
+  analyses: Map<string, AdAnalysis>;
+  statuses: Map<string, AdStatus>;
+  onDrill: (r: AdPerformanceRow) => void;
+  onEdit: (r: AdPerformanceRow) => void;
+  onLightbox: (l: { url: string; name: string }) => void;
+}> = ({ rows, analyses, statuses, onDrill, onEdit, onLightbox }) => {
+  const [closedCamps, setClosedCamps] = useState<Set<string>>(new Set());
+  const [openAdsets, setOpenAdsets] = useState<Set<string>>(new Set());
+  const currency = rows[0]?.currency ?? 'EUR';
+
+  const tree = useMemo<TreeCampaign[]>(() => {
+    const campMap = new Map<string, TreeCampaign>();
+    const adsetMap = new Map<string, TreeAdset>();
+    for (const r of rows) {
+      const cid = r.campaign_id || '—';
+      let c = campMap.get(cid);
+      if (!c) { c = { id: cid, name: r.campaign_name, roll: emptyRoll(), adsets: [] }; campMap.set(cid, c); }
+      addRoll(c.roll, r);
+      const aKey = `${cid}|${r.adset_id || '—'}`;
+      let a = adsetMap.get(aKey);
+      if (!a) { a = { id: r.adset_id || '—', name: r.adset_name, roll: emptyRoll(), ads: [] }; adsetMap.set(aKey, a); c.adsets.push(a); }
+      addRoll(a.roll, r);
+      a.ads.push(r);
+    }
+    const arr = [...campMap.values()].sort((x, y) => y.roll.spend - x.roll.spend);
+    arr.forEach((c) => c.adsets.sort((x, y) => y.roll.spend - x.roll.spend));
+    return arr;
+  }, [rows]);
+
+  const toggle = (set: Set<string>, setter: (s: Set<string>) => void, key: string) => {
+    const next = new Set(set);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    setter(next);
+  };
+
+  function verdictBadge(adId: string) {
+    const a = analyses.get(adId);
+    if (!a || (a.verdict === 'manter' && !a.is_anomaly)) return null;
+    const m = VERDICT_META[a.verdict] ?? VERDICT_META.manter;
+    return <span className={`shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${m.cls}`} title={a.reason || ''}>{m.label}</span>;
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 overflow-hidden">
+      {/* cabeçalho */}
+      <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 text-[10px] uppercase tracking-wide text-slate-400 font-semibold">
+        <span className="flex-1">Campanha › Conjunto › Anúncio</span>
+        <span className="w-[84px] text-right">Gasto</span>
+        <span className="w-[58px] text-right hidden sm:block">Leads</span>
+        <span className="w-[76px] text-right">CPL</span>
+        <span className="w-[58px] text-right hidden sm:block">ROAS</span>
+        <span className="w-[58px] shrink-0" aria-hidden="true" />
+      </div>
+
+      {tree.map((c) => {
+        const campOpen = !closedCamps.has(c.id);
+        return (
+          <div key={c.id} className="border-t border-slate-100">
+            {/* Campanha */}
+            <button
+              type="button"
+              onClick={() => toggle(closedCamps, setClosedCamps, c.id)}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-left bg-violet-50/30 hover:bg-violet-50"
+            >
+              {campOpen ? <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" /> : <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />}
+              <span className="flex-1 min-w-0 font-bold text-sm text-slate-900 truncate">{c.name || c.id}</span>
+              <MetricCells roll={c.roll} currency={currency} />
+              <span className="w-[58px] shrink-0" aria-hidden="true" />
+            </button>
+
+            {campOpen && c.adsets.map((a) => {
+              const aKey = `${c.id}|${a.id}`;
+              const adsetOpen = openAdsets.has(aKey);
+              return (
+                <div key={aKey}>
+                  {/* Conjunto */}
+                  <button
+                    type="button"
+                    onClick={() => toggle(openAdsets, setOpenAdsets, aKey)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left border-t border-slate-50 hover:bg-slate-50"
+                  >
+                    <span className="pl-5 shrink-0">{adsetOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}</span>
+                    <span className="flex-1 min-w-0 font-semibold text-[13px] text-slate-600 truncate">{a.name || a.id} <span className="text-slate-400 font-normal">({a.ads.length})</span></span>
+                    <MetricCells roll={a.roll} currency={currency} />
+                    <span className="w-[58px] shrink-0" aria-hidden="true" />
+                  </button>
+
+                  {adsetOpen && a.ads.map((r) => {
+                    const st = statuses.get(r.ad_id);
+                    const stLabel = statusLabel(st);
+                    const single: Rollup = emptyRoll();
+                    addRoll(single, r);
+                    return (
+                      <div key={r.ad_id} className="flex items-center gap-2 px-3 py-2 border-t border-slate-50 hover:bg-slate-50/70">
+                        <div className="flex items-center gap-2 flex-1 min-w-0 pl-12">
+                          {r.thumbnail_url ? (
+                            <button
+                              type="button"
+                              onClick={() => onLightbox({ url: r.thumbnail_url!, name: r.ad_name || r.ad_id })}
+                              className="relative shrink-0 rounded-md overflow-hidden border border-slate-200 hover:ring-2 hover:ring-violet-300 outline-none"
+                              title="Ver criativo"
+                            >
+                              <img src={r.thumbnail_url} alt={r.ad_name || 'Criativo'} className="w-9 h-9 object-cover" loading="lazy" />
+                              {r.creative_type === 'video' && (
+                                <span className="absolute inset-0 flex items-center justify-center bg-black/30"><Play className="w-3.5 h-3.5 text-white" fill="currentColor" /></span>
+                              )}
+                            </button>
+                          ) : (
+                            <div className="w-9 h-9 shrink-0 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-300"><Megaphone className="w-3.5 h-3.5" /></div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[13px] font-medium text-slate-900 truncate max-w-[180px] sm:max-w-[260px]">{r.ad_name || r.ad_id}</span>
+                              {verdictBadge(r.ad_id)}
+                            </div>
+                            <span className="inline-flex items-center gap-1 text-[11px]">
+                              <span className={`w-1.5 h-1.5 rounded-full ${stLabel.dot}`} />
+                              <span className={stLabel.cls}>{stLabel.text}</span>
+                            </span>
+                          </div>
+                        </div>
+                        <MetricCells roll={single} currency={currency} />
+                        <div className="w-[58px] shrink-0 flex items-center justify-end gap-0.5">
+                          <button type="button" onClick={() => onDrill(r)} title="Ver dados deste anúncio" aria-label={`Ver dados de ${r.ad_name || r.ad_id}`}
+                            className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 outline-none">
+                            <BarChart3 className="w-4 h-4" />
+                          </button>
+                          <button type="button" onClick={() => onEdit(r)} title="Editar anúncio" aria-label={`Editar ${r.ad_name || r.ad_id}`}
+                            className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 outline-none">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 };
