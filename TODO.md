@@ -58,7 +58,7 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 2c. ~~**CT-1 + CT-2** card de contacto rico + atribuição read-only~~ ✅ **FEITO (01/06, LIVE)** — página `/contacts/[id]` completa (Fases 1-3: campos Notion + Indicado por/Indicou + atribuição + comentários).
 2d. ~~**CONTACT-360-AI** (NS-2)~~ ✅ **FEITO (01/06, LIVE)** — Assistente 360 (retrato + próxima acção + mensagem) + auto-enriquecimento + memória/aprendizagem.
 2e. ~~**CT-TIMELINE**~~ ✅ **FEITO (01/06, LIVE)** — histórico de interações (ver + registo manual c/ data editável + liga ao 360).
-3. ~~**#418 hydration**~~ ✅ **CORRIGIDO (02/06, `c1ab61f`), verificado em build de produção LOCAL.** Duas fontes no shell: tema (ThemeProvider lia localStorage no 1.º render → Sol/Lua divergente em modo claro) e InstallBanner (iOS elegível só no cliente). Fix: tema hydration-safe + script inline anti-flash no `<head>` + guarda `mounted` no useInstallState. Local: /dashboard+/contacts+/contacts/[id] mobile = 0 #418 e 0 `$RS`. ⚠️ **PENDENTE:** deploy Vercel ficou preso (>18 min sem promover) → João vê dashboard Vercel; quando LIVE, limpar `client_errors` (`update client_errors set resolved=true where resolved is distinct from true;`) e re-verificar.
+3. ~~**#418 hydration**~~ ✅ **CORRIGIDO E LIVE (02/06, HEAD `482d1e2`, build `260602_1029`).** Duas fontes no shell: tema (ThemeProvider lia localStorage no 1.º render → Sol/Lua divergente em modo claro) e InstallBanner (iOS elegível só no cliente). Fix: tema hydration-safe + script inline anti-flash no `<head>` + guarda `mounted` no useInstallState. **Produção: 0 #418 e 0 `$RS`** em /dashboard+/contacts+/contacts/[id] (desktop + mobile 375). `client_errors` limpos (0 abertos) e 0 erros novos após navegar. **Deploy esteve preso por haver 2 projectos Vercel no mesmo repo (crm-joao + nossocrm) a competir pelo único slot do Hobby** → desbloqueado cancelando o build Queued preso. **Falta decidir: eliminar/pausar o projecto `nossocrm` redundante** (ver INT-DOMAIN + secção F).
 4. **MKT-SOCIAL** (sessão própria) · **IMO-6** mandatos · **NS-3** custo por imóvel · **MA-LTV** valor vitalício do anúncio · **MA-DRILLDOWN Fase 2** · **MSG-WHATSAPP-PROPRIO** · **MKT-STUDIO**
 
 **🥈 P2 — logo a seguir:**
@@ -122,6 +122,18 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 - **CT-TIMELINE · Timeline unificada de interações no contacto (tudo ligado)** `[FEITO]` (01/06, 3 fases LIVE) `P1`
   Secção "Histórico de interações" na ficha `/contacts/[id]`: **Fase 1** (ver) — `getContactTimeline` lê `deal_activities` ligadas ao contacto **E aos negócios** desta pessoa (or contact_id / deal_id in deals), ordena por data efectiva; eventos de sistema (stage_moved) discretos. **Fase 2** (inserir o que quiser) — form "+ Registar" com tipo (nota/chamada/whatsapp/email/reunião/visita), **data/hora editável** (back-dating, ex.: email da conta RE/MAX) e apagar entradas manuais (`occurred_at`+`via=timeline-manual` no metadata; precisou de nova política RLS DELETE em `deal_activities`). **Fase 3** (ligar) — `getContact360Context` passa a usar a timeline unificada → o Assistente 360 fica mais rico. Verificado live (inserir com data passada ordena certo; apagar funciona). Futuro: auto-log de mais canais (liga a MSG-1/MSG-WHATSAPP-PROPRIO) e edição inline. Liga a [[reference-timeline-leads]].
 
+- **CT-PHONE-HYGIENE · Filtros inteligentes de contactos + higiene de números** `[POR FAZER]` `P?` (CAPTURE 02/06, ideias do João)
+  Pesquisa/filtros avançados na lista `/contacts` para chegar rápido a segmentos por **forma do número e completude de dados**:
+  (a) **PT vs estrangeiro** (com/sem `+351` ou prefixo nacional);
+  (b) **só email vs só telefone** (completude — quem não tem número, quem não tem email);
+  (c) **por prefixo**: fixos `21`/`22`/... e móveis `91`/`92`/`93`/`96`, e "sem `+351`" → corrigir em massa;
+  (d) **`+351351` (duplo prefixo de importação)** — encontrar e **corrigir rapidamente** (provável fix em lote: 1 SQL `replace` + normalização; e prevenir no importador);
+  (e) **números claramente falsos** (`911111111`, sequências/repetições) → marcar/limpar.
+  Base: campo telefone já existe. **Falta:** normalização E.164 (lib tipo libphonenumber), coluna/derivação de país+prefixo+validade, chips de filtro na lista, acção de correcção em massa, e guarda no importador (CT-2/import). Alto valor de **qualidade de dados antes de campanhas/automação** (números errados = leads perdidas + custo). Liga ao importador de contactos e à regra origem-obrigatória. Quick win possível já: SQL de auditoria que conta `+351351`, só-email, só-telefone, e padrões falsos — para dimensionar.
+
+- **CT-PARCEIROS · Rede de consultores/parceiros + analítica de co-negócio + plano de agradecimento** `[POR FAZER]` `P?` (CAPTURE 02/06, ideia do João)
+  Guardar consultores/colegas com quem o João faz negócio (na secção **Parceiros** e no **card**): dados de contacto + negócios feitos juntos. **Analítica:** quem trouxe/fechou mais negócios comigo → ranking de parceiros. **Nurture:** plano de **agradecimento/parceria** (lembretes, mensagens no tom do João, "para que se lembrem de mim"). Reusa o grafo `contact_referrals` (Indicado por/Indicou), o Assistente 360 (copy) e liga a **MA-LTV** (valor vitalício/linhagem) e ao financeiro (co-broke). Decidir: parceiro = tipo de contacto/tag vs entidade própria; métricas (nº negócios, € gerado, último contacto); cadência de agradecimento. Marca pessoal "lendária" como fio condutor ([[joao-fonseca-brand]]).
+
 ### C. Mensagens / canais
 
 - **MSG-1 · MSG-WHATSAPP-PROPRIO — SMS+WhatsApp número próprio (sem Meta)** `[POR FAZER]` `P?`
@@ -182,6 +194,12 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 
 - **INT-1 · Portais imobiliários (Idealista / Imovirtual / Casa Sapo)** `[POR FAZER]` `P?`
   Webhooks para receber leads desses portais (hoje só Meta Ads). Alto valor de captação. (origem: Integrações pendentes)
+
+- **INT-DOMAIN · Domínio próprio para o CRM (em vez de crm-joao.vercel.app)** `[POR FAZER]` `P2` (CAPTURE 02/06, ideia do João)
+  Apontar o CRM a um subdomínio próprio (ex.: `crm.joaofilipefonseca.pt`) em vez do `*.vercel.app`. **NÃO exige sair da Vercel:** adicionar o domínio nas settings do projecto Vercel + registo DNS (CNAME) na Cloudflare (temos acesso à API, zone `5da30c05...`); a Vercel emite SSL automático. Rápido (~10-15 min + propagação DNS). Actualizar depois `NEXT_PUBLIC` de URL público se houver, callbacks OAuth Meta (redirect URI), webhooks e o link do morning-brief. **Win fácil que resolve o "prefiro o meu domínio" sem migração de host.**
+
+- **INT-CLOUDFLARE-HOST · (Decisão) migrar o CRM para Cloudflare Pages/Workers** `[POR FAZER / A DECIDIR]` `P3` (CAPTURE 02/06)
+  O João perguntou se muda "tudo para Cloudflare". A regra [[feedback-hosting]] (SEMPRE Cloudflare Pages) era para **landing pages estáticas**; o CRM é Next.js 16 App Router com SSR + muitas server functions + crons + edge → migrar para Cloudflare (via OpenNext/`next-on-pages` + Workers + Cron Triggers) é **projecto sizeable e com risco** (limites de runtime Workers, reescrever `vercel.json` functions/crons, re-testar tudo). Custo Cloudflare baixo (free tier generoso) mas o esforço/risco não compensa agora. **Recomendação:** NÃO migrar; resolver o que o João quer mesmo (domínio próprio = INT-DOMAIN) e manter Vercel. Reavaliar só se houver dor real de custo/limites na Vercel. Nota: a "verificação de segurança" no login é o **Cloudflare Turnstile** (widget na app, já corre na Vercel — independente do host); migrar host não muda isso.
 
 - **INT-2 · Google Calendar sync** `[POR FAZER]` `P?`
   Sincronizar visitas/atividades. (origem: Integrações pendentes)
