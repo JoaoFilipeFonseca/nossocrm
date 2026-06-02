@@ -82,8 +82,15 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 **AUD-D1 · CAUSA-RAIZ do gap CMI — enums duplicados em 3 sítios** `P1` `[FEITO]` (02/06, HEAD `9e28e50`, LIVE+verificado)
   ✅ Tipos de documento centralizados em **`shared.DOCUMENTO_KINDS`** (array canónico): `DocumentoKind` + `DOCUMENTO_KIND_VALUES` derivam dele; `documentoLabel` faz lookup; `ImovelDocumentos` usa-o no dropdown; a rota deriva `ALLOWED_KINDS` dele. Adicionar um tipo = 1 linha, impossível ficar a faltar num sítio. Verificado em produção (dropdown completo, sem regressão). **Resta varrer outros enums duplicados** (tipos de mandato/`comissao_paga_por` na rota+componente; kinds de evento; tipos de canal) com o mesmo padrão — `P2`.
 
-**AUD-A1 · Negócios NÃO ligados a imóveis (0 de 484)** `P1` `[POR FAZER]`
-  `deals.imovel_id` está a **0 em todos os 484 negócios**. Quebra: CMI Acompanhamento (KPI "Negócios" sempre 0), ROI por imóvel (NS-3), valor vitalício (MA-LTV) e toda a relação imóvel↔negócio. Causa: criação/edição de negócio não pede/define o imóvel; importados do GHL sem ligação. **Fix:** selector de imóvel na criação/edição do negócio + backfill onde haja pista (título/morada). É a "costura" central imóvel↔negócio.
+**AUD-A1 · Negócios NÃO ligados a imóveis (0 de 484)** `P1` `[EM CURSO — plano fundamentado 02/06]`
+  `deals.imovel_id` está a **0 em todos os 484 negócios**. Quebra: CMI Acompanhamento (KPI "Negócios" sempre 0), ROI por imóvel (NS-3), valor vitalício (MA-LTV). **Fundamentado (02/06):** `deals.imovel_id` existe na BD mas **NENHUM caminho da UI o escreve**; **não há picker de imóvel** nem **hook `useImoveis` client**; o `Deal`/mapeamento não expõe `imovelId`.
+  **Plano de execução (≈5-6 ficheiros, feature a sério — NÃO é slice pequeno):**
+  1. `types`: `Deal.imovelId?: string | null`; mapear em `lib/supabase/deals.ts` (leitura + no payload de `useUpdateDeal`).
+  2. `useImoveis` (client query hook) a partir de `GET /api/imoveis` (existe) + `queryKeys.imoveis`.
+  3. `ImovelSearchCombobox` (espelhar `components/ui/ContactSearchCombobox.tsx`): procura por referência/morada/tipologia.
+  4. `DealDetailModal`: secção/linha **"Imóvel"** — mostra o ligado (link p/ `/imoveis/[id]`) ou o combobox p/ ligar/trocar/desligar; grava via `updateDeal(id,{imovelId})`. (E opcional: campo no `CreateDealModalV2`.)
+  5. Verificar live: ligar um negócio a um imóvel → KPI "Negócios" do CMI desse imóvel passa a 1.
+  **Backfill (separado, cuidado):** os 484 são em grande parte leads/compradores do GHL sem imóvel específico → NÃO forçar; backfill só por pista forte (título/morada ↔ imóvel) e reversível. Provavelmente manual/assistido, não automático.
 
 **AUD-B1 · 485 de 485 contactos SEM origem/atribuição** `P1` `[POR FAZER]`
   Viola a regra inegociável [[regra-lead-tag-proveniencia-obrigatoria]]. Os contactos históricos (GHL) não têm `attribution.source`; só as leads Meta novas têm. **Fix:** (1) confirmar que a criação MANUAL exige origem; (2) backfill dos 485 com origem `importacao_ghl` (ou similar); (3) Meta já preenche. Sem isto, dashboards de origem e medição vitalícia ficam cegos.
