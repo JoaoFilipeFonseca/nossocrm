@@ -304,6 +304,9 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 - **Q-3 · Multi-utilizador: RBAC granular (#85)** `[POR FAZER]` `P?`
   Owner/Admin/Member/Viewer + permissões scoped + RLS por role. **Portão antes de dar acesso a 2.º consultor (Helena).** Hoje só 1 user (João) → não urgente, mas obrigatório antes de crescer. (origem: #85)
 
+- **WL-1 · White-label SaaS: cada consultor escolhe funcionalidades + cores da marca + nome + logo** `[POR FAZER]` `P?` (CAPTURE 02/06, ideia do João — visão de venda do CRM)
+  Quando o CRM for vendido a outros consultores, cada **tenant/org** deve poder: (a) **ligar/desligar funcionalidades** (feature toggles por org — já há base `instanceFlags`/`queryKeys.instanceFlags.byOrg`, falta UI de gestão + gating consistente em toda a app); (b) **personalizar TODAS as cores** do CRM (tema próprio por org, tokens CSS `--color-*` dinâmicos a partir das cores da marca); (c) **nome + logo próprios** no shell (sidebar/header/login/PWA/emails). ⚠️ **Distinto do Brand Kit** (`ai_brand_kits` = marca pessoal para marketing, NÃO o tema do CRM — ver [[feedback-brand-kit-e-marca-pessoal]]); aqui é o **chrome do próprio produto** white-label. Liga a Q-3 (RBAC/multi-tenant), [[serve-qualquer-consultor]] (SaaS-ready) e ao tema (cuidado com hidratação — ver fix #418). Decisões futuras: armazenar tema/branding por org (`organization_settings` ou tabela própria), aplicar sem flash (script inline), limites do que é desligável.
+
 - **Q-4 · Audit logs alargados (multi-utilizador)** `[PARCIAL]` `P?`
   Já há `audit_logs` para Meta; alargar a quem mexeu em quê quando crescer. (origem: GHL Audit Logs)
 
