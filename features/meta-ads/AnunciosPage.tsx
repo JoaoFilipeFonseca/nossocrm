@@ -20,6 +20,7 @@ export interface AdPerformanceRow {
   won_value: number;
   currency: string | null;
   thumbnail_url: string | null;
+  image_url: string | null;
   creative_type: string | null;
 }
 
@@ -375,7 +376,7 @@ export const AnunciosPage: React.FC = () => {
                         {r.thumbnail_url ? (
                           <button
                             type="button"
-                            onClick={() => setLightbox({ url: r.thumbnail_url!, name: r.ad_name || r.ad_id })}
+                            onClick={() => setLightbox({ url: r.image_url ?? r.thumbnail_url!, name: r.ad_name || r.ad_id })}
                             className="relative shrink-0 rounded-md overflow-hidden border border-slate-200 hover:ring-2 hover:ring-violet-300 focus-visible:ring-2 focus-visible:ring-violet-400 outline-none"
                             title="Ver criativo"
                           >
@@ -661,7 +662,7 @@ const AdTree: React.FC<{
                           {r.thumbnail_url ? (
                             <button
                               type="button"
-                              onClick={() => onLightbox({ url: r.thumbnail_url!, name: r.ad_name || r.ad_id })}
+                              onClick={() => onLightbox({ url: r.image_url ?? r.thumbnail_url!, name: r.ad_name || r.ad_id })}
                               className="relative shrink-0 rounded-md overflow-hidden border border-slate-200 hover:ring-2 hover:ring-violet-300 outline-none"
                               title="Ver criativo"
                             >
