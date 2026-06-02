@@ -79,8 +79,8 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 > morada = 0. O que existe são **gaps de costura de domínio**, **dados históricos sem origem** e um
 > **smell estrutural** (enums duplicados) que foi a causa-raiz do gap do CMI. Atacar por prioridade.
 
-**AUD-D1 · CAUSA-RAIZ do gap CMI — enums duplicados em 3 sítios** `P1` `[POR FAZER]`
-  Os tipos de documento vivem em **3 listas separadas** (`ImovelDocumentos.KIND_OPTIONS` + rota `ALLOWED_KINDS` + `shared.DocumentoKind`/`DOC_LABEL`); idem tipos CMI/mandato. Adicionar um valor obriga a lembrar os 3 → fácil esquecer um (foi o que aconteceu ao CMI). **Fix estrutural:** fonte única de verdade no `shared` e derivar dropdown + allowlist + label dela. Elimina a CLASSE inteira de "faltou no sítio X". Varrer outros enums duplicados (estados, kinds de evento, tipos de canal).
+**AUD-D1 · CAUSA-RAIZ do gap CMI — enums duplicados em 3 sítios** `P1` `[FEITO]` (02/06, HEAD `9e28e50`, LIVE+verificado)
+  ✅ Tipos de documento centralizados em **`shared.DOCUMENTO_KINDS`** (array canónico): `DocumentoKind` + `DOCUMENTO_KIND_VALUES` derivam dele; `documentoLabel` faz lookup; `ImovelDocumentos` usa-o no dropdown; a rota deriva `ALLOWED_KINDS` dele. Adicionar um tipo = 1 linha, impossível ficar a faltar num sítio. Verificado em produção (dropdown completo, sem regressão). **Resta varrer outros enums duplicados** (tipos de mandato/`comissao_paga_por` na rota+componente; kinds de evento; tipos de canal) com o mesmo padrão — `P2`.
 
 **AUD-A1 · Negócios NÃO ligados a imóveis (0 de 484)** `P1` `[POR FAZER]`
   `deals.imovel_id` está a **0 em todos os 484 negócios**. Quebra: CMI Acompanhamento (KPI "Negócios" sempre 0), ROI por imóvel (NS-3), valor vitalício (MA-LTV) e toda a relação imóvel↔negócio. Causa: criação/edição de negócio não pede/define o imóvel; importados do GHL sem ligação. **Fix:** selector de imóvel na criação/edição do negócio + backfill onde haja pista (título/morada). É a "costura" central imóvel↔negócio.
