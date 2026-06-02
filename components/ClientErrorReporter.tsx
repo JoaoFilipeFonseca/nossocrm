@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { isIgnorableClientError } from '@/lib/client-errors/ignore';
 
 /**
  * Sprint 18 c1 — listener global que captura erros front-end em produção.
@@ -27,6 +28,11 @@ export function ClientErrorReporter() {
       stack: string | null,
     ) => {
       try {
+        // Ruído interno benigno (ex.: corrida de streaming $RS do React 19,
+        // ResizeObserver loop) — não é bug da app e não afecta o utilizador.
+        // Ignora-se para não poluir /saúde nem disparar alertas Telegram.
+        if (isIgnorableClientError(message, stack)) return;
+
         const key = `${source}:${message.slice(0, 200)}`;
         const now = Date.now();
         const last = recent.get(key) || 0;
