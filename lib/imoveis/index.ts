@@ -1,6 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
-import type { Imovel, ImovelEvento, ImovelFoto, ImovelDocumento, ImovelProprietario, ImovelMandato, ProprietarioDocumento } from './shared';
+import type { Imovel, ImovelEvento, ImovelFoto, ImovelDocumento, ImovelProprietario, ImovelMandato, ImovelCmi, ProprietarioDocumento } from './shared';
 
 export * from './shared';
 
@@ -86,6 +86,17 @@ export async function listMandatosByImovelId(imovelId: string): Promise<ImovelMa
     .order('data_inicio', { ascending: false });
   if (error) throw error;
   return (data ?? []) as ImovelMandato[];
+}
+
+export async function listCmisByImovelId(imovelId: string): Promise<ImovelCmi[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('imovel_cmi')
+    .select('*')
+    .eq('imovel_id', imovelId)
+    .order('data_cmi', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as ImovelCmi[];
 }
 
 export async function listProprietarioDocs(propId: string): Promise<ProprietarioDocumento[]> {

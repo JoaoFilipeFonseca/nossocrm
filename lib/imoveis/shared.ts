@@ -211,6 +211,51 @@ export interface ImovelMandato {
   created_at: string;
 }
 
+// IMO-6 — CMI (Contrato de Mediação Imobiliária), lado do vendedor/angariação.
+// Distinto do "mandato" (que no modelo do João é do lado do comprador).
+export interface ImovelCmi {
+  id: string;
+  organization_id: string;
+  imovel_id: string;
+  tipo: 'simples' | 'exclusivo';
+  data_cmi: string;          // data de celebração do contrato (date)
+  data_fim: string | null;   // validade
+  comissao_pct: number | null;
+  notas: string | null;
+  activo: boolean;
+  created_at: string;
+}
+
+export const CMI_TIPOS: Array<{ v: 'simples' | 'exclusivo'; l: string }> = [
+  { v: 'exclusivo', l: 'Exclusivo' },
+  { v: 'simples', l: 'Simples' },
+];
+
+export type CmiCountdownState = 'ok' | 'warn' | 'danger' | 'expired' | 'none';
+export interface CmiCountdown {
+  state: CmiCountdownState;
+  days: number | null; // dias até ao fim (negativo se expirou); null se sem data_fim
+}
+
+/**
+ * Contagem decrescente até ao fim do CMI. Determinista por dia (compara só a
+ * parte da data em UTC) para ser seguro em SSR↔hidratação — passar sempre o
+ * `now` calculado no servidor para o cliente renderizar o mesmo valor.
+ * Limiares: vermelho ≤7d · âmbar 8–30d · verde >30d · expirado <0 · sem prazo.
+ */
+export function cmiCountdown(dataFim: string | null, nowISO?: string): CmiCountdown {
+  if (!dataFim) return { state: 'none', days: null };
+  const ref = nowISO ? new Date(nowISO) : new Date();
+  const end = new Date(`${dataFim.slice(0, 10)}T00:00:00Z`);
+  const now = Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth(), ref.getUTCDate());
+  const days = Math.round((end.getTime() - now) / 86_400_000);
+  if (Number.isNaN(days)) return { state: 'none', days: null };
+  if (days < 0) return { state: 'expired', days };
+  if (days <= 7) return { state: 'danger', days };
+  if (days <= 30) return { state: 'warn', days };
+  return { state: 'ok', days };
+}
+
 export interface ProprietarioDocumento {
   id: string;
   organization_id: string;

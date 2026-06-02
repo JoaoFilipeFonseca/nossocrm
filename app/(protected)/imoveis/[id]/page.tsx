@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import {
   getImovelById, listEventosByImovelId, listDealsByImovelId,
   listFotosByImovelId, listDocumentosByImovelId,
-  listProprietariosByImovelId, listMandatosByImovelId, listProprietarioDocsByImovel,
+  listProprietariosByImovelId, listMandatosByImovelId, listCmisByImovelId, listProprietarioDocsByImovel,
   formatPrecoEur, estadoChipClass, estadoLabel, eventoLabel, tipoLabel,
   CARACTERISTICAS_CATALOG,
 } from '@/lib/imoveis';
@@ -14,6 +14,7 @@ import ImovelGaleria from '@/components/imoveis/ImovelGaleria';
 import ImovelDocumentos from '@/components/imoveis/ImovelDocumentos';
 import ImovelProprietarios from '@/components/imoveis/ImovelProprietarios';
 import ImovelMandatos from '@/components/imoveis/ImovelMandatos';
+import ImovelCmi from '@/components/imoveis/ImovelCmi';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Imóvel | Foco Imo' };
@@ -23,15 +24,17 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
   const imovel = await getImovelById(id);
   if (!imovel) notFound();
 
-  const [eventos, deals, fotos, documentos, proprietarios, mandatos, docsByProp] = await Promise.all([
+  const [eventos, deals, fotos, documentos, proprietarios, mandatos, cmis, docsByProp] = await Promise.all([
     listEventosByImovelId(id),
     listDealsByImovelId(id),
     listFotosByImovelId(id),
     listDocumentosByImovelId(id),
     listProprietariosByImovelId(id),
     listMandatosByImovelId(id),
+    listCmisByImovelId(id),
     listProprietarioDocsByImovel(id),
   ]);
+  const nowISO = new Date().toISOString();
 
   // Telegram activo? + contagem de matches activos para este imovel
   let isTelegramActive = false;
@@ -232,6 +235,11 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
       {/* Proprietários */}
       <Section title={`Proprietários${proprietarios.length > 0 ? ` (${proprietarios.length})` : ''}`}>
         <ImovelProprietarios imovelId={id} proprietarios={proprietarios} docsByProp={docsByProp} />
+      </Section>
+
+      {/* CMI — Contrato de Mediação Imobiliária (lado do vendedor) */}
+      <Section title="CMI · Contrato de Mediação Imobiliária">
+        <ImovelCmi imovelId={id} cmis={cmis} nowISO={nowISO} />
       </Section>
 
       {/* Mandato */}
