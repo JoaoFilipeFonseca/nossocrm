@@ -770,6 +770,34 @@ export async function setAdStatus(adId: string, token: string, status: 'ACTIVE' 
   await graphPost(adId, token, { status });
 }
 
+// ----------------------------------------------------------------------------
+// MA-CREATE (Tier 4) — criar campanha/conjunto/anúncio de raiz. Começamos pela
+// campanha (objecto de topo). `special_ad_categories` é obrigatório pela Meta
+// (vazio = sem categoria especial; imobiliário em alguns países exige HOUSING —
+// a confirmar para PT). Cria-se sempre EM PAUSA. `adAccountId` = `act_<id>`.
+// ----------------------------------------------------------------------------
+export async function createCampaign(
+  adAccountId: string | null,
+  token: string,
+  opts: { name: string; objective: string; status?: 'PAUSED' | 'ACTIVE'; specialAdCategories?: string[] },
+): Promise<{ id: string }> {
+  if (!adAccountId) throw new Error('Conta de anúncios não seleccionada.');
+  const created = await graphPostJson(`${adAccountId}/campaigns`, token, {
+    name: opts.name,
+    objective: opts.objective,
+    status: opts.status ?? 'PAUSED',
+    special_ad_categories: JSON.stringify(opts.specialAdCategories ?? []),
+  });
+  const id = (created.id as string) || '';
+  if (!id) throw new Error('A Meta não devolveu a campanha criada.');
+  return { id };
+}
+
+/** Apaga uma campanha (usado para limpar uma campanha de teste). */
+export async function deleteCampaign(campaignId: string, token: string): Promise<void> {
+  await graphDelete(campaignId, token);
+}
+
 /**
  * Altera o orçamento no nó indicado (adset ou campanha). `kind` = 'daily' |
  * 'lifetime', `cents` em cêntimos da moeda da conta.
