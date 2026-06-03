@@ -59,6 +59,10 @@ interface Profile {
     phone?: string | null;
     avatar_url?: string | null;
     created_at?: string;
+    /** PREFS-1: rota de arranque preferida (null = /dashboard) */
+    landing_page?: string | null;
+    /** PREFS-1: tema preferido guardado na conta (null = usar default do dispositivo) */
+    dark_mode?: boolean | null;
 }
 
 /**

@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { isE164, normalizePhoneE164 } from '@/lib/phone';
 import { Loader2, User, Mail, Shield, Calendar, Key, Check, Eye, EyeOff, Phone, Pencil, Save, Camera, X } from 'lucide-react';
+import PreferencesCard from './PreferencesCard';
 
 /**
  * Componente React `ProfilePage`.
@@ -568,6 +569,11 @@ export const ProfilePage: React.FC = () => {
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* PREFS-1: preferências (arranque + tema) */}
+            <div className="my-6">
+                <PreferencesCard />
             </div>
 
             {/* Security Section */}

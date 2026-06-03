@@ -316,8 +316,8 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 
 ### I. UX / Navegação / Mobile
 
-- **PREFS-1 · Preferências do utilizador persistidas na conta (arranque + tema)** `[POR FAZER]` `P?` (CAPTURE 03/06, ideia do João)
-  Definir e **guardar na conta** (não só localStorage por dispositivo): (a) **página de arranque** (onde o CRM abre ao entrar — ex.: Dashboard, Negócios, Anúncios…) e (b) **tema claro/escuro**. Ao gravar, fica igual em **desktop e mobile até o João mudar**. Guardar em `profiles` (ou `organization_settings` por-user) e aplicar no arranque/login. ⚠️ **Tema:** respeitar o fix de hidratação #418 ([[estado-crm-foco-imo]]) — ler a preferência da conta sem mismatch SSR↔cliente (script inline + default determinista). Redireccionar para a página de arranque após login.
+- **PREFS-1 · Preferências do utilizador persistidas na conta (arranque + tema)** `[FEITO]` (03/06, migração `20260603130000`, LIVE)
+  ✅ **Guardado na conta** (`profiles.landing_page` + `profiles.dark_mode`), sincroniza desktop+mobile. **Página de arranque:** cartão "Preferências" no perfil (select Dashboard/Contactos/Imóveis/Anúncios/Financeiro/Automações); o login redirecciona para ela (fallback `/dashboard`). **Tema:** o cartão escolhe claro/escuro (aplica já + grava); o **toggle do header também grava na conta**; ao carregar o perfil o tema da conta aplica-se **1× pós-montagem** (`themeSyncedRef` no `Layout`) → **sem mismatch #418** (mantém default determinista + localStorage como cache). `ThemeContext` ganhou `setDarkMode`. Rota `PATCH /api/profile/preferences` (valida landing_page contra allowlist). Componente `features/profile/PreferencesCard.tsx`.
 
 - **UX-1 · NAV-IA — agrupar sidebar em 6 famílias** `[POR FAZER]` `P?`
   16 itens → 6 grupos colapsáveis (Início/Comunicação/CRM/Imóveis/Marketing/Sistema). Confirmar famílias com o João. Nota: aplicar também à nova gaveta mobile (FULL_NAV). (origem: CAPTURE NAV-IA)

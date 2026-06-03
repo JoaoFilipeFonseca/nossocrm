@@ -182,9 +182,33 @@ const NavItem = ({
  * @returns {JSX.Element} Estrutura de layout completa
  */
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { darkMode, toggleDarkMode } = useTheme();
+  const { darkMode, toggleDarkMode, setDarkMode } = useTheme();
   const { isGlobalAIOpen, setIsGlobalAIOpen, sidebarCollapsed, setSidebarCollapsed } = useUIState();
   const { user, loading, profile, signOut } = useAuth();
+
+  // PREFS-1: a conta é a fonte de verdade do tema. Ao carregar o perfil, aplica
+  // o tema guardado uma única vez (pós-montagem → não há mismatch SSR #418).
+  const themeSyncedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (themeSyncedRef.current) return;
+    if (profile && typeof profile.dark_mode === 'boolean') {
+      themeSyncedRef.current = true;
+      if (profile.dark_mode !== darkMode) setDarkMode(profile.dark_mode);
+    }
+  }, [profile, darkMode, setDarkMode]);
+
+  // Toggle do tema: aplica já e persiste na conta (sincroniza desktop+mobile).
+  const handleToggleTheme = React.useCallback(() => {
+    const next = !darkMode;
+    toggleDarkMode();
+    if (user) {
+      fetch('/api/profile/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dark_mode: next }),
+      }).catch(() => { /* localStorage já guardou; conta é best-effort */ });
+    }
+  }, [darkMode, toggleDarkMode, user]);
   const router = useRouter();
   const pathname = usePathname();
   const { mode } = useResponsiveMode();
@@ -553,7 +577,8 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
               <NotificationPopover />
               <button
                 type="button"
-                onClick={toggleDarkMode}
+                onClick={handleToggleTheme}
+                aria-label={darkMode ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
                 className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-all active:scale-95 focus-visible-ring"
               >
                 {darkMode ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />}

@@ -34,7 +34,18 @@ export default function LoginPage() {
             })
 
             if (error) throw error
-            router.push('/dashboard')
+
+            // PREFS-1: abrir na página de arranque preferida do utilizador (fallback /dashboard).
+            let dest = '/dashboard'
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) {
+                    const { data: prof } = await supabase
+                        .from('profiles').select('landing_page').eq('id', user.id).maybeSingle()
+                    if (prof?.landing_page) dest = prof.landing_page as string
+                }
+            } catch { /* mantém /dashboard */ }
+            router.push(dest)
         } catch (err) {
             setError(getErrorMessage(err))
         } finally {

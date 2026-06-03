@@ -40,6 +40,7 @@ const STORAGE_KEY = 'crm_dark_mode';
 interface ThemeContextType {
   darkMode: boolean;
   toggleDarkMode: () => void;
+  setDarkMode: (next: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -94,7 +95,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const toggleDarkMode = () => setDark(!darkMode);
 
   return (
-    <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
+    <ThemeContext.Provider value={{ darkMode, toggleDarkMode, setDarkMode: setDark }}>
       {children}
     </ThemeContext.Provider>
   );
