@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec } from './write';
+import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate } from './write';
 
 describe('extractCopyFromCreative', () => {
   it('lê a copy directa do creative', () => {
@@ -111,5 +111,30 @@ describe('applyCopyToStorySpec', () => {
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.reason).toContain('dinâmico');
+  });
+});
+
+describe('sanitizeStorySpecForCreate', () => {
+  it('remove picture/image_url quando há image_hash no link_data', () => {
+    const spec = { page_id: 'p', link_data: { link: 'https://x.pt', image_hash: 'h', picture: 'https://cdn/x.jpg', image_url: 'https://cdn/y.jpg', message: 'm', caption: 'x.pt' } };
+    const out = sanitizeStorySpecForCreate(spec);
+    const ld = out.link_data as Record<string, unknown>;
+    expect(ld.image_hash).toBe('h');
+    expect(ld.picture).toBeUndefined();
+    expect(ld.image_url).toBeUndefined();
+    expect(ld.caption).toBeUndefined();
+    expect(ld.message).toBe('m');
+  });
+
+  it('mantém picture quando não há image_hash', () => {
+    const spec = { link_data: { link: 'https://x.pt', picture: 'https://cdn/x.jpg', message: 'm' } };
+    const out = sanitizeStorySpecForCreate(spec);
+    expect((out.link_data as Record<string, unknown>).picture).toBe('https://cdn/x.jpg');
+  });
+
+  it('não muta o spec original', () => {
+    const spec = { link_data: { image_hash: 'h', picture: 'u' } };
+    sanitizeStorySpecForCreate(spec);
+    expect((spec.link_data as Record<string, unknown>).picture).toBe('u');
   });
 });

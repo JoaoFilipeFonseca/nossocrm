@@ -44,6 +44,19 @@ function toCents(v: unknown): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+// Constrói uma mensagem de erro PT rica a partir do corpo da Graph API. A Meta
+// devolve frequentemente "Invalid parameter" genérico, com o detalhe útil em
+// error_user_title/error_user_msg/error_subcode. Surfa-los para o utilizador.
+function metaErrorMessage(json: Record<string, unknown>, status: number): string {
+  const err = (json?.error ?? {}) as {
+    message?: string; error_user_title?: string; error_user_msg?: string; error_subcode?: number;
+  };
+  const detail = err.error_user_msg || err.error_user_title;
+  const base = err.message || `Erro da Graph API (HTTP ${status}).`;
+  const subcode = err.error_subcode ? ` (subcódigo ${err.error_subcode})` : '';
+  return detail && detail !== base ? `${base}: ${detail}${subcode}` : `${base}${subcode}`;
+}
+
 async function graphGet(path: string, token: string): Promise<Record<string, unknown>> {
   const sep = path.includes('?') ? '&' : '?';
   const res = await fetch(`${META_GRAPH_BASE}/${path}${sep}access_token=${encodeURIComponent(token)}`, {
@@ -51,10 +64,7 @@ async function graphGet(path: string, token: string): Promise<Record<string, unk
   });
   let json: Record<string, unknown> = {};
   try { json = (await res.json()) as Record<string, unknown>; } catch { /* corpo não-JSON */ }
-  if (!res.ok) {
-    const err = json?.error as { message?: string } | undefined;
-    throw new Error(err?.message || `Erro da Graph API (HTTP ${res.status}).`);
-  }
+  if (!res.ok) throw new Error(metaErrorMessage(json, res.status));
   return json;
 }
 
@@ -71,10 +81,7 @@ async function graphPostJson(
   });
   let json: Record<string, unknown> = {};
   try { json = (await res.json()) as Record<string, unknown>; } catch { /* corpo não-JSON */ }
-  if (!res.ok) {
-    const err = json?.error as { message?: string } | undefined;
-    throw new Error(err?.message || `Erro da Graph API (HTTP ${res.status}).`);
-  }
+  if (!res.ok) throw new Error(metaErrorMessage(json, res.status));
   return json;
 }
 
@@ -256,6 +263,30 @@ export function applyCopyToStorySpec(
 }
 
 /**
+ * Limpa um object_story_spec lido da Graph API para poder ser usado a CRIAR um
+ * criativo novo. A leitura devolve campos eco/read-only que o endpoint de
+ * criação rejeita ("Invalid parameter"). Pura/testável. Regras:
+ *  - link_data/video_data: se houver `image_hash`, remove `picture`/`image_url`
+ *    (URL eco), pois enviar ambos colide.
+ *  - remove `caption` (derivado do domínio do link, read-only no create).
+ */
+export function sanitizeStorySpecForCreate(spec: Record<string, unknown>): Record<string, unknown> {
+  const clone = JSON.parse(JSON.stringify(spec)) as Record<string, unknown>;
+  const prune = (node: unknown) => {
+    if (!node || typeof node !== 'object') return;
+    const n = node as Record<string, unknown>;
+    if (n.image_hash) {
+      delete n.picture;
+      delete n.image_url;
+    }
+    delete n.caption;
+  };
+  prune(clone.link_data);
+  prune(clone.video_data);
+  return clone;
+}
+
+/**
  * Edita o texto do anúncio: cria um criativo novo (clonando o spec actual com a
  * copy nova) e aponta o anúncio a esse criativo. Devolve o id do criativo novo.
  * `adAccountId` no formato `act_<id>`. Lança Error PT em falha.
@@ -273,10 +304,11 @@ export async function updateAdCopy(
   }
   const built = applyCopyToStorySpec(full.story_spec, copy);
   if (!built.ok) throw new Error(built.reason);
+  const cleanSpec = sanitizeStorySpecForCreate(built.spec);
 
   const created = await graphPostJson(`${adAccountId}/adcreatives`, token, {
     name: 'Texto editado via Foco Imo CRM',
-    object_story_spec: JSON.stringify(built.spec),
+    object_story_spec: JSON.stringify(cleanSpec),
   });
   const newId = (created.id as string) || '';
   if (!newId) throw new Error('A Meta não devolveu o criativo novo.');
