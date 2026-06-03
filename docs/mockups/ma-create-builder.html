@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — MA-CREATE (construtor de anúncios no CRM, à medida do João)</title>
+<style>
+  :root { --primary:#4f46e5; --ok:#059669; --amber:#b45309; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; background:#0b1020; color:#0f172a; }
+  .wrap { display:flex; gap:22px; padding:24px; flex-wrap:wrap; justify-content:center; align-items:flex-start; }
+  .secthead { font-size:13px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .card { width:430px; max-width:100%; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.4); }
+  .head { background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .steps { display:flex; gap:6px; align-items:center; font-size:11px; font-weight:700; color:#94a3b8; }
+  .steps .on { color:var(--primary); }
+  .steps .dot { width:6px; height:6px; border-radius:50%; background:#cbd5e1; }
+  .steps .dot.on { background:var(--primary); }
+  .title { font-size:15px; font-weight:800; }
+  .body { padding:16px; }
+  .lbl { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#64748b; margin:0 0 6px; }
+  .grp { margin-bottom:15px; }
+  .opt { display:flex; gap:10px; align-items:center; border:1px solid #cbd5e1; border-radius:10px; padding:9px 11px; margin-bottom:7px; cursor:pointer; font-size:13px; }
+  .opt.sel { border-color:var(--primary); background:#eef2ff; font-weight:700; }
+  .opt .ic { width:22px; text-align:center; }
+  .inp { width:100%; border:1px solid #cbd5e1; border-radius:9px; padding:9px 11px; font-size:13px; font-family:inherit; }
+  .row2 { display:flex; gap:9px; }
+  .chip { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; background:#ecfdf5; color:var(--ok); border:1px solid #a7f3d0; border-radius:999px; padding:4px 9px; margin:0 5px 5px 0; }
+  .locked { background:#f1f5f9; color:#475569; border-color:#cbd5e1; }
+  .note { font-size:11px; color:#94a3b8; margin-top:4px; }
+  .est { background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:9px 11px; font-size:12px; color:#075985; }
+  .est b { font-weight:800; }
+  .foot { display:flex; gap:9px; padding:13px 16px; border-top:1px solid #e2e8f0; }
+  .btn { flex:1; padding:10px; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; border:1px solid transparent; }
+  .btn-ghost { background:#f1f5f9; color:#334155; }
+  .btn-primary { background:var(--primary); color:#fff; }
+  .warn { display:flex; gap:8px; background:#fffbeb; border:1px solid #fde68a; color:var(--amber); border-radius:10px; padding:9px 11px; font-size:11.5px; line-height:1.4; margin-top:6px; }
+  .expl { color:#cbd5e1; font-size:12px; max-width:430px; line-height:1.55; }
+  .expl b { color:#fff; } .expl code { background:#1e293b; color:#e2e8f0; padding:1px 5px; border-radius:5px; font-size:11px; }
+  .seg { display:flex; gap:6px; flex-wrap:wrap; }
+  .seg .opt { flex:1; justify-content:center; min-width:110px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- PASSO 1 — CAMPANHA -->
+    <div>
+      <p class="secthead">Passo 1 · Campanha</p>
+      <div class="card">
+        <div class="head">
+          <div class="title">Novo anúncio</div>
+          <div class="steps"><span class="on">Campanha</span><span class="dot on"></span><span>Conjunto</span><span class="dot"></span><span>Anúncio</span></div>
+        </div>
+        <div class="body">
+          <div class="grp">
+            <p class="lbl">Objectivo (só os teus 3)</p>
+            <div class="opt sel"><span class="ic">🎯</span> Leads</div>
+            <div class="opt"><span class="ic">👆</span> Tráfego</div>
+            <div class="opt"><span class="ic">💬</span> Interação</div>
+          </div>
+          <div class="grp">
+            <p class="lbl">Nome da campanha</p>
+            <input class="inp" value="[Leads] Moradia Seroa V3 — Junho" />
+            <p class="note">Sugiro o nome no teu padrão [Tipo] Imóvel — Mês.</p>
+          </div>
+          <div class="grp">
+            <p class="lbl">Definições fixas (automáticas)</p>
+            <span class="chip locked">🏠 Categoria: Imobiliário</span>
+            <span class="chip locked">🇵🇹 País: Portugal</span>
+            <span class="chip locked">💶 Orçamento no conjunto</span>
+            <span class="chip locked">🚫 Sem partilha de 20%</span>
+            <span class="chip locked">🛒 Compra: Leilão</span>
+          </div>
+        </div>
+        <div class="foot">
+          <button class="btn btn-ghost">Cancelar</button>
+          <button class="btn btn-primary">Continuar →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSO 2 — CONJUNTO -->
+    <div>
+      <p class="secthead">Passo 2 · Conjunto de anúncios</p>
+      <div class="card">
+        <div class="head">
+          <div class="title">Novo anúncio</div>
+          <div class="steps"><span>Campanha</span><span class="dot on"></span><span class="on">Conjunto</span><span class="dot on"></span><span>Anúncio</span></div>
+        </div>
+        <div class="body">
+          <div class="grp">
+            <p class="lbl">Onde converter</p>
+            <div class="seg">
+              <div class="opt sel"><span class="ic">📝</span> Formulário</div>
+              <div class="opt"><span class="ic">🌐</span> Site</div>
+              <div class="opt"><span class="ic">💬</span> WhatsApp</div>
+            </div>
+          </div>
+          <div class="grp">
+            <p class="lbl">Orçamento diário</p>
+            <div class="row2">
+              <input class="inp" value="5,00 €" style="flex:1" />
+              <select class="inp" style="flex:1"><option>Diário</option><option>Total</option></select>
+            </div>
+            <p class="note">Limite máx. diário ~1,75× · semanal ~7×. (a Meta calcula)</p>
+          </div>
+          <div class="grp">
+            <p class="lbl">Localização + raio</p>
+            <input class="inp" value="Paços de Ferreira, Porto" />
+            <div class="row2" style="margin-top:7px">
+              <select class="inp"><option>Raio 10 km</option><option>Raio 17 km</option><option>Raio 25 km</option><option>Raio 40 km</option></select>
+            </div>
+            <div class="est" style="margin-top:8px">Público estimado: <b>~38 000 – 110 000</b> pessoas nesta zona/raio.</div>
+            <p class="note">Cidade/localidade/morada validadas pela Meta. Outros países só na Meta.</p>
+          </div>
+          <div class="grp">
+            <p class="lbl">Público</p>
+            <div class="opt sel"><span class="ic">✨</span> Advantage+ (a Meta encontra quem responde melhor)</div>
+          </div>
+        </div>
+        <div class="foot">
+          <button class="btn btn-ghost">← Voltar</button>
+          <button class="btn btn-primary">Continuar →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSO 3 — ANÚNCIO -->
+    <div>
+      <p class="secthead">Passo 3 · Anúncio</p>
+      <div class="card">
+        <div class="head">
+          <div class="title">Novo anúncio</div>
+          <div class="steps"><span>Campanha</span><span class="dot on"></span><span>Conjunto</span><span class="dot on"></span><span class="on">Anúncio</span></div>
+        </div>
+        <div class="body">
+          <div class="grp">
+            <p class="lbl">Formato</p>
+            <div class="seg">
+              <div class="opt sel"><span class="ic">🖼️</span> Imagem/vídeo</div>
+              <div class="opt"><span class="ic">🎠</span> Carrossel</div>
+            </div>
+          </div>
+          <div class="grp">
+            <p class="lbl">Destino</p>
+            <div class="seg">
+              <div class="opt sel"><span class="ic">📝</span> Formulário</div>
+              <div class="opt"><span class="ic">🌐</span> Site (URL)</div>
+            </div>
+            <div class="row2" style="margin-top:7px">
+              <select class="inp" style="flex:2"><option>Usar formulário do CRM: Avaliação Gratuita</option><option>+ Criar formulário novo</option></select>
+            </div>
+            <p class="note">Formulários prontos no CRM (MA-LEADFORM) ou criar um novo aqui.</p>
+          </div>
+          <div class="grp">
+            <p class="lbl">Criativo</p>
+            <div class="opt"><span class="ic">⬆️</span> Imagem/vídeo (arrastar ou do arquivo)</div>
+            <input class="inp" style="margin-top:7px" value="Título: Avaliação Gratuita" />
+            <textarea class="inp" style="margin-top:7px" rows="2">Visita presencial gratuita, sem compromisso. Avaliação rigorosa do seu imóvel.</textarea>
+            <div class="row2" style="margin-top:7px">
+              <select class="inp"><option>CTA: Saber mais</option><option>Enviar mensagem</option><option>Pedir orçamento</option></select>
+            </div>
+            <span class="chip" style="margin-top:8px">✨ Otimizar texto por pessoa: ON</span>
+          </div>
+          <div class="warn"><span>⚠️</span><div>Cria <b>tudo em PAUSA</b> na Meta. Reveês e ligas quando quiseres. Píxel e monitorização ligam-se automaticamente.</div></div>
+        </div>
+        <div class="foot">
+          <button class="btn btn-ghost">← Voltar</button>
+          <button class="btn btn-primary">Criar (em pausa)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPLICAÇÃO -->
+    <div style="max-width:430px">
+      <p class="secthead">Como construo (por fases, tudo verificável)</p>
+      <p class="expl">
+        Wizard de 3 passos, com os teus <b>defaults travados</b> (Imobiliário, Portugal, orçamento no conjunto, sem partilha 20%, Leilão) para ser <b>rápido e à prova de erro</b> — e serve qualquer consultor.
+        <br><br>
+        <b>Backend já de-riscado:</b> <code>createCampaign</code> confirmado a criar (em pausa) e a apagar na tua conta real, sem o portão do vídeo. Falta <code>createAdSet</code> + <code>createAd</code> (mesmo padrão) e ligar o criativo (reusa o Tier 2) e o formulário (MA-LEADFORM).
+        <br><br>
+        <b>Fases:</b> 1) Campanha · 2) Conjunto (orçamento+localização+raio+público estimado+Advantage+) · 3) Anúncio (criativo+destino+CTA) · 4) Formulário no anúncio + CAPI.
+        Cada fase: cria <b>em pausa</b>, mostro-te o resultado na Meta + audit, e só publicas tu. <b>Printo cada campo</b> à medida que ligo, como pediste.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>
