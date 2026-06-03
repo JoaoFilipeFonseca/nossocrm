@@ -220,7 +220,7 @@ function DuplicateButton({ adId, adName }: { adId: string; adName: string }) {
       });
       const j = await res.json();
       if (!res.ok || j.error) { setErr(j.error || 'Não foi possível duplicar.'); setState('idle'); return; }
-      setNewId(j.new_ad_id); setState('done');
+      setNewId(j.new_adset_id); setState('done');
     } catch { setErr('Não foi possível duplicar.'); setState('idle'); }
   }, [adId]);
 
@@ -241,7 +241,7 @@ function DuplicateButton({ adId, adName }: { adId: string; adName: string }) {
   if (state === 'done') {
     return (
       <div className="mt-2 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300">
-        <p>✓ Duplicado <b>em pausa</b> (com o sufixo &laquo;cópia CRM&raquo;). Aparece na lista no próximo sync — aí podes editar o texto/imagem na cópia, sem tocar neste.</p>
+        <p>✓ Duplicado para um <b>conjunto novo em pausa</b> (sufixo &laquo;cópia CRM&raquo;). Aparece na lista no próximo sync — aí editas o texto na cópia e testas, sem tocar neste.</p>
         <div className="mt-1.5 flex items-center gap-3">
           <button onClick={() => void undo()} className="font-bold text-red-600 dark:text-red-400 hover:underline">Apagar cópia (desfazer)</button>
           <button onClick={() => { setState('idle'); setNewId(null); }} className="font-bold text-slate-500 hover:underline">Fechar</button>
@@ -254,7 +254,7 @@ function DuplicateButton({ adId, adName }: { adId: string; adName: string }) {
   if (state === 'confirm') {
     return (
       <div className="mt-2 rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
-        <p>Criar uma <b>cópia em pausa</b> de <b>{adName}</b> (mesmo conjunto), para testar uma variante? O original não é tocado.</p>
+        <p>Criar uma <b>cópia em pausa</b> de <b>{adName}</b> num <b>conjunto novo</b>, para testar uma variante? O original não é tocado.</p>
         <div className="mt-1.5 flex items-center gap-3">
           <button onClick={() => void duplicate()} className="font-bold text-primary-600 hover:underline">Confirmar</button>
           <button onClick={() => setState('idle')} className="font-bold text-slate-500 hover:underline">Voltar</button>

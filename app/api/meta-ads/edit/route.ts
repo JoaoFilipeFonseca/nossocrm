@@ -60,41 +60,41 @@ export async function POST(req: Request) {
 
   try {
     // ---- Apagar a cópia (desfazer duplicação) -----------------------------
-    // A cópia recém-criada ainda não está em ad_insights, por isso validamos a
-    // posse pela conta de anúncios (o anúncio tem de pertencer à conta da org).
+    // A duplicação cria um CONJUNTO novo (ainda não está em ad_insights), por
+    // isso validamos a posse pela conta de anúncios (tem de ser da conta da org).
     if (action === 'delete_ad') {
       const acc = await getAdAccountId(ad_id, c.token);
       if (!c.adAccountId || acc !== c.adAccountId) {
-        return metaJson({ error: 'Este anúncio não pertence à sua conta.' }, 200);
+        return metaJson({ error: 'Este item não pertence à sua conta.' }, 200);
       }
       await deleteAd(ad_id, c.token);
       await c.admin.from('audit_logs').insert({
         user_id: c.userId,
         organization_id: c.orgId,
         action: 'META_AD_DELETE',
-        resource_type: 'meta_ad',
+        resource_type: 'meta_adset',
         resource_id: c.integrationId,
         severity: 'warning',
-        details: { ad_id, account_id: acc },
+        details: { deleted_id: ad_id, account_id: acc },
       });
       return metaJson({ ok: true, deleted: ad_id });
     }
 
     const { adName } = await assertAdBelongsToOrg(c, ad_id);
 
-    // ---- Duplicar para testar (cópia em pausa) ----------------------------
+    // ---- Duplicar para testar (conjunto novo em pausa) --------------------
     if (action === 'duplicate_ad') {
-      const { new_ad_id } = await duplicateAd(ad_id, c.token);
+      const { new_adset_id } = await duplicateAd(ad_id, c.token);
       await c.admin.from('audit_logs').insert({
         user_id: c.userId,
         organization_id: c.orgId,
         action: 'META_AD_DUPLICATE',
-        resource_type: 'meta_ad',
+        resource_type: 'meta_adset',
         resource_id: c.integrationId,
         severity: 'warning',
-        details: { ad_id, ad_name: adName, new_ad_id },
+        details: { ad_id, ad_name: adName, new_adset_id },
       });
-      return metaJson({ ok: true, new_ad_id });
+      return metaJson({ ok: true, new_adset_id });
     }
 
     // ---- Pausar / reactivar (nível anúncio) -------------------------------

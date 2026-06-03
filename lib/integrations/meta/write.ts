@@ -472,16 +472,23 @@ export async function updateAdDynamicTexts(
 // seu criativo). A cópia entra EM PAUSA. "Desfazer" apaga a cópia recém-criada.
 // ----------------------------------------------------------------------------
 
-/** Duplica o anúncio (mesmo conjunto), em pausa. Devolve o id da cópia. */
-export async function duplicateAd(adId: string, token: string): Promise<{ new_ad_id: string }> {
-  const json = await graphPostJson(`${adId}/copies`, token, {
+/**
+ * Duplica o anúncio para testar (A/B). Copia o CONJUNTO do anúncio (que traz o
+ * anúncio dentro) para um conjunto novo EM PAUSA — a Meta não deixa ter dois
+ * anúncios no mesmo conjunto de criativo dinâmico, e testar em conjunto separado
+ * é a prática recomendada. Devolve o id do conjunto novo (para desfazer).
+ */
+export async function duplicateAd(adId: string, token: string): Promise<{ new_adset_id: string }> {
+  const live = await getAdLiveState(adId, token);
+  if (!live.adset_id) throw new Error('Não foi possível identificar o conjunto do anúncio.');
+  const json = await graphPostJson(`${live.adset_id}/copies`, token, {
     status_option: 'PAUSED',
     rename_options: JSON.stringify({ rename_strategy: 'ONLY_TOP_LEVEL_RENAME', rename_suffix: ' (cópia CRM)' }),
   });
-  const newId =
-    (json.copied_ad_id as string) || (json.ad_id as string) || (json.id as string) || '';
-  if (!newId) throw new Error('A Meta não devolveu o anúncio duplicado.');
-  return { new_ad_id: newId };
+  const newAdset =
+    (json.copied_adset_id as string) || (json.id as string) || '';
+  if (!newAdset) throw new Error('A Meta não devolveu o conjunto duplicado.');
+  return { new_adset_id: newAdset };
 }
 
 /** Lê o id da conta de anúncios de um anúncio (validação de posse). `act_<id>`. */
