@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 import { z } from 'zod';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 import { resolveMetaAdminContext, metaJson, assertAdBelongsToOrg } from '@/lib/integrations/meta/server';
-import { getAdLiveState, setAdStatus, setBudget, getAdCreativeFull, updateAdCopy, updateAdDynamicTexts } from '@/lib/integrations/meta/write';
+import { getAdLiveState, setAdStatus, setBudget, getAdCreativeFull, updateAdCopy, updateAdDynamicTexts, duplicateAd, deleteAd, getAdAccountId } from '@/lib/integrations/meta/write';
 
 // Piso de segurança do orçamento (1,00 da moeda da conta). A Meta tem mínimos
 // próprios por moeda e é a autoridade final; isto só evita zeros/enganos.
@@ -29,7 +29,7 @@ const Schema = z.object({
   // set_budget edita o orçamento no nó certo (adset ou campanha/CBO).
   // set_adset_budget mantém-se como alias para compatibilidade.
   // update_copy cria um criativo novo (texto novo) e aponta o anúncio a ele.
-  action: z.enum(['pause_ad', 'resume_ad', 'set_budget', 'set_adset_budget', 'update_copy']),
+  action: z.enum(['pause_ad', 'resume_ad', 'set_budget', 'set_adset_budget', 'update_copy', 'duplicate_ad', 'delete_ad']),
   ad_id: z.string().min(1),
   amount_cents: z.number().int().positive().optional(),
   kind: z.enum(['daily', 'lifetime']).optional(),
@@ -59,7 +59,43 @@ export async function POST(req: Request) {
   const { action, ad_id } = payload;
 
   try {
+    // ---- Apagar a cópia (desfazer duplicação) -----------------------------
+    // A cópia recém-criada ainda não está em ad_insights, por isso validamos a
+    // posse pela conta de anúncios (o anúncio tem de pertencer à conta da org).
+    if (action === 'delete_ad') {
+      const acc = await getAdAccountId(ad_id, c.token);
+      if (!c.adAccountId || acc !== c.adAccountId) {
+        return metaJson({ error: 'Este anúncio não pertence à sua conta.' }, 200);
+      }
+      await deleteAd(ad_id, c.token);
+      await c.admin.from('audit_logs').insert({
+        user_id: c.userId,
+        organization_id: c.orgId,
+        action: 'META_AD_DELETE',
+        resource_type: 'meta_ad',
+        resource_id: c.integrationId,
+        severity: 'warning',
+        details: { ad_id, account_id: acc },
+      });
+      return metaJson({ ok: true, deleted: ad_id });
+    }
+
     const { adName } = await assertAdBelongsToOrg(c, ad_id);
+
+    // ---- Duplicar para testar (cópia em pausa) ----------------------------
+    if (action === 'duplicate_ad') {
+      const { new_ad_id } = await duplicateAd(ad_id, c.token);
+      await c.admin.from('audit_logs').insert({
+        user_id: c.userId,
+        organization_id: c.orgId,
+        action: 'META_AD_DUPLICATE',
+        resource_type: 'meta_ad',
+        resource_id: c.integrationId,
+        severity: 'warning',
+        details: { ad_id, ad_name: adName, new_ad_id },
+      });
+      return metaJson({ ok: true, new_ad_id });
+    }
 
     // ---- Pausar / reactivar (nível anúncio) -------------------------------
     if (action === 'pause_ad' || action === 'resume_ad') {

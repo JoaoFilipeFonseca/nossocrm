@@ -5,7 +5,7 @@
  * vitalícias, e a lista de leads e negócios atribuídos a este anúncio.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { X, Image as ImageIcon, PlayCircle, Pencil, AlertTriangle, Trash2 } from 'lucide-react';
+import { X, Image as ImageIcon, PlayCircle, Pencil, AlertTriangle, Trash2, Copy } from 'lucide-react';
 
 // CTAs mais comuns (imobiliário/leads). Valor = enum da Meta; label PT-PT.
 const CTA_OPTIONS: { value: string; label: string }[] = [
@@ -114,7 +114,7 @@ export function AdDrilldownDrawer({ adId, adNameFallback, onClose }: { adId: str
                   {cr?.body && (<><p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mt-2">Texto</p><p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-4">{cr.body}</p></>)}
                   {cr?.cta_type && (<span className="inline-block mt-2 text-[11px] font-bold bg-primary-600 text-white px-2.5 py-1 rounded-md">{cr.cta_type.replaceAll('_', ' ')}</span>)}
                   {!cr?.title && !cr?.body && <p className="text-xs text-slate-400">Sem copy disponível para este criativo.</p>}
-                  <div className="mt-2 flex items-center gap-3">
+                  <div className="mt-2 flex items-center gap-3 flex-wrap">
                     <button
                       onClick={() => setEditing(true)}
                       className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 bg-primary-50 dark:bg-primary-600/10 border border-primary-200 dark:border-primary-600/30 px-3 py-1.5 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-600/20"
@@ -123,6 +123,7 @@ export function AdDrilldownDrawer({ adId, adNameFallback, onClose }: { adId: str
                     </button>
                     {cr?.permalink && <a href={cr.permalink} target="_blank" rel="noopener noreferrer" className="text-xs text-primary-600 hover:underline">Ver na Meta ↗</a>}
                   </div>
+                  <DuplicateButton adId={adId} adName={data.ad.ad_name || adNameFallback} />
                 </div>
               </div>
             )}
@@ -200,6 +201,80 @@ function Section({ title, count, children }: { title: string; count: number; chi
 }
 function Empty({ text }: { text: string }) {
   return <p className="py-3 text-center text-xs text-slate-500 dark:text-slate-400">{text}</p>;
+}
+
+// MA-DUPLICATE (Tier 3) — duplicar o anúncio (cópia em pausa) para testar uma
+// variante sem mexer no original (não reinicia a aprendizagem do vencedor).
+// "Apagar cópia" desfaz, apagando o anúncio recém-criado.
+function DuplicateButton({ adId, adName }: { adId: string; adName: string }) {
+  const [state, setState] = useState<'idle' | 'confirm' | 'working' | 'done'>('idle');
+  const [newId, setNewId] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const duplicate = useCallback(async () => {
+    setState('working'); setErr(null);
+    try {
+      const res = await fetch('/api/meta-ads/edit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'duplicate_ad', ad_id: adId }),
+      });
+      const j = await res.json();
+      if (!res.ok || j.error) { setErr(j.error || 'Não foi possível duplicar.'); setState('idle'); return; }
+      setNewId(j.new_ad_id); setState('done');
+    } catch { setErr('Não foi possível duplicar.'); setState('idle'); }
+  }, [adId]);
+
+  const undo = useCallback(async () => {
+    if (!newId) return;
+    setState('working'); setErr(null);
+    try {
+      const res = await fetch('/api/meta-ads/edit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_ad', ad_id: newId }),
+      });
+      const j = await res.json();
+      if (!res.ok || j.error) { setErr(j.error || 'Não foi possível apagar.'); setState('done'); return; }
+      setNewId(null); setState('idle');
+    } catch { setErr('Não foi possível apagar.'); setState('done'); }
+  }, [newId]);
+
+  if (state === 'done') {
+    return (
+      <div className="mt-2 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300">
+        <p>✓ Duplicado <b>em pausa</b> (com o sufixo &laquo;cópia CRM&raquo;). Aparece na lista no próximo sync — aí podes editar o texto/imagem na cópia, sem tocar neste.</p>
+        <div className="mt-1.5 flex items-center gap-3">
+          <button onClick={() => void undo()} className="font-bold text-red-600 dark:text-red-400 hover:underline">Apagar cópia (desfazer)</button>
+          <button onClick={() => { setState('idle'); setNewId(null); }} className="font-bold text-slate-500 hover:underline">Fechar</button>
+        </div>
+        {err && <p className="mt-1 text-red-600 dark:text-red-400">{err}</p>}
+      </div>
+    );
+  }
+
+  if (state === 'confirm') {
+    return (
+      <div className="mt-2 rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+        <p>Criar uma <b>cópia em pausa</b> de <b>{adName}</b> (mesmo conjunto), para testar uma variante? O original não é tocado.</p>
+        <div className="mt-1.5 flex items-center gap-3">
+          <button onClick={() => void duplicate()} className="font-bold text-primary-600 hover:underline">Confirmar</button>
+          <button onClick={() => setState('idle')} className="font-bold text-slate-500 hover:underline">Voltar</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setState('confirm')}
+        disabled={state === 'working'}
+        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-3 py-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-50"
+      >
+        <Copy className="w-3.5 h-3.5" /> {state === 'working' ? 'A duplicar...' : 'Duplicar para testar'}
+      </button>
+      {err && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{err}</p>}
+    </div>
+  );
 }
 
 interface EditInfo {

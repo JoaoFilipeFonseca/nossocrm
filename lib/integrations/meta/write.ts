@@ -99,6 +99,16 @@ async function graphPost(id: string, token: string, fields: Record<string, strin
   await graphPostJson(id, token, fields);
 }
 
+async function graphDelete(id: string, token: string): Promise<void> {
+  const res = await fetch(`${META_GRAPH_BASE}/${id}?access_token=${encodeURIComponent(token)}`, {
+    method: 'DELETE',
+    headers: { 'User-Agent': 'FocoImoCRM/1.0' },
+  });
+  let json: Record<string, unknown> = {};
+  try { json = (await res.json()) as Record<string, unknown>; } catch { /* corpo não-JSON */ }
+  if (!res.ok) throw new Error(metaErrorMessage(json, res.status));
+}
+
 /** Lê o estado vivo do anúncio (status + orçamento editável adset/campanha). */
 export async function getAdLiveState(adId: string, token: string): Promise<AdLiveState> {
   const json = await graphGet(
@@ -454,6 +464,36 @@ export async function updateAdDynamicTexts(
 
   await graphPost(adId, token, { creative: JSON.stringify({ creative_id: newId }) });
   return { creative_id: newId };
+}
+
+// ----------------------------------------------------------------------------
+// MA-DUPLICATE (Tier 3) — duplicar um anúncio para testar variantes (A/B) sem
+// tocar no original. Usa o endpoint nativo /copies da Meta (copia o anúncio e o
+// seu criativo). A cópia entra EM PAUSA. "Desfazer" apaga a cópia recém-criada.
+// ----------------------------------------------------------------------------
+
+/** Duplica o anúncio (mesmo conjunto), em pausa. Devolve o id da cópia. */
+export async function duplicateAd(adId: string, token: string): Promise<{ new_ad_id: string }> {
+  const json = await graphPostJson(`${adId}/copies`, token, {
+    status_option: 'PAUSED',
+    rename_options: JSON.stringify({ rename_strategy: 'ONLY_TOP_LEVEL_RENAME', rename_suffix: ' (cópia CRM)' }),
+  });
+  const newId =
+    (json.copied_ad_id as string) || (json.ad_id as string) || (json.id as string) || '';
+  if (!newId) throw new Error('A Meta não devolveu o anúncio duplicado.');
+  return { new_ad_id: newId };
+}
+
+/** Lê o id da conta de anúncios de um anúncio (validação de posse). `act_<id>`. */
+export async function getAdAccountId(adId: string, token: string): Promise<string | null> {
+  const json = await graphGet(`${adId}?fields=account_id`, token);
+  const acc = json.account_id as string | undefined;
+  return acc ? `act_${acc}` : null;
+}
+
+/** Apaga um anúncio (usado para desfazer uma duplicação). */
+export async function deleteAd(adId: string, token: string): Promise<void> {
+  await graphDelete(adId, token);
 }
 
 /** Pausa ou reactiva o anúncio (nível anúncio). status: 'ACTIVE' | 'PAUSED'. */
