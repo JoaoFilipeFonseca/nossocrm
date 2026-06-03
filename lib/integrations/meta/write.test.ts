@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate, metaErrorMessage } from './write';
+import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate, metaErrorMessage, extractTextsFromAssetFeedSpec, applyTextsToAssetFeedSpec, sanitizeAssetFeedSpecForCreate } from './write';
 
 describe('extractCopyFromCreative', () => {
   it('lê a copy directa do creative', () => {
@@ -40,16 +40,97 @@ describe('analyzeCreativeForEdit', () => {
     expect(r.editable).toBe(true);
   });
 
-  it('não editável e avisa quando é criativo dinâmico (asset_feed_spec)', () => {
+  it('marca dinâmico editável quando há asset_feed_spec com textos', () => {
     const r = analyzeCreativeForEdit({ asset_feed_spec: { titles: [{ text: 'a' }], bodies: [{ text: 'b' }] } });
-    expect(r.editable).toBe(false);
-    expect(r.reason).toContain('dinâmico');
+    expect(r.editable).toBe(true);
+    expect(r.kind).toBe('dynamic');
+    expect(r.texts.titles).toEqual(['a']);
+    expect(r.texts.bodies).toEqual(['b']);
+  });
+
+  it('story tem precedência sobre asset_feed_spec', () => {
+    const r = analyzeCreativeForEdit({ object_story_spec: { link_data: { name: 'n', message: 'm' } }, asset_feed_spec: { titles: [{ text: 'a' }] } });
+    expect(r.kind).toBe('story');
   });
 
   it('não editável quando não há spec nenhum', () => {
     const r = analyzeCreativeForEdit({ id: 'c2' });
     expect(r.editable).toBe(false);
+    expect(r.kind).toBe('none');
     expect(r.reason).toBeTruthy();
+  });
+});
+
+describe('extractTextsFromAssetFeedSpec', () => {
+  it('lê titles/bodies/descriptions como arrays de strings', () => {
+    const t = extractTextsFromAssetFeedSpec({
+      titles: [{ text: 'T1' }, { text: 'T2' }],
+      bodies: [{ text: 'B1' }],
+      descriptions: [{ text: 'D1' }],
+    });
+    expect(t.titles).toEqual(['T1', 'T2']);
+    expect(t.bodies).toEqual(['B1']);
+    expect(t.descriptions).toEqual(['D1']);
+  });
+
+  it('ignora entradas vazias e campos em falta', () => {
+    const t = extractTextsFromAssetFeedSpec({ titles: [{ text: '' }, { text: 'ok' }] });
+    expect(t.titles).toEqual(['ok']);
+    expect(t.bodies).toEqual([]);
+    expect(t.descriptions).toEqual([]);
+  });
+});
+
+describe('applyTextsToAssetFeedSpec', () => {
+  it('substitui os textos e preserva imagens/formatos', () => {
+    const afs = { titles: [{ text: 'velho' }], bodies: [{ text: 'antigo' }], images: [{ hash: 'h1' }], ad_formats: ['SINGLE_IMAGE'] };
+    const r = applyTextsToAssetFeedSpec(afs, { titles: ['novo 1', 'novo 2'], bodies: ['corpo'], descriptions: [] });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.spec.titles).toEqual([{ text: 'novo 1' }, { text: 'novo 2' }]);
+    expect(r.spec.bodies).toEqual([{ text: 'corpo' }]);
+    expect(r.spec.images).toEqual([{ hash: 'h1' }]);
+    expect(r.spec.ad_formats).toEqual(['SINGLE_IMAGE']);
+    expect(r.spec.descriptions).toBeUndefined();
+  });
+
+  it('exige pelo menos um título e um texto', () => {
+    const r = applyTextsToAssetFeedSpec({ titles: [], bodies: [] }, { titles: ['só título'], bodies: [], descriptions: [] });
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.reason).toContain('título');
+  });
+
+  it('limpa espaços e remove vazios', () => {
+    const r = applyTextsToAssetFeedSpec({}, { titles: ['  T  ', '  '], bodies: ['  B '], descriptions: ['  '] });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.spec.titles).toEqual([{ text: 'T' }]);
+    expect(r.spec.bodies).toEqual([{ text: 'B' }]);
+    expect(r.spec.descriptions).toBeUndefined();
+  });
+
+  it('não muta o spec original', () => {
+    const afs = { titles: [{ text: 'velho' }], bodies: [{ text: 'antigo' }] };
+    applyTextsToAssetFeedSpec(afs, { titles: ['novo'], bodies: ['novo'], descriptions: [] });
+    expect(afs.titles).toEqual([{ text: 'velho' }]);
+  });
+});
+
+describe('sanitizeAssetFeedSpecForCreate', () => {
+  it('remove url das imagens quando há hash', () => {
+    const afs = { images: [{ hash: 'h', url: 'https://cdn/x.jpg', image_crops: {} }, { hash: 'h2' }] };
+    const out = sanitizeAssetFeedSpecForCreate(afs);
+    const imgs = out.images as Record<string, unknown>[];
+    expect(imgs[0].url).toBeUndefined();
+    expect(imgs[0].image_crops).toBeUndefined();
+    expect(imgs[0].hash).toBe('h');
+  });
+
+  it('remove url dos vídeos quando há video_id', () => {
+    const afs = { videos: [{ video_id: 'v', url: 'https://cdn/v.mp4' }] };
+    const out = sanitizeAssetFeedSpecForCreate(afs);
+    expect((out.videos as Record<string, unknown>[])[0].url).toBeUndefined();
   });
 });
 
@@ -110,7 +191,7 @@ describe('applyCopyToStorySpec', () => {
     const r = applyCopyToStorySpec({ photo_data: {} }, { title: 'x', body: 'y', cta_type: null });
     expect(r.ok).toBe(false);
     if (r.ok) return;
-    expect(r.reason).toContain('dinâmico');
+    expect(r.reason).toBeTruthy();
   });
 });
 

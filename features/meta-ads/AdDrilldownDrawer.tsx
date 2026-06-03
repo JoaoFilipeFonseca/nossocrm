@@ -5,7 +5,7 @@
  * vitalícias, e a lista de leads e negócios atribuídos a este anúncio.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { X, Image as ImageIcon, PlayCircle, Pencil, AlertTriangle } from 'lucide-react';
+import { X, Image as ImageIcon, PlayCircle, Pencil, AlertTriangle, Trash2 } from 'lucide-react';
 
 // CTAs mais comuns (imobiliário/leads). Valor = enum da Meta; label PT-PT.
 const CTA_OPTIONS: { value: string; label: string }[] = [
@@ -95,7 +95,6 @@ export function AdDrilldownDrawer({ adId, adNameFallback, onClose }: { adId: str
               <EditCopyPanel
                 adId={adId}
                 adName={data.ad.ad_name || adNameFallback}
-                initial={{ title: cr.title, body: cr.body, cta_type: cr.cta_type }}
                 onCancel={() => setEditing(false)}
                 onSaved={() => { setEditing(false); void load(); }}
               />
@@ -203,46 +202,95 @@ function Empty({ text }: { text: string }) {
   return <p className="py-3 text-center text-xs text-slate-500 dark:text-slate-400">{text}</p>;
 }
 
-// MA-EDIT Tier 1 — editar o texto do anúncio. Cria um criativo novo na Meta e
-// aponta o anúncio a ele (a copy actual fica preservada no histórico da Meta).
+interface EditInfo {
+  kind: 'story' | 'dynamic' | 'none';
+  editable: boolean;
+  reason: string | null;
+  copy: { title: string | null; body: string | null; cta_type: string | null };
+  texts: { titles: string[]; bodies: string[]; descriptions: string[] };
+}
+
+// MA-EDIT — editar o texto do anúncio. Cria um criativo novo na Meta e aponta o
+// anúncio a ele (a copy actual fica preservada no histórico da Meta). Trata
+// criativo simples (1 texto) e dinâmico (várias variações; asset_feed_spec).
 function EditCopyPanel({
-  adId, adName, initial, onCancel, onSaved,
+  adId, adName, onCancel, onSaved,
 }: {
   adId: string;
   adName: string;
-  initial: { title: string | null; body: string | null; cta_type: string | null };
   onCancel: () => void;
   onSaved: () => void;
 }) {
-  const [title, setTitle] = useState(initial.title ?? '');
-  const [body, setBody] = useState(initial.body ?? '');
-  const [cta, setCta] = useState(initial.cta_type ?? '');
+  const [info, setInfo] = useState<EditInfo | null>(null);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+  // Simples:
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [cta, setCta] = useState('');
+  // Dinâmico:
+  const [titles, setTitles] = useState<string[]>([]);
+  const [bodies, setBodies] = useState<string[]>([]);
+  const [descriptions, setDescriptions] = useState<string[]>([]);
+
   const [confirm, setConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // Se o CTA actual não estiver na lista curada, junta-o para não se perder.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`/api/meta-ads/ad/${adId}/edit-info`, { cache: 'no-store' });
+        const j = await res.json();
+        if (!alive) return;
+        if (j.error) { setLoadErr(j.error); return; }
+        const i = j as EditInfo;
+        setInfo(i);
+        setTitle(i.copy.title ?? '');
+        setBody(i.copy.body ?? '');
+        setCta(i.copy.cta_type ?? '');
+        setTitles(i.texts.titles.length ? [...i.texts.titles] : ['']);
+        setBodies(i.texts.bodies.length ? [...i.texts.bodies] : ['']);
+        setDescriptions([...i.texts.descriptions]);
+      } catch {
+        if (alive) setLoadErr('Não foi possível ler o criativo.');
+      }
+    })();
+    return () => { alive = false; };
+  }, [adId]);
+
   const ctaOptions = cta && !CTA_OPTIONS.some((o) => o.value === cta)
     ? [{ value: cta, label: cta.replaceAll('_', ' ') }, ...CTA_OPTIONS]
     : CTA_OPTIONS;
 
-  const dirty = title !== (initial.title ?? '') || body !== (initial.body ?? '') || cta !== (initial.cta_type ?? '');
-  const canSave = (title.trim().length > 0 || body.trim().length > 0) && dirty;
+  const isDynamic = info?.kind === 'dynamic';
+  const cleanedTitles = titles.map((t) => t.trim()).filter(Boolean);
+  const cleanedBodies = bodies.map((t) => t.trim()).filter(Boolean);
+
+  const storyDirty = !!info && (title !== (info.copy.title ?? '') || body !== (info.copy.body ?? '') || cta !== (info.copy.cta_type ?? ''));
+  const dynamicDirty = !!info && JSON.stringify({ t: cleanedTitles, b: cleanedBodies, d: descriptions.map((t) => t.trim()).filter(Boolean) }) !== JSON.stringify({ t: info.texts.titles, b: info.texts.bodies, d: info.texts.descriptions });
+  const canSave = isDynamic
+    ? (cleanedTitles.length > 0 && cleanedBodies.length > 0 && dynamicDirty)
+    : ((title.trim().length > 0 || body.trim().length > 0) && storyDirty);
 
   const save = useCallback(async () => {
     setSaving(true);
     setErr(null);
     try {
+      const payload = isDynamic
+        ? {
+            action: 'update_copy', ad_id: adId,
+            titles: titles.map((t) => t.trim()).filter(Boolean),
+            bodies: bodies.map((t) => t.trim()).filter(Boolean),
+            descriptions: descriptions.map((t) => t.trim()).filter(Boolean),
+          }
+        : {
+            action: 'update_copy', ad_id: adId,
+            title: title.trim() || null, body: body.trim() || null, cta_type: cta || null,
+          };
       const res = await fetch('/api/meta-ads/edit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update_copy',
-          ad_id: adId,
-          title: title.trim() || null,
-          body: body.trim() || null,
-          cta_type: cta || null,
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!res.ok || json.error) { setErr(json.error || 'Não foi possível gravar.'); setConfirm(false); return; }
@@ -253,54 +301,66 @@ function EditCopyPanel({
     } finally {
       setSaving(false);
     }
-  }, [adId, title, body, cta, onSaved]);
+  }, [adId, isDynamic, title, body, cta, titles, bodies, descriptions, onSaved]);
+
+  if (loadErr) {
+    return (
+      <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-4 space-y-3">
+        <p className="text-sm text-red-600 dark:text-red-400">{loadErr}</p>
+        <button onClick={onCancel} className="w-full rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200">Fechar</button>
+      </div>
+    );
+  }
+  if (!info) {
+    return <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-8 text-center text-sm text-slate-500 dark:text-slate-400">A carregar o criativo...</div>;
+  }
+  if (!info.editable) {
+    return (
+      <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-4 space-y-3">
+        <p className="text-sm text-slate-600 dark:text-slate-300">{info.reason ?? 'Este anúncio não tem texto editável.'}</p>
+        <button onClick={onCancel} className="w-full rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200">Fechar</button>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-4 space-y-3">
-      <div>
-        <label className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
-          <span>Título</span>
-          <span className="text-slate-400 font-semibold normal-case">{title.length} / {MAX_TITLE}</span>
-        </label>
-        <input
-          value={title}
-          maxLength={MAX_TITLE}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-          placeholder="Título do anúncio"
-        />
-      </div>
-
-      <div>
-        <label className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
-          <span>Texto principal</span>
-          <span className="text-slate-400 font-semibold normal-case">{body.length}</span>
-        </label>
-        <textarea
-          value={body}
-          maxLength={MAX_BODY}
-          onChange={(e) => setBody(e.target.value)}
-          rows={4}
-          className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
-          placeholder="Texto principal do anúncio"
-        />
-      </div>
-
-      <div>
-        <label className="block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Botão (CTA)</label>
-        <select
-          value={cta}
-          onChange={(e) => setCta(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option value="">Sem botão</option>
-          {ctaOptions.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
-        </select>
-      </div>
+      {isDynamic ? (
+        <>
+          <span className="inline-block text-[10px] font-bold uppercase tracking-wide text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-600/10 border border-primary-200 dark:border-primary-600/30 px-2.5 py-1 rounded-full">Criativo dinâmico · a Meta combina estes textos</span>
+          <TextList label="Títulos" items={titles} setItems={setTitles} maxLen={MAX_TITLE} multiline={false} addLabel="Adicionar título" />
+          <TextList label="Textos principais" items={bodies} setItems={setBodies} maxLen={MAX_BODY} multiline addLabel="Adicionar texto" />
+          <TextList label="Descrições" items={descriptions} setItems={setDescriptions} maxLen={MAX_BODY} multiline={false} addLabel="Adicionar descrição" optional />
+        </>
+      ) : (
+        <>
+          <div>
+            <label className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
+              <span>Título</span>
+              <span className="text-slate-400 font-semibold normal-case">{title.length} / {MAX_TITLE}</span>
+            </label>
+            <input value={title} maxLength={MAX_TITLE} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Título do anúncio" />
+          </div>
+          <div>
+            <label className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
+              <span>Texto principal</span>
+              <span className="text-slate-400 font-semibold normal-case">{body.length}</span>
+            </label>
+            <textarea value={body} maxLength={MAX_BODY} onChange={(e) => setBody(e.target.value)} rows={4} className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y" placeholder="Texto principal do anúncio" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Botão (CTA)</label>
+            <select value={cta} onChange={(e) => setCta(e.target.value)} className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+              <option value="">Sem botão</option>
+              {ctaOptions.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
+            </select>
+          </div>
+        </>
+      )}
 
       <div className="flex gap-2.5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-        <p>Guardar <b>cria um criativo novo na Meta</b> e o anúncio <b>volta a revisão</b> (reinicia a aprendizagem). Para testar sem arriscar um anúncio que já vende, vai poder <b>duplicar primeiro</b> (próximo tier).</p>
+        <p>Guardar <b>cria um criativo novo na Meta</b> e o anúncio <b>volta a revisão</b> (reinicia a aprendizagem). A imagem/vídeo e o público <b>mantêm-se</b> — só mudam os textos.</p>
       </div>
 
       {err && <p className="text-xs text-red-600 dark:text-red-400">{err}</p>}
@@ -322,6 +382,46 @@ function EditCopyPanel({
           <button onClick={() => setConfirm(true)} disabled={!canSave} className="flex-1 rounded-lg bg-primary-600 px-3 py-2 text-sm font-bold text-white hover:bg-primary-700 disabled:opacity-40">Guardar na Meta</button>
         </div>
       )}
+    </div>
+  );
+}
+
+// Editor de uma lista de textos (títulos/textos/descrições do criativo dinâmico).
+function TextList({
+  label, items, setItems, maxLen, multiline, addLabel, optional,
+}: {
+  label: string;
+  items: string[];
+  setItems: (v: string[]) => void;
+  maxLen: number;
+  multiline: boolean;
+  addLabel: string;
+  optional?: boolean;
+}) {
+  const update = (i: number, v: string) => setItems(items.map((it, idx) => (idx === i ? v : it)));
+  const remove = (i: number) => setItems(items.filter((_, idx) => idx !== i));
+  const add = () => setItems([...items, '']);
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label} <span className="text-slate-400 font-semibold">({items.filter((t) => t.trim()).length})</span></span>
+        <button onClick={add} className="text-[11px] font-bold text-primary-600 bg-primary-50 dark:bg-primary-600/10 border border-primary-200 dark:border-primary-600/30 rounded-lg px-2.5 py-1 hover:bg-primary-100 dark:hover:bg-primary-600/20">+ {addLabel}</button>
+      </div>
+      <div className="space-y-2">
+        {items.length === 0 && optional && <p className="text-xs text-slate-400">Sem {label.toLowerCase()}.</p>}
+        {items.map((it, i) => (
+          <div key={i} className="flex gap-2 items-start">
+            {multiline ? (
+              <textarea value={it} maxLength={maxLen} onChange={(e) => update(i, e.target.value)} rows={2} className="flex-1 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y" />
+            ) : (
+              <input value={it} maxLength={maxLen} onChange={(e) => update(i, e.target.value)} className="flex-1 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" />
+            )}
+            <button onClick={() => remove(i)} aria-label="Remover" className="shrink-0 w-9 h-9 rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 flex items-center justify-center">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

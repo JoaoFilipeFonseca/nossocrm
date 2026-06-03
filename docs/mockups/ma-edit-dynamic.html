@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — MA-EDIT-DYNAMIC (editar textos de criativo dinâmico)</title>
+<style>
+  :root { --primary:#4f46e5; --amber:#b45309; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; background:#0b1020; color:#0f172a; }
+  .wrap { display:flex; gap:24px; padding:24px; flex-wrap:wrap; justify-content:center; }
+  .secthead { font-size:13px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .phone { width:440px; max-width:100%; background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.45); }
+  .head { border-bottom:1px solid #e2e8f0; padding:12px 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .crumb { font-size:11px; color:#64748b; }
+  .title { font-size:16px; font-weight:800; }
+  .x { color:#94a3b8; font-size:18px; }
+  .body { padding:18px; }
+  .badge { display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#3730a3; background:#eef2ff; border:1px solid #c7d2fe; padding:3px 8px; border-radius:999px; margin-bottom:12px; }
+  .group { margin-bottom:16px; }
+  .glabel { display:flex; align-items:center; justify-content:space-between; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#64748b; margin-bottom:6px; }
+  .add { font-size:11px; font-weight:800; color:var(--primary); background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; padding:3px 9px; cursor:pointer; }
+  .item { display:flex; gap:8px; align-items:flex-start; margin-bottom:7px; }
+  .item input, .item textarea { flex:1; border:1px solid #cbd5e1; border-radius:9px; padding:8px 10px; font-size:13px; font-family:inherit; }
+  .item textarea { min-height:54px; resize:vertical; }
+  .del { flex:none; width:32px; height:34px; border:1px solid #fecaca; background:#fef2f2; color:#dc2626; border-radius:9px; cursor:pointer; font-size:14px; }
+  .hint { font-size:11px; color:#94a3b8; margin-top:2px; }
+  .warn { display:flex; gap:9px; background:#fffbeb; border:1px solid #fde68a; color:var(--amber); border-radius:11px; padding:11px 13px; font-size:12px; line-height:1.45; margin:6px 0 14px; }
+  .warn b { font-weight:800; }
+  .row { display:flex; gap:10px; }
+  .btn { flex:1; padding:11px; border-radius:11px; font-size:14px; font-weight:800; cursor:pointer; border:1px solid transparent; }
+  .btn-ghost { background:#f1f5f9; color:#334155; }
+  .btn-primary { background:var(--primary); color:#fff; }
+  .note { color:#cbd5e1; font-size:12px; max-width:440px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <p class="secthead">Criativo dinâmico — editar as várias variações de texto</p>
+      <div class="phone">
+        <div class="head">
+          <div>
+            <div class="crumb">Angariação Leads Porto › Conjunto Imagens</div>
+            <div class="title">Editar textos do anúncio</div>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <div class="body">
+          <span class="badge">Criativo dinâmico · a Meta combina estes textos</span>
+
+          <div class="group">
+            <div class="glabel"><span>Títulos (2)</span><button class="add">+ Adicionar título</button></div>
+            <div class="item"><input value="Casa dos seus sonhos em Seroa" /><button class="del">🗑</button></div>
+            <div class="item"><input value="Moradia V3 com jardim" /><button class="del">🗑</button></div>
+          </div>
+
+          <div class="group">
+            <div class="glabel"><span>Textos principais (2)</span><button class="add">+ Adicionar texto</button></div>
+            <div class="item"><textarea>Moradia V3 com jardim e garagem. Marque a sua visita hoje.</textarea><button class="del">🗑</button></div>
+            <div class="item"><textarea>Procura casa em Seroa? Veja esta V3 com quintal. Fale connosco.</textarea><button class="del">🗑</button></div>
+          </div>
+
+          <div class="group">
+            <div class="glabel"><span>Descrições (1)</span><button class="add">+ Adicionar descrição</button></div>
+            <div class="item"><input value="Marcação de visita sem compromisso" /><button class="del">🗑</button></div>
+          </div>
+
+          <div class="warn">
+            <span>⚠️</span>
+            <div>Guardar <b>cria um criativo novo na Meta</b> (com estes textos) e o anúncio <b>volta a revisão</b> (reinicia a aprendizagem). A imagem/vídeo e o público <b>mantêm-se</b> — só mudam os textos.</div>
+          </div>
+
+          <div class="row">
+            <button class="btn btn-ghost">Cancelar</button>
+            <button class="btn btn-primary">Guardar na Meta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="max-width:440px">
+      <p class="secthead">O que muda face ao Tier 1</p>
+      <p class="note">No Tier 1 (criativo simples) há <b>1 título + 1 texto</b>. No dinâmico há <b>listas</b> de títulos/textos/descrições que a Meta combina. Aqui editas cada variação, adicionas e removes — e gravamos pelo <b>mesmo pipeline</b> (criar criativo novo + apontar o anúncio a ele), só que com <code>asset_feed_spec</code> em vez de <code>object_story_spec</code>. Mantém imagem, público, formulário e CTA. Aviso + confirmação + <code>audit_logs</code> iguais.</p>
+    </div>
+  </div>
+</body>
+</html>

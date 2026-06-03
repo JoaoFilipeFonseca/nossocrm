@@ -191,37 +191,75 @@ export async function getAdCreativeCopy(adId: string, token: string): Promise<Ad
 // aprendizagem (a UI avisa). As transformações de spec são puras (testáveis).
 // ----------------------------------------------------------------------------
 
+/** Variações de texto de um criativo dinâmico (asset_feed_spec). */
+export interface DynamicTexts {
+  titles: string[];
+  bodies: string[];
+  descriptions: string[];
+}
+
 export interface AdCreativeFull {
   /** ID do criativo actual (informativo). */
   creative_id: string | null;
+  /** Tipo de criativo: 'story' (1 texto), 'dynamic' (vários), 'none'. */
+  kind: 'story' | 'dynamic' | 'none';
   /** object_story_spec clonável (ou null se o anúncio não o usa). */
   story_spec: Record<string, unknown> | null;
-  /** Copy actual, para pré-preencher o formulário. */
+  /** asset_feed_spec clonável (só nos dinâmicos). */
+  asset_feed_spec: Record<string, unknown> | null;
+  /** Copy actual (criativo simples), para pré-preencher o formulário. */
   copy: AdCreativeCopy;
-  /** Se a copy é editável por este tier (link_data ou video_data presentes). */
+  /** Variações de texto (criativo dinâmico), para pré-preencher. */
+  texts: DynamicTexts;
+  /** Se a copy é editável a partir do CRM. */
   editable: boolean;
   /** Motivo (PT) quando não é editável. */
   reason: string | null;
 }
 
-const DYNAMIC_REASON =
-  'Este anúncio usa um criativo dinâmico (vários textos); a edição de texto chega num próximo tier.';
 const NO_SPEC_REASON = 'Este anúncio não tem texto editável a partir do CRM.';
+
+/** Extrai as variações de texto de um asset_feed_spec. Pura/testável. */
+export function extractTextsFromAssetFeedSpec(afs: Record<string, unknown>): DynamicTexts {
+  const pick = (key: string): string[] => {
+    const arr = afs?.[key];
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .map((it) => (it && typeof it === 'object' ? (it as { text?: unknown }).text : it))
+      .filter((t): t is string => typeof t === 'string' && t.length > 0);
+  };
+  return { titles: pick('titles'), bodies: pick('bodies'), descriptions: pick('descriptions') };
+}
 
 /** Decide editabilidade a partir de um `creative` da Graph API. Pura/testável. */
 export function analyzeCreativeForEdit(creative: Record<string, unknown>): AdCreativeFull {
   const spec = (creative.object_story_spec ?? null) as Record<string, unknown> | null;
+  const afs = (creative.asset_feed_spec ?? null) as Record<string, unknown> | null;
   const copy = extractCopyFromCreative(creative);
+  const texts = afs ? extractTextsFromAssetFeedSpec(afs) : { titles: [], bodies: [], descriptions: [] };
+
+  let kind: 'story' | 'dynamic' | 'none' = 'none';
   let editable = false;
   let reason: string | null = null;
   if (spec && (spec.link_data || spec.video_data)) {
+    kind = 'story';
     editable = true;
-  } else if (creative.asset_feed_spec) {
-    reason = DYNAMIC_REASON;
+  } else if (afs && (texts.titles.length > 0 || texts.bodies.length > 0)) {
+    kind = 'dynamic';
+    editable = true;
   } else {
     reason = NO_SPEC_REASON;
   }
-  return { creative_id: (creative.id as string) ?? null, story_spec: spec, copy, editable, reason };
+  return {
+    creative_id: (creative.id as string) ?? null,
+    kind,
+    story_spec: spec,
+    asset_feed_spec: afs,
+    copy,
+    texts,
+    editable,
+    reason,
+  };
 }
 
 /** Lê o criativo completo do anúncio (spec clonável + copy + editabilidade). */
@@ -269,7 +307,7 @@ export function applyCopyToStorySpec(
     return { ok: true, spec: clone };
   }
 
-  return { ok: false, reason: DYNAMIC_REASON };
+  return { ok: false, reason: NO_SPEC_REASON };
 }
 
 /**
@@ -297,8 +335,61 @@ export function sanitizeStorySpecForCreate(spec: Record<string, unknown>): Recor
 }
 
 /**
+ * Aplica variações de texto novas a uma cópia profunda do asset_feed_spec.
+ * Pura/testável. Substitui titles/bodies/descriptions; preserva imagens, vídeos,
+ * formatos, CTAs, link_urls e tudo o resto. Exige ≥1 título e ≥1 texto.
+ */
+export function applyTextsToAssetFeedSpec(
+  afs: Record<string, unknown>,
+  texts: DynamicTexts,
+): { ok: true; spec: Record<string, unknown> } | { ok: false; reason: string } {
+  if (!afs || typeof afs !== 'object') return { ok: false, reason: NO_SPEC_REASON };
+  const titles = texts.titles.map((t) => t.trim()).filter(Boolean);
+  const bodies = texts.bodies.map((t) => t.trim()).filter(Boolean);
+  const descriptions = texts.descriptions.map((t) => t.trim()).filter(Boolean);
+  if (titles.length === 0 || bodies.length === 0) {
+    return { ok: false, reason: 'É preciso pelo menos um título e um texto.' };
+  }
+  const clone = JSON.parse(JSON.stringify(afs)) as Record<string, unknown>;
+  clone.titles = titles.map((text) => ({ text }));
+  clone.bodies = bodies.map((text) => ({ text }));
+  if (descriptions.length > 0) clone.descriptions = descriptions.map((text) => ({ text }));
+  else delete clone.descriptions;
+  return { ok: true, spec: clone };
+}
+
+/**
+ * Limpa um asset_feed_spec lido da Graph API para criar um criativo novo.
+ * Pura/testável. Remove URLs eco nas imagens/vídeos quando há hash/id, e campos
+ * read-only que o endpoint de criação rejeita.
+ */
+export function sanitizeAssetFeedSpecForCreate(afs: Record<string, unknown>): Record<string, unknown> {
+  const clone = JSON.parse(JSON.stringify(afs)) as Record<string, unknown>;
+  const images = clone.images;
+  if (Array.isArray(images)) {
+    for (const img of images) {
+      if (img && typeof img === 'object') {
+        const n = img as Record<string, unknown>;
+        if (n.hash) { delete n.url; delete n.image_crops; }
+      }
+    }
+  }
+  const videos = clone.videos;
+  if (Array.isArray(videos)) {
+    for (const v of videos) {
+      if (v && typeof v === 'object') {
+        const n = v as Record<string, unknown>;
+        if (n.video_id) delete n.url;
+      }
+    }
+  }
+  return clone;
+}
+
+/**
  * Edita o texto do anúncio: cria um criativo novo (clonando o spec actual com a
  * copy nova) e aponta o anúncio a esse criativo. Devolve o id do criativo novo.
+ * Trata criativo simples (object_story_spec) e dinâmico (asset_feed_spec).
  * `adAccountId` no formato `act_<id>`. Lança Error PT em falha.
  */
 export async function updateAdCopy(
@@ -309,7 +400,7 @@ export async function updateAdCopy(
 ): Promise<{ creative_id: string }> {
   if (!adAccountId) throw new Error('Conta de anúncios não seleccionada.');
   const full = await getAdCreativeFull(adId, token);
-  if (!full.editable || !full.story_spec) {
+  if (full.kind !== 'story' || !full.story_spec) {
     throw new Error(full.reason ?? NO_SPEC_REASON);
   }
   const built = applyCopyToStorySpec(full.story_spec, copy);
@@ -320,6 +411,44 @@ export async function updateAdCopy(
     name: 'Texto editado via Foco Imo CRM',
     object_story_spec: JSON.stringify(cleanSpec),
   });
+  const newId = (created.id as string) || '';
+  if (!newId) throw new Error('A Meta não devolveu o criativo novo.');
+
+  await graphPost(adId, token, { creative: JSON.stringify({ creative_id: newId }) });
+  return { creative_id: newId };
+}
+
+/**
+ * Edita os textos de um criativo DINÂMICO (asset_feed_spec): cria um criativo
+ * novo com as variações novas e aponta o anúncio a ele. Mantém imagem/vídeo,
+ * público e CTA. `adAccountId` no formato `act_<id>`. Lança Error PT em falha.
+ */
+export async function updateAdDynamicTexts(
+  adId: string,
+  adAccountId: string | null,
+  token: string,
+  texts: DynamicTexts,
+): Promise<{ creative_id: string }> {
+  if (!adAccountId) throw new Error('Conta de anúncios não seleccionada.');
+  const full = await getAdCreativeFull(adId, token);
+  if (full.kind !== 'dynamic' || !full.asset_feed_spec) {
+    throw new Error(full.reason ?? 'Este anúncio não é um criativo dinâmico editável.');
+  }
+  const built = applyTextsToAssetFeedSpec(full.asset_feed_spec, texts);
+  if (!built.ok) throw new Error(built.reason);
+  const cleanAfs = sanitizeAssetFeedSpecForCreate(built.spec);
+
+  const fields: Record<string, string> = {
+    name: 'Textos editados via Foco Imo CRM',
+    asset_feed_spec: JSON.stringify(cleanAfs),
+  };
+  // Os dinâmicos têm também um object_story_spec (página/link) — é preciso para
+  // criar o criativo. Enviamo-lo saneado, a par do asset_feed_spec.
+  if (full.story_spec) {
+    fields.object_story_spec = JSON.stringify(sanitizeStorySpecForCreate(full.story_spec));
+  }
+
+  const created = await graphPostJson(`${adAccountId}/adcreatives`, token, fields);
   const newId = (created.id as string) || '';
   if (!newId) throw new Error('A Meta não devolveu o criativo novo.');
 

@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 import { z } from 'zod';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 import { resolveMetaAdminContext, metaJson, assertAdBelongsToOrg } from '@/lib/integrations/meta/server';
-import { getAdLiveState, setAdStatus, setBudget, getAdCreativeFull, updateAdCopy } from '@/lib/integrations/meta/write';
+import { getAdLiveState, setAdStatus, setBudget, getAdCreativeFull, updateAdCopy, updateAdDynamicTexts } from '@/lib/integrations/meta/write';
 
 // Piso de segurança do orçamento (1,00 da moeda da conta). A Meta tem mínimos
 // próprios por moeda e é a autoridade final; isto só evita zeros/enganos.
@@ -33,10 +33,14 @@ const Schema = z.object({
   ad_id: z.string().min(1),
   amount_cents: z.number().int().positive().optional(),
   kind: z.enum(['daily', 'lifetime']).optional(),
-  // update_copy:
+  // update_copy (criativo simples):
   title: z.string().max(MAX_TITLE).nullable().optional(),
   body: z.string().max(MAX_BODY).nullable().optional(),
   cta_type: z.string().max(64).nullable().optional(),
+  // update_copy (criativo dinâmico): listas de variações de texto.
+  titles: z.array(z.string().max(MAX_TITLE)).max(20).optional(),
+  bodies: z.array(z.string().max(MAX_BODY)).max(20).optional(),
+  descriptions: z.array(z.string().max(MAX_BODY)).max(20).optional(),
 });
 
 export async function POST(req: Request) {
@@ -87,6 +91,51 @@ export async function POST(req: Request) {
       if (!before.editable) {
         return metaJson({ error: before.reason ?? 'Texto não editável neste anúncio.' }, 200);
       }
+
+      // Criativo DINÂMICO (asset_feed_spec): listas de títulos/textos/descrições.
+      if (before.kind === 'dynamic') {
+        const nextTexts = {
+          titles: (payload.titles ?? before.texts.titles).map((t) => t.trim()).filter(Boolean),
+          bodies: (payload.bodies ?? before.texts.bodies).map((t) => t.trim()).filter(Boolean),
+          descriptions: (payload.descriptions ?? before.texts.descriptions).map((t) => t.trim()).filter(Boolean),
+        };
+        if (nextTexts.titles.length === 0 || nextTexts.bodies.length === 0) {
+          return metaJson({ error: 'É preciso pelo menos um título e um texto.' }, 200);
+        }
+
+        const { creative_id } = await updateAdDynamicTexts(ad_id, c.adAccountId, c.token, nextTexts);
+
+        await c.admin.from('audit_logs').insert({
+          user_id: c.userId,
+          organization_id: c.orgId,
+          action: 'META_AD_COPY_UPDATE',
+          resource_type: 'meta_ad',
+          resource_id: c.integrationId,
+          severity: 'warning',
+          details: {
+            ad_id,
+            ad_name: adName,
+            creative_kind: 'dynamic',
+            new_creative_id: creative_id,
+            titles_before: before.texts.titles,
+            titles_after: nextTexts.titles,
+            bodies_before: before.texts.bodies,
+            bodies_after: nextTexts.bodies,
+            descriptions_before: before.texts.descriptions,
+            descriptions_after: nextTexts.descriptions,
+          },
+        });
+
+        // Cache local: guarda o 1.º título/texto como representação da copy.
+        await c.admin
+          .from('ad_creatives')
+          .update({ title: nextTexts.titles[0] ?? null, body: nextTexts.bodies[0] ?? null })
+          .eq('organization_id', c.orgId)
+          .eq('ad_id', ad_id);
+
+        return metaJson({ ok: true, creative_id, kind: 'dynamic', texts: nextTexts });
+      }
+
       const next = {
         title: payload.title ?? before.copy.title,
         body: payload.body ?? before.copy.body,
