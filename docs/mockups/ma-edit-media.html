@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — MA-EDIT-FULL Tier 2 (editar imagem/vídeo do anúncio)</title>
+<style>
+  :root { --primary:#4f46e5; --amber:#b45309; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; background:#0b1020; color:#0f172a; }
+  .wrap { display:flex; gap:24px; padding:24px; flex-wrap:wrap; justify-content:center; align-items:flex-start; }
+  .secthead { font-size:13px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .phone { width:440px; max-width:100%; background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.45); }
+  .head { border-bottom:1px solid #e2e8f0; padding:12px 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .crumb { font-size:11px; color:#64748b; }
+  .title { font-size:16px; font-weight:800; }
+  .x { color:#94a3b8; font-size:18px; }
+  .body { padding:18px; }
+  .badge { display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#3730a3; background:#eef2ff; border:1px solid #c7d2fe; padding:3px 8px; border-radius:999px; margin-bottom:12px; }
+  .glabel { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#64748b; margin:0 0 6px; }
+  /* dois botões no topo do drawer */
+  .editbtns { display:flex; gap:8px; margin-bottom:14px; }
+  .editbtn { font-size:12px; font-weight:800; color:var(--primary); background:#eef2ff; border:1px solid #c7d2fe; border-radius:9px; padding:7px 11px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .editbtn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+  /* media actual + nova */
+  .media-row { display:flex; gap:14px; align-items:center; margin-bottom:14px; }
+  .thumb { width:104px; height:104px; flex:none; border-radius:13px; overflow:hidden; background:#e2e8f0; display:flex; align-items:center; justify-content:center; position:relative; }
+  .thumb img { width:100%; height:100%; object-fit:cover; }
+  .thumb .tag { position:absolute; left:6px; bottom:6px; font-size:9px; font-weight:800; background:rgba(15,23,42,.78); color:#fff; padding:2px 6px; border-radius:6px; }
+  .arrow { font-size:22px; color:#94a3b8; }
+  .dropzone { flex:1; min-height:104px; border:2px dashed #c7d2fe; border-radius:13px; background:#f8faff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; text-align:center; padding:10px; cursor:pointer; }
+  .dropzone .ic { font-size:24px; }
+  .dropzone .t { font-size:12px; font-weight:800; color:#3730a3; }
+  .dropzone .s { font-size:10.5px; color:#64748b; }
+  /* estado: ficheiro escolhido */
+  .picked { flex:1; border:1px solid #c7d2fe; border-radius:13px; background:#fff; padding:9px; display:flex; gap:10px; align-items:center; }
+  .picked .pv { width:84px; height:84px; border-radius:9px; object-fit:cover; flex:none; background:#0b1020; }
+  .picked .meta { min-width:0; }
+  .picked .fn { font-size:12px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .picked .fs { font-size:10.5px; color:#64748b; margin-top:2px; }
+  .picked .rm { font-size:11px; font-weight:800; color:#dc2626; background:#fef2f2; border:1px solid #fecaca; border-radius:7px; padding:3px 8px; cursor:pointer; margin-top:6px; }
+  .source { font-size:11px; color:#64748b; margin:-6px 0 14px; }
+  .source a { color:var(--primary); font-weight:700; text-decoration:none; }
+  .warn { display:flex; gap:9px; background:#fffbeb; border:1px solid #fde68a; color:var(--amber); border-radius:11px; padding:11px 13px; font-size:12px; line-height:1.45; margin:6px 0 14px; }
+  .warn b { font-weight:800; }
+  .row { display:flex; gap:10px; }
+  .btn { flex:1; padding:11px; border-radius:11px; font-size:14px; font-weight:800; cursor:pointer; border:1px solid transparent; }
+  .btn-ghost { background:#f1f5f9; color:#334155; }
+  .btn-primary { background:var(--primary); color:#fff; }
+  .btn-primary[disabled] { opacity:.4; }
+  .btn-amber { background:#d97706; color:#fff; }
+  .confirmbox { background:#fffbeb; border:1px solid #fde68a; color:var(--amber); border-radius:11px; padding:11px 13px; font-size:12px; margin-bottom:9px; }
+  .auditnote { text-align:center; font-size:11px; color:#94a3b8; margin-top:8px; }
+  .note { color:#cbd5e1; font-size:12px; max-width:420px; line-height:1.55; }
+  .note code { background:#1e293b; color:#e2e8f0; padding:1px 5px; border-radius:5px; font-size:11px; }
+  .note b { color:#fff; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- Estado 1: escolher ficheiro -->
+    <div>
+      <p class="secthead">1 · Escolher a nova imagem/vídeo</p>
+      <div class="phone">
+        <div class="head">
+          <div>
+            <div class="crumb">Angariação Leads Porto › Imagens 1 form</div>
+            <div class="title">Editar o anúncio</div>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <div class="body">
+          <div class="editbtns">
+            <button class="editbtn">✏️ Editar texto</button>
+            <button class="editbtn active">🖼️ Editar imagem/vídeo</button>
+          </div>
+          <span class="badge">Criativo dinâmico · troca a imagem mantendo os textos</span>
+
+          <p class="glabel">Imagem actual → nova</p>
+          <div class="media-row">
+            <div class="thumb">
+              <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=200&q=60" alt="actual" />
+              <span class="tag">ACTUAL</span>
+            </div>
+            <span class="arrow">→</span>
+            <div class="dropzone">
+              <span class="ic">⬆️</span>
+              <span class="t">Arrastar ou escolher ficheiro</span>
+              <span class="s">JPG, PNG ou MP4 · até 30&nbsp;MB</span>
+            </div>
+          </div>
+          <p class="source">Ou usar do <a href="#">arquivo de criativos →</a> <span style="color:#94a3b8">(em breve)</span></p>
+
+          <div class="row">
+            <button class="btn btn-ghost">Cancelar</button>
+            <button class="btn btn-primary" disabled>Guardar na Meta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado 2: ficheiro escolhido + confirmar -->
+    <div>
+      <p class="secthead">2 · Pré-visualizar e confirmar</p>
+      <div class="phone">
+        <div class="head">
+          <div>
+            <div class="crumb">Angariação Leads Porto › Imagens 1 form</div>
+            <div class="title">Editar o anúncio</div>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <div class="body">
+          <div class="editbtns">
+            <button class="editbtn">✏️ Editar texto</button>
+            <button class="editbtn active">🖼️ Editar imagem/vídeo</button>
+          </div>
+          <span class="badge">Criativo dinâmico · troca a imagem mantendo os textos</span>
+
+          <p class="glabel">Imagem actual → nova</p>
+          <div class="media-row">
+            <div class="thumb">
+              <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=200&q=60" alt="actual" />
+              <span class="tag">ACTUAL</span>
+            </div>
+            <span class="arrow">→</span>
+            <div class="picked">
+              <img class="pv" src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=200&q=60" alt="nova" />
+              <div class="meta">
+                <div class="fn">moradia-seroa-v3.jpg</div>
+                <div class="fs">2,4 MB · 1200×1200 · enviada à Meta ✓</div>
+                <button class="rm">Remover</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="warn">
+            <span>⚠️</span>
+            <div>Guardar <b>cria um criativo novo na Meta</b> (com esta imagem) e o anúncio <b>volta a revisão</b> (reinicia a aprendizagem). Os <b>textos, o público e o CTA mantêm-se</b> — só muda a imagem/vídeo.</div>
+          </div>
+
+          <div class="confirmbox">Vais trocar a imagem do anúncio <b>Imagens 1 form</b> na Meta. Confirma?</div>
+          <div class="row">
+            <button class="btn btn-ghost">Voltar</button>
+            <button class="btn btn-amber">Confirmar e gravar</button>
+          </div>
+          <p class="auditnote">Fica registado em audit_logs (antes/depois).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Explicação -->
+    <div style="max-width:420px">
+      <p class="secthead">Como funciona (igual ao texto, só muda a media)</p>
+      <p class="note">
+        Dois passos: <b>(1)</b> o ficheiro é <b>enviado à Meta</b> (<code>POST act/adimages</code> devolve um <code>hash</code>; vídeo <code>POST act/advideos</code> devolve um <code>id</code>) por uma rota dedicada — ainda <b>não toca</b> no anúncio, só permite pré-visualizar.
+        <b>(2)</b> Ao confirmar, gravamos pelo <b>mesmo pipeline</b> dos textos: trocamos a imagem no <code>asset_feed_spec.images[{hash}]</code> (dinâmico) ou <code>object_story_spec.link_data.image_hash</code> (simples), <b>criamos um criativo novo</b> e <b>apontamos o anúncio a ele</b> (swap).
+        <br><br>
+        Preserva títulos, textos, descrições, público, formulário de leads e CTA — só muda a media. Aviso âmbar + confirmação + <code>audit_logs META_AD_MEDIA_UPDATE</code>, tal como o Tier 1/DYNAMIC. Verifico verde num anúncio da <b>página verde</b> e <b>reverto</b>.
+        <br><br>
+        <b>Imagem</b> = caminho verde (anúncios "Imagens 1 form" do João). <b>Vídeo</b> entra pela mesma UI mas a Meta processa-o uns segundos (eventual consistency) — a UI avisa.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>

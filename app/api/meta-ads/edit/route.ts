@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 import { z } from 'zod';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 import { resolveMetaAdminContext, metaJson, assertAdBelongsToOrg } from '@/lib/integrations/meta/server';
-import { getAdLiveState, setAdStatus, setBudget, getAdCreativeFull, updateAdCopy, updateAdDynamicTexts, duplicateAd, deleteAd, getAdAccountId } from '@/lib/integrations/meta/write';
+import { getAdLiveState, setAdStatus, setBudget, getAdCreativeFull, updateAdCopy, updateAdDynamicTexts, updateAdMedia, duplicateAd, deleteAd, getAdAccountId } from '@/lib/integrations/meta/write';
 
 // Piso de segurança do orçamento (1,00 da moeda da conta). A Meta tem mínimos
 // próprios por moeda e é a autoridade final; isto só evita zeros/enganos.
@@ -29,7 +29,7 @@ const Schema = z.object({
   // set_budget edita o orçamento no nó certo (adset ou campanha/CBO).
   // set_adset_budget mantém-se como alias para compatibilidade.
   // update_copy cria um criativo novo (texto novo) e aponta o anúncio a ele.
-  action: z.enum(['pause_ad', 'resume_ad', 'set_budget', 'set_adset_budget', 'update_copy', 'duplicate_ad', 'delete_ad']),
+  action: z.enum(['pause_ad', 'resume_ad', 'set_budget', 'set_adset_budget', 'update_copy', 'update_media', 'duplicate_ad', 'delete_ad']),
   ad_id: z.string().min(1),
   amount_cents: z.number().int().positive().optional(),
   kind: z.enum(['daily', 'lifetime']).optional(),
@@ -41,6 +41,11 @@ const Schema = z.object({
   titles: z.array(z.string().max(MAX_TITLE)).max(20).optional(),
   bodies: z.array(z.string().max(MAX_BODY)).max(20).optional(),
   descriptions: z.array(z.string().max(MAX_BODY)).max(20).optional(),
+  // update_media: hash da imagem OU id do vídeo (já enviados via upload-media).
+  image_hash: z.string().max(255).optional(),
+  video_id: z.string().max(64).optional(),
+  // url da media nova (só para actualizar a cache local; informativo).
+  media_url: z.string().url().max(2000).optional(),
 });
 
 export async function POST(req: Request) {
@@ -212,6 +217,54 @@ export async function POST(req: Request) {
         .eq('ad_id', ad_id);
 
       return metaJson({ ok: true, creative_id, copy: next });
+    }
+
+    // ---- Editar a imagem/vídeo do anúncio (cria criativo novo + swap) -----
+    if (action === 'update_media') {
+      const before = await getAdCreativeFull(ad_id, c.token);
+      if (!before.editable) {
+        return metaJson({ error: before.reason ?? 'Media não editável neste anúncio.' }, 200);
+      }
+      if (!payload.image_hash && !payload.video_id) {
+        return metaJson({ error: 'Falta a imagem ou o vídeo.' }, 200);
+      }
+
+      const { creative_id } = await updateAdMedia(ad_id, c.adAccountId, c.token, {
+        imageHash: payload.image_hash,
+        videoId: payload.video_id,
+      });
+
+      await c.admin.from('audit_logs').insert({
+        user_id: c.userId,
+        organization_id: c.orgId,
+        action: 'META_AD_MEDIA_UPDATE',
+        resource_type: 'meta_ad',
+        resource_id: c.integrationId,
+        severity: 'warning',
+        details: {
+          ad_id,
+          ad_name: adName,
+          creative_kind: before.kind,
+          new_creative_id: creative_id,
+          media_type: payload.video_id ? 'video' : 'image',
+          image_hash_before: before.media.image_hash,
+          image_hash_after: payload.image_hash ?? null,
+          video_id_before: before.media.video_id,
+          video_id_after: payload.video_id ?? null,
+        },
+      });
+
+      // Cache local: actualiza a miniatura/imagem se a UI a forneceu (a imagem
+      // nova já foi enviada à Meta no passo de upload, com a url devolvida).
+      if (payload.media_url) {
+        await c.admin
+          .from('ad_creatives')
+          .update({ image_url: payload.media_url, thumbnail_url: payload.media_url })
+          .eq('organization_id', c.orgId)
+          .eq('ad_id', ad_id);
+      }
+
+      return metaJson({ ok: true, creative_id, media_type: payload.video_id ? 'video' : 'image' });
     }
 
     // ---- Orçamento (adset ou campanha/CBO) -------------------------------

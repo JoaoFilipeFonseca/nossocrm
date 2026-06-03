@@ -208,6 +208,20 @@ export interface DynamicTexts {
   descriptions: string[];
 }
 
+/** Media actual do anúncio (imagem ou vídeo), para mostrar na edição. */
+export interface AdMedia {
+  /** 'image' | 'video' | 'none'. */
+  kind: 'image' | 'video' | 'none';
+  /** Hash da imagem na biblioteca da conta (quando é imagem). */
+  image_hash: string | null;
+  /** URL da imagem actual (para pré-visualizar na UI). */
+  image_url: string | null;
+  /** ID do vídeo (quando é vídeo). */
+  video_id: string | null;
+  /** Miniatura do vídeo (para pré-visualizar na UI). */
+  thumbnail_url: string | null;
+}
+
 export interface AdCreativeFull {
   /** ID do criativo actual (informativo). */
   creative_id: string | null;
@@ -221,6 +235,8 @@ export interface AdCreativeFull {
   copy: AdCreativeCopy;
   /** Variações de texto (criativo dinâmico), para pré-preencher. */
   texts: DynamicTexts;
+  /** Media actual (imagem/vídeo) — para o editor de imagem/vídeo (Tier 2). */
+  media: AdMedia;
   /** Se a copy é editável a partir do CRM. */
   editable: boolean;
   /** Motivo (PT) quando não é editável. */
@@ -241,12 +257,67 @@ export function extractTextsFromAssetFeedSpec(afs: Record<string, unknown>): Dyn
   return { titles: pick('titles'), bodies: pick('bodies'), descriptions: pick('descriptions') };
 }
 
+/**
+ * Lê a media actual (imagem/vídeo) de um `creative` da Graph API. Pura/testável.
+ * O vídeo tem precedência (um anúncio de vídeo pode ter imagem de miniatura).
+ * Procura no object_story_spec (link_data/video_data) e no asset_feed_spec.
+ */
+export function mediaFromCreative(creative: Record<string, unknown>): AdMedia {
+  const oss = (creative.object_story_spec ?? {}) as Record<string, unknown>;
+  const link = (oss.link_data ?? {}) as Record<string, unknown>;
+  const video = (oss.video_data ?? {}) as Record<string, unknown>;
+  const afs = (creative.asset_feed_spec ?? {}) as Record<string, unknown>;
+  const afsImages = Array.isArray(afs.images) ? (afs.images as Record<string, unknown>[]) : [];
+  const afsVideos = Array.isArray(afs.videos) ? (afs.videos as Record<string, unknown>[]) : [];
+
+  if (video.video_id) {
+    return {
+      kind: 'video',
+      image_hash: null,
+      image_url: (video.image_url as string) ?? null,
+      video_id: video.video_id as string,
+      thumbnail_url: (video.image_url as string) ?? null,
+    };
+  }
+  if (afsVideos.length > 0 && afsVideos[0].video_id) {
+    const v = afsVideos[0];
+    return {
+      kind: 'video',
+      image_hash: null,
+      image_url: (v.url as string) ?? (v.thumbnail_url as string) ?? null,
+      video_id: (v.video_id as string) ?? null,
+      thumbnail_url: (v.thumbnail_url as string) ?? null,
+    };
+  }
+  if (link.image_hash) {
+    return {
+      kind: 'image',
+      image_hash: link.image_hash as string,
+      image_url: (link.picture as string) ?? (link.image_url as string) ?? null,
+      video_id: null,
+      thumbnail_url: null,
+    };
+  }
+  if (afsImages.length > 0 && afsImages[0].hash) {
+    const i = afsImages[0];
+    return {
+      kind: 'image',
+      image_hash: (i.hash as string) ?? null,
+      image_url: (i.url as string) ?? null,
+      video_id: null,
+      thumbnail_url: null,
+    };
+  }
+  return { kind: 'none', image_hash: null, image_url: null, video_id: null, thumbnail_url: null };
+}
+
 /** Decide editabilidade a partir de um `creative` da Graph API. Pura/testável. */
 export function analyzeCreativeForEdit(creative: Record<string, unknown>): AdCreativeFull {
   const spec = (creative.object_story_spec ?? null) as Record<string, unknown> | null;
   const afs = (creative.asset_feed_spec ?? null) as Record<string, unknown> | null;
   const copy = extractCopyFromCreative(creative);
   const texts = afs ? extractTextsFromAssetFeedSpec(afs) : { titles: [], bodies: [], descriptions: [] };
+  const media = mediaFromCreative(creative);
 
   let kind: 'story' | 'dynamic' | 'none' = 'none';
   let editable = false;
@@ -267,12 +338,13 @@ export function analyzeCreativeForEdit(creative: Record<string, unknown>): AdCre
     asset_feed_spec: afs,
     copy,
     texts,
+    media,
     editable,
     reason,
   };
 }
 
-/** Lê o criativo completo do anúncio (spec clonável + copy + editabilidade). */
+/** Lê o criativo completo do anúncio (spec clonável + copy + media + editabilidade). */
 export async function getAdCreativeFull(adId: string, token: string): Promise<AdCreativeFull> {
   const json = await graphGet(
     `${adId}?fields=creative{id,title,body,call_to_action_type,object_story_spec,asset_feed_spec}`,
@@ -456,6 +528,183 @@ export async function updateAdDynamicTexts(
   // criar o criativo. Enviamo-lo saneado, a par do asset_feed_spec.
   if (full.story_spec) {
     fields.object_story_spec = JSON.stringify(sanitizeStorySpecForCreate(full.story_spec));
+  }
+
+  const created = await graphPostJson(`${adAccountId}/adcreatives`, token, fields);
+  const newId = (created.id as string) || '';
+  if (!newId) throw new Error('A Meta não devolveu o criativo novo.');
+
+  await graphPost(adId, token, { creative: JSON.stringify({ creative_id: newId }) });
+  return { creative_id: newId };
+}
+
+// ----------------------------------------------------------------------------
+// MA-EDIT Tier 2 — editar a imagem/vídeo do anúncio.
+// Tal como a copy, a media troca-se criando um criativo novo com o hash/id da
+// media nova e apontando o anúncio a ele. Dois passos: (1) enviar o ficheiro à
+// Meta (adimages devolve hash; advideos devolve id) — feito pela rota dedicada;
+// (2) trocar a media no spec + criar criativo + swap (aqui). As transformações
+// de spec são puras (testáveis) e preservam textos, público, link e CTA.
+// ----------------------------------------------------------------------------
+
+/** Mete a imagem nova (hash) num object_story_spec de imagem. Pura/testável. */
+export function applyImageToStorySpec(
+  spec: Record<string, unknown>,
+  imageHash: string,
+): { ok: true; spec: Record<string, unknown> } | { ok: false; reason: string } {
+  if (!spec || typeof spec !== 'object') return { ok: false, reason: NO_SPEC_REASON };
+  const clone = JSON.parse(JSON.stringify(spec)) as Record<string, unknown>;
+  const link = clone.link_data as Record<string, unknown> | undefined;
+  if (link && typeof link === 'object') {
+    link.image_hash = imageHash;
+    delete link.picture;
+    delete link.image_url;
+    return { ok: true, spec: clone };
+  }
+  return { ok: false, reason: 'Este anúncio é de vídeo — escolha um vídeo para o substituir.' };
+}
+
+/** Mete o vídeo novo (id) num object_story_spec de vídeo. Pura/testável. */
+export function applyVideoToStorySpec(
+  spec: Record<string, unknown>,
+  videoId: string,
+): { ok: true; spec: Record<string, unknown> } | { ok: false; reason: string } {
+  if (!spec || typeof spec !== 'object') return { ok: false, reason: NO_SPEC_REASON };
+  const clone = JSON.parse(JSON.stringify(spec)) as Record<string, unknown>;
+  const video = clone.video_data as Record<string, unknown> | undefined;
+  if (video && typeof video === 'object') {
+    video.video_id = videoId;
+    return { ok: true, spec: clone };
+  }
+  return { ok: false, reason: 'Este anúncio é de imagem — escolha uma imagem para a substituir.' };
+}
+
+/**
+ * Mete a imagem nova (hash) num asset_feed_spec (criativo dinâmico). Pura.
+ * Substitui a lista de imagens por uma só (a nova), remove vídeos e fixa o
+ * formato em imagem. Preserva títulos, textos, descrições, link e CTA.
+ */
+export function applyImageToAssetFeedSpec(
+  afs: Record<string, unknown>,
+  imageHash: string,
+): { ok: true; spec: Record<string, unknown> } | { ok: false; reason: string } {
+  if (!afs || typeof afs !== 'object') return { ok: false, reason: NO_SPEC_REASON };
+  const clone = JSON.parse(JSON.stringify(afs)) as Record<string, unknown>;
+  clone.images = [{ hash: imageHash }];
+  delete clone.videos;
+  if (Array.isArray(clone.ad_formats)) clone.ad_formats = ['SINGLE_IMAGE'];
+  return { ok: true, spec: clone };
+}
+
+/**
+ * Mete o vídeo novo (id) num asset_feed_spec (criativo dinâmico). Pura.
+ * Substitui a lista de vídeos por um só (o novo), remove imagens e fixa o
+ * formato em vídeo. Preserva títulos, textos, descrições, link e CTA.
+ */
+export function applyVideoToAssetFeedSpec(
+  afs: Record<string, unknown>,
+  videoId: string,
+): { ok: true; spec: Record<string, unknown> } | { ok: false; reason: string } {
+  if (!afs || typeof afs !== 'object') return { ok: false, reason: NO_SPEC_REASON };
+  const clone = JSON.parse(JSON.stringify(afs)) as Record<string, unknown>;
+  clone.videos = [{ video_id: videoId }];
+  delete clone.images;
+  if (Array.isArray(clone.ad_formats)) clone.ad_formats = ['SINGLE_VIDEO'];
+  return { ok: true, spec: clone };
+}
+
+/**
+ * Envia uma imagem para a biblioteca da conta (devolve o hash + url). Usa
+ * multipart (FormData) — robusto para binário. `adAccountId` = `act_<id>`.
+ * A Meta devolve { images: { <nome>: { hash, url } } } — lemos o primeiro.
+ */
+export async function uploadAdImage(
+  adAccountId: string,
+  token: string,
+  bytes: ArrayBuffer,
+  filename: string,
+  mime: string,
+): Promise<{ hash: string; url: string | null }> {
+  const form = new FormData();
+  form.append('access_token', token);
+  form.append('filename', new Blob([bytes], { type: mime || 'image/jpeg' }), filename || 'imagem');
+  const res = await fetch(`${META_GRAPH_BASE}/${adAccountId}/adimages`, {
+    method: 'POST',
+    headers: { 'User-Agent': 'FocoImoCRM/1.0' },
+    body: form,
+  });
+  let json: Record<string, unknown> = {};
+  try { json = (await res.json()) as Record<string, unknown>; } catch { /* corpo não-JSON */ }
+  if (!res.ok) throw new Error(metaErrorMessage(json, res.status));
+  const images = (json.images ?? {}) as Record<string, { hash?: string; url?: string }>;
+  const first = Object.values(images)[0];
+  if (!first?.hash) throw new Error('A Meta não devolveu o identificador da imagem.');
+  return { hash: first.hash, url: first.url ?? null };
+}
+
+/**
+ * Envia um vídeo para a biblioteca da conta (devolve o id). Usa multipart.
+ * O vídeo é processado pela Meta uns segundos antes de poder ser usado — a UI
+ * avisa. `adAccountId` = `act_<id>`.
+ */
+export async function uploadAdVideo(
+  adAccountId: string,
+  token: string,
+  bytes: ArrayBuffer,
+  filename: string,
+  mime: string,
+): Promise<{ id: string }> {
+  const form = new FormData();
+  form.append('access_token', token);
+  form.append('source', new Blob([bytes], { type: mime || 'video/mp4' }), filename || 'video');
+  const res = await fetch(`${META_GRAPH_BASE}/${adAccountId}/advideos`, {
+    method: 'POST',
+    headers: { 'User-Agent': 'FocoImoCRM/1.0' },
+    body: form,
+  });
+  let json: Record<string, unknown> = {};
+  try { json = (await res.json()) as Record<string, unknown>; } catch { /* corpo não-JSON */ }
+  if (!res.ok) throw new Error(metaErrorMessage(json, res.status));
+  const id = (json.id as string) || '';
+  if (!id) throw new Error('A Meta não devolveu o identificador do vídeo.');
+  return { id };
+}
+
+/**
+ * Troca a imagem/vídeo do anúncio: cria um criativo novo (clonando o spec actual
+ * com a media nova) e aponta o anúncio a ele. Trata criativo simples
+ * (object_story_spec) e dinâmico (asset_feed_spec). Passa-se OU imageHash OU
+ * videoId. `adAccountId` = `act_<id>`. Lança Error PT em falha.
+ */
+export async function updateAdMedia(
+  adId: string,
+  adAccountId: string | null,
+  token: string,
+  media: { imageHash?: string; videoId?: string },
+): Promise<{ creative_id: string }> {
+  if (!adAccountId) throw new Error('Conta de anúncios não seleccionada.');
+  if (!media.imageHash && !media.videoId) throw new Error('Falta a imagem ou o vídeo.');
+  const full = await getAdCreativeFull(adId, token);
+
+  const fields: Record<string, string> = { name: 'Media editada via Foco Imo CRM' };
+
+  if (full.kind === 'dynamic' && full.asset_feed_spec) {
+    const built = media.imageHash
+      ? applyImageToAssetFeedSpec(full.asset_feed_spec, media.imageHash)
+      : applyVideoToAssetFeedSpec(full.asset_feed_spec, media.videoId as string);
+    if (!built.ok) throw new Error(built.reason);
+    fields.asset_feed_spec = JSON.stringify(sanitizeAssetFeedSpecForCreate(built.spec));
+    if (full.story_spec) {
+      fields.object_story_spec = JSON.stringify(sanitizeStorySpecForCreate(full.story_spec));
+    }
+  } else if (full.kind === 'story' && full.story_spec) {
+    const built = media.imageHash
+      ? applyImageToStorySpec(full.story_spec, media.imageHash)
+      : applyVideoToStorySpec(full.story_spec, media.videoId as string);
+    if (!built.ok) throw new Error(built.reason);
+    fields.object_story_spec = JSON.stringify(sanitizeStorySpecForCreate(built.spec));
+  } else {
+    throw new Error(full.reason ?? NO_SPEC_REASON);
   }
 
   const created = await graphPostJson(`${adAccountId}/adcreatives`, token, fields);

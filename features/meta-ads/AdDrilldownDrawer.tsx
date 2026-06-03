@@ -4,7 +4,7 @@
  * MA-DRILLDOWN — drawer com tudo sobre UM anúncio: criativo + copy, métricas
  * vitalícias, e a lista de leads e negócios atribuídos a este anúncio.
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { X, Image as ImageIcon, PlayCircle, Pencil, AlertTriangle, Trash2, Copy } from 'lucide-react';
 
 // CTAs mais comuns (imobiliário/leads). Valor = enum da Meta; label PT-PT.
@@ -42,8 +42,8 @@ export function AdDrilldownDrawer({ adId, adNameFallback, onClose }: { adId: str
   const [data, setData] = useState<Drilldown | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Edição de texto (MA-EDIT Tier 1).
-  const [editing, setEditing] = useState(false);
+  // Edição do criativo: texto (Tier 1) ou imagem/vídeo (Tier 2). null = fechado.
+  const [editing, setEditing] = useState<'text' | 'media' | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -91,12 +91,19 @@ export function AdDrilldownDrawer({ adId, adNameFallback, onClose }: { adId: str
         ) : data ? (
           <div className="p-5 space-y-5">
             {/* Criativo + copy */}
-            {editing && cr ? (
+            {editing === 'text' && cr ? (
               <EditCopyPanel
                 adId={adId}
                 adName={data.ad.ad_name || adNameFallback}
-                onCancel={() => setEditing(false)}
-                onSaved={() => { setEditing(false); void load(); }}
+                onCancel={() => setEditing(null)}
+                onSaved={() => { setEditing(null); void load(); }}
+              />
+            ) : editing === 'media' && cr ? (
+              <EditMediaPanel
+                adId={adId}
+                adName={data.ad.ad_name || adNameFallback}
+                onCancel={() => setEditing(null)}
+                onSaved={() => { setEditing(null); void load(); }}
               />
             ) : (
               <div className="flex gap-4">
@@ -114,12 +121,18 @@ export function AdDrilldownDrawer({ adId, adNameFallback, onClose }: { adId: str
                   {cr?.body && (<><p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mt-2">Texto</p><p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-4">{cr.body}</p></>)}
                   {cr?.cta_type && (<span className="inline-block mt-2 text-[11px] font-bold bg-primary-600 text-white px-2.5 py-1 rounded-md">{cr.cta_type.replaceAll('_', ' ')}</span>)}
                   {!cr?.title && !cr?.body && <p className="text-xs text-slate-400">Sem copy disponível para este criativo.</p>}
-                  <div className="mt-2 flex items-center gap-3 flex-wrap">
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
                     <button
-                      onClick={() => setEditing(true)}
+                      onClick={() => setEditing('text')}
                       className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 bg-primary-50 dark:bg-primary-600/10 border border-primary-200 dark:border-primary-600/30 px-3 py-1.5 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-600/20"
                     >
                       <Pencil className="w-3.5 h-3.5" /> Editar texto
+                    </button>
+                    <button
+                      onClick={() => setEditing('media')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 bg-primary-50 dark:bg-primary-600/10 border border-primary-200 dark:border-primary-600/30 px-3 py-1.5 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-600/20"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" /> Editar imagem/vídeo
                     </button>
                     {cr?.permalink && <a href={cr.permalink} target="_blank" rel="noopener noreferrer" className="text-xs text-primary-600 hover:underline">Ver na Meta ↗</a>}
                   </div>
@@ -283,6 +296,7 @@ interface EditInfo {
   reason: string | null;
   copy: { title: string | null; body: string | null; cta_type: string | null };
   texts: { titles: string[]; bodies: string[]; descriptions: string[] };
+  media: { kind: 'image' | 'video' | 'none'; image_hash: string | null; image_url: string | null; video_id: string | null; thumbnail_url: string | null };
 }
 
 // MA-EDIT — editar o texto do anúncio. Cria um criativo novo na Meta e aponta o
@@ -497,6 +511,215 @@ function TextList({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+const MAX_IMAGE_MB = 30;
+const MAX_VIDEO_MB = 200;
+
+// MA-EDIT Tier 2 — editar a imagem/vídeo do anúncio. Dois passos: o ficheiro é
+// enviado à Meta (upload-media → hash/id) ao escolher (permite pré-visualizar);
+// ao confirmar, troca-se a media (cria criativo novo + swap), preservando os
+// textos, o público e o CTA. Mesmo padrão de aviso + confirmação + audit.
+function EditMediaPanel({
+  adId, adName, onCancel, onSaved,
+}: {
+  adId: string;
+  adName: string;
+  onCancel: () => void;
+  onSaved: () => void;
+}) {
+  const [info, setInfo] = useState<EditInfo | null>(null);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null); // object URL local
+  const [pickedName, setPickedName] = useState<string | null>(null);
+  const [pickedIsVideo, setPickedIsVideo] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  // Resultado do upload à Meta (hash da imagem OU id do vídeo + url da imagem).
+  const [uploaded, setUploaded] = useState<{ image_hash?: string; video_id?: string; image_url?: string | null } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`/api/meta-ads/ad/${adId}/edit-info`, { cache: 'no-store' });
+        const j = await res.json();
+        if (!alive) return;
+        if (j.error) { setLoadErr(j.error); return; }
+        setInfo(j as EditInfo);
+      } catch {
+        if (alive) setLoadErr('Não foi possível ler o criativo.');
+      }
+    })();
+    return () => { alive = false; };
+  }, [adId]);
+
+  // Limpa o object URL ao desmontar / trocar de ficheiro.
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+
+  const onPick = useCallback(async (file: File) => {
+    setErr(null);
+    const isVideo = file.type.startsWith('video/');
+    const isImage = file.type.startsWith('image/');
+    if (!isVideo && !isImage) { setErr('Só são aceites imagens ou vídeos.'); return; }
+    const maxMb = isVideo ? MAX_VIDEO_MB : MAX_IMAGE_MB;
+    if (file.size > maxMb * 1024 * 1024) { setErr(`Ficheiro acima de ${maxMb} MB.`); return; }
+
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(URL.createObjectURL(file));
+    setPickedName(file.name);
+    setPickedIsVideo(isVideo);
+    setUploaded(null);
+
+    // Envia já à Meta, para pré-visualizar e validar antes de confirmar.
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(`/api/meta-ads/ad/${adId}/upload-media`, { method: 'POST', body: form });
+      const j = await res.json();
+      if (!res.ok || j.error) { setErr(j.error || 'Não foi possível enviar a media.'); setUploaded(null); return; }
+      setUploaded({ image_hash: j.image_hash, video_id: j.video_id, image_url: j.image_url });
+    } catch {
+      setErr('Não foi possível enviar a media.');
+    } finally {
+      setUploading(false);
+    }
+  }, [adId, preview]);
+
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) void onPick(file);
+  }, [onPick]);
+
+  const save = useCallback(async () => {
+    if (!uploaded) return;
+    setSaving(true); setErr(null);
+    try {
+      const res = await fetch('/api/meta-ads/edit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_media', ad_id: adId,
+          image_hash: uploaded.image_hash, video_id: uploaded.video_id,
+          media_url: uploaded.image_url || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) { setErr(json.error || 'Não foi possível gravar.'); setConfirm(false); return; }
+      onSaved();
+    } catch {
+      setErr('Não foi possível gravar. Tente de novo.'); setConfirm(false);
+    } finally {
+      setSaving(false);
+    }
+  }, [adId, uploaded, onSaved]);
+
+  if (loadErr) {
+    return (
+      <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-4 space-y-3">
+        <p className="text-sm text-red-600 dark:text-red-400">{loadErr}</p>
+        <button onClick={onCancel} className="w-full rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200">Fechar</button>
+      </div>
+    );
+  }
+  if (!info) {
+    return <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-8 text-center text-sm text-slate-500 dark:text-slate-400">A carregar o criativo...</div>;
+  }
+  if (!info.editable) {
+    return (
+      <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-4 space-y-3">
+        <p className="text-sm text-slate-600 dark:text-slate-300">{info.reason ?? 'Este anúncio não tem media editável.'}</p>
+        <button onClick={onCancel} className="w-full rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200">Fechar</button>
+      </div>
+    );
+  }
+
+  const currentUrl = info.media.image_url || info.media.thumbnail_url;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-4 space-y-3">
+      <span className="inline-block text-[10px] font-bold uppercase tracking-wide text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-600/10 border border-primary-200 dark:border-primary-600/30 px-2.5 py-1 rounded-full">
+        {info.kind === 'dynamic' ? 'Criativo dinâmico · troca a media mantendo os textos' : 'Troca a imagem/vídeo mantendo os textos'}
+      </span>
+
+      <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Media actual → nova</p>
+      <div className="flex gap-3 items-center">
+        <div className="relative w-24 h-24 shrink-0 rounded-xl overflow-hidden bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+          {currentUrl ? (
+            <img src={currentUrl} alt="Media actual" className="w-full h-full object-cover" />
+          ) : info.media.kind === 'video' ? (
+            <PlayCircle className="w-8 h-8 text-slate-400" />
+          ) : (
+            <ImageIcon className="w-8 h-8 text-slate-400" />
+          )}
+          <span className="absolute left-1 bottom-1 text-[8px] font-bold bg-slate-900/75 text-white px-1.5 py-0.5 rounded">ACTUAL</span>
+        </div>
+        <span className="text-slate-400 text-xl">→</span>
+
+        {!preview ? (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            className={`flex-1 min-h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 text-center px-3 py-2 ${dragOver ? 'border-primary-500 bg-primary-50 dark:bg-primary-600/10' : 'border-primary-200 dark:border-primary-600/30 bg-primary-50/40 dark:bg-white/5'}`}
+          >
+            <ImageIcon className="w-5 h-5 text-primary-500" />
+            <span className="text-xs font-bold text-primary-700 dark:text-primary-300">Arrastar ou escolher ficheiro</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">JPG, PNG ou MP4 · até {MAX_IMAGE_MB} MB (vídeo {MAX_VIDEO_MB})</span>
+          </button>
+        ) : (
+          <div className="flex-1 rounded-xl border border-primary-200 dark:border-primary-600/30 bg-white dark:bg-white/5 p-2 flex gap-2.5 items-center">
+            <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-slate-900 flex items-center justify-center">
+              {pickedIsVideo ? <video src={preview} className="w-full h-full object-cover" muted /> : <img src={preview} alt="Nova media" className="w-full h-full object-cover" />}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{pickedName}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                {uploading ? 'A enviar à Meta...' : uploaded ? (pickedIsVideo ? 'Enviado à Meta ✓ (a processar)' : 'Enviada à Meta ✓') : 'Por enviar'}
+              </p>
+              <button
+                onClick={() => { if (preview) URL.revokeObjectURL(preview); setPreview(null); setPickedName(null); setUploaded(null); setErr(null); }}
+                className="mt-1.5 text-[11px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded px-2 py-0.5"
+              >Remover</button>
+            </div>
+          </div>
+        )}
+      </div>
+      <input ref={inputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onPick(f); e.target.value = ''; }} />
+
+      <div className="flex gap-2.5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+        <p>Guardar <b>cria um criativo novo na Meta</b> e o anúncio <b>volta a revisão</b> (reinicia a aprendizagem). Os <b>textos, o público e o CTA mantêm-se</b> — só muda a imagem/vídeo.</p>
+      </div>
+
+      {err && <p className="text-xs text-red-600 dark:text-red-400">{err}</p>}
+
+      {confirm ? (
+        <div className="space-y-2">
+          <div className="rounded-xl border border-amber-300 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/5 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-300">
+            Vais trocar a {pickedIsVideo ? 'vídeo' : 'imagem'} do anúncio <b>{adName}</b> na Meta. Confirma?
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setConfirm(false)} disabled={saving} className="flex-1 rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50">Voltar</button>
+            <button onClick={() => void save()} disabled={saving} className="flex-1 rounded-lg bg-amber-600 px-3 py-2 text-sm font-bold text-white hover:bg-amber-700 disabled:opacity-50">{saving ? 'A gravar...' : 'Confirmar e gravar'}</button>
+          </div>
+          <p className="text-center text-[11px] text-slate-400">Fica registado em audit_logs (antes/depois).</p>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200">Cancelar</button>
+          <button onClick={() => setConfirm(true)} disabled={!uploaded || uploading} className="flex-1 rounded-lg bg-primary-600 px-3 py-2 text-sm font-bold text-white hover:bg-primary-700 disabled:opacity-40">Guardar na Meta</button>
+        </div>
+      )}
     </div>
   );
 }

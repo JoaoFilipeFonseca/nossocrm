@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate, metaErrorMessage, extractTextsFromAssetFeedSpec, applyTextsToAssetFeedSpec, sanitizeAssetFeedSpecForCreate } from './write';
+import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate, metaErrorMessage, extractTextsFromAssetFeedSpec, applyTextsToAssetFeedSpec, sanitizeAssetFeedSpecForCreate, mediaFromCreative, applyImageToStorySpec, applyVideoToStorySpec, applyImageToAssetFeedSpec, applyVideoToAssetFeedSpec } from './write';
 
 describe('extractCopyFromCreative', () => {
   it('lê a copy directa do creative', () => {
@@ -217,6 +217,117 @@ describe('sanitizeStorySpecForCreate', () => {
     const spec = { link_data: { image_hash: 'h', picture: 'u' } };
     sanitizeStorySpecForCreate(spec);
     expect((spec.link_data as Record<string, unknown>).picture).toBe('u');
+  });
+});
+
+describe('mediaFromCreative', () => {
+  it('lê imagem de link_data (story)', () => {
+    const m = mediaFromCreative({ object_story_spec: { link_data: { image_hash: 'h1', picture: 'https://cdn/x.jpg' } } });
+    expect(m.kind).toBe('image');
+    expect(m.image_hash).toBe('h1');
+    expect(m.image_url).toBe('https://cdn/x.jpg');
+    expect(m.video_id).toBeNull();
+  });
+
+  it('lê vídeo de video_data (story) com precedência', () => {
+    const m = mediaFromCreative({ object_story_spec: { video_data: { video_id: 'v1', image_url: 'https://cdn/t.jpg' } } });
+    expect(m.kind).toBe('video');
+    expect(m.video_id).toBe('v1');
+    expect(m.thumbnail_url).toBe('https://cdn/t.jpg');
+  });
+
+  it('lê imagem de asset_feed_spec (dinâmico)', () => {
+    const m = mediaFromCreative({ asset_feed_spec: { images: [{ hash: 'ah', url: 'https://cdn/a.jpg' }] } });
+    expect(m.kind).toBe('image');
+    expect(m.image_hash).toBe('ah');
+    expect(m.image_url).toBe('https://cdn/a.jpg');
+  });
+
+  it('lê vídeo de asset_feed_spec (dinâmico)', () => {
+    const m = mediaFromCreative({ asset_feed_spec: { videos: [{ video_id: 'av', thumbnail_url: 'https://cdn/v.jpg' }] } });
+    expect(m.kind).toBe('video');
+    expect(m.video_id).toBe('av');
+    expect(m.thumbnail_url).toBe('https://cdn/v.jpg');
+  });
+
+  it('devolve none quando não há media', () => {
+    expect(mediaFromCreative({}).kind).toBe('none');
+  });
+});
+
+describe('applyImageToStorySpec', () => {
+  it('mete o hash novo no link_data e remove echo de url', () => {
+    const spec = { link_data: { image_hash: 'velho', picture: 'https://cdn/x.jpg', image_url: 'https://cdn/y.jpg', name: 'n', message: 'm' } };
+    const r = applyImageToStorySpec(spec, 'novo');
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const ld = r.spec.link_data as Record<string, unknown>;
+    expect(ld.image_hash).toBe('novo');
+    expect(ld.picture).toBeUndefined();
+    expect(ld.image_url).toBeUndefined();
+    expect(ld.name).toBe('n');
+  });
+
+  it('rejeita quando o anúncio é de vídeo', () => {
+    const r = applyImageToStorySpec({ video_data: { video_id: 'v' } }, 'h');
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.reason).toContain('vídeo');
+  });
+
+  it('não muta o spec original', () => {
+    const spec = { link_data: { image_hash: 'velho' } };
+    applyImageToStorySpec(spec, 'novo');
+    expect((spec.link_data as Record<string, unknown>).image_hash).toBe('velho');
+  });
+});
+
+describe('applyVideoToStorySpec', () => {
+  it('mete o video_id novo no video_data', () => {
+    const r = applyVideoToStorySpec({ video_data: { video_id: 'velho', message: 'm' } }, 'novo');
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect((r.spec.video_data as Record<string, unknown>).video_id).toBe('novo');
+  });
+
+  it('rejeita quando o anúncio é de imagem', () => {
+    const r = applyVideoToStorySpec({ link_data: { image_hash: 'h' } }, 'v');
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.reason).toContain('imagem');
+  });
+});
+
+describe('applyImageToAssetFeedSpec', () => {
+  it('substitui as imagens, remove vídeos e fixa o formato, preservando textos', () => {
+    const afs = { titles: [{ text: 'T' }], bodies: [{ text: 'B' }], images: [{ hash: 'velho' }], videos: [{ video_id: 'v' }], ad_formats: ['SINGLE_VIDEO'] };
+    const r = applyImageToAssetFeedSpec(afs, 'novo');
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.spec.images).toEqual([{ hash: 'novo' }]);
+    expect(r.spec.videos).toBeUndefined();
+    expect(r.spec.ad_formats).toEqual(['SINGLE_IMAGE']);
+    expect(r.spec.titles).toEqual([{ text: 'T' }]);
+    expect(r.spec.bodies).toEqual([{ text: 'B' }]);
+  });
+
+  it('não muta o spec original', () => {
+    const afs = { images: [{ hash: 'velho' }] };
+    applyImageToAssetFeedSpec(afs, 'novo');
+    expect(afs.images).toEqual([{ hash: 'velho' }]);
+  });
+});
+
+describe('applyVideoToAssetFeedSpec', () => {
+  it('substitui os vídeos, remove imagens e fixa o formato, preservando textos', () => {
+    const afs = { titles: [{ text: 'T' }], bodies: [{ text: 'B' }], images: [{ hash: 'h' }], ad_formats: ['SINGLE_IMAGE'] };
+    const r = applyVideoToAssetFeedSpec(afs, 'vnovo');
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.spec.videos).toEqual([{ video_id: 'vnovo' }]);
+    expect(r.spec.images).toBeUndefined();
+    expect(r.spec.ad_formats).toEqual(['SINGLE_VIDEO']);
+    expect(r.spec.titles).toEqual([{ text: 'T' }]);
   });
 });
 

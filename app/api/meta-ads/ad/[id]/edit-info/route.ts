@@ -23,6 +23,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       reason: full.reason,
       copy: full.copy,
       texts: full.texts,
+      media: full.media,
     });
   } catch (e) {
     return metaJson({ error: e instanceof Error ? e.message : 'Não foi possível ler o criativo.' }, 200);
