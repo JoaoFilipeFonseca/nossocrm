@@ -20,6 +20,7 @@ export const META_OAUTH_SCOPES = [
   'pages_show_list',
   'pages_manage_metadata',
   'pages_read_engagement',
+  'pages_manage_ads', // MA-LEADFORM: criar/gerir formulários de leads da Página
   'ads_read',
   'ads_management',
   'business_management',
