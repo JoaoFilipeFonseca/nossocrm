@@ -13,20 +13,30 @@ export const dynamic = 'force-dynamic';
 import { z } from 'zod';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 import { resolveMetaAdminContext, metaJson, assertAdBelongsToOrg } from '@/lib/integrations/meta/server';
-import { getAdLiveState, setAdStatus, setBudget } from '@/lib/integrations/meta/write';
+import { getAdLiveState, setAdStatus, setBudget, getAdCreativeFull, updateAdCopy } from '@/lib/integrations/meta/write';
 
 // Piso de segurança do orçamento (1,00 da moeda da conta). A Meta tem mínimos
 // próprios por moeda e é a autoridade final; isto só evita zeros/enganos.
 const MIN_BUDGET_CENTS = 100;
 const MAX_BUDGET_CENTS = 100_000_00; // 100.000 — trava enganos grosseiros.
 
+// Limites de texto (folga sobre os limites práticos da Meta; a Graph API é a
+// autoridade final). Evitam enganos grosseiros antes de chamar a API.
+const MAX_TITLE = 255;
+const MAX_BODY = 2000;
+
 const Schema = z.object({
   // set_budget edita o orçamento no nó certo (adset ou campanha/CBO).
   // set_adset_budget mantém-se como alias para compatibilidade.
-  action: z.enum(['pause_ad', 'resume_ad', 'set_budget', 'set_adset_budget']),
+  // update_copy cria um criativo novo (texto novo) e aponta o anúncio a ele.
+  action: z.enum(['pause_ad', 'resume_ad', 'set_budget', 'set_adset_budget', 'update_copy']),
   ad_id: z.string().min(1),
   amount_cents: z.number().int().positive().optional(),
   kind: z.enum(['daily', 'lifetime']).optional(),
+  // update_copy:
+  title: z.string().max(MAX_TITLE).nullable().optional(),
+  body: z.string().max(MAX_BODY).nullable().optional(),
+  cta_type: z.string().max(64).nullable().optional(),
 });
 
 export async function POST(req: Request) {
@@ -69,6 +79,54 @@ export async function POST(req: Request) {
       });
 
       return metaJson({ ok: true, status: next });
+    }
+
+    // ---- Editar o texto do anúncio (cria criativo novo + swap) -----------
+    if (action === 'update_copy') {
+      const before = await getAdCreativeFull(ad_id, c.token);
+      if (!before.editable) {
+        return metaJson({ error: before.reason ?? 'Texto não editável neste anúncio.' }, 200);
+      }
+      const next = {
+        title: payload.title ?? before.copy.title,
+        body: payload.body ?? before.copy.body,
+        cta_type: payload.cta_type ?? before.copy.cta_type,
+      };
+      if (!next.title && !next.body) {
+        return metaJson({ error: 'O título ou o texto têm de ter conteúdo.' }, 200);
+      }
+
+      const { creative_id } = await updateAdCopy(ad_id, c.adAccountId, c.token, next);
+
+      await c.admin.from('audit_logs').insert({
+        user_id: c.userId,
+        organization_id: c.orgId,
+        action: 'META_AD_COPY_UPDATE',
+        resource_type: 'meta_ad',
+        resource_id: c.integrationId,
+        severity: 'warning',
+        details: {
+          ad_id,
+          ad_name: adName,
+          new_creative_id: creative_id,
+          title_before: before.copy.title,
+          title_after: next.title,
+          body_before: before.copy.body,
+          body_after: next.body,
+          cta_before: before.copy.cta_type,
+          cta_after: next.cta_type,
+        },
+      });
+
+      // Actualiza a cache local da copy (a imagem mantém-se; o thumbnail só muda
+      // se mudar a imagem, o que este tier não faz).
+      await c.admin
+        .from('ad_creatives')
+        .update({ title: next.title, body: next.body, cta_type: next.cta_type })
+        .eq('organization_id', c.orgId)
+        .eq('ad_id', ad_id);
+
+      return metaJson({ ok: true, creative_id, copy: next });
     }
 
     // ---- Orçamento (adset ou campanha/CBO) -------------------------------

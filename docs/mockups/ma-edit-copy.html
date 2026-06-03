@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — MA-EDIT Tier 1 (Editar texto do anúncio)</title>
+<style>
+  :root { --primary:#4f46e5; --amber:#b45309; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:#0b1020; color:#0f172a; }
+  .wrap { display:flex; gap:24px; padding:24px; flex-wrap:wrap; justify-content:center; }
+  .phone { width:430px; max-width:100%; background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.45); }
+  .head { position:sticky; top:0; background:rgba(255,255,255,.96); border-bottom:1px solid #e2e8f0; padding:12px 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .crumb { font-size:11px; color:#64748b; }
+  .title { font-size:16px; font-weight:800; color:#0f172a; }
+  .x { color:#94a3b8; font-size:18px; cursor:pointer; }
+  .body { padding:18px; }
+  .creative { display:flex; gap:16px; }
+  .thumb { width:96px; height:96px; border-radius:12px; background:linear-gradient(135deg,#c7d2fe,#a5b4fc); flex:none; display:flex; align-items:center; justify-content:center; color:#4338ca; font-size:11px; font-weight:700; }
+  .lbl { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#94a3b8; }
+  .val-title { font-size:14px; font-weight:800; color:#0f172a; }
+  .val-body { font-size:13px; color:#334155; }
+  .cta { display:inline-block; margin-top:8px; font-size:11px; font-weight:800; background:var(--primary); color:#fff; padding:4px 10px; border-radius:7px; }
+  .editbtn { margin-top:10px; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--primary); background:#eef2ff; border:1px solid #c7d2fe; padding:6px 12px; border-radius:9px; cursor:pointer; }
+  /* edit form */
+  .field { margin-bottom:12px; }
+  .field label { display:block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#64748b; margin-bottom:5px; }
+  .field input, .field textarea, .field select { width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:9px 11px; font-size:14px; font-family:inherit; color:#0f172a; }
+  .field textarea { min-height:90px; resize:vertical; }
+  .count { float:right; font-size:10px; color:#94a3b8; font-weight:600; }
+  .warn { display:flex; gap:9px; background:#fffbeb; border:1px solid #fde68a; color:var(--amber); border-radius:11px; padding:11px 13px; font-size:12px; line-height:1.45; margin:4px 0 14px; }
+  .warn b { font-weight:800; }
+  .row { display:flex; gap:10px; }
+  .btn { flex:1; padding:11px; border-radius:11px; font-size:14px; font-weight:800; cursor:pointer; border:1px solid transparent; }
+  .btn-ghost { background:#f1f5f9; color:#334155; }
+  .btn-primary { background:var(--primary); color:#fff; }
+  .btn-confirm { background:#b45309; color:#fff; }
+  .confirmbar { background:#fff7ed; border:1px solid #fed7aa; border-radius:11px; padding:11px 13px; font-size:12.5px; color:#9a3412; margin-bottom:10px; }
+  .caption { color:#cbd5e1; font-size:12px; text-align:center; margin-top:10px; }
+  .secthead { font-size:13px; font-weight:800; color:#fff; margin:0 0 8px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- ESTADO A: leitura (com botão Editar texto) -->
+    <div>
+      <p class="secthead">A · Drill-down (leitura) — ganha "Editar texto"</p>
+      <div class="phone">
+        <div class="head">
+          <div>
+            <div class="crumb">Compradores Seroa › Conjunto Imagens</div>
+            <div class="title">Anúncio · Moradia V3 Seroa</div>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <div class="body">
+          <div class="creative">
+            <div class="thumb">imagem<br>do criativo</div>
+            <div>
+              <div class="lbl">Título</div>
+              <div class="val-title">Casa dos seus sonhos em Seroa</div>
+              <div class="lbl" style="margin-top:8px">Texto</div>
+              <div class="val-body">Moradia V3 com jardim e garagem. Marque a sua visita hoje.</div>
+              <span class="cta">SABER MAIS</span>
+              <div><button class="editbtn">✎ Editar texto</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESTADO B: edição + aviso -->
+    <div>
+      <p class="secthead">B · A editar (aviso honesto antes de gravar)</p>
+      <div class="phone">
+        <div class="head">
+          <div>
+            <div class="crumb">Compradores Seroa › Conjunto Imagens</div>
+            <div class="title">Editar texto do anúncio</div>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <div class="body">
+          <div class="field">
+            <label>Título <span class="count">28 / 255</span></label>
+            <input value="Casa dos seus sonhos em Seroa" />
+          </div>
+          <div class="field">
+            <label>Texto principal <span class="count">61</span></label>
+            <textarea>Moradia V3 com jardim e garagem. Marque a sua visita hoje.</textarea>
+          </div>
+          <div class="field">
+            <label>Botão (CTA)</label>
+            <select>
+              <option>Saber mais</option>
+              <option>Enviar mensagem</option>
+              <option>Contactar</option>
+              <option>Ligar agora</option>
+              <option>Inscrever-se</option>
+            </select>
+          </div>
+          <div class="warn">
+            <span>⚠️</span>
+            <div>Guardar <b>cria um criativo novo na Meta</b> e o anúncio <b>volta a revisão</b> (reinicia a aprendizagem). Para testar sem arriscar um anúncio que já vende, no <b>Tier 3</b> vais poder <b>duplicar primeiro</b> e editar a cópia.</div>
+          </div>
+          <div class="row">
+            <button class="btn btn-ghost">Cancelar</button>
+            <button class="btn btn-primary">Guardar na Meta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ESTADO C: confirmação -->
+    <div>
+      <p class="secthead">C · Confirmação explícita (1 clique extra)</p>
+      <div class="phone">
+        <div class="head">
+          <div>
+            <div class="crumb">Compradores Seroa › Conjunto Imagens</div>
+            <div class="title">Editar texto do anúncio</div>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <div class="body">
+          <div class="confirmbar">
+            Vais gravar texto novo no anúncio <b>Moradia V3 Seroa</b> na Meta. Confirma?
+          </div>
+          <div class="row">
+            <button class="btn btn-ghost">Voltar</button>
+            <button class="btn btn-confirm">Confirmar e gravar</button>
+          </div>
+          <p style="color:#94a3b8;font-size:11px;margin-top:12px;text-align:center">Fica registado em audit_logs (antes/depois).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
