@@ -47,14 +47,24 @@ function toCents(v: unknown): number | null {
 // Constrói uma mensagem de erro PT rica a partir do corpo da Graph API. A Meta
 // devolve frequentemente "Invalid parameter" genérico, com o detalhe útil em
 // error_user_title/error_user_msg/error_subcode. Surfa-los para o utilizador.
-function metaErrorMessage(json: Record<string, unknown>, status: number): string {
+// Dicas accionáveis (PT) para subcódigos conhecidos da Meta — transformam erros
+// crípticos em passos concretos para o consultor. Ex.: ToS da Geração de Leads.
+const META_SUBCODE_HINTS: Record<number, string> = {
+  1892181:
+    'Aceite os Termos da Geração de Leads no Gestor de Anúncios da Meta (Definições da conta > Termos e políticas > Termos da Geração de Leads), com a Página seleccionada. Depois repita.',
+};
+
+export function metaErrorMessage(json: Record<string, unknown>, status: number): string {
   const err = (json?.error ?? {}) as {
     message?: string; error_user_title?: string; error_user_msg?: string; error_subcode?: number;
   };
   const detail = err.error_user_msg || err.error_user_title;
   const base = err.message || `Erro da Graph API (HTTP ${status}).`;
   const subcode = err.error_subcode ? ` (subcódigo ${err.error_subcode})` : '';
-  return detail && detail !== base ? `${base}: ${detail}${subcode}` : `${base}${subcode}`;
+  const hint = err.error_subcode && META_SUBCODE_HINTS[err.error_subcode]
+    ? ` ${META_SUBCODE_HINTS[err.error_subcode]}`
+    : '';
+  return detail && detail !== base ? `${base}: ${detail}${subcode}${hint}` : `${base}${subcode}${hint}`;
 }
 
 async function graphGet(path: string, token: string): Promise<Record<string, unknown>> {

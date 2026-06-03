@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate } from './write';
+import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate, metaErrorMessage } from './write';
 
 describe('extractCopyFromCreative', () => {
   it('lê a copy directa do creative', () => {
@@ -136,5 +136,23 @@ describe('sanitizeStorySpecForCreate', () => {
     const spec = { link_data: { image_hash: 'h', picture: 'u' } };
     sanitizeStorySpecForCreate(spec);
     expect((spec.link_data as Record<string, unknown>).picture).toBe('u');
+  });
+});
+
+describe('metaErrorMessage', () => {
+  it('surfa o detalhe do error_user_msg', () => {
+    const msg = metaErrorMessage({ error: { message: 'Invalid parameter', error_user_msg: 'Falta X', error_subcode: 999 } }, 400);
+    expect(msg).toContain('Invalid parameter');
+    expect(msg).toContain('Falta X');
+    expect(msg).toContain('999');
+  });
+
+  it('acrescenta a dica accionável do ToS da Geração de Leads (1892181)', () => {
+    const msg = metaErrorMessage({ error: { message: 'Invalid parameter', error_user_msg: 'Página não aceitou os termos', error_subcode: 1892181 } }, 400);
+    expect(msg).toContain('Termos da Geração de Leads');
+  });
+
+  it('cai para mensagem genérica sem corpo de erro', () => {
+    expect(metaErrorMessage({}, 500)).toContain('HTTP 500');
   });
 });
