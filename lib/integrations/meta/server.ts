@@ -27,6 +27,8 @@ export interface MetaAdminContext {
   integrationId: string;
   token: string;
   adAccountId: string | null;
+  /** Página seleccionada que recebe as leads (para criar formulários). */
+  pageId: string | null;
   admin: ReturnType<typeof createStaticAdminClient>;
 }
 
@@ -73,6 +75,7 @@ export async function resolveMetaAdminContext(): Promise<
       integrationId: integ.id,
       token: token as string,
       adAccountId: (metadata.selected_ad_account_id as string) ?? null,
+      pageId: (metadata.subscribed_page_id as string) ?? null,
       admin,
     },
   };
