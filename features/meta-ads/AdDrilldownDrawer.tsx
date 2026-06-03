@@ -102,6 +102,7 @@ export function AdDrilldownDrawer({ adId, adNameFallback, onClose }: { adId: str
               <EditMediaPanel
                 adId={adId}
                 adName={data.ad.ad_name || adNameFallback}
+                currentMediaUrl={cr.image_url || cr.thumbnail_url || null}
                 onCancel={() => setEditing(null)}
                 onSaved={() => { setEditing(null); void load(); }}
               />
@@ -523,10 +524,11 @@ const MAX_VIDEO_MB = 200;
 // ao confirmar, troca-se a media (cria criativo novo + swap), preservando os
 // textos, o público e o CTA. Mesmo padrão de aviso + confirmação + audit.
 function EditMediaPanel({
-  adId, adName, onCancel, onSaved,
+  adId, adName, currentMediaUrl, onCancel, onSaved,
 }: {
   adId: string;
   adName: string;
+  currentMediaUrl: string | null;
   onCancel: () => void;
   onSaved: () => void;
 }) {
@@ -641,7 +643,7 @@ function EditMediaPanel({
     );
   }
 
-  const currentUrl = info.media.image_url || info.media.thumbnail_url;
+  const currentUrl = info.media.image_url || info.media.thumbnail_url || currentMediaUrl;
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-4 space-y-3">
