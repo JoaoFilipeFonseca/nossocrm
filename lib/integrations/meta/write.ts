@@ -779,7 +779,7 @@ export async function setAdStatus(adId: string, token: string, status: 'ACTIVE' 
 export async function createCampaign(
   adAccountId: string | null,
   token: string,
-  opts: { name: string; objective: string; status?: 'PAUSED' | 'ACTIVE'; specialAdCategories?: string[] },
+  opts: { name: string; objective: string; status?: 'PAUSED' | 'ACTIVE'; specialAdCategories?: string[]; adsetBudgetSharing?: boolean },
 ): Promise<{ id: string }> {
   if (!adAccountId) throw new Error('Conta de anúncios não seleccionada.');
   const created = await graphPostJson(`${adAccountId}/campaigns`, token, {
@@ -787,6 +787,9 @@ export async function createCampaign(
     objective: opts.objective,
     status: opts.status ?? 'PAUSED',
     special_ad_categories: JSON.stringify(opts.specialAdCategories ?? []),
+    // Sem orçamento de campanha (CBO): a Meta exige declarar a partilha de 20%
+    // entre conjuntos. Por decisão do João = nunca → false.
+    is_adset_budget_sharing_enabled: String(opts.adsetBudgetSharing ?? false),
   });
   const id = (created.id as string) || '';
   if (!id) throw new Error('A Meta não devolveu a campanha criada.');
