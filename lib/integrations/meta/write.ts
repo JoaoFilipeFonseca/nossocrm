@@ -707,7 +707,20 @@ export async function updateAdMedia(
     throw new Error(full.reason ?? NO_SPEC_REASON);
   }
 
-  const created = await graphPostJson(`${adAccountId}/adcreatives`, token, fields);
+  let created: Record<string, unknown>;
+  try {
+    created = await graphPostJson(`${adAccountId}/adcreatives`, token, fields);
+  } catch (e) {
+    // A criação de criativo de VÍDEO pela API exige uma capacidade da app Meta
+    // que pode não estar activa (erro "(#3) ... capability"); a imagem não.
+    // Transforma o erro cru numa explicação PT accionável (não é bug do CRM).
+    if (media.videoId && e instanceof Error && /capability|\(#3\)/i.test(e.message)) {
+      throw new Error(
+        'A Meta recusou criar o anúncio de vídeo novo: esta app ainda não tem a capacidade de vídeo da Marketing API (a edição de imagem funciona). Por agora, troque o vídeo no Gestor de Anúncios da Meta; a edição de imagem e os textos fazem-se aqui.',
+      );
+    }
+    throw e;
+  }
   const newId = (created.id as string) || '';
   if (!newId) throw new Error('A Meta não devolveu o criativo novo.');
 
