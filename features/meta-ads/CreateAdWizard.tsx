@@ -15,7 +15,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   X, Target, MousePointerClick, MessageCircle, AlertTriangle, Check,
-  FileText, Globe, MapPin, Sparkles, ArrowLeft, Loader2, Image as ImageIcon, Upload,
+  FileText, Globe, MapPin, Sparkles, ArrowLeft, Loader2, Image as ImageIcon, Upload, Plus,
 } from 'lucide-react';
 
 type Objective = 'leads' | 'trafego' | 'interacao';
@@ -33,6 +33,16 @@ const CTA_OPTIONS: { value: string; label: string }[] = [
 ];
 
 interface LeadForm { id: string; name: string; status: string }
+
+// Tipos de pergunta do formulário (enum da Meta → etiqueta PT). O telefone é
+// sempre pedido pelo backend (regra de proveniência) — não aparece aqui.
+const LF_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'FULL_NAME', label: 'Nome' },
+  { value: 'EMAIL', label: 'Email' },
+  { value: 'CITY', label: 'Cidade' },
+  { value: 'POST_CODE', label: 'Código postal' },
+  { value: 'STREET_ADDRESS', label: 'Morada' },
+];
 
 const OBJECTIVES: { key: Objective; label: string; icon: typeof Target; hint: string }[] = [
   { key: 'leads', label: 'Leads', icon: Target, hint: 'Recolher contactos (formulário ou site).' },
@@ -102,6 +112,17 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
   const [formsLoading, setFormsLoading] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState('');
   const [adId, setAdId] = useState<string | null>(null);
+
+  // Passo 3 — criar formulário novo (MA-LEADFORM, Fase 4)
+  const [showFormEditor, setShowFormEditor] = useState(false);
+  const [lfName, setLfName] = useState('');
+  const [lfTypes, setLfTypes] = useState<string[]>(['FULL_NAME', 'EMAIL']);
+  const [lfContext, setLfContext] = useState('');
+  const [lfThankYou, setLfThankYou] = useState('');
+  const [lfPrivacyUrl, setLfPrivacyUrl] = useState('');
+  const [lfFollowUrl, setLfFollowUrl] = useState('');
+  const [lfSaving, setLfSaving] = useState(false);
+  const [lfErr, setLfErr] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -236,21 +257,74 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
   }, [campaignId, budgetOk, budgetCents, name, conversion, selectedCity, radius]);
 
   // --- Passo 3: carregar formulários (destino Formulário) -------------------
+  const loadForms = useCallback(async () => {
+    setFormsLoading(true);
+    try {
+      const res = await fetch('/api/meta-ads/leadforms');
+      const j = await res.json();
+      setForms(Array.isArray(j.forms) ? j.forms : []);
+    } catch {
+      setForms([]);
+    } finally {
+      setFormsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (step !== 3 || destination !== 'form') return;
-    setFormsLoading(true);
-    (async () => {
-      try {
-        const res = await fetch('/api/meta-ads/leadforms');
-        const j = await res.json();
-        setForms(Array.isArray(j.forms) ? j.forms : []);
-      } catch {
-        setForms([]);
-      } finally {
-        setFormsLoading(false);
+    void loadForms();
+  }, [step, destination, loadForms]);
+
+  // --- Passo 3: criar um formulário novo na Página (rascunho) ----------------
+  const openFormEditor = useCallback(() => {
+    setLfErr(null);
+    // Pré-preenche os URLs a partir do link externo já escrito, se válido.
+    const base = siteUrl.trim();
+    if (base && /^https?:\/\/.+/i.test(base)) {
+      setLfFollowUrl(base);
+      try { setLfPrivacyUrl(`${new URL(base).origin}/privacidade`); } catch { /* ignora */ }
+    }
+    setShowFormEditor(true);
+  }, [siteUrl]);
+
+  const toggleLfType = useCallback((t: string) => {
+    setLfTypes((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
+  }, []);
+
+  const lfReady = !!lfName.trim() && /^https?:\/\/.+/i.test(lfPrivacyUrl.trim()) && /^https?:\/\/.+/i.test(lfFollowUrl.trim());
+
+  const createForm = useCallback(async () => {
+    if (!lfReady) return;
+    setLfSaving(true);
+    setLfErr(null);
+    try {
+      const res = await fetch('/api/meta-ads/leadform', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: lfName.trim(),
+          question_types: lfTypes,
+          privacy_url: lfPrivacyUrl.trim(),
+          follow_up_url: lfFollowUrl.trim(),
+          context_description: lfContext.trim() || undefined,
+          thank_you_body: lfThankYou.trim() || undefined,
+          status: 'DRAFT',
+        }),
+      });
+      const j = await res.json();
+      if (!res.ok || j.error) {
+        setLfErr(j.error || 'Não foi possível criar o formulário.');
+        return;
       }
-    })();
-  }, [step, destination]);
+      await loadForms();
+      setSelectedFormId(j.form_id);
+      setShowFormEditor(false);
+    } catch {
+      setLfErr('Não foi possível criar. Tente de novo.');
+    } finally {
+      setLfSaving(false);
+    }
+  }, [lfReady, lfName, lfTypes, lfPrivacyUrl, lfFollowUrl, lfContext, lfThankYou, loadForms]);
 
   // --- Passo 3: enviar a imagem à Meta (devolve hash) -----------------------
   const uploadImage = useCallback(async (file: File) => {
@@ -551,8 +625,87 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
           </div>
         )}
 
+        {/* PASSO 3 — criar formulário novo (MA-LEADFORM) */}
+        {step === 3 && showFormEditor && (
+          <div className="space-y-4 p-5">
+            <div>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">Novo formulário de leads</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Cria na tua Página (rascunho). Fica logo escolhido neste anúncio.</p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Nome do formulário</label>
+              <input
+                value={lfName}
+                maxLength={200}
+                onChange={(e) => setLfName(e.target.value)}
+                placeholder="Avaliação gratuita · Moradia Seroa"
+                className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+            </div>
+
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">O que pedir</p>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="rounded-full border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">📞 Telefone (sempre)</span>
+                {LF_TYPE_OPTIONS.map((t) => {
+                  const on = lfTypes.includes(t.value);
+                  return (
+                    <button
+                      key={t.value}
+                      onClick={() => toggleLfType(t.value)}
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                        on ? 'border-violet-500 bg-violet-50 dark:bg-violet-600/10 text-violet-700 dark:text-violet-200' : 'border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-1 text-[11px] text-slate-400">O telefone é sempre pedido (regra de proveniência da lead).</p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Introdução (opcional)</label>
+              <input value={lfContext} maxLength={600} onChange={(e) => setLfContext(e.target.value)} placeholder="Avaliação rigorosa, sem compromisso." className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Agradecimento (opcional)</label>
+              <input value={lfThankYou} maxLength={600} onChange={(e) => setLfThankYou(e.target.value)} placeholder="Obrigado! Entro em contacto em breve." className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Política de privacidade (URL)</label>
+              <input value={lfPrivacyUrl} onChange={(e) => setLfPrivacyUrl(e.target.value)} placeholder="https://joaofilipefonseca.pt/privacidade" className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Site de seguimento (URL)</label>
+              <input value={lfFollowUrl} onChange={(e) => setLfFollowUrl(e.target.value)} placeholder="https://joaofilipefonseca.pt" className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            </div>
+
+            <div className="flex gap-2.5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>Cria como <b>rascunho</b> na tua Página. Revês na Meta e activas quando quiseres.</p>
+            </div>
+
+            {lfErr && <p className="text-xs text-red-600 dark:text-red-400">{lfErr}</p>}
+
+            <div className="flex gap-2">
+              <button onClick={() => { setShowFormEditor(false); setLfErr(null); }} className="flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200">
+                <ArrowLeft className="h-4 w-4" /> Voltar
+              </button>
+              <button onClick={() => void createForm()} disabled={lfSaving || !lfReady} className="flex-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-bold text-white hover:bg-violet-700 disabled:opacity-40">
+                {lfSaving ? 'A criar...' : 'Criar e usar'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* PASSO 3 — ANÚNCIO */}
-        {step === 3 && (
+        {step === 3 && !showFormEditor && (
           <div className="space-y-4 p-5">
             {/* Formato */}
             <div>
@@ -601,8 +754,14 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
                       {forms.map((f) => <option key={f.id} value={f.id}>{f.name}{f.status && f.status !== 'ACTIVE' ? ` (${f.status.toLowerCase()})` : ''}</option>)}
                     </select>
                   </div>
+                  <button
+                    onClick={openFormEditor}
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-violet-600 dark:text-violet-300 hover:underline"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Criar formulário novo
+                  </button>
                   {forms.length === 0 && !formsLoading && (
-                    <p className="text-[11px] text-slate-400">Sem formulários na Página ainda. Cria um no editor de formulários (em breve) ou no Gestor.</p>
+                    <p className="text-[11px] text-slate-400">Sem formulários na Página ainda. Cria um aqui em segundos.</p>
                   )}
                 </>
               )}
