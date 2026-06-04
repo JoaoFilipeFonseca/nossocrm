@@ -352,11 +352,11 @@ describe('metaErrorMessage', () => {
 // ---- MA-CREATE Fase 2 — conjunto (adset) -----------------------------------
 
 describe('conversionToAdSetParams', () => {
-  it('Formulário usa LEAD_GENERATION + promoted_object, SEM destination_type (caminho verde)', () => {
+  it('Formulário usa LEAD_GENERATION + promoted_object + destino ON_AD (exigido pela Meta)', () => {
     const p = conversionToAdSetParams('form');
     expect(p.optimizationGoal).toBe('LEAD_GENERATION');
     expect(p.usePagePromotedObject).toBe(true);
-    expect(p.destinationType).toBeUndefined();
+    expect(p.destinationType).toBe('ON_AD');
   });
   it('Site usa LANDING_PAGE_VIEWS + WEBSITE, sem promoted_object da página', () => {
     const p = conversionToAdSetParams('site');
@@ -449,12 +449,12 @@ describe('buildAdCreativeStorySpec', () => {
     expect(ld.call_to_action).toEqual({ type: 'LEARN_MORE', value: { link: 'https://x.pt/imovel' } });
   });
 
-  it('destino Formulário: CTA leva lead_gen_form_id e usa a Página como link', () => {
+  it('destino Formulário: CTA leva lead_gen_form_id e o link é o URL externo', () => {
     const spec = buildAdCreativeStorySpec({
-      pageId: 'P1', imageHash: 'h1', message: 'Texto', ctaType: 'SIGN_UP', leadGenFormId: 'F9',
+      pageId: 'P1', imageHash: 'h1', message: 'Texto', link: 'https://meusite.pt', ctaType: 'SIGN_UP', leadGenFormId: 'F9',
     });
     const ld = spec.link_data as Record<string, unknown>;
-    expect(ld.link).toBe('https://facebook.com/P1');
+    expect(ld.link).toBe('https://meusite.pt');
     expect(ld.call_to_action).toEqual({ type: 'SIGN_UP', value: { lead_gen_form_id: 'F9' } });
     expect(ld.name).toBeUndefined();
     expect(ld.description).toBeUndefined();

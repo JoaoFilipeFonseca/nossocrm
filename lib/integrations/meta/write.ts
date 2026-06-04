@@ -823,8 +823,8 @@ export interface GeoCity {
 
 /**
  * Mapeia a "localização da conversão" escolhida pelo João para os parâmetros
- * do conjunto. Formulário fica IDÊNTICO ao probe verde (sem destination_type)
- * para não partir o que está validado.
+ * do conjunto. Formulário usa LEAD_GENERATION + destino ON_AD (a Meta exige
+ * ON_AD para anúncios com formulário instantâneo — subcódigo 1892040).
  */
 export function conversionToAdSetParams(conversion: AdSetConversion): {
   optimizationGoal: string;
@@ -838,7 +838,7 @@ export function conversionToAdSetParams(conversion: AdSetConversion): {
       return { optimizationGoal: 'CONVERSATIONS', destinationType: 'WHATSAPP', usePagePromotedObject: true };
     case 'form':
     default:
-      return { optimizationGoal: 'LEAD_GENERATION', usePagePromotedObject: true };
+      return { optimizationGoal: 'LEAD_GENERATION', destinationType: 'ON_AD', usePagePromotedObject: true };
   }
 }
 
@@ -1006,8 +1006,12 @@ export interface AdCreativeInput {
   title?: string;
   /** Descrição (link_data.description). */
   description?: string;
-  /** URL do site (destino Site); no destino Formulário usa-se a Página. */
-  link?: string;
+  /**
+   * URL externo de destino. Obrigatório SEMPRE: no Site é a página de destino;
+   * no Formulário é o link "Ver mais" (a Meta recusa formulários cujo link
+   * aponte à própria Página do Facebook — subcódigo 1815316).
+   */
+  link: string;
   /** Tipo de apelo à acção da Meta (ex.: LEARN_MORE, SIGN_UP, MESSAGE_PAGE). */
   ctaType: string;
   /** Id do formulário de leads (destino Formulário). */
@@ -1016,7 +1020,7 @@ export interface AdCreativeInput {
 
 /** Constrói o object_story_spec de um criativo de imagem. Puro/testável. */
 export function buildAdCreativeStorySpec(input: AdCreativeInput): Record<string, unknown> {
-  const link = input.link || `https://facebook.com/${input.pageId}`;
+  const link = input.link;
   const linkData: Record<string, unknown> = {
     image_hash: input.imageHash,
     message: input.message,
@@ -1024,6 +1028,7 @@ export function buildAdCreativeStorySpec(input: AdCreativeInput): Record<string,
   };
   if (input.title) linkData.name = input.title;
   if (input.description) linkData.description = input.description;
+  // No Formulário o CTA leva o id do formulário; no Site, o próprio link.
   const value: Record<string, unknown> = input.leadGenFormId
     ? { lead_gen_form_id: input.leadGenFormId }
     : { link };

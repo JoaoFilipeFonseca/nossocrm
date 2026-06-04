@@ -21,11 +21,12 @@ const Schema = z
     title: z.string().max(255).optional(),
     description: z.string().max(255).optional(),
     destination: z.enum(['site', 'form']),
-    link: z.string().url().optional(),
+    // URL externo: a Meta exige-o sempre (no Site é o destino; no Formulário é
+    // o link "Ver mais", que não pode ser a própria Página do Facebook).
+    link: z.string().url(),
     leadGenFormId: z.string().optional(),
     ctaType: z.enum(CTA_TYPES).default('LEARN_MORE'),
   })
-  .refine((d) => (d.destination === 'site' ? !!d.link : true), { message: 'Falta o URL do site.', path: ['link'] })
   .refine((d) => (d.destination === 'form' ? !!d.leadGenFormId : true), { message: 'Falta o formulário.', path: ['leadGenFormId'] });
 
 export async function POST(req: Request) {
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
       message: body.message,
       title: body.title,
       description: body.description,
-      link: body.destination === 'site' ? body.link : undefined,
+      link: body.link,
       ctaType: body.ctaType,
       leadGenFormId: body.destination === 'form' ? body.leadGenFormId : undefined,
     });

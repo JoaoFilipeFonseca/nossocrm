@@ -275,10 +275,14 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
     }
   }, []);
 
+  // A Meta exige sempre um URL externo (no Site é o destino; no Formulário é o
+  // link "Ver mais", que não pode ser a Página do Facebook).
+  const linkOk = /^https?:\/\/.+/i.test(siteUrl.trim());
   const adReady =
     !!imageHash &&
     !!message.trim() &&
-    (destination === 'site' ? /^https?:\/\/.+/i.test(siteUrl.trim()) : !!selectedFormId);
+    linkOk &&
+    (destination === 'form' ? !!selectedFormId : true);
 
   // --- Passo 3: criar o anúncio ---------------------------------------------
   const createTheAd = useCallback(async () => {
@@ -581,9 +585,9 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
             </div>
 
             {/* Destino */}
-            <div>
-              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Destino</p>
-              {destination === 'form' ? (
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Destino · {destination === 'form' ? 'Formulário' : 'Site'}</p>
+              {destination === 'form' && (
                 <>
                   <div className="relative">
                     <FileText className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -597,22 +601,27 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
                       {forms.map((f) => <option key={f.id} value={f.id}>{f.name}{f.status && f.status !== 'ACTIVE' ? ` (${f.status.toLowerCase()})` : ''}</option>)}
                     </select>
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-400">{forms.length === 0 && !formsLoading ? 'Sem formulários na Página ainda. Cria um no editor de formulários (em breve) ou no Gestor.' : 'Formulários instantâneos da tua Página.'}</p>
-                </>
-              ) : (
-                <>
-                  <div className="relative">
-                    <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      value={siteUrl}
-                      onChange={(e) => setSiteUrl(e.target.value)}
-                      placeholder="https://joaofilipefonseca.pt/imovel"
-                      className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 pl-8 pr-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    />
-                  </div>
-                  <p className="mt-1 text-[11px] text-slate-400">URL da página de destino (com http:// ou https://).</p>
+                  {forms.length === 0 && !formsLoading && (
+                    <p className="text-[11px] text-slate-400">Sem formulários na Página ainda. Cria um no editor de formulários (em breve) ou no Gestor.</p>
+                  )}
                 </>
               )}
+              <div className="relative">
+                <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={siteUrl}
+                  onChange={(e) => setSiteUrl(e.target.value)}
+                  placeholder="https://joaofilipefonseca.pt/imovel"
+                  className={`w-full rounded-lg border bg-white dark:bg-white/5 pl-8 pr-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 ${
+                    !siteUrl.trim() || linkOk ? 'border-slate-300 dark:border-white/15 focus:ring-violet-500' : 'border-red-400 focus:ring-red-400'
+                  }`}
+                />
+              </div>
+              <p className="text-[11px] text-slate-400">
+                {destination === 'form'
+                  ? 'URL do botão "Ver mais" (o teu site). A Meta exige um link externo, mesmo com formulário.'
+                  : 'URL da página de destino (com http:// ou https://).'}
+              </p>
             </div>
 
             {/* Criativo */}
