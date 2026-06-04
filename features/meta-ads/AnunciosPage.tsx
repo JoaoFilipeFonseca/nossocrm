@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2, ChevronDown, ChevronRight, Route as RouteIcon, BarChart3, History } from 'lucide-react';
 import { AdDrilldownDrawer } from './AdDrilldownDrawer';
+import { CreateAdWizard } from './CreateAdWizard';
 
 export interface AdPerformanceRow {
   ad_id: string;
@@ -117,6 +118,7 @@ export const AnunciosPage: React.FC = () => {
   const [view, setView] = useState<'tabela' | 'arvore'>('tabela');
   const [analystOpen, setAnalystOpen] = useState(true);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [creating, setCreating] = useState(false); // MA-CREATE wizard (Novo anúncio)
 
   // Estado do painel do analista persiste por dispositivo (lê após montar — evita mismatch SSR #418).
   useEffect(() => {
@@ -266,6 +268,12 @@ export const AnunciosPage: React.FC = () => {
               </button>
             ))}
           </div>
+          <button
+            onClick={() => setCreating(true)}
+            className="inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+          >
+            <Play className="h-4 w-4" /> Novo anúncio
+          </button>
           <button
             onClick={runAnalysis}
             disabled={analyzing}
@@ -541,6 +549,13 @@ export const AnunciosPage: React.FC = () => {
           adId={drilling.ad_id}
           adNameFallback={drilling.ad_name || drilling.ad_id}
           onClose={() => setDrilling(null)}
+        />
+      )}
+
+      {creating && (
+        <CreateAdWizard
+          onClose={() => setCreating(false)}
+          onCreated={() => { setCreating(false); load(days); loadStatuses(); }}
         />
       )}
 
