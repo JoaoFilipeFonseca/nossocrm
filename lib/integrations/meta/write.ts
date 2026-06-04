@@ -801,10 +801,77 @@ export async function deleteCampaign(campaignId: string, token: string): Promise
   await graphDelete(campaignId, token);
 }
 
-// MA-CREATE Fase 2 — criar o conjunto de anúncios (adset). Para LEADS com
-// formulário instantâneo: optimization_goal LEAD_GENERATION + promoted_object
-// {page_id}. Orçamento diário no conjunto (cêntimos). Geo simples (países) para
-// já; cidade+raio entram no passo seguinte. Cria EM PAUSA.
+// MA-CREATE Fase 2 — criar o conjunto de anúncios (adset).
+// ----------------------------------------------------------------------------
+// Onde converter (decisão do João): Formulário instantâneo (default, caminho
+// VERDE verificado: LEAD_GENERATION + promoted_object{page_id}, sem
+// destination_type), Site (LANDING_PAGE_VIEWS no site) ou WhatsApp (mensagens).
+// Orçamento mínimo desta conta ~2,59€/dia (subcódigo 1885272); a UI valida e a
+// Meta é a autoridade final. Geo por cidade+raio (key da pesquisa adgeolocation)
+// ou, em falta, país (Portugal). Cria SEMPRE em pausa.
+
+/** Orçamento diário mínimo do conjunto nesta conta (cêntimos, ~2,59€). */
+export const MIN_DAILY_BUDGET_CENTS = 259;
+
+export type AdSetConversion = 'form' | 'site' | 'whatsapp';
+
+export interface GeoCity {
+  key: string;
+  /** Raio em quilómetros (Meta aceita ~1–80 km para cidades). */
+  radius: number;
+}
+
+/**
+ * Mapeia a "localização da conversão" escolhida pelo João para os parâmetros
+ * do conjunto. Formulário fica IDÊNTICO ao probe verde (sem destination_type)
+ * para não partir o que está validado.
+ */
+export function conversionToAdSetParams(conversion: AdSetConversion): {
+  optimizationGoal: string;
+  destinationType?: string;
+  usePagePromotedObject: boolean;
+} {
+  switch (conversion) {
+    case 'site':
+      return { optimizationGoal: 'LANDING_PAGE_VIEWS', destinationType: 'WEBSITE', usePagePromotedObject: false };
+    case 'whatsapp':
+      return { optimizationGoal: 'CONVERSATIONS', destinationType: 'WHATSAPP', usePagePromotedObject: true };
+    case 'form':
+    default:
+      return { optimizationGoal: 'LEAD_GENERATION', usePagePromotedObject: true };
+  }
+}
+
+/** Constrói o targeting do conjunto: cidade+raio se houver, senão país. */
+export function buildAdSetTargeting(opts: {
+  geoCities?: GeoCity[];
+  geoCountries?: string[];
+  advantageAudience?: boolean;
+}): Record<string, unknown> {
+  const t: Record<string, unknown> = {};
+  if (opts.geoCities && opts.geoCities.length > 0) {
+    t.geo_locations = {
+      cities: opts.geoCities.map((c) => ({ key: c.key, radius: c.radius, distance_unit: 'kilometer' })),
+    };
+  } else {
+    t.geo_locations = { countries: opts.geoCountries ?? ['PT'] };
+  }
+  // Público Advantage+ (default do João): a Meta expande além do segmento base.
+  if (opts.advantageAudience) {
+    t.targeting_automation = { advantage_audience: 1 };
+  }
+  return t;
+}
+
+/** Converte "5,00" / "5.00" / "5" (euros) em cêntimos; null se inválido. */
+export function parseEurosToCents(input: string): number | null {
+  const cleaned = (input ?? '').replace(/[€\s]/g, '').replace(',', '.');
+  if (!/^\d+(\.\d{0,2})?$/.test(cleaned)) return null;
+  const euros = parseFloat(cleaned);
+  if (!Number.isFinite(euros) || euros <= 0) return null;
+  return Math.round(euros * 100);
+}
+
 export async function createAdSet(
   adAccountId: string | null,
   token: string,
@@ -813,30 +880,112 @@ export async function createAdSet(
     campaignId: string;
     dailyBudgetCents: number;
     pageId: string | null;
-    optimizationGoal?: string;
-    billingEvent?: string;
+    conversion?: AdSetConversion;
+    geoCities?: GeoCity[];
     geoCountries?: string[];
+    advantageAudience?: boolean;
     status?: 'PAUSED' | 'ACTIVE';
   },
 ): Promise<{ id: string }> {
   if (!adAccountId) throw new Error('Conta de anúncios não seleccionada.');
-  if (!opts.pageId) throw new Error('Página não seleccionada.');
-  const targeting = { geo_locations: { countries: opts.geoCountries ?? ['PT'] } };
-  const created = await graphPostJson(`${adAccountId}/adsets`, token, {
+  const conv = conversionToAdSetParams(opts.conversion ?? 'form');
+  if (conv.usePagePromotedObject && !opts.pageId) throw new Error('Página não seleccionada.');
+  const targeting = buildAdSetTargeting({
+    geoCities: opts.geoCities,
+    geoCountries: opts.geoCountries,
+    advantageAudience: opts.advantageAudience,
+  });
+  const fields: Record<string, string> = {
     name: opts.name,
     campaign_id: opts.campaignId,
     daily_budget: String(opts.dailyBudgetCents),
-    billing_event: opts.billingEvent ?? 'IMPRESSIONS',
-    optimization_goal: opts.optimizationGoal ?? 'LEAD_GENERATION',
+    billing_event: 'IMPRESSIONS',
+    optimization_goal: conv.optimizationGoal,
     // Sem CBO nem limite de licitação → "maior volume" (default do João).
     bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
-    promoted_object: JSON.stringify({ page_id: opts.pageId }),
     targeting: JSON.stringify(targeting),
     status: opts.status ?? 'PAUSED',
-  });
+  };
+  if (conv.destinationType) fields.destination_type = conv.destinationType;
+  if (conv.usePagePromotedObject && opts.pageId) {
+    fields.promoted_object = JSON.stringify({ page_id: opts.pageId });
+  }
+  const created = await graphPostJson(`${adAccountId}/adsets`, token, fields);
   const id = (created.id as string) || '';
   if (!id) throw new Error('A Meta não devolveu o conjunto criado.');
   return { id };
+}
+
+// ---- Pesquisa de localização (cidade) e estimativa de público --------------
+
+export interface GeoSearchResult {
+  key: string;
+  name: string;
+  type: string;
+  region?: string;
+  countryName?: string;
+  countryCode?: string;
+}
+
+/** Lê os resultados da pesquisa adgeolocation da Meta. */
+export function parseGeoSearch(json: Record<string, unknown>): GeoSearchResult[] {
+  const data = Array.isArray(json.data) ? json.data : [];
+  return data
+    .map((d) => {
+      const r = (d ?? {}) as Record<string, unknown>;
+      return {
+        key: String(r.key ?? ''),
+        name: String(r.name ?? ''),
+        type: String(r.type ?? ''),
+        region: r.region ? String(r.region) : undefined,
+        countryName: r.country_name ? String(r.country_name) : undefined,
+        countryCode: r.country_code ? String(r.country_code) : undefined,
+      };
+    })
+    .filter((r) => r.key && r.name);
+}
+
+/** Pesquisa cidades/localidades por texto (para o selector de localização). */
+export async function searchAdGeoLocations(token: string, q: string): Promise<GeoSearchResult[]> {
+  const params = new URLSearchParams({
+    type: 'adgeolocation',
+    location_types: JSON.stringify(['city']),
+    q,
+    limit: '8',
+  });
+  const json = await graphGet(`search?${params.toString()}`, token);
+  return parseGeoSearch(json);
+}
+
+/** Lê os limites de público do delivery_estimate (vários formatos da Meta). */
+export function parseReachEstimate(json: Record<string, unknown>): { lower: number; upper: number } | null {
+  const raw = Array.isArray(json.data) ? json.data[0] : json.data;
+  const data = (raw ?? json) as Record<string, unknown>;
+  if (!data) return null;
+  const lower = Number(
+    data.estimate_mau_lower_bound ?? data.users_lower_bound ?? data.estimate_dau ?? data.users,
+  );
+  const upper = Number(
+    data.estimate_mau_upper_bound ?? data.users_upper_bound ?? data.estimate_mau ?? lower,
+  );
+  if (!Number.isFinite(lower)) return null;
+  return { lower, upper: Number.isFinite(upper) ? upper : lower };
+}
+
+/** Estimativa de público atingível para um targeting (delivery_estimate). */
+export async function estimateReach(
+  adAccountId: string | null,
+  token: string,
+  targetingSpec: Record<string, unknown>,
+  optimizationGoal = 'LEAD_GENERATION',
+): Promise<{ lower: number; upper: number } | null> {
+  if (!adAccountId) return null;
+  const params = new URLSearchParams({
+    optimization_goal: optimizationGoal,
+    targeting_spec: JSON.stringify(targetingSpec),
+  });
+  const json = await graphGet(`${adAccountId}/delivery_estimate?${params.toString()}`, token);
+  return parseReachEstimate(json);
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate, metaErrorMessage, extractTextsFromAssetFeedSpec, applyTextsToAssetFeedSpec, sanitizeAssetFeedSpecForCreate, mediaFromCreative, applyImageToStorySpec, applyVideoToStorySpec, applyImageToAssetFeedSpec, applyVideoToAssetFeedSpec } from './write';
+import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate, metaErrorMessage, extractTextsFromAssetFeedSpec, applyTextsToAssetFeedSpec, sanitizeAssetFeedSpecForCreate, mediaFromCreative, applyImageToStorySpec, applyVideoToStorySpec, applyImageToAssetFeedSpec, applyVideoToAssetFeedSpec, conversionToAdSetParams, buildAdSetTargeting, parseEurosToCents, parseGeoSearch, parseReachEstimate, MIN_DAILY_BUDGET_CENTS } from './write';
 
 describe('extractCopyFromCreative', () => {
   it('lê a copy directa do creative', () => {
@@ -347,4 +347,86 @@ describe('metaErrorMessage', () => {
   it('cai para mensagem genérica sem corpo de erro', () => {
     expect(metaErrorMessage({}, 500)).toContain('HTTP 500');
   });
+});
+
+// ---- MA-CREATE Fase 2 — conjunto (adset) -----------------------------------
+
+describe('conversionToAdSetParams', () => {
+  it('Formulário usa LEAD_GENERATION + promoted_object, SEM destination_type (caminho verde)', () => {
+    const p = conversionToAdSetParams('form');
+    expect(p.optimizationGoal).toBe('LEAD_GENERATION');
+    expect(p.usePagePromotedObject).toBe(true);
+    expect(p.destinationType).toBeUndefined();
+  });
+  it('Site usa LANDING_PAGE_VIEWS + WEBSITE, sem promoted_object da página', () => {
+    const p = conversionToAdSetParams('site');
+    expect(p.optimizationGoal).toBe('LANDING_PAGE_VIEWS');
+    expect(p.destinationType).toBe('WEBSITE');
+    expect(p.usePagePromotedObject).toBe(false);
+  });
+  it('WhatsApp usa CONVERSATIONS + WHATSAPP + promoted_object da página', () => {
+    const p = conversionToAdSetParams('whatsapp');
+    expect(p.optimizationGoal).toBe('CONVERSATIONS');
+    expect(p.destinationType).toBe('WHATSAPP');
+    expect(p.usePagePromotedObject).toBe(true);
+  });
+});
+
+describe('buildAdSetTargeting', () => {
+  it('usa cidades+raio quando há geoCities', () => {
+    const t = buildAdSetTargeting({ geoCities: [{ key: '1234', radius: 25 }], advantageAudience: true });
+    expect(t.geo_locations).toEqual({ cities: [{ key: '1234', radius: 25, distance_unit: 'kilometer' }] });
+    expect(t.targeting_automation).toEqual({ advantage_audience: 1 });
+  });
+  it('cai para país quando não há cidade', () => {
+    const t = buildAdSetTargeting({ geoCountries: ['PT'] });
+    expect(t.geo_locations).toEqual({ countries: ['PT'] });
+    expect(t.targeting_automation).toBeUndefined();
+  });
+  it('default de país é Portugal', () => {
+    const t = buildAdSetTargeting({});
+    expect(t.geo_locations).toEqual({ countries: ['PT'] });
+  });
+});
+
+describe('parseEurosToCents', () => {
+  it('aceita vírgula e euro', () => expect(parseEurosToCents('5,00 €')).toBe(500));
+  it('aceita ponto', () => expect(parseEurosToCents('2.59')).toBe(259));
+  it('aceita inteiro', () => expect(parseEurosToCents('10')).toBe(1000));
+  it('rejeita vazio/zero/negativo/letras', () => {
+    expect(parseEurosToCents('')).toBeNull();
+    expect(parseEurosToCents('0')).toBeNull();
+    expect(parseEurosToCents('abc')).toBeNull();
+    expect(parseEurosToCents('-3')).toBeNull();
+  });
+  it('mínimo da conta está em cêntimos', () => expect(MIN_DAILY_BUDGET_CENTS).toBe(259));
+});
+
+describe('parseGeoSearch', () => {
+  it('mapeia resultados e descarta sem key/nome', () => {
+    const r = parseGeoSearch({ data: [
+      { key: '111', name: 'Paços de Ferreira', type: 'city', region: 'Porto', country_name: 'Portugal', country_code: 'PT' },
+      { key: '', name: 'Inválido', type: 'city' },
+      { name: 'Sem key', type: 'city' },
+    ] });
+    expect(r).toHaveLength(1);
+    expect(r[0]).toEqual({ key: '111', name: 'Paços de Ferreira', type: 'city', region: 'Porto', countryName: 'Portugal', countryCode: 'PT' });
+  });
+  it('devolve vazio sem data', () => expect(parseGeoSearch({})).toEqual([]));
+});
+
+describe('parseReachEstimate', () => {
+  it('lê limites mau (formato novo, dentro de data[])', () => {
+    expect(parseReachEstimate({ data: [{ estimate_mau_lower_bound: 38000, estimate_mau_upper_bound: 110000 }] }))
+      .toEqual({ lower: 38000, upper: 110000 });
+  });
+  it('lê users_lower/upper_bound', () => {
+    expect(parseReachEstimate({ data: [{ users_lower_bound: 1000, users_upper_bound: 5000 }] }))
+      .toEqual({ lower: 1000, upper: 5000 });
+  });
+  it('upper cai para lower se faltar', () => {
+    expect(parseReachEstimate({ data: [{ estimate_mau_lower_bound: 2000 }] }))
+      .toEqual({ lower: 2000, upper: 2000 });
+  });
+  it('devolve null sem dados válidos', () => expect(parseReachEstimate({ data: [{}] })).toBeNull());
 });
