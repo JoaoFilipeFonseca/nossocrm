@@ -301,7 +301,7 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
           title: title.trim() || undefined,
           description: description.trim() || undefined,
           destination,
-          link: destination === 'site' ? siteUrl.trim() : undefined,
+          link: siteUrl.trim(),
           leadGenFormId: destination === 'form' ? selectedFormId : undefined,
           ctaType: cta,
         }),
