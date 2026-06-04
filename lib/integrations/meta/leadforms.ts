@@ -101,7 +101,9 @@ export async function createLeadForm(
   };
   if (spec.contextHeadline || spec.contextDescription) {
     fields.context_card = JSON.stringify({
-      title: spec.contextHeadline ?? '',
+      // A Meta exige um título no cartão de contexto; usa o nome do formulário
+      // quando não há um título próprio (subcódigo (#100)).
+      title: spec.contextHeadline || spec.name,
       style: 'PARAGRAPH_STYLE',
       content: spec.contextDescription ? [spec.contextDescription] : [],
       button_text: 'Continuar',
