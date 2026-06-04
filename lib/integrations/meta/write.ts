@@ -770,6 +770,14 @@ export async function setAdStatus(adId: string, token: string, status: 'ACTIVE' 
   await graphPost(adId, token, { status });
 }
 
+/**
+ * Muda o estado de qualquer nó (campanha/conjunto/anúncio). A Graph API aceita
+ * `status` em todos. Usado ao publicar (MA-CREATE-PUBLICAR): liga os três.
+ */
+export async function setEntityStatus(id: string, token: string, status: 'ACTIVE' | 'PAUSED'): Promise<void> {
+  await graphPost(id, token, { status });
+}
+
 // ----------------------------------------------------------------------------
 // MA-CREATE (Tier 4) — criar campanha/conjunto/anúncio de raiz. Começamos pela
 // campanha (objecto de topo). `special_ad_categories` é obrigatório pela Meta

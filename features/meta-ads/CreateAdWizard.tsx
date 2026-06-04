@@ -108,6 +108,9 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
   const [description, setDescription] = useState('');
   const [siteUrl, setSiteUrl] = useState('');
   const [cta, setCta] = useState('LEARN_MORE');
+  const [publishMode, setPublishMode] = useState<'pause' | 'publish'>('pause');
+  const [confirmPublish, setConfirmPublish] = useState(false);
+  const [wasPublished, setWasPublished] = useState(false);
   const [forms, setForms] = useState<LeadForm[]>([]);
   const [formsLoading, setFormsLoading] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState('');
@@ -318,7 +321,7 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
       }
       // A Meta é eventually-consistent: o formulário novo ainda não aparece na
       // lista recarregada. Insere-o localmente para ficar logo escolhido.
-      setForms((cur) => [{ id: j.form_id, name: lfName.trim(), status: 'DRAFT' }, ...cur.filter((f) => f.id !== j.form_id)]);
+      setForms((cur) => [{ id: j.form_id, name: lfName.trim(), status: 'ACTIVE' }, ...cur.filter((f) => f.id !== j.form_id)]);
       setSelectedFormId(j.form_id);
       setShowFormEditor(false);
     } catch {
@@ -360,8 +363,8 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
     linkOk &&
     (destination === 'form' ? !!selectedFormId : true);
 
-  // --- Passo 3: criar o anúncio ---------------------------------------------
-  const createTheAd = useCallback(async () => {
+  // --- Passo 3: criar o anúncio (e, opcionalmente, publicar) -----------------
+  const createTheAd = useCallback(async (publish: boolean) => {
     if (!adsetId || !adReady) return;
     setSaving(true);
     setErr(null);
@@ -371,6 +374,8 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           adsetId,
+          campaignId: campaignId ?? undefined,
+          publish,
           name: adName.trim() || `${name.trim()} — Anúncio`,
           imageHash,
           message: message.trim(),
@@ -388,13 +393,17 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
         return;
       }
       setAdId(j.ad_id);
+      setWasPublished(!!j.published);
+      // Aviso gracioso se pediu publicar mas a Meta não ligou (ficou em pausa).
+      if (publish && !j.published && j.publish_warning) setErr(j.publish_warning);
+      setConfirmPublish(false);
       setStep('done');
     } catch {
       setErr('Não foi possível criar. Tente de novo.');
     } finally {
       setSaving(false);
     }
-  }, [adsetId, adReady, adName, name, imageHash, message, title, description, destination, siteUrl, selectedFormId, cta]);
+  }, [adsetId, campaignId, adReady, adName, name, imageHash, message, title, description, destination, siteUrl, selectedFormId, cta]);
 
   const stepLabel =
     step === 1 ? 'Passo 1 de 3 · Campanha'
@@ -632,7 +641,7 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
           <div className="space-y-4 p-5">
             <div>
               <p className="text-sm font-bold text-slate-900 dark:text-white">Novo formulário de leads</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Cria na tua Página (rascunho). Fica logo escolhido neste anúncio.</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Cria na tua Página e fica logo escolhido neste anúncio. Só recolhe leads quando o anúncio for publicado.</p>
             </div>
 
             <div>
@@ -690,7 +699,7 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
 
             <div className="flex gap-2.5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>Cria como <b>rascunho</b> na tua Página. Revês na Meta e activas quando quiseres.</p>
+              <p>O formulário fica criado na tua Página. <b>Só recebe leads quando publicares o anúncio</b> (que aqui fica em pausa até decidires).</p>
             </div>
 
             {lfErr && <p className="text-xs text-red-600 dark:text-red-400">{lfErr}</p>}
@@ -822,9 +831,34 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
               </span>
             </div>
 
+            {/* Estado ao concluir */}
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Ao concluir</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setPublishMode('pause')}
+                  className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                    publishMode === 'pause' ? 'border-violet-500 bg-violet-50 dark:bg-violet-600/10' : 'border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <span className={`block text-xs font-bold ${publishMode === 'pause' ? 'text-violet-700 dark:text-violet-200' : 'text-slate-700 dark:text-slate-300'}`}>Deixar em pausa</span>
+                  <span className="block text-[11px] text-slate-500 dark:text-slate-400">Não gasta nada. Publicas depois.</span>
+                </button>
+                <button
+                  onClick={() => setPublishMode('publish')}
+                  className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                    publishMode === 'publish' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-600/10' : 'border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <span className={`block text-xs font-bold ${publishMode === 'publish' ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-300'}`}>Publicar já</span>
+                  <span className="block text-[11px] text-slate-500 dark:text-slate-400">Liga o anúncio. Começa a gastar.</span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex gap-2.5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>Cria o anúncio <b>em pausa</b> na Meta. Reveês tudo e publicas tu quando quiseres.</p>
+              <p>{publishMode === 'pause' ? <>Cria tudo <b>em pausa</b> na Meta. Reveês e publicas tu quando quiseres.</> : <>Vai <b>publicar a sério</b> (gasta dinheiro). Pedimos confirmação antes de ligar.</>}</p>
             </div>
 
             {err && <p className="text-xs text-red-600 dark:text-red-400">{err}</p>}
@@ -833,13 +867,45 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
               <button onClick={() => { setStep(2); setErr(null); }} className="flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200">
                 <ArrowLeft className="h-4 w-4" /> Voltar
               </button>
-              <button
-                onClick={() => void createTheAd()}
-                disabled={saving || !adReady}
-                className="flex-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-bold text-white hover:bg-violet-700 disabled:opacity-40"
-              >
-                {saving ? 'A criar...' : 'Criar anúncio (em pausa)'}
-              </button>
+              {publishMode === 'pause' ? (
+                <button
+                  onClick={() => void createTheAd(false)}
+                  disabled={saving || !adReady}
+                  className="flex-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-bold text-white hover:bg-violet-700 disabled:opacity-40"
+                >
+                  {saving ? 'A criar...' : 'Criar anúncio (em pausa)'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setConfirmPublish(true)}
+                  disabled={saving || !adReady}
+                  className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-40"
+                >
+                  Criar e publicar
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Confirmação de publicação (gasta dinheiro real) */}
+        {step === 3 && !showFormEditor && confirmPublish && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4" onMouseDown={() => setConfirmPublish(false)}>
+            <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-dark-card p-5 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+              <div className="mb-2 flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Tens a certeza? Vais publicar a sério</h3>
+              </div>
+              <p className="mb-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                Isto liga na Meta a <b>campanha</b>, o <b>conjunto</b> e o <b>anúncio</b>{destination === 'form' ? ' (o formulário fica activo)' : ''}, e <b>começa a gastar</b> o orçamento que definiste: <b>{budget.trim()} € por dia</b>. A Meta ainda revê o anúncio antes de o mostrar.
+              </p>
+              <p className="mb-4 text-[11px] text-slate-400">Podes pausar a qualquer momento no separador Anúncios.</p>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmPublish(false)} className="flex-1 rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200">Cancelar</button>
+                <button onClick={() => void createTheAd(true)} disabled={saving} className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-40">
+                  {saving ? 'A publicar...' : 'Sim, publicar'}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -851,10 +917,14 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/15">
                 <Check className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">{adId ? 'Anúncio criado em pausa' : 'Campanha e conjunto criados em pausa'}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">{adId ? (wasPublished ? 'Anúncio publicado' : 'Anúncio criado em pausa') : 'Campanha e conjunto criados em pausa'}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {adId ? (
-                  <>Campanha, conjunto e anúncio ficam <b>em pausa</b> (não gastam nada). Reveês tudo e <b>publicas tu</b> quando quiseres. Aparece na lista após o próximo sync.</>
+                  wasPublished ? (
+                    <>Campanha, conjunto e anúncio estão <b>ligados</b>. A Meta <b>revê o anúncio</b> antes de o mostrar e só depois começa a entregar. Podes <b>pausar a qualquer momento</b> no separador Anúncios. Aparece na lista após o próximo sync.</>
+                  ) : (
+                    <>Campanha, conjunto e anúncio ficam <b>em pausa</b> (não gastam nada). Reveês tudo e <b>publicas tu</b> quando quiseres. Aparece na lista após o próximo sync.</>
+                  )
                 ) : (
                   <>Ficam <b>em pausa</b> (não gastam nada). O <b>anúncio</b> completa-se no Gestor de Anúncios (o destino WhatsApp liga-se aqui numa próxima iteração). Aparece na lista após o próximo sync.</>
                 )}
