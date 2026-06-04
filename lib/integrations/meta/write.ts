@@ -828,6 +828,8 @@ export async function createAdSet(
     daily_budget: String(opts.dailyBudgetCents),
     billing_event: opts.billingEvent ?? 'IMPRESSIONS',
     optimization_goal: opts.optimizationGoal ?? 'LEAD_GENERATION',
+    // Sem CBO nem limite de licitação → "maior volume" (default do João).
+    bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
     promoted_object: JSON.stringify({ page_id: opts.pageId }),
     targeting: JSON.stringify(targeting),
     status: opts.status ?? 'PAUSED',
