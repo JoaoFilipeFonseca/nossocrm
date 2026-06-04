@@ -316,7 +316,9 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
         setLfErr(j.error || 'Não foi possível criar o formulário.');
         return;
       }
-      await loadForms();
+      // A Meta é eventually-consistent: o formulário novo ainda não aparece na
+      // lista recarregada. Insere-o localmente para ficar logo escolhido.
+      setForms((cur) => [{ id: j.form_id, name: lfName.trim(), status: 'DRAFT' }, ...cur.filter((f) => f.id !== j.form_id)]);
       setSelectedFormId(j.form_id);
       setShowFormEditor(false);
     } catch {
