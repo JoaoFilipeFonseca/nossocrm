@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate, metaErrorMessage, extractTextsFromAssetFeedSpec, applyTextsToAssetFeedSpec, sanitizeAssetFeedSpecForCreate, mediaFromCreative, applyImageToStorySpec, applyVideoToStorySpec, applyImageToAssetFeedSpec, applyVideoToAssetFeedSpec, conversionToAdSetParams, buildAdSetTargeting, parseEurosToCents, parseGeoSearch, parseReachEstimate, MIN_DAILY_BUDGET_CENTS } from './write';
+import { extractCopyFromCreative, analyzeCreativeForEdit, applyCopyToStorySpec, sanitizeStorySpecForCreate, metaErrorMessage, extractTextsFromAssetFeedSpec, applyTextsToAssetFeedSpec, sanitizeAssetFeedSpecForCreate, mediaFromCreative, applyImageToStorySpec, applyVideoToStorySpec, applyImageToAssetFeedSpec, applyVideoToAssetFeedSpec, conversionToAdSetParams, buildAdSetTargeting, parseEurosToCents, parseGeoSearch, parseReachEstimate, MIN_DAILY_BUDGET_CENTS, buildAdCreativeStorySpec } from './write';
 
 describe('extractCopyFromCreative', () => {
   it('lê a copy directa do creative', () => {
@@ -429,4 +429,34 @@ describe('parseReachEstimate', () => {
       .toEqual({ lower: 2000, upper: 2000 });
   });
   it('devolve null sem dados válidos', () => expect(parseReachEstimate({ data: [{}] })).toBeNull());
+});
+
+// ---- MA-CREATE Fase 3 — anúncio (criativo) ---------------------------------
+
+describe('buildAdCreativeStorySpec', () => {
+  it('destino Site: CTA aponta ao link, com título/texto/descrição/imagem', () => {
+    const spec = buildAdCreativeStorySpec({
+      pageId: 'P1', imageHash: 'h1', message: 'Texto', title: 'Título', description: 'Desc',
+      link: 'https://x.pt/imovel', ctaType: 'LEARN_MORE',
+    });
+    expect(spec.page_id).toBe('P1');
+    const ld = spec.link_data as Record<string, unknown>;
+    expect(ld.image_hash).toBe('h1');
+    expect(ld.message).toBe('Texto');
+    expect(ld.name).toBe('Título');
+    expect(ld.description).toBe('Desc');
+    expect(ld.link).toBe('https://x.pt/imovel');
+    expect(ld.call_to_action).toEqual({ type: 'LEARN_MORE', value: { link: 'https://x.pt/imovel' } });
+  });
+
+  it('destino Formulário: CTA leva lead_gen_form_id e usa a Página como link', () => {
+    const spec = buildAdCreativeStorySpec({
+      pageId: 'P1', imageHash: 'h1', message: 'Texto', ctaType: 'SIGN_UP', leadGenFormId: 'F9',
+    });
+    const ld = spec.link_data as Record<string, unknown>;
+    expect(ld.link).toBe('https://facebook.com/P1');
+    expect(ld.call_to_action).toEqual({ type: 'SIGN_UP', value: { lead_gen_form_id: 'F9' } });
+    expect(ld.name).toBeUndefined();
+    expect(ld.description).toBeUndefined();
+  });
 });

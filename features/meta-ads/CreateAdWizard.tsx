@@ -7,17 +7,32 @@
  * PASSO 2 (Conjunto): onde converter (Formulário/Site/WhatsApp) + orçamento
  *   diário (mínimo da conta) + localização (pesquisa Meta) + raio + público
  *   estimado + Advantage+; cria o conjunto EM PAUSA, encadeado ao campaign_id.
- * As fases seguintes (Anúncio, Formulário) acrescentam-se a este shell.
+ * PASSO 3 (Anúncio): imagem (upload à Meta) + título + texto + descrição +
+ *   destino (Formulário existente ou Site URL) + CTA; cria o criativo e o
+ *   anúncio EM PAUSA, encadeado ao adset_id. A Fase 4 (criar formulário + CAPI)
+ *   acrescenta-se a este shell.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   X, Target, MousePointerClick, MessageCircle, AlertTriangle, Check,
-  FileText, Globe, MapPin, Sparkles, ArrowLeft, Loader2,
+  FileText, Globe, MapPin, Sparkles, ArrowLeft, Loader2, Image as ImageIcon, Upload,
 } from 'lucide-react';
 
 type Objective = 'leads' | 'trafego' | 'interacao';
 type Conversion = 'form' | 'site' | 'whatsapp';
-type Step = 1 | 2 | 'done';
+type Step = 1 | 2 | 3 | 'done';
+
+// Apelos à acção (enum da Meta → etiqueta PT).
+const CTA_OPTIONS: { value: string; label: string }[] = [
+  { value: 'LEARN_MORE', label: 'Saber mais' },
+  { value: 'SIGN_UP', label: 'Inscrever-se' },
+  { value: 'GET_QUOTE', label: 'Pedir orçamento' },
+  { value: 'CONTACT_US', label: 'Contactar' },
+  { value: 'SUBSCRIBE', label: 'Subscrever' },
+  { value: 'DOWNLOAD', label: 'Transferir' },
+];
+
+interface LeadForm { id: string; name: string; status: string }
 
 const OBJECTIVES: { key: Objective; label: string; icon: typeof Target; hint: string }[] = [
   { key: 'leads', label: 'Leads', icon: Target, hint: 'Recolher contactos (formulário ou site).' },
@@ -73,8 +88,26 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
   const [estLoading, setEstLoading] = useState(false);
   const [adsetId, setAdsetId] = useState<string | null>(null);
 
+  // Passo 3 — Anúncio
+  const [imageHash, setImageHash] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [adName, setAdName] = useState('');
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [description, setDescription] = useState('');
+  const [siteUrl, setSiteUrl] = useState('');
+  const [cta, setCta] = useState('LEARN_MORE');
+  const [forms, setForms] = useState<LeadForm[]>([]);
+  const [formsLoading, setFormsLoading] = useState(false);
+  const [selectedFormId, setSelectedFormId] = useState('');
+  const [adId, setAdId] = useState<string | null>(null);
+
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // Destino do anúncio derivado da conversão escolhida no passo 2.
+  const destination: 'form' | 'site' = conversion === 'form' ? 'form' : 'site';
 
   const budgetCents = parseEurosToCents(budget);
   const budgetOk = budgetCents !== null && budgetCents >= MIN_DAILY_CENTS;
@@ -191,7 +224,10 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
         return;
       }
       setAdsetId(j.adset_id);
-      setStep('done');
+      setAdName(name.trim());
+      // O destino WhatsApp (anúncio de mensagem) chega numa iteração futura;
+      // por agora o conjunto fica pronto e o anúncio completa-se no Gestor.
+      setStep(conversion === 'whatsapp' ? 'done' : 3);
     } catch {
       setErr('Não foi possível criar. Tente de novo.');
     } finally {
@@ -199,7 +235,92 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
     }
   }, [campaignId, budgetOk, budgetCents, name, conversion, selectedCity, radius]);
 
-  const stepLabel = step === 1 ? 'Passo 1 de 3 · Campanha' : step === 2 ? 'Passo 2 de 3 · Conjunto' : 'Concluído';
+  // --- Passo 3: carregar formulários (destino Formulário) -------------------
+  useEffect(() => {
+    if (step !== 3 || destination !== 'form') return;
+    setFormsLoading(true);
+    (async () => {
+      try {
+        const res = await fetch('/api/meta-ads/leadforms');
+        const j = await res.json();
+        setForms(Array.isArray(j.forms) ? j.forms : []);
+      } catch {
+        setForms([]);
+      } finally {
+        setFormsLoading(false);
+      }
+    })();
+  }, [step, destination]);
+
+  // --- Passo 3: enviar a imagem à Meta (devolve hash) -----------------------
+  const uploadImage = useCallback(async (file: File) => {
+    setErr(null);
+    setImageHash(null);
+    setImageUploading(true);
+    setImagePreview(URL.createObjectURL(file));
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/meta-ads/upload-image', { method: 'POST', body: fd });
+      const j = await res.json();
+      if (!res.ok || j.error) {
+        setErr(j.error || 'Não foi possível enviar a imagem.');
+        return;
+      }
+      setImageHash(j.image_hash);
+    } catch {
+      setErr('Não foi possível enviar a imagem.');
+    } finally {
+      setImageUploading(false);
+    }
+  }, []);
+
+  const adReady =
+    !!imageHash &&
+    !!message.trim() &&
+    (destination === 'site' ? /^https?:\/\/.+/i.test(siteUrl.trim()) : !!selectedFormId);
+
+  // --- Passo 3: criar o anúncio ---------------------------------------------
+  const createTheAd = useCallback(async () => {
+    if (!adsetId || !adReady) return;
+    setSaving(true);
+    setErr(null);
+    try {
+      const res = await fetch('/api/meta-ads/ad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adsetId,
+          name: adName.trim() || `${name.trim()} — Anúncio`,
+          imageHash,
+          message: message.trim(),
+          title: title.trim() || undefined,
+          description: description.trim() || undefined,
+          destination,
+          link: destination === 'site' ? siteUrl.trim() : undefined,
+          leadGenFormId: destination === 'form' ? selectedFormId : undefined,
+          ctaType: cta,
+        }),
+      });
+      const j = await res.json();
+      if (!res.ok || j.error) {
+        setErr(j.error || 'Não foi possível criar o anúncio.');
+        return;
+      }
+      setAdId(j.ad_id);
+      setStep('done');
+    } catch {
+      setErr('Não foi possível criar. Tente de novo.');
+    } finally {
+      setSaving(false);
+    }
+  }, [adsetId, adReady, adName, name, imageHash, message, title, description, destination, siteUrl, selectedFormId, cta]);
+
+  const stepLabel =
+    step === 1 ? 'Passo 1 de 3 · Campanha'
+    : step === 2 ? 'Passo 2 de 3 · Conjunto'
+    : step === 3 ? 'Passo 3 de 3 · Anúncio'
+    : 'Concluído';
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onMouseDown={onClose} role="dialog" aria-modal="true" aria-label="Novo anúncio">
@@ -406,7 +527,7 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
 
             <div className="flex gap-2.5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>Cria o conjunto <b>em pausa</b>. O anúncio (criativo e destino) chega na próxima fase do construtor.</p>
+              <p>Cria o conjunto <b>em pausa</b>{conversion === 'whatsapp' ? ' (o anúncio de mensagem completa-se no Gestor por agora).' : ' e segue para o anúncio (imagem, texto e destino).'}</p>
             </div>
 
             {err && <p className="text-xs text-red-600 dark:text-red-400">{err}</p>}
@@ -420,7 +541,134 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
                 disabled={saving || !budgetOk}
                 className="flex-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-bold text-white hover:bg-violet-700 disabled:opacity-40"
               >
-                {saving ? 'A criar...' : 'Criar conjunto (em pausa)'}
+                {saving ? 'A criar...' : conversion === 'whatsapp' ? 'Criar conjunto (em pausa)' : 'Criar conjunto e continuar'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PASSO 3 — ANÚNCIO */}
+        {step === 3 && (
+          <div className="space-y-4 p-5">
+            {/* Formato */}
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Formato</p>
+              <div className="flex items-center gap-3 rounded-xl border border-violet-300 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-600/10 px-3 py-2.5">
+                <ImageIcon className="h-5 w-5 shrink-0 text-violet-600 dark:text-violet-300" />
+                <span className="text-xs font-semibold text-violet-800 dark:text-violet-200">Uma imagem (o vídeo edita-se no Gestor até a Meta libertar a capacidade)</span>
+              </div>
+            </div>
+
+            {/* Imagem */}
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Imagem do anúncio</p>
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 dark:border-white/15 px-3 py-5 text-center hover:bg-slate-50 dark:hover:bg-white/5">
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Pré-visualização" className="max-h-36 rounded-lg object-contain" />
+                ) : (
+                  <Upload className="h-6 w-6 text-slate-400" />
+                )}
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  {imageUploading ? 'A enviar à Meta...' : imageHash ? 'Enviada à Meta ✓ (clica para trocar)' : 'Arrasta ou clica para escolher uma imagem'}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadImage(f); }}
+                />
+              </label>
+            </div>
+
+            {/* Destino */}
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Destino</p>
+              {destination === 'form' ? (
+                <>
+                  <div className="relative">
+                    <FileText className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <select
+                      value={selectedFormId}
+                      onChange={(e) => setSelectedFormId(e.target.value)}
+                      disabled={formsLoading}
+                      className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 pl-8 pr-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50"
+                    >
+                      <option value="">{formsLoading ? 'A carregar formulários...' : 'Escolhe um formulário'}</option>
+                      {forms.map((f) => <option key={f.id} value={f.id}>{f.name}{f.status && f.status !== 'ACTIVE' ? ` (${f.status.toLowerCase()})` : ''}</option>)}
+                    </select>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-400">{forms.length === 0 && !formsLoading ? 'Sem formulários na Página ainda. Cria um no editor de formulários (em breve) ou no Gestor.' : 'Formulários instantâneos da tua Página.'}</p>
+                </>
+              ) : (
+                <>
+                  <div className="relative">
+                    <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      value={siteUrl}
+                      onChange={(e) => setSiteUrl(e.target.value)}
+                      placeholder="https://joaofilipefonseca.pt/imovel"
+                      className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 pl-8 pr-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    />
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-400">URL da página de destino (com http:// ou https://).</p>
+                </>
+              )}
+            </div>
+
+            {/* Criativo */}
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Texto do anúncio</p>
+              <input
+                value={title}
+                maxLength={255}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Título (ex.: Avaliação gratuita do seu imóvel)"
+                className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              <textarea
+                value={message}
+                rows={3}
+                maxLength={2000}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Texto principal (a mensagem que aparece no anúncio)"
+                className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              <input
+                value={description}
+                maxLength={255}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Descrição (opcional)"
+                className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              <select
+                value={cta}
+                onChange={(e) => setCta(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+              >
+                {CTA_OPTIONS.map((o) => <option key={o.value} value={o.value}>Apelo à acção: {o.label}</option>)}
+              </select>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-600/10 px-2.5 py-1 text-[11px] font-semibold text-violet-700 dark:text-violet-200">
+                <Sparkles className="h-3 w-3" /> Otimizar texto por pessoa: ON
+              </span>
+            </div>
+
+            <div className="flex gap-2.5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>Cria o anúncio <b>em pausa</b> na Meta. Reveês tudo e publicas tu quando quiseres.</p>
+            </div>
+
+            {err && <p className="text-xs text-red-600 dark:text-red-400">{err}</p>}
+
+            <div className="flex gap-2">
+              <button onClick={() => { setStep(2); setErr(null); }} className="flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 dark:bg-white/5 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200">
+                <ArrowLeft className="h-4 w-4" /> Voltar
+              </button>
+              <button
+                onClick={() => void createTheAd()}
+                disabled={saving || !adReady}
+                className="flex-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-bold text-white hover:bg-violet-700 disabled:opacity-40"
+              >
+                {saving ? 'A criar...' : 'Criar anúncio (em pausa)'}
               </button>
             </div>
           </div>
@@ -433,11 +681,15 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/15">
                 <Check className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">Campanha e conjunto criados em pausa</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">{adId ? 'Anúncio criado em pausa' : 'Campanha e conjunto criados em pausa'}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Ficam <b>em pausa</b> (não gastam nada). O <b>anúncio</b> (criativo, destino e CTA) chega na próxima fase do construtor; entretanto podes completá-lo no Gestor de Anúncios. Aparece na lista após o próximo sync.
+                {adId ? (
+                  <>Campanha, conjunto e anúncio ficam <b>em pausa</b> (não gastam nada). Reveês tudo e <b>publicas tu</b> quando quiseres. Aparece na lista após o próximo sync.</>
+                ) : (
+                  <>Ficam <b>em pausa</b> (não gastam nada). O <b>anúncio</b> completa-se no Gestor de Anúncios (o destino WhatsApp liga-se aqui numa próxima iteração). Aparece na lista após o próximo sync.</>
+                )}
               </p>
-              {adsetId && <p className="text-[11px] text-slate-400">Conjunto: {adsetId}</p>}
+              {adId ? <p className="text-[11px] text-slate-400">Anúncio: {adId}</p> : adsetId && <p className="text-[11px] text-slate-400">Conjunto: {adsetId}</p>}
             </div>
             <button onClick={onCreated} className="w-full rounded-lg bg-violet-600 px-3 py-2 text-sm font-bold text-white hover:bg-violet-700">Concluir</button>
           </div>

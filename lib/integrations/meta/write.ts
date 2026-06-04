@@ -988,6 +988,83 @@ export async function estimateReach(
   return parseReachEstimate(json);
 }
 
+// MA-CREATE Fase 3 — criar o anúncio (criativo + anúncio).
+// ----------------------------------------------------------------------------
+// O anúncio é uma media (imagem) + copy + destino + CTA. Cria-se em dois passos:
+// (1) criativo (object_story_spec.link_data com page_id, imagem, textos, link e
+// call_to_action) via adcreatives; (2) anúncio que liga o conjunto ao criativo,
+// EM PAUSA. Reusa `uploadAdImage` do Tier 2 para a imagem. De-risco confirmado
+// VERDE na conta real (anúncio de imagem não tem o portão `(#3)` do vídeo).
+// Destino: Site (CTA aponta ao link) ou Formulário (CTA SIGN_UP + lead_gen_form_id).
+
+export interface AdCreativeInput {
+  pageId: string;
+  imageHash: string;
+  /** Texto principal (link_data.message). */
+  message: string;
+  /** Título (link_data.name). */
+  title?: string;
+  /** Descrição (link_data.description). */
+  description?: string;
+  /** URL do site (destino Site); no destino Formulário usa-se a Página. */
+  link?: string;
+  /** Tipo de apelo à acção da Meta (ex.: LEARN_MORE, SIGN_UP, MESSAGE_PAGE). */
+  ctaType: string;
+  /** Id do formulário de leads (destino Formulário). */
+  leadGenFormId?: string;
+}
+
+/** Constrói o object_story_spec de um criativo de imagem. Puro/testável. */
+export function buildAdCreativeStorySpec(input: AdCreativeInput): Record<string, unknown> {
+  const link = input.link || `https://facebook.com/${input.pageId}`;
+  const linkData: Record<string, unknown> = {
+    image_hash: input.imageHash,
+    message: input.message,
+    link,
+  };
+  if (input.title) linkData.name = input.title;
+  if (input.description) linkData.description = input.description;
+  const value: Record<string, unknown> = input.leadGenFormId
+    ? { lead_gen_form_id: input.leadGenFormId }
+    : { link };
+  linkData.call_to_action = { type: input.ctaType, value };
+  return { page_id: input.pageId, link_data: linkData };
+}
+
+/** Cria um criativo (object_story_spec) na conta. `adAccountId` = `act_<id>`. */
+export async function createAdCreative(
+  adAccountId: string | null,
+  token: string,
+  opts: { name: string; storySpec: Record<string, unknown> },
+): Promise<{ id: string }> {
+  if (!adAccountId) throw new Error('Conta de anúncios não seleccionada.');
+  const created = await graphPostJson(`${adAccountId}/adcreatives`, token, {
+    name: opts.name,
+    object_story_spec: JSON.stringify(opts.storySpec),
+  });
+  const id = (created.id as string) || '';
+  if (!id) throw new Error('A Meta não devolveu o criativo criado.');
+  return { id };
+}
+
+/** Cria o anúncio que liga o conjunto ao criativo. Cria EM PAUSA. */
+export async function createAd(
+  adAccountId: string | null,
+  token: string,
+  opts: { name: string; adsetId: string; creativeId: string; status?: 'PAUSED' | 'ACTIVE' },
+): Promise<{ id: string }> {
+  if (!adAccountId) throw new Error('Conta de anúncios não seleccionada.');
+  const created = await graphPostJson(`${adAccountId}/ads`, token, {
+    name: opts.name,
+    adset_id: opts.adsetId,
+    creative: JSON.stringify({ creative_id: opts.creativeId }),
+    status: opts.status ?? 'PAUSED',
+  });
+  const id = (created.id as string) || '';
+  if (!id) throw new Error('A Meta não devolveu o anúncio criado.');
+  return { id };
+}
+
 /**
  * Altera o orçamento no nó indicado (adset ou campanha). `kind` = 'daily' |
  * 'lifetime', `cents` em cêntimos da moeda da conta.

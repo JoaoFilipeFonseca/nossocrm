@@ -127,3 +127,19 @@ export async function createLeadForm(
 export async function getLeadForm(formId: string, token: string): Promise<Record<string, unknown>> {
   return graphGet(`${formId}?fields=id,name,status,locale,questions,privacy_policy,follow_up_action_url`, token);
 }
+
+export interface LeadFormSummary { id: string; name: string; status: string }
+
+/** Lista os formulários de leads da Página (para os ligar a um anúncio). */
+export async function listLeadForms(pageId: string, userToken: string): Promise<LeadFormSummary[]> {
+  if (!pageId) throw new Error('Página não seleccionada.');
+  const pageToken = await getPageAccessToken(pageId, userToken);
+  const json = await graphGet(`${pageId}/leadgen_forms?fields=id,name,status&limit=50`, pageToken);
+  const data = Array.isArray(json.data) ? json.data : [];
+  return data
+    .map((d) => {
+      const r = (d ?? {}) as Record<string, unknown>;
+      return { id: String(r.id ?? ''), name: String(r.name ?? 'Formulário'), status: String(r.status ?? '') };
+    })
+    .filter((f) => f.id);
+}
