@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const adset = await createAdSet(c.adAccountId, c.token, {
       name: 'PROBE conjunto (apagar)',
       campaignId: camp.id,
-      dailyBudgetCents: 100,
+      dailyBudgetCents: 300,
       pageId: c.pageId,
       status: 'PAUSED',
     });
