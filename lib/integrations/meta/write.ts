@@ -801,6 +801,42 @@ export async function deleteCampaign(campaignId: string, token: string): Promise
   await graphDelete(campaignId, token);
 }
 
+// MA-CREATE Fase 2 — criar o conjunto de anúncios (adset). Para LEADS com
+// formulário instantâneo: optimization_goal LEAD_GENERATION + promoted_object
+// {page_id}. Orçamento diário no conjunto (cêntimos). Geo simples (países) para
+// já; cidade+raio entram no passo seguinte. Cria EM PAUSA.
+export async function createAdSet(
+  adAccountId: string | null,
+  token: string,
+  opts: {
+    name: string;
+    campaignId: string;
+    dailyBudgetCents: number;
+    pageId: string | null;
+    optimizationGoal?: string;
+    billingEvent?: string;
+    geoCountries?: string[];
+    status?: 'PAUSED' | 'ACTIVE';
+  },
+): Promise<{ id: string }> {
+  if (!adAccountId) throw new Error('Conta de anúncios não seleccionada.');
+  if (!opts.pageId) throw new Error('Página não seleccionada.');
+  const targeting = { geo_locations: { countries: opts.geoCountries ?? ['PT'] } };
+  const created = await graphPostJson(`${adAccountId}/adsets`, token, {
+    name: opts.name,
+    campaign_id: opts.campaignId,
+    daily_budget: String(opts.dailyBudgetCents),
+    billing_event: opts.billingEvent ?? 'IMPRESSIONS',
+    optimization_goal: opts.optimizationGoal ?? 'LEAD_GENERATION',
+    promoted_object: JSON.stringify({ page_id: opts.pageId }),
+    targeting: JSON.stringify(targeting),
+    status: opts.status ?? 'PAUSED',
+  });
+  const id = (created.id as string) || '';
+  if (!id) throw new Error('A Meta não devolveu o conjunto criado.');
+  return { id };
+}
+
 /**
  * Altera o orçamento no nó indicado (adset ou campanha). `kind` = 'daily' |
  * 'lifetime', `cents` em cêntimos da moeda da conta.
