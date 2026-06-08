@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — Caixa Social (SOCIAL-INBOX, MVP Messenger)</title>
+<style>
+  :root{
+    --bg:#0b1120; --card:#0f172a; --card2:#111c33; --line:rgba(255,255,255,.08);
+    --txt:#e2e8f0; --mut:#94a3b8; --pri:#6366f1; --pri2:#818cf8;
+    --amber:#f59e0b; --green:#22c55e; --red:#ef4444; --msgr:#0084ff; --insta:#e1306c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:20px}
+  h1{font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  .sub{color:var(--mut);margin:0 0 16px;font-size:13px}
+  .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:5px}
+  .pill.act{background:rgba(245,158,11,.15);color:#fcd34d}
+  .pill.msgr{background:rgba(0,132,255,.15);color:#5eb1ff}
+  .pill.insta{background:rgba(225,48,108,.15);color:#f472b6}
+  .pill.soon{background:rgba(148,163,184,.15);color:#cbd5e1}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .chip{font-size:12px;font-weight:600;padding:6px 12px;border-radius:10px;border:1px solid var(--line);color:var(--mut);background:transparent;cursor:pointer}
+  .chip.on{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.5);color:#c7d2fe}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}.thread{display:none}.thread.open{display:block}}
+  .list{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .row{display:flex;gap:11px;padding:13px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+  .row:hover{background:var(--card2)}
+  .row.sel{background:rgba(99,102,241,.10);border-left:3px solid var(--pri)}
+  .av{width:42px;height:42px;border-radius:50%;flex:0 0 42px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px}
+  .row .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .row .nm{font-weight:700}
+  .row .tm{font-size:11px;color:var(--mut);white-space:nowrap}
+  .row .snip{color:var(--mut);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:250px}
+  .row .meta{display:flex;gap:6px;margin-top:5px;align-items:center}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex:0 0 8px}
+  .thread{background:var(--card);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;min-height:520px}
+  .thead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .thead .who{display:flex;gap:11px;align-items:center}
+  .link{color:var(--pri2);font-size:12px;text-decoration:none}
+  .conv{flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+  .bub{max-width:78%;padding:9px 13px;border-radius:14px;font-size:13.5px}
+  .bub.them{align-self:flex-start;background:#1e293b;border-bottom-left-radius:4px}
+  .bub.me{align-self:flex-end;background:rgba(99,102,241,.22);border-bottom-right-radius:4px}
+  .bub .t{font-size:10px;color:var(--mut);margin-top:4px}
+  .draft{border-top:1px solid var(--line);padding:14px 16px;background:var(--card2)}
+  .draft .lbl{font-size:11px;font-weight:700;color:#fcd34d;display:flex;align-items:center;gap:6px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+  .ta{width:100%;min-height:88px;background:var(--bg);border:1px solid var(--line);border-radius:12px;color:var(--txt);padding:11px 13px;font:inherit;resize:vertical}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .btn{font-size:13px;font-weight:700;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--txt);cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+  .btn.pri{background:var(--msgr);border-color:var(--msgr);color:#fff}
+  .btn.ghost{color:var(--mut)}
+  .note{margin-top:10px;font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:6px}
+  .ctx{padding:11px 16px;border-bottom:1px solid var(--line);font-size:12px;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .ctx b{color:var(--txt)}
+  .legend{margin-top:18px;color:var(--mut);font-size:12px;border-top:1px dashed var(--line);padding-top:12px}
+  .legend b{color:var(--txt)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💬 Caixa Social <span class="pill act">3 a precisar de resposta</span></h1>
+  <p class="sub">DMs do Facebook Messenger e Instagram que precisam da tua atenção. <b>A IA prepara o rascunho; tu revês e envias sempre.</b> Os urgentes também te chegam ao Telegram.</p>
+
+  <div class="filters">
+    <button class="chip on">A precisar de resposta (3)</button>
+    <button class="chip">Todas</button>
+    <button class="chip">Messenger</button>
+    <button class="chip">Instagram <span class="pill soon" style="margin-left:6px">em breve</span></button>
+  </div>
+
+  <div class="grid">
+    <!-- LISTA -->
+    <div class="list">
+      <div class="row sel">
+        <div class="av" style="background:#0ea5e9">M</div>
+        <div style="flex:1;min-width:0">
+          <div class="top"><span class="nm">Marco Marilinda</span><span class="tm">há 2 h</span></div>
+          <div class="snip">Boa tarde, ainda tem aquele apartamento em...</div>
+          <div class="meta"><span class="dot"></span><span class="pill msgr">Messenger</span><span class="pill act">responder</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="av" style="background:#a855f7">C</div>
+        <div style="flex:1;min-width:0">
+          <div class="top"><span class="nm">Cátia Cardoso</span><span class="tm">ontem</span></div>
+          <div class="snip">Obrigada! E para arrendamento também faz?</div>
+          <div class="meta"><span class="dot"></span><span class="pill msgr">Messenger</span><span class="pill act">responder</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="av" style="background:#14b8a6">C</div>
+        <div style="flex:1;min-width:0">
+          <div class="top"><span class="nm">Catarina Vieira</span><span class="tm">2 dias</span></div>
+          <div class="snip">Pode ligar me amanhã de manhã?</div>
+          <div class="meta"><span class="dot"></span><span class="pill msgr">Messenger</span><span class="pill act">responder</span></div>
+        </div>
+      </div>
+      <div class="row" style="opacity:.6">
+        <div class="av" style="background:#64748b">M</div>
+        <div style="flex:1;min-width:0">
+          <div class="top"><span class="nm">Meta Maneger</span><span class="tm">há 3 h</span></div>
+          <div class="snip">Aviso: violações graves das políticas...</div>
+          <div class="meta"><span class="pill msgr">Messenger</span><span class="pill soon">ruído (ignorar)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONVERSA -->
+    <div class="thread open">
+      <div class="thead">
+        <div class="who">
+          <div class="av" style="background:#0ea5e9;width:38px;height:38px;flex-basis:38px">M</div>
+          <div><div class="nm">Marco Marilinda</div><div style="font-size:11px;color:var(--mut)">Facebook Messenger · janela de resposta: 22 h</div></div>
+        </div>
+        <a class="link" href="#">Abrir contacto ↗</a>
+      </div>
+      <div class="ctx">
+        <span>🔗 Ligado a: <b>Marco Marilinda</b> (contacto)</span>
+        <span>· Negócio: <b>Compradores · Oportunidade</b></span>
+        <span>· Origem: <b>Anúncio "Imagens 1 form"</b></span>
+      </div>
+
+      <div class="conv">
+        <div class="bub them">Boa tarde, ainda tem aquele apartamento T2 em Paços de Ferreira que vi no anúncio?<div class="t">há 2 h</div></div>
+        <div class="bub them">Qual é o valor?<div class="t">há 2 h</div></div>
+      </div>
+
+      <div class="draft">
+        <div class="lbl">✨ A IA preparou esta resposta (no teu tom)</div>
+        <textarea class="ta">Boa tarde Marco, obrigado pela mensagem. Sim, esse T2 ainda está disponível. O valor é de 165.000 EUR. Quer que combinemos uma visita esta semana, quando lhe for oportuno? Posso também enviar-lhe a ficha completa com fotos.</textarea>
+        <div class="acts">
+          <button class="btn pri">↗ Abrir no Messenger para enviar</button>
+          <button class="btn">⧉ Copiar</button>
+          <button class="btn ghost">↻ Outra versão</button>
+          <button class="btn ghost">✓ Marcar tratada</button>
+        </div>
+        <div class="note">🔒 A IA nunca envia. O rascunho é teu para reveres e enviares. · 🔔 Esta entrou no Telegram às 13:24.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <p><b>O que a maqueta mostra (MVP Messenger, sem App Review):</b></p>
+    <p>• Lista de DMs <b>que precisam de resposta</b> (a IA separa ruído tipo "Meta Maneger") com plataforma, snippet e indicador.<br>
+    • Conversa real + <b>rascunho da IA no teu tom</b> (editável) com contexto do contacto/negócio/anúncio quando der para ligar.<br>
+    • Acções: <b>Abrir no Messenger</b> (tu envias), Copiar, Outra versão, Marcar tratada. <b>A IA NUNCA envia.</b><br>
+    • Urgentes chegam ao <b>Telegram</b> (sem inundar, regra do silêncio).<br>
+    • <b>Instagram</b> aparece como "em breve" até destravares o acesso a mensagens no app do Instagram (fast-follow).</p>
+  </div>
+</div>
+</body>
+</html>
