@@ -54,6 +54,7 @@ import {
   Menu,
   Filter,
   Share2,
+  Brain,
   Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -94,6 +95,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/financeiro': 'Financeiro',
   '/anuncios': 'Anúncios',
   '/organico': 'Orgânico',
+  '/cerebro': 'Cérebro de Marketing',
   '/criativos': 'Criativos',
   '/settings': 'Configurações',
   '/profile': 'Perfil',
@@ -364,6 +366,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
             { to: '/financeiro', icon: Wallet, label: 'Financeiro', prefetch: undefined, badge: undefined },
             { to: '/anuncios', icon: Megaphone, label: 'Anúncios', prefetch: undefined, badge: undefined },
             { to: '/organico', icon: Share2, label: 'Orgânico', prefetch: undefined, badge: undefined },
+            { to: '/cerebro', icon: Brain, label: 'Cérebro', prefetch: undefined, badge: undefined },
             { to: '/criativos', icon: Archive, label: 'Criativos', prefetch: undefined, badge: undefined },
             { to: '/automacoes', icon: Zap, label: 'Automações', prefetch: undefined, badge: undefined },
             ...(profile?.role === 'admin' ? [{ to: '/admin/saude', icon: Activity, label: 'Saúde', prefetch: undefined, badge: undefined }] : []),
