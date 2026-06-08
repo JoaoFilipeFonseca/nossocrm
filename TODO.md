@@ -1,5 +1,16 @@
 # TODO — Foco Imo (CRM) — CATÁLOGO ÚNICO
 
+> ## ▶️ ORDEM DE EXECUÇÃO DECIDIDA PELO JOÃO (08/06/2026) — seguir sem saltar
+> O épico **MKT-MEASURE** está fechado na parte construível (CAPI + Funil + Orgânico + Cérebro).
+> O Cérebro expôs o gargalo: **centenas de leads, 0 fecham → o problema está DENTRO do CRM**
+> (leads por trabalhar/qualificar). Por isso o João escolheu atacar primeiro o que faz trabalhar
+> as leads e só no fim o assistente. **Sequência travada (não reordenar sem ordem dele):**
+> 1. **CT-AUTO** — auto-preencher campos (Trimestre/data de entrada) + **automações de follow-up/cadências** no `/automacoes`. ← **A EXECUTAR AGORA**
+> 2. **SOCIAL-INBOX** — avisos de DMs/comentários FB+IG; IA prepara, **o João envia** (nunca auto-send).
+> 3. **IMO-7** — Agente de Divulgação do Imóvel (sequência de fotos + copy por canal + plano).
+> 4. **IA-7** — Bot do CRM = tutor + assistente pessoal 360 (fica para o FIM, por decisão do João).
+> (Detalhe de cada peça nas secções B/D/G/J abaixo.)
+
 > **FONTE DE VERDADE ÚNICA do backlog.** Consolida (31/05/2026) o antigo `CAPTURE.md`
 > + o `crm/.claude/TODO.md` (1744 linhas, planeamento 14-18 Mai) + a memória viva.
 > Regra do João: **nada se perde.** Primeiro catalogamos tudo; depois ordenamos do mais
