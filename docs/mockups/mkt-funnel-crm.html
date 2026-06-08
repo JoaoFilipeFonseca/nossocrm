@@ -54,6 +54,10 @@
   .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .seg button{background:transparent;color:var(--muted);border:0;padding:7px 12px;font-size:13px;cursor:pointer}
   .seg button.on{background:var(--accent);color:#fff}
+  .daterange{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .daterange label{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+  .daterange input[type=date]{background:#0b1430;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font-size:13px;color-scheme:dark}
+  .daterange .apply{background:var(--green);color:#04210f;border:0;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -62,12 +66,17 @@
 
   <div class="controls">
     <div class="seg">
-      <button class="on">Mandatos (comprador)</button>
+      <button class="on">Compradores</button>
       <button>CMI (vendedor)</button>
       <button>Todos os funis</button>
     </div>
     <div class="seg">
-      <button>30 dias</button><button class="on">12 meses</button><button>Tudo</button>
+      <button>30 dias</button><button>12 meses</button><button>Tudo</button><button class="on">Personalizado</button>
+    </div>
+    <div class="daterange">
+      <label>De <input type="date" value="2026-01-01"></label>
+      <label>Até <input type="date" value="2026-06-08"></label>
+      <button class="apply">Aplicar</button>
     </div>
   </div>
 
