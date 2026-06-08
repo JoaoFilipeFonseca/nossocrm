@@ -183,6 +183,26 @@ export async function POST(req: NextRequest) {
         summary.push({ org: i.organization_id, error: e instanceof Error ? e.message : String(e) });
       }
     }
+
+    // Estado em /automacoes (best-effort; a linha é criada pela migração do cron).
+    try {
+      const { data: cur } = await admin
+        .from('system_automations')
+        .select('run_count, fail_count')
+        .eq('key', 'meta-capi-forward')
+        .maybeSingle();
+      await admin
+        .from('system_automations')
+        .update({
+          last_run_at: new Date().toISOString(),
+          last_run_ok: ok,
+          last_run_error: ok ? null : 'ver logs',
+          run_count: ((cur as { run_count?: number } | null)?.run_count ?? 0) + 1,
+          fail_count: ((cur as { fail_count?: number } | null)?.fail_count ?? 0) + (ok ? 0 : 1),
+        })
+        .eq('key', 'meta-capi-forward');
+    } catch { /* best-effort */ }
+
     return Response.json({ ok, summary });
   }
 
