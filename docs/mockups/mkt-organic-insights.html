@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — Orgânico / Página (MKT-ORGANIC-INSIGHTS)</title>
+<style>
+  :root{--bg:#0b1020;--card:#121a30;--card2:#0f1730;--line:#22304f;--txt:#e6ecf7;--muted:#93a1bd;--accent:#3b82f6;--green:#22c55e;--amber:#f59e0b;--violet:#8b5cf6;--pink:#ec4899}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;padding:24px}
+  h1{font-size:22px;margin:0 0 2px}
+  .sub{color:var(--muted);margin:0 0 18px}
+  .pill{font-size:12px;color:var(--muted);background:#0b1430;border:1px solid var(--line);padding:3px 9px;border-radius:999px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{background:transparent;color:var(--muted);border:0;padding:7px 12px;font-size:13px;cursor:pointer}
+  .seg button.on{background:var(--accent);color:#fff}
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+  @media(min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
+  .kpi{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px;position:relative}
+  .kpi .v{font-size:24px;font-weight:700}.kpi .l{color:var(--muted);font-size:12.5px}.kpi .d{font-size:12px;margin-top:4px;color:var(--muted)}
+  .warn{position:absolute;top:10px;right:10px;font-size:10px;color:#fdba74;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);padding:1px 6px;border-radius:999px}
+  .grid{display:grid;gap:16px}
+  @media(min-width:980px){.grid.cols2{grid-template-columns:1.4fr .8fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .card h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .post{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .post:last-child{border-bottom:0}
+  .thumb{width:54px;height:54px;border-radius:10px;flex:none;background:linear-gradient(135deg,#1e293b,#334155);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .post .body{flex:1;min-width:0}
+  .post .txt{font-size:13.5px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .post .meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .stats{display:flex;gap:12px;font-size:12.5px;color:var(--muted);margin-top:5px;flex-wrap:wrap}
+  .stats b{color:var(--txt);font-weight:600}
+  .rank{width:22px;text-align:center;font-weight:700;color:var(--muted);align-self:center}
+  .best{border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.07);border-radius:10px;padding:10px;margin-bottom:12px}
+  .best .tag{font-size:11px;color:#86efac;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);padding:1px 7px;border-radius:999px}
+  .row{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .row .name{width:120px;color:var(--muted);font-size:13px}
+  .row .bar{flex:1;height:14px;border-radius:7px;background:#0b1430;overflow:hidden;border:1px solid var(--line)}
+  .row .bar>span{display:block;height:100%}
+  .row .val{width:54px;text-align:right;font-size:13px}
+  .spark{display:flex;align-items:flex-end;gap:4px;height:90px;margin-top:6px}
+  .spark .b{flex:1;background:linear-gradient(180deg,#6366f1,#3b82f6);border-radius:4px 4px 0 0;min-height:4px}
+  .note{color:var(--muted);font-size:12.5px;margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+</style>
+</head>
+<body>
+  <h1>Orgânico — Página</h1>
+  <p class="sub">Os teus posts não pagos (Facebook/Instagram): o que publicas, o que gera interacção e os que mais resultam. <span class="pill">Maqueta</span></p>
+
+  <div class="controls">
+    <div class="seg"><button>Facebook</button><button class="on">Tudo</button><button>Instagram</button></div>
+    <div class="seg"><button>30 dias</button><button class="on">90 dias</button><button>12 meses</button><button>Personalizado</button></div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="l">Publicações</div><div class="v">24</div><div class="d">no período</div></div>
+    <div class="kpi"><div class="l">Interações totais</div><div class="v">1 842</div><div class="d">reações + comentários + partilhas</div></div>
+    <div class="kpi"><span class="warn">requer re-autorização</span><div class="l">Alcance</div><div class="v">~38 mil</div><div class="d">pessoas alcançadas</div></div>
+    <div class="kpi"><div class="l">Média por post</div><div class="v">77</div><div class="d">interações/post</div></div>
+  </div>
+
+  <div class="grid cols2">
+    <div class="card">
+      <h2>🏆 Melhores publicações <span class="pill">por interacção</span></h2>
+
+      <div class="best">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b>Publicação destacada</b><span class="tag">+3x da média</span></div>
+        <div style="font-size:13.5px">"Vendi este T3 em Paços de Ferreira em 11 dias — eis como..."</div>
+        <div class="stats" style="margin-top:6px">👍 <b>214</b> reações · 💬 <b>38</b> comentários · ↗️ <b>22</b> partilhas · 12 Mai</div>
+      </div>
+
+      <div class="post"><div class="rank">1</div><div class="thumb">🏠</div><div class="body"><div class="txt">Vendi este T3 em Paços de Ferreira em 11 dias — eis como…</div><div class="meta">Facebook · 12 Mai</div><div class="stats">👍 <b>214</b> · 💬 <b>38</b> · ↗️ <b>22</b> · <span>274 total</span></div></div></div>
+      <div class="post"><div class="rank">2</div><div class="thumb">📸</div><div class="body"><div class="txt">Antes/depois desta moradia em Seroa</div><div class="meta">Instagram · 28 Abr</div><div class="stats">👍 <b>168</b> · 💬 <b>14</b> · ↗️ <b>9</b> · <span>191 total</span></div></div></div>
+      <div class="post"><div class="rank">3</div><div class="thumb">🎥</div><div class="body"><div class="txt">3 erros que fazem perder dinheiro ao vender casa</div><div class="meta">Facebook · 04 Mai</div><div class="stats">👍 <b>121</b> · 💬 <b>27</b> · ↗️ <b>31</b> · <span>179 total</span></div></div></div>
+      <div class="post"><div class="rank">4</div><div class="thumb">🗣️</div><div class="body"><div class="txt">Testemunho da família que ajudei a comprar a 1ª casa</div><div class="meta">Instagram · 19 Abr</div><div class="stats">👍 <b>96</b> · 💬 <b>9</b> · ↗️ <b>4</b> · <span>109 total</span></div></div></div>
+      <div class="post"><div class="rank">5</div><div class="thumb">📊</div><div class="body"><div class="txt">Quanto vale a tua casa? (calculadora grátis)</div><div class="meta">Facebook · 02 Mai</div><div class="stats">👍 <b>61</b> · 💬 <b>5</b> · ↗️ <b>7</b> · <span>73 total</span></div></div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>📈 Interacção ao longo do tempo</h2>
+        <div class="spark">
+          <div class="b" style="height:30%"></div><div class="b" style="height:55%"></div><div class="b" style="height:40%"></div>
+          <div class="b" style="height:80%"></div><div class="b" style="height:100%"></div><div class="b" style="height:62%"></div>
+          <div class="b" style="height:48%"></div><div class="b" style="height:70%"></div><div class="b" style="height:35%"></div>
+        </div>
+        <div class="note" style="border:0;padding:0;margin-top:8px">Pico a meio de Maio (post da venda em 11 dias).</div>
+      </div>
+
+      <div class="card">
+        <h2>🧩 O que funciona melhor <span class="pill">por tipo</span></h2>
+        <div class="row"><div class="name">Casos de venda</div><div class="bar"><span style="width:100%;background:#22c55e"></span></div><div class="val">274</div></div>
+        <div class="row"><div class="name">Antes/depois</div><div class="bar"><span style="width:70%;background:#3b82f6"></span></div><div class="val">191</div></div>
+        <div class="row"><div class="name">Dicas/educar</div><div class="bar"><span style="width:65%;background:#6366f1"></span></div><div class="val">179</div></div>
+        <div class="row"><div class="name">Testemunhos</div><div class="bar"><span style="width:40%;background:#8b5cf6"></span></div><div class="val">109</div></div>
+        <div class="row"><div class="name">Ferramentas</div><div class="bar"><span style="width:27%;background:#ec4899"></span></div><div class="val">73</div></div>
+        <div class="note" style="border:0;padding:0">Os <b>casos de venda reais</b> são os que mais interacção geram. Sugestão do analista: repetir esse formato.</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">Fonte: API da Página (Graph). Posts + reações/comentários/partilhas vêm já com a ligação actual (<code>pages_read_engagement</code>). O <b>Alcance/impressões</b> precisa de 1 re-autorização (<code>read_insights</code>) — acção do João. Liga ao <b>analista IA</b> e, mais tarde, ao <b>MKT-BRAIN</b> (orgânico + ads + funil). Números ilustrativos.</p>
+</body>
+</html>
