@@ -32,6 +32,13 @@ export function metaTokenSecretName(integrationId: string): string {
   return `meta_oauth_token_${integrationId}`;
 }
 
+// MA-CAPI — Conjunto de dados ("dataset"/Pixel) para onde a API de Conversões
+// envia os eventos do servidor (negócio ganho → Meta). É o "João Fonseca Online".
+// NOTA: por agora é uma constante; quando existir a MA-ASSET-HUB passa a vir do
+// metadata da integração (cada consultor terá o seu). Reutiliza-se o mesmo token
+// de longa duração do Vault (scope ads_management) — não precisa de token novo.
+export const META_CAPI_DATASET_ID = '226877513589288';
+
 // URL de callback do OAuth. Tem de coincidir exactamente com uma das
 // "Valid OAuth Redirect URIs" configuradas na app Meta.
 export function metaRedirectUri(origin: string): string {
