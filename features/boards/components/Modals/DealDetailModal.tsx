@@ -22,6 +22,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { ConfirmDialog as ConfirmModal } from '@/components/ui/confirm-dialog';
 import { LossReasonModal } from '@/components/ui/LossReasonModal';
+import { SnoozeDealModal } from '@/components/ui/SnoozeDealModal';
 import { DealImovelField } from '@/components/ui/ImovelSearchCombobox';
 import { useMoveDealSimple } from '@/lib/query/hooks';
 import { DEALS_VIEW_KEY } from '@/lib/query';
@@ -47,6 +48,7 @@ import {
   Pencil,
   ThumbsUp,
   ThumbsDown,
+  PauseCircle,
   Building2,
   User,
   Package,
@@ -223,6 +225,24 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   const deal = dealId ? dealsById.get(dealId) : undefined;
   const contact = deal ? (contactsById.get(deal.contactId) ?? null) : null;
 
+  // CT-AUTO — "Adiar em vez de perder": grava snoozedUntil em custom_fields.
+  const snoozedUntilRaw = (deal?.customFields?.snoozedUntil as string | undefined) || undefined;
+  const isSnoozed = !!snoozedUntilRaw && new Date(snoozedUntilRaw) > new Date();
+  const handleSnooze = (iso: string, reason: string) => {
+    if (!deal) return;
+    updateDeal(deal.id, {
+      customFields: { ...(deal.customFields ?? {}), snoozedUntil: iso, snoozeReason: reason || null },
+    });
+    setShowSnoozeModal(false);
+  };
+  const handleUnsnooze = () => {
+    if (!deal) return;
+    const cf = { ...(deal.customFields ?? {}) };
+    delete cf.snoozedUntil;
+    delete cf.snoozeReason;
+    updateDeal(deal.id, { customFields: cf });
+  };
+
   // Determine the correct board for this deal
   const dealBoard = deal ? (boardsById.get(deal.boardId) ?? activeBoard) : activeBoard;
 
@@ -256,6 +276,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showLossReasonModal, setShowLossReasonModal] = useState(false);
   const [pendingLostStageId, setPendingLostStageId] = useState<string | null>(null);
+  const [showSnoozeModal, setShowSnoozeModal] = useState(false);
   const [lossReasonOrigin, setLossReasonOrigin] = useState<'button' | 'stage'>('button');
   const [showBriefingDrawer, setShowBriefingDrawer] = useState(false);
 
@@ -660,6 +681,11 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                 ) : (
                   /* Se aberto: mostra botões Ganho e Perdido */
                   <>
+                    {isSnoozed && (
+                      <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 flex items-center gap-1">
+                        ⏸ Adiado até {new Date(snoozedUntilRaw!).toLocaleDateString('pt-PT')}
+                      </span>
+                    )}
                     <button
                       onClick={() => {
                         // Intelligent "Won" Logic:
@@ -720,6 +746,22 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     >
                       <ThumbsDown size={16} /> PERDIDO
                     </button>
+                    <button
+                      onClick={() => setShowSnoozeModal(true)}
+                      className="px-4 py-2 bg-transparent border border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg font-bold text-sm shadow-sm flex items-center gap-2"
+                      title="Adiar em vez de perder"
+                    >
+                      <PauseCircle size={16} /> {isSnoozed ? 'Reagendar' : 'Adiar'}
+                    </button>
+                    {isSnoozed && (
+                      <button
+                        onClick={handleUnsnooze}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-sm transition-all"
+                        title="Retomar agora (tirar de adiado)"
+                      >
+                        Retomar
+                      </button>
+                    )}
                   </>
                 )}
                 <button
@@ -1595,6 +1637,13 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
             // Only close the deal modal if it was triggered via the "PERDIDO" button
             if (lossReasonOrigin === 'button') onClose();
           }}
+          dealTitle={deal.title}
+        />
+
+        <SnoozeDealModal
+          isOpen={showSnoozeModal}
+          onClose={() => setShowSnoozeModal(false)}
+          onConfirm={handleSnooze}
           dealTitle={deal.title}
         />
 
