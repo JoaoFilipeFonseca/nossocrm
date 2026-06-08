@@ -52,6 +52,7 @@ import {
   Activity,
   Megaphone,
   Menu,
+  Filter,
   Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -88,6 +89,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/activities': 'Actividades',
   '/decisions': 'Decisões',
   '/reports': 'Relatórios',
+  '/funil': 'Funil de Vendas',
   '/financeiro': 'Financeiro',
   '/anuncios': 'Anúncios',
   '/criativos': 'Criativos',
@@ -356,6 +358,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
             { to: '/imoveis', icon: Home, label: 'Imóveis', prefetch: undefined, badge: undefined },
             { to: '/activities', icon: CheckSquare, label: 'Actividades', prefetch: 'activities' as const, badge: undefined },
             { to: '/reports', icon: BarChart3, label: 'Relatórios', prefetch: 'reports' as const, badge: undefined },
+            { to: '/funil', icon: Filter, label: 'Funil', prefetch: undefined, badge: undefined },
             { to: '/financeiro', icon: Wallet, label: 'Financeiro', prefetch: undefined, badge: undefined },
             { to: '/anuncios', icon: Megaphone, label: 'Anúncios', prefetch: undefined, badge: undefined },
             { to: '/criativos', icon: Archive, label: 'Criativos', prefetch: undefined, badge: undefined },

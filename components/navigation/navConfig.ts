@@ -18,6 +18,7 @@ import {
   Archive,
   Sparkles,
   Activity,
+  Filter,
   Wallet,
 } from 'lucide-react';
 
@@ -43,7 +44,7 @@ export const PRIMARY_NAV: PrimaryNavItem[] = [
   { id: 'more', label: 'Mais', icon: MoreHorizontal },
 ];
 
-export type SecondaryNavId = 'dashboard' | 'reports' | 'despesas' | 'anuncios' | 'criativos' | 'automacoes' | 'automation_logs' | 'settings' | 'profile';
+export type SecondaryNavId = 'dashboard' | 'reports' | 'funil' | 'despesas' | 'anuncios' | 'criativos' | 'automacoes' | 'automation_logs' | 'settings' | 'profile';
 
 export interface SecondaryNavItem {
   id: SecondaryNavId;
@@ -56,6 +57,7 @@ export interface SecondaryNavItem {
 export const SECONDARY_NAV: SecondaryNavItem[] = [
   { id: 'dashboard', label: 'Visão Geral', href: '/dashboard', icon: LayoutDashboard },
   { id: 'reports', label: 'Relatórios', href: '/reports', icon: BarChart3 },
+  { id: 'funil', label: 'Funil', href: '/funil', icon: Filter },
   { id: 'despesas', label: 'Financeiro', href: '/financeiro', icon: Wallet },
   { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
   { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
@@ -90,6 +92,7 @@ export const FULL_NAV: FullNavItem[] = [
   { id: 'imoveis', label: 'Imóveis', href: '/imoveis', icon: Home },
   { id: 'activities', label: 'Actividades', href: '/activities', icon: CheckSquare },
   { id: 'reports', label: 'Relatórios', href: '/reports', icon: BarChart3 },
+  { id: 'funil', label: 'Funil', href: '/funil', icon: Filter },
   { id: 'despesas', label: 'Financeiro', href: '/financeiro', icon: Wallet },
   { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
   { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
