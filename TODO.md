@@ -393,6 +393,10 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 
 ### J. IA — performance e propagação
 
+- **IMO-7 · Agente de Divulgação do Imóvel (orquestra a venda toda)** `[POR FAZER]` `P?` (CAPTURE 08/06, ideia do João — NÃO executar agora)
+  Na ficha do imóvel, um agente que pensa **todo o processo de divulgação ao detalhe**: (1) **sequência de fotos** — diz qual a ordem/selecção que melhor resulta para vender; (2) **copy à medida do cliente-ideal** desse imóvel (cruza perfil do comprador-alvo) e gera **textos prontos por canal**: RE/MAX, Idealista, **Meta Ads** (alinhado a [[reference-meta-ia-2026-best-practices]]); (3) plano de divulgação passo a passo. Liga a: fotos da angariação (`imovel-fotos`), Brand Kit, MA-CREATE (anúncio), CONTACT-360 (cliente-ideal), MA-ASSET-HUB. Filtro: aproxima a venda mais rápida + mais leads qualificadas.
+- **IA-7 · Bot do CRM = tutor + assistente pessoal 360** `[POR FAZER]` `P?` (CAPTURE 08/06, ideia do João — NÃO executar agora)
+  O bot que já existe no CRM passa a ter duas funções novas: (1) **tutor** — ensina a usar o CRM quando o João tem dúvidas ("como faço X?", "onde está Y?"), guia passo a passo; (2) **assistente pessoal** — a partir de um **contacto, nome ou só uma ideia/descrição**, diz **quem é o cliente e todo o histórico** (timeline, negócios, atribuição, DISC, próxima acção). Reusa CONTACT-360-AI (`getContact360Context`, `contact_ai_analyses`) + a timeline unificada + o agente do CRM (`lib/ai/crmAgent.ts`). Liga a IA-1 (copy IA em todo o lado).
 - **IA-1 · M-001 Propagar pipeline copy IA a todo o lado** `[POR FAZER]` `P?`
   DealCard hover, Modal Deal, /contacts/[id], matches, /scripts, briefing, Telegram. (~5-6 sessões) (origem: CAPTURE M-001)
 
