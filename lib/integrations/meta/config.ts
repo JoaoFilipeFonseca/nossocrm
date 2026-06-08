@@ -24,6 +24,11 @@ export const META_OAUTH_SCOPES = [
   'ads_read',
   'ads_management',
   'business_management',
+  // SOCIAL-INBOX (DMs): ler/responder DMs do Messenger + Instagram. Avançadas →
+  // App Review provável para uso live; o João (admin) testa em modo de desenvolvimento.
+  'pages_messaging', // Facebook Messenger (receber/enviar DMs da Página)
+  'instagram_basic', // ler a conta Instagram Business ligada à Página
+  'instagram_manage_messages', // Instagram DM (receber/enviar)
 ].join(',');
 
 // Nome canónico do segredo do Vault que guarda o token de longa duração de uma
