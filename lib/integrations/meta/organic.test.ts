@@ -1,0 +1,65 @@
+import { describe, it, expect } from 'vitest';
+import { normalizePost, summarizeOrganic, type OrganicPost } from './organic';
+
+describe('normalizePost', () => {
+  it('soma interações e deriva tipo do anexo', () => {
+    const p = normalizePost({
+      id: '1', message: ' Olá ', created_time: '2026-05-12T10:00:00+0000',
+      permalink_url: 'https://fb/1', full_picture: 'https://img/1',
+      attachments: { data: [{ media_type: 'photo' }] },
+      reactions: { summary: { total_count: 214 } },
+      comments: { summary: { total_count: 38 } },
+      shares: { count: 22 },
+    });
+    expect(p.message).toBe('Olá');
+    expect(p.media_type).toBe('photo');
+    expect(p.reactions).toBe(214);
+    expect(p.interactions).toBe(214 + 38 + 22);
+  });
+
+  it('sem métricas → zeros, tipo status', () => {
+    const p = normalizePost({ id: '2', created_time: '2026-05-01T00:00:00+0000' });
+    expect(p.interactions).toBe(0);
+    expect(p.media_type).toBe('status');
+    expect(p.message).toBe('');
+  });
+});
+
+describe('summarizeOrganic', () => {
+  const mk = (id: string, date: string, r: number, c: number, s: number, type = 'photo'): OrganicPost => ({
+    id, message: `post ${id}`, created_time: date, permalink: null, picture: null,
+    media_type: type, reactions: r, comments: c, shares: s, interactions: r + c + s,
+  });
+
+  it('KPIs, top ordenado, por tipo', () => {
+    const posts = [
+      mk('a', '2026-05-12T10:00:00Z', 200, 30, 20, 'photo'),
+      mk('b', '2026-04-28T10:00:00Z', 100, 10, 5, 'video'),
+      mk('c', '2026-05-02T10:00:00Z', 50, 5, 5, 'photo'),
+    ];
+    const s = summarizeOrganic(posts);
+    expect(s.kpis.posts).toBe(3);
+    expect(s.kpis.interactions).toBe(250 + 115 + 60);
+    expect(s.kpis.avg).toBe(Math.round((250 + 115 + 60) / 3));
+    expect(s.top[0].id).toBe('a'); // mais interacção primeiro
+    expect(s.reach_available).toBe(false);
+    // por tipo: photo (250+60=310) > video (115)
+    expect(s.by_type[0]).toMatchObject({ type: 'photo', label: 'Fotos', value: 310 });
+    expect(s.by_type[1]).toMatchObject({ type: 'video', value: 115 });
+  });
+
+  it('lista vazia → tudo a zero, sem rebentar', () => {
+    const s = summarizeOrganic([]);
+    expect(s.kpis).toEqual({ posts: 0, interactions: 0, avg: 0 });
+    expect(s.top).toEqual([]);
+    expect(s.timeline).toEqual([]);
+    expect(s.by_type).toEqual([]);
+  });
+
+  it('timeline agrupa por semana e ordena', () => {
+    const posts = [mk('a', '2026-05-12T10:00:00Z', 10, 0, 0), mk('b', '2026-04-02T10:00:00Z', 5, 0, 0)];
+    const s = summarizeOrganic(posts);
+    expect(s.timeline.length).toBe(2);
+    expect(s.timeline[0].label < s.timeline[1].label).toBe(true); // Abril antes de Maio
+  });
+});
