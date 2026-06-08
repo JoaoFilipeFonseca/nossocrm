@@ -22,7 +22,6 @@ import {
   Share2,
   Brain,
   Wallet,
-  MessageCircle,
 } from 'lucide-react';
 
 export type PrimaryNavId = 'inbox' | 'messaging' | 'cruzamentos' | 'matches' | 'boards' | 'contacts' | 'imoveis' | 'activities' | 'more';
@@ -47,7 +46,7 @@ export const PRIMARY_NAV: PrimaryNavItem[] = [
   { id: 'more', label: 'Mais', icon: MoreHorizontal },
 ];
 
-export type SecondaryNavId = 'dashboard' | 'reports' | 'funil' | 'despesas' | 'anuncios' | 'organico' | 'cerebro' | 'caixa_social' | 'criativos' | 'automacoes' | 'automation_logs' | 'settings' | 'profile';
+export type SecondaryNavId = 'dashboard' | 'reports' | 'funil' | 'despesas' | 'anuncios' | 'organico' | 'cerebro' | 'criativos' | 'automacoes' | 'automation_logs' | 'settings' | 'profile';
 
 export interface SecondaryNavItem {
   id: SecondaryNavId;
@@ -65,7 +64,6 @@ export const SECONDARY_NAV: SecondaryNavItem[] = [
   { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
   { id: 'organico', label: 'Orgânico', href: '/organico', icon: Share2 },
   { id: 'cerebro', label: 'Cérebro', href: '/cerebro', icon: Brain },
-  { id: 'caixa_social', label: 'Caixa Social', href: '/caixa-social', icon: MessageCircle },
   { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
   { id: 'automacoes', label: 'Automações', href: '/automacoes', icon: Zap },
   { id: 'automation_logs', label: 'Logs Automações', href: '/settings/automation-logs', icon: ScrollText },
@@ -103,7 +101,6 @@ export const FULL_NAV: FullNavItem[] = [
   { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
   { id: 'organico', label: 'Orgânico', href: '/organico', icon: Share2 },
   { id: 'cerebro', label: 'Cérebro', href: '/cerebro', icon: Brain },
-  { id: 'caixa_social', label: 'Caixa Social', href: '/caixa-social', icon: MessageCircle },
   { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
   { id: 'automacoes', label: 'Automações', href: '/automacoes', icon: Zap },
   { id: 'saude', label: 'Saúde', href: '/admin/saude', icon: Activity, adminOnly: true },

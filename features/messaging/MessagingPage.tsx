@@ -174,7 +174,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
   }, [router]);
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex">
+    <div className="h-full flex">
       {/* Conversation List */}
       <div className="w-80 flex-shrink-0">
         <ConversationList

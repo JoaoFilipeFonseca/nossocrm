@@ -19,7 +19,9 @@ export default async function ConversationPage({ params }: ConversationPageProps
 
   return (
     <Suspense fallback={<MessageThreadSkeleton />}>
-      <MessagingPage initialConversationId={conversationId} />
+      <div className="h-[calc(100vh-4rem)]">
+        <MessagingPage initialConversationId={conversationId} />
+      </div>
     </Suspense>
   );
 }

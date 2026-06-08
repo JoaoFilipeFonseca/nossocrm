@@ -215,7 +215,7 @@ async function syncOrg(
         '',
         ...newlyNeedsResponse.slice(0, 10).map((n) => `• ${n.name}`),
         '',
-        `<a href="${APP_URL}/caixa-social">Abrir a Caixa Social</a>`,
+        `<a href="${APP_URL}/messaging?tab=social">Abrir a Caixa Social</a>`,
       ];
       try {
         await sendTelegramMessage(botToken, chatId, lines.join('\n'));

@@ -1,8 +1,7 @@
-import type { Metadata } from 'next';
-import { SocialInboxPage } from '@/features/social-inbox/SocialInboxPage';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = { title: 'Caixa Social | Foco Imo' };
-
+// A Caixa Social passou a viver dentro de Mensagens (aba). Mantém-se o caminho antigo
+// a redireccionar para não partir links (Telegram) nem marcadores.
 export default function CaixaSocial() {
-  return <SocialInboxPage />;
+  redirect('/messaging?tab=social');
 }
