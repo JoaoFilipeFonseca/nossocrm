@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — Funil de Vendas (MKT-FUNNEL-CRM)</title>
+<style>
+  :root{
+    --bg:#0b1020; --card:#121a30; --card2:#0f1730; --line:#22304f; --txt:#e6ecf7;
+    --muted:#93a1bd; --accent:#3b82f6; --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#8b5cf6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;padding:24px}
+  h1{font-size:22px;margin:0 0 2px}
+  .sub{color:var(--muted);margin:0 0 20px}
+  .grid{display:grid;gap:16px}
+  @media(min-width:980px){.grid.cols2{grid-template-columns:1.3fr .9fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .pill{font-size:12px;color:var(--muted);background:#0b1430;border:1px solid var(--line);padding:3px 9px;border-radius:999px}
+  /* KPIs */
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+  @media(min-width:720px){.kpis{grid-template-columns:repeat(4,1fr)}}
+  .kpi{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi .v{font-size:24px;font-weight:700}
+  .kpi .l{color:var(--muted);font-size:12.5px}
+  .kpi .d{font-size:12px;margin-top:4px}
+  .up{color:var(--green)} .down{color:var(--red)}
+  /* Funnel */
+  .stage{margin:10px 0}
+  .stage .top{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:5px}
+  .stage .top b{font-weight:600}
+  .bar{height:34px;border-radius:8px;background:#0b1430;overflow:hidden;position:relative;border:1px solid var(--line)}
+  .bar>span{display:block;height:100%;background:linear-gradient(90deg,#3b82f6,#6366f1)}
+  .bar em{position:absolute;left:10px;top:7px;font-style:normal;font-size:13px;color:#fff;font-weight:600}
+  .leak{font-size:12px;color:var(--red);margin-top:3px}
+  .leak.ok{color:var(--muted)}
+  /* time per stage */
+  .row{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .row .name{width:120px;color:var(--muted);font-size:13px}
+  .row .tbar{flex:1;height:14px;border-radius:7px;background:#0b1430;overflow:hidden;border:1px solid var(--line)}
+  .row .tbar>span{display:block;height:100%}
+  .row .val{width:78px;text-align:right;font-size:13px}
+  .tag{font-size:11px;padding:2px 7px;border-radius:999px;margin-left:6px}
+  .tag.slow{background:rgba(239,68,68,.15);color:#fda4a4;border:1px solid rgba(239,68,68,.4)}
+  /* loss reasons */
+  .loss{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .loss .name{flex:1;font-size:13.5px}
+  .loss .lbar{width:120px;height:12px;border-radius:6px;background:#0b1430;overflow:hidden;border:1px solid var(--line)}
+  .loss .lbar>span{display:block;height:100%;background:linear-gradient(90deg,#ef4444,#f59e0b)}
+  .loss .pc{width:42px;text-align:right;color:var(--muted);font-size:12.5px}
+  .note{color:var(--muted);font-size:12.5px;margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{background:transparent;color:var(--muted);border:0;padding:7px 12px;font-size:13px;cursor:pointer}
+  .seg button.on{background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+  <h1>Funil de Vendas</h1>
+  <p class="sub">Onde os negócios encalham, quanto tempo demoram e porque não fecham — só com dados que o CRM já tem. <span class="pill">Maqueta</span></p>
+
+  <div class="controls">
+    <div class="seg">
+      <button class="on">Mandatos (comprador)</button>
+      <button>CMI (vendedor)</button>
+      <button>Todos os funis</button>
+    </div>
+    <div class="seg">
+      <button>30 dias</button><button class="on">12 meses</button><button>Tudo</button>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="l">Negócios no funil</div><div class="v">128</div><div class="d up">▲ 9 vs período anterior</div></div>
+    <div class="kpi"><div class="l">Taxa de fecho</div><div class="v">14%</div><div class="d down">▼ 2 pp</div></div>
+    <div class="kpi"><div class="l">Ciclo médio (lead→fecho)</div><div class="v">38 dias</div><div class="d">mediana 31</div></div>
+    <div class="kpi"><div class="l">Valor em aberto</div><div class="v">19,7 M€</div><div class="d">481 negócios</div></div>
+  </div>
+
+  <div class="grid cols2">
+    <!-- Funil -->
+    <div class="card">
+      <h2>📉 Funil por etapa <span class="pill">conversão e fugas</span></h2>
+
+      <div class="stage">
+        <div class="top"><b>Lead nova</b><span>128 · 100%</span></div>
+        <div class="bar"><span style="width:100%"></span><em>128</em></div>
+        <div class="leak ok">passam 86% para a etapa seguinte</div>
+      </div>
+
+      <div class="stage">
+        <div class="top"><b>Contacto feito</b><span>110 · 86%</span></div>
+        <div class="bar"><span style="width:86%"></span><em>110</em></div>
+        <div class="leak">↓ maior fuga: só 53% avança (perdem-se 52 negócios aqui)</div>
+      </div>
+
+      <div class="stage">
+        <div class="top"><b>Visita / Reunião</b><span>58 · 45%</span></div>
+        <div class="bar"><span style="width:45%"></span><em>58</em></div>
+        <div class="leak ok">passam 74%</div>
+      </div>
+
+      <div class="stage">
+        <div class="top"><b>Proposta</b><span>43 · 34%</span></div>
+        <div class="bar"><span style="width:34%"></span><em>43</em></div>
+        <div class="leak ok">passam 42%</div>
+      </div>
+
+      <div class="stage">
+        <div class="top"><b>Ganho</b><span>18 · 14%</span></div>
+        <div class="bar"><span style="width:14%;background:linear-gradient(90deg,#16a34a,#22c55e)"></span><em>18</em></div>
+        <div class="leak ok">fecho</div>
+      </div>
+
+      <div class="note">O maior buraco está em <b>Contacto → Visita</b>: 52 negócios não avançam. Foco da semana: porque não se marca a visita?</div>
+    </div>
+
+    <!-- Lado direito: tempo + perdas -->
+    <div class="grid">
+      <div class="card">
+        <h2>⏱️ Tempo médio em cada etapa</h2>
+        <div class="row"><div class="name">Lead nova</div><div class="tbar"><span style="width:18%;background:#22c55e"></span></div><div class="val">1,2 d</div></div>
+        <div class="row"><div class="name">Contacto</div><div class="tbar"><span style="width:40%;background:#3b82f6"></span></div><div class="val">3,1 d</div></div>
+        <div class="row"><div class="name">Visita</div><div class="tbar"><span style="width:100%;background:#ef4444"></span></div><div class="val">11,4 d<span class="tag slow">gargalo</span></div></div>
+        <div class="row"><div class="name">Proposta</div><div class="tbar"><span style="width:62%;background:#f59e0b"></span></div><div class="val">6,8 d</div></div>
+        <div class="note">A etapa <b>Visita</b> é onde os negócios ficam parados mais tempo (11,4 dias). Calculado pelos movimentos reais de cada negócio.</div>
+      </div>
+
+      <div class="card">
+        <h2>🚫 Porque não fecham <span class="pill">motivos de perda</span></h2>
+        <div class="loss"><div class="name">Preço / avaliação</div><div class="lbar"><span style="width:90%"></span></div><div class="pc">34%</div></div>
+        <div class="loss"><div class="name">Foi a outro consultor</div><div class="lbar"><span style="width:62%"></span></div><div class="pc">23%</div></div>
+        <div class="loss"><div class="name">Desistiu de vender/comprar</div><div class="lbar"><span style="width:48%"></span></div><div class="pc">18%</div></div>
+        <div class="loss"><div class="name">Sem resposta / esfriou</div><div class="lbar"><span style="width:40%"></span></div><div class="pc">15%</div></div>
+        <div class="loss"><div class="name">Outro</div><div class="lbar"><span style="width:26%"></span></div><div class="pc">10%</div></div>
+        <div class="note">Agregado de <b>negócios perdidos</b> no período. 25% não têm motivo registado → sugerir tornar o motivo obrigatório ao marcar perdido.</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note" style="margin-top:18px">Tudo isto sai de dados que já existem: etapas (<code>board_stages</code>), movimentos reais (<code>deal_activities · stage_moved</code> — a mesma fonte do "tempo médio por fase" já calculado) e motivos de perda (<code>deals.loss_reason</code>). Sem sensores novos. Números aqui são ilustrativos.</p>
+</body>
+</html>
