@@ -16,6 +16,7 @@ import { runWithAIFallback } from '@/lib/ai/run-with-fallback';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // descarrega varias fotos + chamada de visao
 
 const FotoDecisaoSchema = z.object({ foto: z.number().int(), motivo: z.string() });
 const FotosSchema = z.object({
@@ -73,19 +74,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Sem chaves de IA configuradas para esta organização.' }, { status: 400 });
     }
 
-    // Descarrega os bytes de cada foto (bucket privado) para passar ao modelo de visão.
+    // Descarrega os bytes de cada foto (bucket privado) em paralelo, preservando a ordem.
+    const downloaded = await Promise.all(
+      fotos.map(async (f) => {
+        try {
+          const { data: blob } = await admin.storage.from('imovel-fotos').download(f.storage_path as string);
+          if (!blob) return null;
+          return { id: f.id as string, caption: f.caption as string | null, buf: new Uint8Array(await blob.arrayBuffer()), mime: (blob as Blob).type || 'image/jpeg' };
+        } catch {
+          return null;
+        }
+      }),
+    );
     const imageParts: Array<Record<string, unknown>> = [];
     const indexToId: string[] = [];
-    for (let i = 0; i < fotos.length; i++) {
-      const f = fotos[i];
-      const { data: blob } = await admin.storage.from('imovel-fotos').download(f.storage_path as string);
-      if (!blob) continue;
-      const buf = new Uint8Array(await blob.arrayBuffer());
-      const mime = (blob as Blob).type || 'image/jpeg';
+    for (const d of downloaded) {
+      if (!d) continue;
       const n = indexToId.length + 1;
-      indexToId.push(f.id as string);
-      imageParts.push({ type: 'text', text: `Foto ${n}${f.caption ? ` (legenda: ${f.caption})` : ''}:` });
-      imageParts.push({ type: 'image', image: buf, mediaType: mime });
+      indexToId.push(d.id);
+      imageParts.push({ type: 'text', text: `Foto ${n}${d.caption ? ` (legenda: ${d.caption})` : ''}:` });
+      imageParts.push({ type: 'image', image: d.buf, mediaType: d.mime });
     }
     if (indexToId.length < 2) {
       return NextResponse.json({ error: 'Não foi possível ler as fotos do imóvel.' }, { status: 400 });

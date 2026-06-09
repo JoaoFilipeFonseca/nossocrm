@@ -18,6 +18,7 @@ import { runWithAIFallback } from '@/lib/ai/run-with-fallback';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // chamada de IA pode demorar
 
 const CanalSchema = z.object({ titulo: z.string(), corpo: z.string() });
 const MetaSchema = z.object({ titulo: z.string(), corpo: z.string(), cta: z.string() });
