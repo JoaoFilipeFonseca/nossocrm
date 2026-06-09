@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — Bot tutor + assistente 360 (IA-7)</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin:0; background:#f8fafc; color:#0f172a; }
+  .wrap { max-width:760px; margin:0 auto; padding:24px; }
+  .muted { color:#64748b; font-size:12px; }
+  h1 { font-size:19px; margin:0 0 2px; }
+  .chat { background:#fff; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden; }
+  .chat-head { background:linear-gradient(135deg,#0f172a,#1e293b); color:#fff; padding:14px 16px; display:flex; align-items:center; gap:10px; }
+  .chat-head .dot { width:10px; height:10px; border-radius:50%; background:#22c55e; }
+  .modes { display:flex; gap:6px; padding:10px 14px; border-bottom:1px solid #eef2f7; flex-wrap:wrap; }
+  .mode { font-size:12px; font-weight:600; border-radius:999px; padding:4px 11px; border:1px solid #cbd5e1; color:#475569; background:#fff; }
+  .mode.on { background:#0f172a; color:#fff; border-color:#0f172a; }
+  .body { padding:16px; display:flex; flex-direction:column; gap:14px; }
+  .msg { max-width:85%; }
+  .msg.user { align-self:flex-end; }
+  .bubble { border-radius:14px; padding:10px 13px; font-size:13.5px; line-height:1.5; }
+  .user .bubble { background:#2563eb; color:#fff; border-bottom-right-radius:4px; }
+  .bot .bubble { background:#f1f5f9; color:#0f172a; border-bottom-left-radius:4px; }
+  .tag { display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; border-radius:6px; padding:1px 7px; margin-bottom:6px; }
+  .tag.tutor { background:#eff6ff; color:#1d4ed8; }
+  .tag.a360 { background:#f0fdf4; color:#15803d; }
+  .steps { margin:6px 0 0; padding-left:18px; }
+  .steps li { margin:3px 0; }
+  .link { color:#2563eb; font-weight:600; text-decoration:none; }
+  /* cartao 360 */
+  .card360 { border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin-top:8px; background:#fff; }
+  .card360 .top { display:flex; align-items:center; gap:10px; }
+  .av { width:38px; height:38px; border-radius:50%; background:#dbeafe; color:#1d4ed8; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .chip { font-size:11px; border-radius:999px; padding:2px 8px; background:#f1f5f9; color:#334155; }
+  .chip.disc { background:#fef9c3; color:#854d0e; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .kv { border:1px solid #eef2f7; border-radius:9px; padding:7px 9px; }
+  .kv .l { font-size:10px; text-transform:uppercase; color:#94a3b8; }
+  .kv .v { font-size:13px; font-weight:600; }
+  .tl { margin-top:10px; border-top:1px dashed #e2e8f0; padding-top:8px; }
+  .tl .ev { font-size:12px; color:#475569; padding:2px 0; }
+  .next { margin-top:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:9px 11px; font-size:12.5px; color:#14532d; }
+  .actions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .btn { font-size:12px; font-weight:600; border-radius:8px; padding:6px 11px; border:1px solid #cbd5e1; background:#fff; color:#334155; }
+  .btn.p { background:#2563eb; color:#fff; border-color:#2563eb; }
+  .composer { border-top:1px solid #eef2f7; padding:12px 14px; display:flex; gap:8px; }
+  .composer input { flex:1; border:1px solid #cbd5e1; border-radius:10px; padding:9px 12px; font-size:13px; }
+  .composer .send { background:#2563eb; color:#fff; border:none; border-radius:10px; padding:0 14px; font-weight:700; }
+  .note { font-size:12px; color:#64748b; margin-top:14px; }
+  @media (max-width:560px){ .grid2{ grid-template-columns:1fr; } .msg{ max-width:100%; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="muted">O bot que já existe no CRM (launcher global / página /ai) ganha 2 capacidades novas. Não é item novo na barra.</p>
+  <h1>🤖 Assistente do CRM — agora tutor + assistente 360</h1>
+  <p class="muted" style="margin-bottom:14px;">Continua a fazer tudo o que já faz (mover negócios, criar tarefas, analisar pipeline). Acrescenta: ensinar a usar o CRM, e dizer quem é um cliente a partir de um nome ou ideia.</p>
+
+  <div class="chat">
+    <div class="chat-head"><span class="dot"></span> <b>Assistente Foco Imo</b></div>
+    <div class="modes">
+      <span class="mode on">Auto (deteta sozinho)</span>
+      <span class="mode">Tutor</span>
+      <span class="mode">Assistente 360</span>
+      <span class="mode">Acções no CRM</span>
+    </div>
+    <div class="body">
+
+      <!-- TUTOR -->
+      <div class="msg user"><div class="bubble">como faço para criar um anúncio para aquela moradia de Seroa?</div></div>
+      <div class="msg bot"><div class="bubble">
+        <span class="tag tutor">Tutor</span>
+        Faz assim, passo a passo:
+        <ol class="steps">
+          <li>Abre a ficha do imóvel e usa o <b>Agente de Divulgação</b> para gerar a copy do Meta (já fica com CTA a pedir mensagem).</li>
+          <li>Vai a <a class="link" href="#">Anúncios → Novo anúncio</a> e escolhe o objectivo (Formulário de leads).</li>
+          <li>Define orçamento e localização, cola a copy e a foto de capa, e deixa em pausa.</li>
+          <li>Revês e publicas quando estiveres pronto.</li>
+        </ol>
+        Queres que eu te leve já ao passo 2?
+      </div></div>
+
+      <!-- ASSISTENTE 360 -->
+      <div class="msg user"><div class="bubble">fala-me do senhor de Paços que andava a ver o T3 para investimento</div></div>
+      <div class="msg bot"><div class="bubble">
+        <span class="tag a360">Assistente 360</span>
+        Acho que é o <b>Marco Silva</b>. Aqui está o retrato completo:
+        <div class="card360">
+          <div class="top">
+            <div class="av">MS</div>
+            <div>
+              <div style="font-weight:700;">Marco Silva</div>
+              <div style="display:flex; gap:6px; margin-top:3px; flex-wrap:wrap;">
+                <span class="chip">Paços de Ferreira</span>
+                <span class="chip disc">DISC: D (decidido)</span>
+                <span class="chip">Origem: Meta Ads</span>
+              </div>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="kv"><div class="l">Procura</div><div class="v">T3 para investimento</div></div>
+            <div class="kv"><div class="l">Negócios</div><div class="v">1 aberto · 0 ganhos</div></div>
+            <div class="kv"><div class="l">Última actividade</div><div class="v">Visita há 9 dias</div></div>
+            <div class="kv"><div class="l">Trigger</div><div class="v">Rentabilidade / arrendamento</div></div>
+          </div>
+          <div class="tl">
+            <div class="ev">• 12 Mai — lead entrou por anúncio "T3 Paços"</div>
+            <div class="ev">• 20 Mai — primeira chamada, mostrou interesse</div>
+            <div class="ev">• 31 Mai — visita ao T3 da Rua X</div>
+          </div>
+          <div class="next"><b>Próxima melhor acção:</b> está há 9 dias sem contacto depois da visita. Ligar a saber a decisão e propor uma 2.ª opção de investimento na mesma zona.</div>
+          <div class="actions">
+            <button class="btn p">Abrir ficha</button>
+            <button class="btn">Mensagem pronta (WhatsApp)</button>
+            <button class="btn">Ver negócio</button>
+          </div>
+        </div>
+      </div></div>
+
+    </div>
+    <div class="composer">
+      <input placeholder="Pergunta como se faz, ou escreve um nome / uma ideia do cliente…" />
+      <button class="send">➤</button>
+    </div>
+  </div>
+
+  <p class="note">Reusa o agente do CRM (<code>lib/ai/crmAgent.ts</code> + ferramentas) e o motor 360 da ficha de contacto (<code>getContact360Context</code>, timeline, <code>contact_ai_analyses</code>). O <b>tutor</b> precisa de uma base de conhecimento "como usar este CRM" (a decidir o âmbito contigo). A IA prepara/responde; nunca envia nada sozinha.</p>
+  <p class="muted" style="text-align:center; margin-top:16px;">Maqueta IA-7 · a aprovar pelo João antes de construir</p>
+</div>
+</body>
+</html>

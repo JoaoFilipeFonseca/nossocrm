@@ -1499,6 +1499,67 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
             },
         }),
 
+        findClientProfile: tool({
+            description: 'Assistente 360: identifica um cliente a partir de um NOME ou de uma DESCRIÇÃO VAGA (zona, tipologia como T3, motivo/trigger, origem) e devolve o retrato completo (quem é, DISC, gatilhos, negócios, última análise da IA, link da ficha). Usa quando o utilizador pergunta "quem é X", "fala-me do cliente que...", "o senhor de Paços que queria T3 para investimento". Apresenta o melhor candidato; se houver dúvida, mostra também os outros.',
+            inputSchema: z.object({
+                query: z.string().describe('Nome ou descrição do cliente (ex.: "Marcia do Idealista", "o senhor de Paços que queria T3")'),
+            }),
+            execute: async ({ query }) => {
+                const { data: cands, error } = await supabase.rpc('search_clients_fuzzy', {
+                    p_org: organizationId,
+                    p_query: query,
+                    p_limit: 6,
+                });
+                if (error) return { error: formatSupabaseFailure(error) };
+                if (!cands || cands.length === 0) {
+                    return { found: false, message: 'Nenhum contacto compatível com essa descrição. Pede mais detalhes (nome, zona, tipologia) ou regista o contacto.' };
+                }
+                const top = cands[0] as { id: string; name: string; source: string | null; phone: string | null; custom_fields: Record<string, unknown> | null };
+
+                const [{ data: deals }, { data: an }] = await Promise.all([
+                    supabase.from('deals')
+                        .select('title, value, is_won, is_lost, created_at')
+                        .eq('organization_id', organizationId).eq('contact_id', top.id)
+                        .order('created_at', { ascending: false }).limit(8),
+                    supabase.from('contact_ai_analyses')
+                        .select('result, created_at')
+                        .eq('contact_id', top.id)
+                        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+                ]);
+                const dealRows = (deals ?? []) as Array<{ title: string | null; value: number | null; is_won: boolean | null; is_lost: boolean | null }>;
+                const cf = (top.custom_fields ?? {}) as Record<string, unknown>;
+
+                return {
+                    found: true,
+                    cliente: {
+                        id: top.id,
+                        nome: top.name,
+                        origem: top.source ?? null,
+                        telefone: top.phone ?? null,
+                        disc: cf.disc ?? null,
+                        gatilhos: Array.isArray(cf.triggers) ? cf.triggers : null,
+                        zona: cf.address ?? null,
+                        familia: cf.family ?? null,
+                        trimestre: cf.quarter ?? null,
+                        negocios: {
+                            abertos: dealRows.filter((d) => !d.is_won && !d.is_lost).length,
+                            ganhos: dealRows.filter((d) => d.is_won).length,
+                            perdidos: dealRows.filter((d) => d.is_lost).length,
+                            recentes: dealRows.slice(0, 5).map((d) => ({
+                                titulo: d.title || 'Negócio',
+                                valor: d.value || 0,
+                                estado: d.is_won ? 'ganho' : d.is_lost ? 'perdido' : 'aberto',
+                            })),
+                        },
+                        ultima_analise: (an as { result?: unknown } | null)?.result ?? null,
+                        link: `/contacts/${top.id}`,
+                    },
+                    outros_candidatos: (cands as Array<{ id: string; name: string; source: string | null }>).slice(1, 4)
+                        .map((c) => ({ id: c.id, nome: c.name, origem: c.source ?? null })),
+                };
+            },
+        }),
+
         linkDealToContact: tool({
             description: 'Associa um deal a um contacto (define deal.contact_id). Requer aprovação no card (Aprovar/Negar) — não peça confirmação em texto.',
             inputSchema: z.object({
