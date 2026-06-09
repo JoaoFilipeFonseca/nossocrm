@@ -7,18 +7,22 @@
  * A IA prepara; o João copia/edita e publica. A IA nunca publica.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Sparkles, RotateCw, Copy, Check, Target, Megaphone } from 'lucide-react';
+import { Sparkles, RotateCw, Copy, Check, Target, Megaphone, Images, Scissors } from 'lucide-react';
 
 type Canal = { titulo: string; corpo: string };
 type Meta = { titulo: string; corpo: string; cta: string };
+type FotoDecisao = { id: string; motivo: string };
+type FotosOrdem = { capa_id: string | null; ordem: FotoDecisao[]; cortar: FotoDecisao[] };
 interface Version {
   id: string;
   versao: number;
   comprador_ideal: { perfis: string[]; angulo: string } | null;
   copy_canais: { remax: Canal; idealista: Canal; meta: Meta } | null;
+  fotos_ordem?: FotosOrdem | null;
   modelo: string | null;
   created_at: string;
 }
+type FotoRef = { id: string; url: string | null; caption: string | null };
 
 const CANAIS = [
   { key: 'remax', label: 'RE/MAX' },
@@ -26,9 +30,13 @@ const CANAIS = [
   { key: 'meta', label: 'Meta Ads' },
 ] as const;
 
-export default function ImovelDivulgacao({ imovelId }: { imovelId: string }) {
+export default function ImovelDivulgacao({ imovelId, fotos = [] }: { imovelId: string; fotos?: FotoRef[] }) {
   const [versions, setVersions] = useState<Version[]>([]);
   const [selId, setSelId] = useState<string | null>(null);
+  const [fotosVersions, setFotosVersions] = useState<Version[]>([]);
+  const [fotosSelId, setFotosSelId] = useState<string | null>(null);
+  const [fotosGenerating, setFotosGenerating] = useState(false);
+  const [fotosError, setFotosError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +50,8 @@ export default function ImovelDivulgacao({ imovelId }: { imovelId: string }) {
       if (json.ok) {
         setVersions(json.versions ?? []);
         setSelId((json.versions ?? [])[0]?.id ?? null);
+        setFotosVersions(json.fotosVersions ?? []);
+        setFotosSelId((json.fotosVersions ?? [])[0]?.id ?? null);
       }
     } catch {
       /* silencioso */
@@ -49,6 +59,25 @@ export default function ImovelDivulgacao({ imovelId }: { imovelId: string }) {
       setLoading(false);
     }
   }, [imovelId]);
+
+  async function gerarFotos() {
+    setFotosGenerating(true);
+    setFotosError(null);
+    try {
+      const res = await fetch(`/api/imoveis/${imovelId}/divulgacao/fotos`, { method: 'POST' });
+      const json = await res.json();
+      if (!json.ok) {
+        setFotosError(json.error || 'Não foi possível analisar as fotos. Tente novamente.');
+      } else if (json.version) {
+        setFotosVersions((prev) => [json.version, ...prev]);
+        setFotosSelId(json.version.id);
+      }
+    } catch {
+      setFotosError('Erro de rede. Tente novamente.');
+    } finally {
+      setFotosGenerating(false);
+    }
+  }
 
   useEffect(() => { void load(); }, [load]);
 
@@ -79,6 +108,7 @@ export default function ImovelDivulgacao({ imovelId }: { imovelId: string }) {
   }
 
   const sel = versions.find((v) => v.id === selId) ?? null;
+  const fotosSel = fotosVersions.find((v) => v.id === fotosSelId) ?? null;
   const dt = (iso: string) => new Date(iso).toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   if (loading) {
@@ -198,6 +228,97 @@ export default function ImovelDivulgacao({ imovelId }: { imovelId: string }) {
           </p>
         </>
       )}
+
+      {/* Sequência de fotos (IA de visão) */}
+      <div className="mt-6 rounded-xl border border-slate-200 dark:border-white/10 p-4">
+        <div className="flex items-start justify-between gap-3 flex-wrap mb-2">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
+            <Images className="h-4 w-4 text-blue-600" /> Sequência de fotos
+          </h3>
+          <button
+            onClick={gerarFotos}
+            disabled={fotosGenerating || fotos.length < 2}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+          >
+            {fotosGenerating ? <RotateCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {fotosVersions.length === 0 ? 'Analisar fotos' : 'Analisar de novo'}
+          </button>
+        </div>
+        <p className="text-xs text-slate-500 mb-3">A IA olha para as fotos e sugere capa, ordem e quais cortar. Tu decides o que aplicar.</p>
+
+        {fotos.length < 2 && (
+          <p className="text-xs text-slate-500">São precisas pelo menos 2 fotos no imóvel para o agente sugerir a sequência.</p>
+        )}
+        {fotosError && (
+          <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">{fotosError}</p>
+        )}
+
+        {fotosSel && (() => {
+          const fotoById = new Map(fotos.map((f) => [f.id, f]));
+          const fo = fotosSel.fotos_ordem!;
+          return (
+            <>
+              {fotosVersions.length > 1 && (
+                <div className="mb-3 flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-slate-500">Versão:</span>
+                  {fotosVersions.map((v) => (
+                    <button key={v.id} onClick={() => setFotosSelId(v.id)} title={dt(v.created_at)}
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${v.id === fotosSelId ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300'}`}>
+                      v{v.versao}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {fo.ordem.map((o, idx) => {
+                  const f = fotoById.get(o.id);
+                  const isCapa = o.id === fo.capa_id;
+                  return (
+                    <div key={o.id} className="rounded-lg border border-slate-200 dark:border-white/10 overflow-hidden relative">
+                      <div className="relative aspect-[4/3] bg-slate-100 dark:bg-white/5">
+                        {f?.url ? (
+                          <img src={f.url} alt={f.caption ?? ''} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs text-slate-400">sem imagem</div>
+                        )}
+                        <span className="absolute top-1.5 left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/90 text-[11px] font-bold text-white">{idx + 1}</span>
+                        {isCapa && <span className="absolute top-1.5 right-1.5 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">CAPA</span>}
+                      </div>
+                      <p className="px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300">{o.motivo}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              {fo.cortar.length > 0 && (
+                <div className="mt-3">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2"><Scissors className="h-3.5 w-3.5" /> Sugeridas para cortar ({fo.cortar.length})</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {fo.cortar.map((o) => {
+                      const f = fotoById.get(o.id);
+                      return (
+                        <div key={o.id} className="rounded-lg border border-slate-200 dark:border-white/10 overflow-hidden opacity-70">
+                          <div className="relative aspect-[4/3] bg-slate-100 dark:bg-white/5">
+                            {f?.url ? (
+                              <img src={f.url} alt={f.caption ?? ''} className="h-full w-full object-cover grayscale" />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xs text-slate-400">sem imagem</div>
+                            )}
+                            <span className="absolute top-1.5 right-1.5 rounded bg-slate-600 px-1.5 py-0.5 text-[10px] font-bold text-white">cortar</span>
+                          </div>
+                          <p className="px-2 py-1.5 text-[11px] text-slate-600 dark:text-slate-300">{o.motivo}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <p className="mt-3 text-xs text-slate-400">
+                {fotosSel.modelo ? `Analisado por ${fotosSel.modelo} · ` : ''}v{fotosSel.versao} de {dt(fotosSel.created_at)}. A ordem é uma sugestão; aplica o que fizer sentido.
+              </p>
+            </>
+          );
+        })()}
+      </div>
     </div>
   );
 }

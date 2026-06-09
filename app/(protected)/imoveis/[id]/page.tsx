@@ -125,7 +125,10 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
 
       {/* IMO-7 — Agente de Divulgação */}
       <Section title="🚀 Agente de Divulgação">
-        <ImovelDivulgacao imovelId={id} />
+        <ImovelDivulgacao
+          imovelId={id}
+          fotos={fotos.map((f) => ({ id: f.id, url: f.url_publica, caption: f.caption }))}
+        />
       </Section>
 
       {/* Características */}

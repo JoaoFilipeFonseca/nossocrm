@@ -50,14 +50,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // RLS valida a org da sessão.
     const { data: rows } = await supabase
       .from('imovel_divulgacao')
-      .select('id, versao, comprador_ideal, copy_canais, modelo, created_at')
+      .select('id, versao, comprador_ideal, copy_canais, fotos_ordem, modelo, created_at')
       .eq('imovel_id', id)
       .order('versao', { ascending: false })
-      .limit(30);
+      .limit(40);
 
     const list = rows ?? [];
-    // Devolve as versões completas (1 utilizador, máx 30) para alternar/comparar sem chamada extra.
-    return NextResponse.json({ ok: true, latest: list[0] ?? null, versions: list });
+    // Históricos independentes: copy (comprador-ideal + 3 canais) e fotos (sequência por IA de visão).
+    const copyVersions = list.filter((r) => r.copy_canais);
+    const fotosVersions = list.filter((r) => r.fotos_ordem);
+    return NextResponse.json({
+      ok: true,
+      latest: copyVersions[0] ?? null, // compat
+      versions: copyVersions,
+      fotosVersions,
+    });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 200 });
   }
