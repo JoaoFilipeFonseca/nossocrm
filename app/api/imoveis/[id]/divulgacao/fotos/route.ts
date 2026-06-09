@@ -74,26 +74,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Sem chaves de IA configuradas para esta organização.' }, { status: 400 });
     }
 
-    // Descarrega os bytes de cada foto (bucket privado) em paralelo, preservando a ordem.
-    const downloaded = await Promise.all(
-      fotos.map(async (f) => {
-        try {
-          const { data: blob } = await admin.storage.from('imovel-fotos').download(f.storage_path as string);
-          if (!blob) return null;
-          return { id: f.id as string, caption: f.caption as string | null, buf: new Uint8Array(await blob.arrayBuffer()), mime: (blob as Blob).type || 'image/jpeg' };
-        } catch {
-          return null;
-        }
-      }),
-    );
+    // Gera URLs assinados (bucket privado, 1h) e PASSA OS URLS ao modelo de visão — o provider
+    // descarrega as imagens. Assim a função não carrega bytes para memória (evita OOM com fotos grandes).
+    const paths = fotos.map((f) => f.storage_path as string);
+    const { data: signed } = await admin.storage.from('imovel-fotos').createSignedUrls(paths, 60 * 60);
+    const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
     const imageParts: Array<Record<string, unknown>> = [];
     const indexToId: string[] = [];
-    for (const d of downloaded) {
-      if (!d) continue;
+    for (const f of fotos) {
+      const url = urlByPath.get(f.storage_path as string);
+      if (!url) continue;
       const n = indexToId.length + 1;
-      indexToId.push(d.id);
-      imageParts.push({ type: 'text', text: `Foto ${n}${d.caption ? ` (legenda: ${d.caption})` : ''}:` });
-      imageParts.push({ type: 'image', image: d.buf, mediaType: d.mime });
+      indexToId.push(f.id as string);
+      imageParts.push({ type: 'text', text: `Foto ${n}${f.caption ? ` (legenda: ${f.caption})` : ''}:` });
+      imageParts.push({ type: 'image', image: new URL(url) });
     }
     if (indexToId.length < 2) {
       return NextResponse.json({ error: 'Não foi possível ler as fotos do imóvel.' }, { status: 400 });
