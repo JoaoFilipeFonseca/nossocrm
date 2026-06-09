@@ -16,6 +16,7 @@ import ImovelProprietarios from '@/components/imoveis/ImovelProprietarios';
 import ImovelMandatos from '@/components/imoveis/ImovelMandatos';
 import ImovelCmi from '@/components/imoveis/ImovelCmi';
 import ImovelFinanceiro from '@/components/imoveis/ImovelFinanceiro';
+import ImovelDivulgacao from '@/components/imoveis/ImovelDivulgacao';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Imóvel | Foco Imo' };
@@ -121,6 +122,11 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
       <section className="mb-10">
         <ImovelGaleria imovelId={id} fotos={fotos} linkExterno={imovel.link_externo} />
       </section>
+
+      {/* IMO-7 — Agente de Divulgação */}
+      <Section title="🚀 Agente de Divulgação">
+        <ImovelDivulgacao imovelId={id} />
+      </Section>
 
       {/* Características */}
       <Section title="Detalhes do imóvel">
