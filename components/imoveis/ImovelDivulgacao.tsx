@@ -7,22 +7,36 @@
  * A IA prepara; o João copia/edita e publica. A IA nunca publica.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Sparkles, RotateCw, Copy, Check, Target, Megaphone, Images, Scissors } from 'lucide-react';
+import Link from 'next/link';
+import { Sparkles, RotateCw, Copy, Check, Target, Megaphone, Images, Scissors, ListChecks, ArrowRight } from 'lucide-react';
 
 type Canal = { titulo: string; corpo: string };
 type Meta = { titulo: string; corpo: string; cta: string };
 type FotoDecisao = { id: string; motivo: string };
 type FotosOrdem = { capa_id: string | null; ordem: FotoDecisao[]; cortar: FotoDecisao[] };
+type Accao = 'fotos' | 'portais' | 'anuncio' | 'cruzamentos' | 'acompanhar' | 'nenhuma';
+type Passo = { titulo: string; descricao: string; accao: Accao };
+type Plano = { passos: Passo[] };
 interface Version {
   id: string;
   versao: number;
   comprador_ideal: { perfis: string[]; angulo: string } | null;
   copy_canais: { remax: Canal; idealista: Canal; meta: Meta } | null;
   fotos_ordem?: FotosOrdem | null;
+  plano?: Plano | null;
   modelo: string | null;
   created_at: string;
 }
 type FotoRef = { id: string; url: string | null; caption: string | null };
+
+const ACCAO_CTA: Record<Accao, { label: string; href: string } | null> = {
+  fotos: null,
+  portais: null,
+  anuncio: { label: 'Criar anúncio', href: '/anuncios' },
+  cruzamentos: { label: 'Ver cruzamentos', href: '/cruzamentos' },
+  acompanhar: null,
+  nenhuma: null,
+};
 
 const CANAIS = [
   { key: 'remax', label: 'RE/MAX' },
@@ -37,6 +51,10 @@ export default function ImovelDivulgacao({ imovelId, fotos = [] }: { imovelId: s
   const [fotosSelId, setFotosSelId] = useState<string | null>(null);
   const [fotosGenerating, setFotosGenerating] = useState(false);
   const [fotosError, setFotosError] = useState<string | null>(null);
+  const [planoVersions, setPlanoVersions] = useState<Version[]>([]);
+  const [planoSelId, setPlanoSelId] = useState<string | null>(null);
+  const [planoGenerating, setPlanoGenerating] = useState(false);
+  const [planoError, setPlanoError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +70,8 @@ export default function ImovelDivulgacao({ imovelId, fotos = [] }: { imovelId: s
         setSelId((json.versions ?? [])[0]?.id ?? null);
         setFotosVersions(json.fotosVersions ?? []);
         setFotosSelId((json.fotosVersions ?? [])[0]?.id ?? null);
+        setPlanoVersions(json.planoVersions ?? []);
+        setPlanoSelId((json.planoVersions ?? [])[0]?.id ?? null);
       }
     } catch {
       /* silencioso */
@@ -59,6 +79,25 @@ export default function ImovelDivulgacao({ imovelId, fotos = [] }: { imovelId: s
       setLoading(false);
     }
   }, [imovelId]);
+
+  async function gerarPlano() {
+    setPlanoGenerating(true);
+    setPlanoError(null);
+    try {
+      const res = await fetch(`/api/imoveis/${imovelId}/divulgacao/plano`, { method: 'POST' });
+      const json = await res.json();
+      if (!json.ok) {
+        setPlanoError(json.error || 'Não foi possível montar o plano. Tente novamente.');
+      } else if (json.version) {
+        setPlanoVersions((prev) => [json.version, ...prev]);
+        setPlanoSelId(json.version.id);
+      }
+    } catch {
+      setPlanoError('Erro de rede. Tente novamente.');
+    } finally {
+      setPlanoGenerating(false);
+    }
+  }
 
   async function gerarFotos() {
     setFotosGenerating(true);
@@ -109,6 +148,7 @@ export default function ImovelDivulgacao({ imovelId, fotos = [] }: { imovelId: s
 
   const sel = versions.find((v) => v.id === selId) ?? null;
   const fotosSel = fotosVersions.find((v) => v.id === fotosSelId) ?? null;
+  const planoSel = planoVersions.find((v) => v.id === planoSelId) ?? null;
   const dt = (iso: string) => new Date(iso).toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   if (loading) {
@@ -318,6 +358,66 @@ export default function ImovelDivulgacao({ imovelId, fotos = [] }: { imovelId: s
             </>
           );
         })()}
+      </div>
+
+      {/* Plano de divulgação passo a passo */}
+      <div className="mt-6 rounded-xl border border-slate-200 dark:border-white/10 p-4">
+        <div className="flex items-start justify-between gap-3 flex-wrap mb-2">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
+            <ListChecks className="h-4 w-4 text-blue-600" /> Plano de divulgação
+          </h3>
+          <button
+            onClick={gerarPlano}
+            disabled={planoGenerating}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+          >
+            {planoGenerating ? <RotateCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {planoVersions.length === 0 ? 'Montar plano' : 'Montar de novo'}
+          </button>
+        </div>
+        <p className="text-xs text-slate-500 mb-3">A IA monta o passo a passo de divulgação à medida deste imóvel. Segue na ordem que fizer sentido.</p>
+
+        {planoError && (
+          <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">{planoError}</p>
+        )}
+
+        {planoSel?.plano && (
+          <>
+            {planoVersions.length > 1 && (
+              <div className="mb-3 flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-slate-500">Versão:</span>
+                {planoVersions.map((v) => (
+                  <button key={v.id} onClick={() => setPlanoSelId(v.id)} title={dt(v.created_at)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${v.id === planoSelId ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300'}`}>
+                    v{v.versao}
+                  </button>
+                ))}
+              </div>
+            )}
+            <ol className="space-y-0">
+              {planoSel.plano.passos.map((p, idx) => {
+                const cta = ACCAO_CTA[p.accao] ?? null;
+                return (
+                  <li key={idx} className="flex gap-3 items-start border-t border-slate-100 dark:border-white/5 first:border-t-0 py-3">
+                    <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 text-xs font-bold">{idx + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{p.titulo}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{p.descricao}</p>
+                      {cta && (
+                        <Link href={cta.href} className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
+                          {cta.label} <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            <p className="mt-3 text-xs text-slate-400">
+              {planoSel.modelo ? `Montado por ${planoSel.modelo} · ` : ''}v{planoSel.versao} de {dt(planoSel.created_at)}.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

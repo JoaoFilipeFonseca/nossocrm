@@ -51,20 +51,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // RLS valida a org da sessão.
     const { data: rows } = await supabase
       .from('imovel_divulgacao')
-      .select('id, versao, comprador_ideal, copy_canais, fotos_ordem, modelo, created_at')
+      .select('id, versao, comprador_ideal, copy_canais, fotos_ordem, plano, modelo, created_at')
       .eq('imovel_id', id)
       .order('versao', { ascending: false })
-      .limit(40);
+      .limit(60);
 
     const list = rows ?? [];
-    // Históricos independentes: copy (comprador-ideal + 3 canais) e fotos (sequência por IA de visão).
+    // Históricos independentes: copy (comprador-ideal + 3 canais), fotos (IA de visão) e plano.
     const copyVersions = list.filter((r) => r.copy_canais);
     const fotosVersions = list.filter((r) => r.fotos_ordem);
+    const planoVersions = list.filter((r) => r.plano);
     return NextResponse.json({
       ok: true,
       latest: copyVersions[0] ?? null, // compat
       versions: copyVersions,
       fotosVersions,
+      planoVersions,
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 200 });
