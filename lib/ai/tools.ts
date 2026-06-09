@@ -343,31 +343,71 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
         }),
 
         searchContacts: tool({
-            description: 'Busca contactos por nome ou email',
+            description: 'Procura/identifica contactos por nome, email OU descrição vaga (zona, origem, tipologia como T3, motivo). Tolerante a acentos (encontra "Márcia" com "Marcia"). Para "quem é X" ou "fala-me do cliente que..." devolve também o RETRATO 360 do melhor candidato (DISC, gatilhos, negócios, link da ficha).',
             inputSchema: z.object({
-                query: z.string().describe('Termo de busca'),
+                query: z.string().describe('Nome, email ou descrição do contacto/cliente'),
                 limit: z.number().optional().default(5),
             }),
             execute: async ({ query, limit }) => {
-                // supabase is already initialized
                 console.log('[AI] 🔍 searchContacts EXECUTED!', query);
 
-                const { data: contacts } = await supabase
-                    .from('contacts')
-                    .select('id, name, email, phone, company_name')
-                    .eq('organization_id', organizationId)
-                    .or(`name.ilike.%${sanitizePostgrestValue(query)}%,email.ilike.%${sanitizePostgrestValue(query)}%`)
-                    .limit(limit);
+                // Procura difusa com unaccent (acentos não falham) + descrição (zona/origem/tipologia).
+                type FuzzyRow = { id: string; name: string; phone: string | null; source: string | null; custom_fields: Record<string, unknown> | null };
+                const { data: fuzzy, error: fuzzyErr } = await supabase.rpc('search_clients_fuzzy', {
+                    p_org: organizationId,
+                    p_query: query,
+                    p_limit: limit ?? 5,
+                });
+                let contacts = (fuzzy as FuzzyRow[] | null) ?? [];
+
+                // Salvaguarda: se a RPC falhar ou não devolver nada, cai no ilike simples.
+                if (fuzzyErr || contacts.length === 0) {
+                    const { data: fallback } = await supabase
+                        .from('contacts')
+                        .select('id, name, phone, source, custom_fields')
+                        .eq('organization_id', organizationId)
+                        .or(`name.ilike.%${sanitizePostgrestValue(query)}%,email.ilike.%${sanitizePostgrestValue(query)}%`)
+                        .limit(limit);
+                    contacts = (fallback as FuzzyRow[] | null) ?? [];
+                }
+
+                if (contacts.length === 0) {
+                    return { count: 0, contacts: [], message: 'Nenhum contacto compatível. Pede mais detalhes (nome, zona, tipologia) ou regista o contacto.' };
+                }
+
+                // Retrato 360 do melhor candidato (reusa o motor de dados da ficha; admin client, sem cookies).
+                const top = contacts[0];
+                const [{ data: deals }, { data: an }] = await Promise.all([
+                    supabase.from('deals')
+                        .select('title, value, is_won, is_lost')
+                        .eq('organization_id', organizationId).eq('contact_id', top.id).limit(8),
+                    supabase.from('contact_ai_analyses')
+                        .select('result').eq('contact_id', top.id)
+                        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+                ]);
+                const dealRows = (deals ?? []) as Array<{ title: string | null; value: number | null; is_won: boolean | null; is_lost: boolean | null }>;
+                const cf = (top.custom_fields ?? {}) as Record<string, unknown>;
 
                 return {
-                    count: contacts?.length || 0,
-                    contacts: contacts?.map(c => ({
-                        id: c.id,
-                        name: c.name,
-                        email: c.email || 'N/A',
-                        phone: c.phone || 'N/A',
-                        company: c.company_name || 'N/A'
-                    })) || []
+                    count: contacts.length,
+                    contacts: contacts.map((c) => ({ id: c.id, name: c.name, phone: c.phone || 'N/A', source: c.source || 'N/A' })),
+                    retrato360: {
+                        id: top.id,
+                        nome: top.name,
+                        origem: top.source || null,
+                        telefone: top.phone || null,
+                        disc: cf.disc ?? null,
+                        gatilhos: Array.isArray(cf.triggers) ? cf.triggers : null,
+                        zona: cf.address ?? null,
+                        negocios: {
+                            abertos: dealRows.filter((d) => !d.is_won && !d.is_lost).length,
+                            ganhos: dealRows.filter((d) => d.is_won).length,
+                            recentes: dealRows.slice(0, 4).map((d) => ({ titulo: d.title || 'Negócio', valor: d.value || 0, estado: d.is_won ? 'ganho' : d.is_lost ? 'perdido' : 'aberto' })),
+                        },
+                        ultima_analise: (an as { result?: unknown } | null)?.result ?? null,
+                        link: `/contacts/${top.id}`,
+                    },
+                    outros_candidatos: contacts.slice(1, 5).map((c) => ({ id: c.id, nome: c.name, origem: c.source || null })),
                 };
             },
         }),
