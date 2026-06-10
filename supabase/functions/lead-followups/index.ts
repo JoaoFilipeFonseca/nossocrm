@@ -12,6 +12,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { loadAutomationParams } from '../_shared/automation-params.ts';
+import { recordAutomationRun } from '../_shared/record-run.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -164,12 +165,15 @@ Deno.serve(async (req: Request) => {
     }
   } catch (e) {
     // Nunca 500 em erro lógico — comunicar e devolver 200.
+    await recordAutomationRun(supabase, 'lead-followups', false, (e as Error).message);
     return new Response(JSON.stringify({ ok: false, error: (e as Error).message, results }), {
       status: 200,
       headers: { 'content-type': 'application/json' },
     });
   }
 
+  const runOk = results.every((r) => r.ok);
+  await recordAutomationRun(supabase, 'lead-followups', runOk, results.find((r) => !r.ok)?.error ?? null);
   return new Response(JSON.stringify({ ok: true, results }), {
     status: 200,
     headers: { 'content-type': 'application/json' },

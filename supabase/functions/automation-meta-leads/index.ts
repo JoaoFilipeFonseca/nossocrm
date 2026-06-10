@@ -28,7 +28,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const GRAPH_VERSION = "v21.0";
 const GRAPH = `https://graph.facebook.com/${GRAPH_VERSION}`;
-const APP_URL = "https://crm-joao.vercel.app";
+const APP_URL = "https://crm.joaofilipefonseca.pt";
 
 // Alerta Telegram de lead nova (regra: Telegram só para leads novas). Best-effort.
 async function notifyTelegram(token: string, chatId: string, htmlText: string) {
@@ -312,10 +312,43 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
 
   // 3) negócio via encaminhamento por campanha (meta_lead_routing).
   // A campanha define o intuito (comprador/vendedor/arrendamento) e aponta o
-  // board+etapa. Sem regra para a campanha, fica só o contacto e o Telegram
-  // avisa "campanha sem destino" para o João atribuir.
+  // board+etapa. Sem regra para a campanha, cai no board POR OMISSÃO da org
+  // (organization_settings.default_lead_board_id) para a lead NUNCA ficar órfã
+  // — sem negócio = invisível ao funil e ao motor de follow-up. Só quando nem o
+  // board por omissão está definido é que fica apenas o contacto (e o Telegram avisa).
   let boardName: string | null = null;
   let routed = false;
+  let routedVia: "campanha" | "omissao" | null = null;
+
+  // 1.ª etapa de um board (quando não há etapa explícita).
+  async function firstStageId(boardId: string): Promise<string | null> {
+    const { data } = await supabase
+      .from("board_stages")
+      .select("id")
+      .eq("board_id", boardId)
+      .order("order", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    return (data?.id as string) ?? null;
+  }
+  async function createDeal(boardId: string, stageId: string): Promise<boolean> {
+    const { error: dealErr } = await supabase.from("deals").insert({
+      organization_id: orgId,
+      board_id: boardId,
+      stage_id: stageId,
+      status: "open",
+      contact_id: contactId,
+      title: `${leadName} - Meta Ads`,
+      value: 0,
+      attribution,
+    });
+    if (dealErr) {
+      console.error("[meta-leads] Erro ao criar negócio:", dealErr.message);
+      return false;
+    }
+    return true;
+  }
+
   const campaignId = attribution.campaign_id;
   if (contactId && campaignId) {
     const { data: routing } = await supabase
@@ -325,34 +358,30 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
       .eq("campaign_id", campaignId)
       .maybeSingle();
     if (routing?.board_id) {
-      boardName = (routing.boards as { name?: string } | null)?.name ?? null;
-      let stageId = routing.stage_id as string | null;
-      if (!stageId) {
-        const { data: firstStage } = await supabase
-          .from("board_stages")
-          .select("id")
-          .eq("board_id", routing.board_id)
-          .order("order", { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        stageId = firstStage?.id ?? null;
+      const stageId = (routing.stage_id as string | null) ?? (await firstStageId(routing.board_id as string));
+      if (stageId && (await createDeal(routing.board_id as string, stageId))) {
+        routed = true;
+        routedVia = "campanha";
+        boardName = (routing.boards as { name?: string } | null)?.name ?? null;
       }
-      if (stageId) {
-        const { error: dealErr } = await supabase.from("deals").insert({
-          organization_id: orgId,
-          board_id: routing.board_id,
-          stage_id: stageId,
-          status: "open",
-          contact_id: contactId,
-          title: `${leadName} - Meta Ads`,
-          value: 0,
-          attribution,
-        });
-        if (dealErr) {
-          console.error("[meta-leads] Erro ao criar negócio:", dealErr.message);
-        } else {
-          routed = true;
-        }
+    }
+  }
+
+  // Fallback: board por omissão da org (não deixar a lead órfã).
+  if (contactId && !routed) {
+    const { data: defaults } = await supabase
+      .from("organization_settings")
+      .select("default_lead_board_id, default_lead_stage_id")
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    const boardId = (defaults?.default_lead_board_id as string | null) ?? null;
+    if (boardId) {
+      const stageId = (defaults?.default_lead_stage_id as string | null) ?? (await firstStageId(boardId));
+      if (stageId && (await createDeal(boardId, stageId))) {
+        routed = true;
+        routedVia = "omissao";
+        const { data: b } = await supabase.from("boards").select("name").eq("id", boardId).maybeSingle();
+        boardName = (b?.name as string) ?? null;
       }
     }
   }
@@ -366,9 +395,11 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
   const tgToken = orgSettings?.telegram_crm_bot_token as string | undefined;
   const tgChat = orgSettings?.telegram_crm_chat_id as string | undefined;
   if (tgToken && tgChat) {
-    const destinoLinha = routed
+    const destinoLinha = routedVia === "campanha"
       ? `🎯 Destino: <b>${esc(boardName ?? "board")}</b>`
-      : `⚠️ <b>Campanha sem destino</b> — atribui o board em /anuncios`;
+      : routedVia === "omissao"
+      ? `🎯 Destino (por omissão): <b>${esc(boardName ?? "board")}</b> — atribui a campanha em /anuncios`
+      : `⚠️ <b>Sem destino</b> — define o board por omissão ou atribui a campanha em /anuncios`;
     const contacto = [phone ? `📞 ${esc(phone)}` : null, email ? `✉️ ${esc(email)}` : null].filter(Boolean).join("  ");
     const texto =
       `🟢 <b>Lead nova — Meta Ads</b>\n` +

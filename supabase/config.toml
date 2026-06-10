@@ -105,3 +105,22 @@ verify_jwt = false
 # a segurança é o header X-Cron-Secret == backup_cron_secret.
 [functions.automation-meta-insights]
 verify_jwt = false
+
+# Crons de sistema (pg_cron → net.http_post com X-Cron-Secret, sem JWT).
+# Geríveis em /automacoes. Cada um valida X-Cron-Secret == backup_cron_secret.
+# IMPORTANTE: manter verify_jwt=false — o cron não envia Authorization/JWT, só
+# o header X-Cron-Secret; com verify_jwt=true o gateway devolveria 401.
+[functions.lead-followups]
+verify_jwt = false
+
+[functions.cmi-watch]
+verify_jwt = false
+
+[functions.telegram-morning-brief]
+verify_jwt = false
+
+[functions.client-errors-alert]
+verify_jwt = false
+
+[functions.backup-export]
+verify_jwt = false

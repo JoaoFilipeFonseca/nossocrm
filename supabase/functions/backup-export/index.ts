@@ -9,6 +9,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { loadAutomationParams } from '../_shared/automation-params.ts';
+import { recordAutomationRun } from '../_shared/record-run.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -72,6 +73,7 @@ Deno.serve(async (req: Request) => {
     .select('id, name');
 
   if (orgsErr || !orgs) {
+    await recordAutomationRun(supabase, 'backup-weekly', false, orgsErr?.message || 'no orgs');
     return new Response(JSON.stringify({ error: orgsErr?.message || 'no orgs' }), {
       status: 500,
       headers: { 'content-type': 'application/json' },
@@ -139,6 +141,8 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  const runOk = report.every((r) => r.ok);
+  await recordAutomationRun(supabase, 'backup-weekly', runOk, report.find((r) => !r.ok)?.error ?? null);
   return new Response(
     JSON.stringify({
       ok: true,
