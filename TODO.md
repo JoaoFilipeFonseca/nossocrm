@@ -56,13 +56,36 @@ contactos, 20 origens) → **481 de 484 negócios presos na 1.ª etapa "Oportuni
 - ~~F~~ negócio "Sonia Rodrigo" com `status`=stage_id → **NÃO é bug** (leitura usa `stage_id || status`).
 
 **Aberto (decisão do João, NÃO executar sem ordem):**
-- **C — GARGALO: 481 leads presas em "Oportunidade"** `P1` `[POR FAZER]` — entram e não há processo que
-  as mova. É o gargalo que o Cérebro já apontava. Ideias do João (capturadas): "colocar a 482 a zero",
-  patamares por temperatura (probabilidade=etapa+recência), email automático/30d às muito frias. O João
-  **não** o escolheu nesta sessão (preferiu desenhar à parte). Desenhar a maqueta/fluxo com ele antes de construir.
+- **C — 481 leads em "Oportunidade"** `[NÃO É BUG — decisão do João 10/06]` — **NÃO contar com isto como
+  gargalo.** O João vai **colocar os contadores a zero** mais tarde (reset deliberado da 1.ª etapa). Não
+  testar/medir como problema. Eventual desenho de patamares por temperatura + email automático às frias
+  continua capturado, mas só quando ele abrir o tema.
 - **B — Token Meta morto** (acção do João) — `meta-insights-sync` falha ("session invalidated… password/
   Facebook"), também trava `social-inbox-sync`. **Reautorizar a Meta** em /settings → integrações. Já visível
   em /automacoes ("19 execuções · 3 falhas").
+
+**QA verificado VERDE em produção (2.ª parte da sessão, browser autenticado):**
+- ✅ **Ciclo de follow-up fecha:** cron cria tarefa "Retomar contacto" → aparece na mesa de trabalho
+  (Inbox, Lista: "Retomar contacto: Bruno Soares"); botão **"Adiar"** no negócio → modal 3/6/12 meses
+  + data + motivo, "Adiar até 10/12/2026" (data certa), "fica de fora do follow-up e volta na data"
+  (não marca perdido). Tudo PT-PT.
+- ✅ **IA-7 bot (`/ai`, via `POST /api/ai/crm-agent` 200):** Assistente 360 ("fala-me do Bruno Soares"
+  → retrato + origem Facebook + link da ficha + candidatos semelhantes por `search_clients_fuzzy`);
+  Tutor ("como faço para adiar um negócio?" → passos numerados + /boards + opção Adiar). PT-PT limpo.
+- ✅ **Dashboards 0 erros de consola:** `/funil` (mostra honestamente a fuga em Oportunidade),
+  `/cerebro`, `/organico` (degrada bem sem token Meta), `/anuncios`, `/financeiro`.
+- ✅ **`/admin/saude`:** Erros front-end 24h = **0** ("nada partiu"), backup 07/06 visível, IA OK.
+- ✅ **0 #418 / 0 erros** em Inbox, Boards, dashboards.
+
+**Corrigido (copy PT-BR, commit `35a33ef`):** "Sua mesa de trabalho"→"A sua…"; chips do /ai "pra
+fazer"→"para", "meu pipeline"→"o meu pipeline"; placeholder "sobre seu CRM"→"sobre o seu CRM";
+valor "1650 €k"→"1650 k€".
+
+**Nits menores capturados (não corrigidos — P3):**
+- `/saude` dá **404** (não é rota; a nav usa `/admin/saude` correctamente). Eventual alias/redirect.
+- Assistente 360: o link `/contacts/...` na resposta é **texto, não clicável** (UX menor).
+- Falta testar (não chegámos): variante "descrição vaga" do Assistente 360; ficha `/contacts/[id]`
+  (Assistente 360 + timeline) a fundo; mobile 375/540 das áreas acima.
 
 ## 🗓️ Registo da sessão 01 Jun 2026 — SESSÃO 2 (o que ficou feito) — HEAD `261d3f1`
 A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núcleo:
