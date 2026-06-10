@@ -66,8 +66,8 @@ const WelcomeMessage: React.FC = () => (
     </p>
     <div className="flex flex-wrap justify-center gap-2">
       {[
-        'O que tenho pra fazer hoje?',
-        'Mostre meu pipeline',
+        'O que tenho para fazer hoje?',
+        'Mostre o meu pipeline',
         'Quais deals estão parados?',
         'Crie uma reunião com Stark amanhã às 14h',
       ].map((suggestion) => (
@@ -238,8 +238,8 @@ export const AIHubPage: React.FC = () => {
         <div className="px-4 pb-4">
           <div className="flex flex-wrap gap-2 justify-center">
             {[
-              'O que tenho pra fazer hoje?',
-              'Mostre meu pipeline',
+              'O que tenho para fazer hoje?',
+              'Mostre o meu pipeline',
               'Quais deals estão parados?',
             ].map((suggestion) => (
               <button
@@ -263,7 +263,7 @@ export const AIHubPage: React.FC = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Pergunte algo sobre seu CRM..."
+              placeholder="Pergunte algo sobre o seu CRM..."
               className="flex-1 px-4 py-3 bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400"
               disabled={isLoading}
             />
