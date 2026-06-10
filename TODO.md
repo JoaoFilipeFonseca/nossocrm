@@ -27,6 +27,43 @@
 
 ---
 
+## 🗓️ Registo da sessão 10 Jun 2026 — QA A FUNDO (percurso da lead) — HEAD `c978c18`
+Sessão de QA guiada (não construir features). Foco do João: **o caminho da lead** — entra,
+onde para, que sequência, follow-up, automações. Recon na BD + verificação ao vivo em produção.
+
+**Mapa real do percurso (BD + browser):** entram (Meta webhook cria lead+contacto+negócio; 485
+contactos, 20 origens) → **481 de 484 negócios presos na 1.ª etapa "Oportunidade"** (186 parados
++30d; mais antigo 2023) → sequência das etapas existe mas ~0 progrediram → follow-up CT-AUTO VIVO
+(275 elegíveis; cron criou 10 tarefas "Retomar contacto" a 09/06 09:00) → automações: 10 ON.
+
+**Corrigido (commit `c978c18`, A+D+E aprovados pelo João, verificado em produção):**
+- **A — Contabilidade de /automacoes** ✅ `[FEITO]` As 5 edge functions de cron (lead-followups,
+  cmi-watch, telegram-morning-brief, client-errors-alert, backup-export) + rota social-inbox/sync
+  **não registavam** a corrida → /automacoes mostrava "nunca" em automações que correm (a "Leva de
+  follow-up" inclusive). Novo helper `supabase/functions/_shared/record-run.ts` (espelha o bloco da
+  `automation-meta-insights`); cada função grava `last_run_at/ok/error/run_count/fail_count`.
+  `verify_jwt=false` fixado no `config.toml` p/ os 5 crons. **Verificado:** disparei client-errors-alert
+  por pg_net → 200 + `last_run_at` actualizou; /automacoes passou a "há 1m · 2 execuções" (era "nunca").
+  ⚠️ **Aprendizado caro:** o MCP `deploy_edge_function` mete `verify_jwt=true` por omissão → o 1.º
+  deploy partiu a lead-followups (cron manda X-Cron-Secret, não JWT → 401 do gateway). **Passar SEMPRE
+  `verify_jwt: false`** nestes crons. O bundling de `_shared` funciona (passar os ficheiros `../_shared/*`).
+- **D — Leads Meta nunca órfãs** ✅ `[FEITO]` Campanha sem `meta_lead_routing` (só 1 mapeada) criava
+  contacto SEM negócio → invisível ao funil e ao follow-up. Agora cai no board **por omissão** da org
+  (`organization_settings.default_lead_board_id/stage_id`, migração `20260610120000`, seed
+  Compradores/Oportunidade). Telegram distingue "Destino" vs "Destino (por omissão)". (E2E só na próxima
+  lead Meta real de campanha não mapeada — não dá para forjar webhook assinado.)
+- **E — APP_URL** ✅ `[FEITO]` edge de leads passa a `crm.joaofilipefonseca.pt` (era `crm-joao.vercel.app`).
+- ~~F~~ negócio "Sonia Rodrigo" com `status`=stage_id → **NÃO é bug** (leitura usa `stage_id || status`).
+
+**Aberto (decisão do João, NÃO executar sem ordem):**
+- **C — GARGALO: 481 leads presas em "Oportunidade"** `P1` `[POR FAZER]` — entram e não há processo que
+  as mova. É o gargalo que o Cérebro já apontava. Ideias do João (capturadas): "colocar a 482 a zero",
+  patamares por temperatura (probabilidade=etapa+recência), email automático/30d às muito frias. O João
+  **não** o escolheu nesta sessão (preferiu desenhar à parte). Desenhar a maqueta/fluxo com ele antes de construir.
+- **B — Token Meta morto** (acção do João) — `meta-insights-sync` falha ("session invalidated… password/
+  Facebook"), também trava `social-inbox-sync`. **Reautorizar a Meta** em /settings → integrações. Já visível
+  em /automacoes ("19 execuções · 3 falhas").
+
 ## 🗓️ Registo da sessão 01 Jun 2026 — SESSÃO 2 (o que ficou feito) — HEAD `261d3f1`
 A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núcleo:
 - **CT-1 + CT-2** ✅ LIVE — página `/contacts/[id]` (maqueta aprovada): campos ricos estilo Notion
