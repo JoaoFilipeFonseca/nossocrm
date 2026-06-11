@@ -14,8 +14,10 @@
 > ## ▶️▶️ PRÓXIMO DECIDIDO (11/06/2026) — arrancar JÁ por aqui
 > A sequência travada (CT-AUTO→SOCIAL-INBOX→IMO-7→IA-7) está TODA feita. Pós-QA (10-11/06), ordem decidida:
 > 1. **LIMAR primeiro:** **UX-1 NAV-IA** (barra lateral ~20 itens → famílias, regra "não inchar a barra")
->    + **copy restante do QA** (B-012 `Contatos`→`Contactos` em `app/(protected)/contacts/page.tsx`;
->    `Senha`→`Palavra-passe` no login do CRM; varrer `metadata.title` PT-BR). Maqueta primeiro.
+>    — maqueta `docs/mockups/ux1-nav-familias.html` criada 11/06, à espera do "avança" do João.
+>    + **copy restante do QA** ✅ `[FEITO 11/06, commit 6e86448, verificado em produção]` (B-012
+>    `Contatos`→`Contactos`; `Senha`→`Palavra-passe` no login, /setup, /join e instalador; varrido
+>    `metadata.title` — não havia mais PT-BR).
 > 2. **CONSTRUIR:** **MA-PIXEL-OWNERSHIP** `P1` (risco "terreno alheio" — confirmar propriedade dos pixéis).
 > 3. **Depois (escolha do João):** **DASH-2** (lead scoring) ou **MKT-BIBLIOTECA**.
 > Já feitos (reclassificar, não re-propor): INT-DOMAIN, MA-CAPI, MKT-MEASURE(construível), AUTO-1 pause-on-touch.
