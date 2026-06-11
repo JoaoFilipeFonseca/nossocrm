@@ -65,7 +65,7 @@ export const SECONDARY_NAV: SecondaryNavItem[] = [
   { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
   { id: 'organico', label: 'Orgânico', href: '/organico', icon: Share2 },
   { id: 'cerebro', label: 'Cérebro', href: '/cerebro', icon: Brain },
-  { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
+  { id: 'criativos', label: 'Biblioteca', href: '/criativos', icon: Archive },
   { id: 'automacoes', label: 'Automações', href: '/automacoes', icon: Zap },
   { id: 'automation_logs', label: 'Logs Automações', href: '/settings/automation-logs', icon: ScrollText },
   { id: 'settings', label: 'Configurações', href: '/settings', icon: Settings },
@@ -120,7 +120,7 @@ export const NAV_FAMILIES: NavFamily[] = [
     items: [
       { id: 'anuncios', label: 'Anúncios', href: '/anuncios', icon: Megaphone },
       { id: 'organico', label: 'Orgânico', href: '/organico', icon: Share2 },
-      { id: 'criativos', label: 'Criativos', href: '/criativos', icon: Archive },
+      { id: 'criativos', label: 'Biblioteca', href: '/criativos', icon: Archive },
       { id: 'angariacao', label: 'Angariação IA', href: '/ai/workflows/angariacao', icon: Sparkles },
     ],
   },

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
+import { CREATIVE_STATUSES, parseUsages } from '@/lib/criativos/shared';
+import { attachSignedFileUrls } from '@/lib/criativos/server';
 
 function json<T>(body: T, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -16,8 +18,15 @@ const PatchSchema = z.object({
   tags: z.array(z.string()).optional(),
   is_favorite: z.boolean().optional(),
   is_template: z.boolean().optional(),
-  status: z.string().optional(),
+  status: z.enum(CREATIVE_STATUSES).optional(),
   edited_by_human: z.boolean().optional(),
+  imovel_id: z.string().uuid().nullable().optional(),
+  // "usei em X a Y" — acrescenta um registo de utilização (nunca substitui os anteriores)
+  add_usage: z.object({
+    channel: z.string().min(1).max(60),
+    used_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    note: z.string().max(200).optional(),
+  }).optional(),
 }).strict();
 
 async function profileOr(req: Request) {
@@ -49,7 +58,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 
   if (dbError) return json({ error: dbError.message }, 500);
   if (!data) return json({ error: 'Not found' }, 404);
-  return json({ item: data });
+  const [item] = await attachSignedFileUrls(supabase, [data]);
+  return json({ item });
 }
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -65,9 +75,26 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     return json({ error: 'Invalid payload', details: parsed.error.flatten() }, 400);
   }
 
+  const { add_usage, ...fields } = parsed.data;
+  const update: Record<string, unknown> = { ...fields };
+
+  if (add_usage) {
+    const { data: current, error: readError } = await supabase
+      .from('creative_archive')
+      .select('usages')
+      .eq('organization_id', profile!.organization_id)
+      .eq('id', id)
+      .maybeSingle();
+    if (readError) return json({ error: readError.message }, 500);
+    if (!current) return json({ error: 'Not found' }, 404);
+    update.usages = [...parseUsages(current.usages), add_usage];
+  }
+
+  if (Object.keys(update).length === 0) return json({ ok: true });
+
   const { error: dbError } = await supabase
     .from('creative_archive')
-    .update(parsed.data)
+    .update(update)
     .eq('organization_id', profile!.organization_id)
     .eq('id', id);
 
