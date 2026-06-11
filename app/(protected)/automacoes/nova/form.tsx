@@ -9,7 +9,7 @@ interface Template {
   name: string;
   description: string;
   icon: string;
-  definition: { nodes: Array<{ id: string; atom: string; position: { x: number; y: number }; config: Record<string, unknown> }>; edges: Array<{ id: string; source: string; target: string }> };
+  definition: { nodes: Array<{ id: string; atom: string; position: { x: number; y: number }; config: Record<string, unknown>; label?: string }>; edges: Array<{ id: string; source: string; target: string }> };
 }
 
 const TEMPLATES: Template[] = [
@@ -44,6 +44,58 @@ const TEMPLATES: Template[] = [
         { id: 'n2', atom: 'action.send_telegram', position: { x: 250, y: 0 }, config: { text: '🆕 Novo lead: <b>{{contact.name}}</b>\nStage: {{contact.stage}}' } },
       ],
       edges: [ { id: 'e1', source: 'n1', target: 'n2' } ],
+    },
+  },
+  {
+    id: 'email_sequence_boas_vindas',
+    name: 'Sequência de boas-vindas (3 emails)',
+    description: 'Lead nova com email recebe boas-vindas logo, um segundo email passadas ~3 horas e um terceiro no dia seguinte. As esperas respeitam o horário comercial (nunca aos Domingos). Todos os emails saem com rodapé de anular subscrição e política de privacidade. Nasce em rascunho: edita os textos no builder e activa quando estiver pronta.',
+    icon: '💌',
+    definition: {
+      nodes: [
+        { id: 'n1', atom: 'trigger.event', position: { x: 0, y: 0 }, config: { events: ['contact.created'] } },
+        { id: 'n2', atom: 'logic.filter', position: { x: 220, y: 0 }, config: { left: '{{contact.email}}', operator: 'is_not_empty', right: '' } },
+        {
+          id: 'n3', atom: 'action.send_email', position: { x: 440, y: 0 },
+          label: 'Email 1 · Boas-vindas',
+          config: {
+            to: '{{contact.email}}',
+            subject: 'Recebi o seu pedido, {{contact.name | split: " " | first}}',
+            text: 'Olá {{contact.name | split: " " | first}},\n\nObrigado pelo seu contacto. Recebi o seu pedido e vou analisar tudo com atenção.\n\nEntretanto, se quiser adiantar caminho, responda a este email com duas linhas sobre o que procura (zona, tipo de imóvel, prazos). Assim consigo preparar uma resposta mais útil.\n\nFalamos em breve.\n\nJoão Fonseca\nConsultor Imobiliário · RE/MAX',
+            html: '<p>Olá {{contact.name | split: " " | first}},</p><p>Obrigado pelo seu contacto. Recebi o seu pedido e vou analisar tudo com atenção.</p><p>Entretanto, se quiser adiantar caminho, responda a este email com duas linhas sobre o que procura (zona, tipo de imóvel, prazos). Assim consigo preparar uma resposta mais útil.</p><p>Falamos em breve.</p><p>João Fonseca<br/>Consultor Imobiliário · RE/MAX</p>',
+          },
+        },
+        { id: 'n4', atom: 'logic.wait_humanized', position: { x: 660, y: 0 }, config: { min_seconds: 10800, max_seconds: 14400 } },
+        {
+          id: 'n5', atom: 'action.send_email', position: { x: 880, y: 0 },
+          label: 'Email 2 · ~3 horas depois',
+          config: {
+            to: '{{contact.email}}',
+            subject: 'Uma pergunta rápida sobre o que procura',
+            text: 'Olá {{contact.name | split: " " | first}},\n\nPara o conseguir ajudar a sério, só preciso de saber uma coisa: está a pensar comprar, vender, ou ainda a estudar o mercado?\n\nCom essa resposta consigo apontar o caminho certo, sem perder o seu tempo.\n\nQuando lhe for oportuno, basta responder a este email.\n\nJoão Fonseca\nConsultor Imobiliário · RE/MAX',
+            html: '<p>Olá {{contact.name | split: " " | first}},</p><p>Para o conseguir ajudar a sério, só preciso de saber uma coisa: está a pensar comprar, vender, ou ainda a estudar o mercado?</p><p>Com essa resposta consigo apontar o caminho certo, sem perder o seu tempo.</p><p>Quando lhe for oportuno, basta responder a este email.</p><p>João Fonseca<br/>Consultor Imobiliário · RE/MAX</p>',
+          },
+        },
+        { id: 'n6', atom: 'logic.wait_humanized', position: { x: 1100, y: 0 }, config: { min_seconds: 86400, max_seconds: 93600 } },
+        {
+          id: 'n7', atom: 'action.send_email', position: { x: 1320, y: 0 },
+          label: 'Email 3 · No dia seguinte',
+          config: {
+            to: '{{contact.email}}',
+            subject: 'Posso ajudar com o próximo passo?',
+            text: 'Olá {{contact.name | split: " " | first}},\n\nNão quero encher a sua caixa de correio, por isso este é o meu último email por agora.\n\nSe fizer sentido, a minha proposta é uma conversa de 15 minutos, sem compromisso, para perceber o seu objectivo e responder com franqueza sobre a melhor forma de ajudar (e se não for o momento, digo isso mesmo).\n\nQuando lhe for oportuno, basta responder a este email.\n\nJoão Fonseca\nConsultor Imobiliário · RE/MAX',
+            html: '<p>Olá {{contact.name | split: " " | first}},</p><p>Não quero encher a sua caixa de correio, por isso este é o meu último email por agora.</p><p>Se fizer sentido, a minha proposta é uma conversa de 15 minutos, sem compromisso, para perceber o seu objectivo e responder com franqueza sobre a melhor forma de ajudar (e se não for o momento, digo isso mesmo).</p><p>Quando lhe for oportuno, basta responder a este email.</p><p>João Fonseca<br/>Consultor Imobiliário · RE/MAX</p>',
+          },
+        },
+      ],
+      edges: [
+        { id: 'e1', source: 'n1', target: 'n2' },
+        { id: 'e2', source: 'n2', target: 'n3' },
+        { id: 'e3', source: 'n3', target: 'n4' },
+        { id: 'e4', source: 'n4', target: 'n5' },
+        { id: 'e5', source: 'n5', target: 'n6' },
+        { id: 'e6', source: 'n6', target: 'n7' },
+      ],
     },
   },
   {
