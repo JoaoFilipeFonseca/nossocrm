@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — MKT-BIBLIOTECA (Biblioteca de activos + Criar com templates da marca)</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin:0; background:#f8fafc; color:#0f172a; }
+  .wrap { max-width:1080px; margin:0 auto; padding:24px; }
+  h1 { font-size:19px; margin:0 0 2px; }
+  h2 { font-size:15px; margin:26px 0 8px; }
+  .muted { color:#64748b; font-size:12.5px; }
+  .cols { display:flex; gap:20px; margin-top:14px; flex-wrap:wrap; align-items:flex-start; }
+  .panel { background:#fff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; flex:1; min-width:300px; }
+  .panel h3 { margin:0; padding:10px 14px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:#64748b; border-bottom:1px solid #eef2f7; background:#f8fafc; }
+  .body { padding:14px; }
+  .chip { display:inline-block; font-size:10px; font-weight:700; border-radius:6px; padding:1px 7px; background:#fef9c3; color:#854d0e; }
+  .chip.green { background:#f0fdf4; color:#15803d; }
+  .chip.blue { background:#eff6ff; color:#1d4ed8; }
+  .chip.grey { background:#f1f5f9; color:#475569; }
+  .chip.purple { background:#faf5ff; color:#7e22ce; }
+  .note { font-size:12.5px; color:#475569; margin-top:16px; max-width:860px; line-height:1.5; }
+  /* tabs do /criativos */
+  .tabs { display:flex; gap:4px; border-bottom:2px solid #e2e8f0; padding:0 14px; background:#fff; }
+  .tabs span { padding:9px 14px; font-size:13px; font-weight:600; color:#64748b; }
+  .tabs span.on { color:#0f172a; border-bottom:2px solid #0f172a; margin-bottom:-2px; }
+  /* toolbar */
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; padding:10px 14px; border-bottom:1px solid #eef2f7; align-items:center; }
+  .search { flex:1; min-width:140px; border:1px solid #e2e8f0; border-radius:9px; padding:6px 10px; font-size:12px; color:#94a3b8; }
+  .btn { background:#0f172a; color:#fff; font-size:11.5px; font-weight:700; border-radius:9px; padding:6px 12px; white-space:nowrap; }
+  .btn.sec { background:#fff; color:#0f172a; border:1px solid #cbd5e1; }
+  .filters { display:flex; gap:6px; flex-wrap:wrap; padding:8px 14px; border-bottom:1px solid #eef2f7; }
+  .filters .chip { cursor:default; }
+  /* grid de cartões */
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px; }
+  @media (max-width:680px){ .grid { grid-template-columns:1fr; } }
+  .card { border:1px solid #e2e8f0; border-radius:11px; padding:11px 12px; font-size:12px; }
+  .card .top { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:5px; }
+  .card b { font-size:12.5px; }
+  .card p { margin:4px 0 0; color:#64748b; line-height:1.45; }
+  .thumb { height:64px; border-radius:8px; margin-top:8px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; font-weight:700; }
+  .used { margin-top:7px; font-size:10.5px; color:#475569; }
+  /* drawer */
+  .drow { display:flex; justify-content:space-between; gap:8px; font-size:11.5px; padding:6px 0; border-bottom:1px dashed #eef2f7; }
+  .drow span:first-child { color:#64748b; }
+  /* criar */
+  .fmt { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px; }
+  @media (max-width:680px){ .fmt { grid-template-columns:1fr; } }
+  .fcard { border:1px solid #e2e8f0; border-radius:11px; padding:12px; font-size:12px; text-align:center; }
+  .fcard .dim { font-size:10.5px; color:#94a3b8; }
+  /* preview do template da marca */
+  .tpl { width:200px; height:200px; margin:0 auto; border-radius:10px; overflow:hidden; position:relative; background:linear-gradient(160deg,#1e3a5f 55%,#0f2440); color:#fff; text-align:left; }
+  .tpl .foto { height:55%; background:repeating-linear-gradient(45deg,#94a3b8,#94a3b8 8px,#64748b 8px,#64748b 16px); display:flex; align-items:center; justify-content:center; font-size:10px; color:#fff; }
+  .tpl .txt { padding:8px 10px; }
+  .tpl .txt b { font-size:11px; display:block; }
+  .tpl .txt small { font-size:9px; opacity:.85; }
+  .tpl .logo { position:absolute; top:6px; left:8px; background:#fff; color:#1e3a5f; font-size:8px; font-weight:800; border-radius:4px; padding:1px 5px; }
+  .tpl .preco { position:absolute; top:6px; right:8px; background:#d4af37; color:#0f172a; font-size:9px; font-weight:800; border-radius:4px; padding:1px 6px; }
+  .tplstory { width:120px; height:200px; }
+  .steps { counter-reset:s; padding:0 14px 14px; }
+  .steps div { font-size:12px; padding:6px 0 6px 30px; position:relative; color:#334155; }
+  .steps div::before { counter-increment:s; content:counter(s); position:absolute; left:0; top:4px; width:20px; height:20px; border-radius:50%; background:#eff6ff; color:#1d4ed8; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📚 MKT-BIBLIOTECA — todos os activos digitais num só sítio (assenta no /criativos)</h1>
+  <p class="muted">O item "Criativos" da barra passa a ser a Biblioteca. Duas abas dentro da MESMA página: <b>Biblioteca</b> (o coração: guardar, organizar, reencontrar, reutilizar) e <b>Criar</b> (os 4 formatos com templates da marca). Nada de itens novos na barra.</p>
+
+  <!-- ============ ABA BIBLIOTECA ============ -->
+  <h2>Aba 1 — Biblioteca (o repositório)</h2>
+  <div class="cols">
+    <div class="panel" style="flex:2; min-width:340px;">
+      <div class="tabs"><span class="on">📚 Biblioteca</span><span>✨ Criar</span></div>
+      <div class="toolbar">
+        <span class="search">🔍 Procurar em tudo (título, texto, tags)…</span>
+        <span class="btn">+ Adicionar ▾</span>
+      </div>
+      <div class="filters">
+        <span class="chip blue">Tipo: Post ✕</span>
+        <span class="chip grey">Origem: todas</span>
+        <span class="chip grey">Estado: todos</span>
+        <span class="chip grey">Imóvel: todos</span>
+        <span class="chip grey">★ Favoritos</span>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="top"><span class="chip blue">Post FB/IG</span><span class="chip green">Publicado</span><span class="chip grey">✨ Criado</span></div>
+          <b>Moradia T3 Paços de Ferreira — lançamento</b>
+          <p>Chegou ao mercado uma moradia T3 com jardim e churrasqueira, a 5 minutos do centro…</p>
+          <div class="thumb" style="background:#1e3a5f;">imagem 1080×1080 do template da marca</div>
+          <div class="used">📌 Usei em: Facebook (09/06) · Instagram (09/06)</div>
+        </div>
+        <div class="card">
+          <div class="top"><span class="chip purple">💡 Ideia</span><span class="chip grey">Rascunho</span></div>
+          <b>Série "mitos de quem vende casa"</b>
+          <p>5 posts curtos, um mito por post. Mito 1: preciso de obras antes de vender. Mito 2: o preço alto deixa margem…</p>
+          <div class="used">Sem ficheiro. Uma ideia é uma peça como as outras: pesquisável, com tags, nunca se perde.</div>
+        </div>
+        <div class="card">
+          <div class="top"><span class="chip blue">Flyer PDF</span><span class="chip green">Aprovado</span><span class="chip grey">📥 Importado</span></div>
+          <b>One-pager avaliação gratuita (ficheiro do João)</b>
+          <p>flyer-avaliacao-v2.pdf · 1,2 MB · carregado pelo João</p>
+          <div class="thumb" style="background:#475569;">pré-visualização do PDF</div>
+          <div class="used">📌 Usei em: porta a porta Seroa (Mai 2026)</div>
+        </div>
+        <div class="card">
+          <div class="top"><span class="chip blue">Referência</span><span class="chip grey">🔖 Guardado</span></div>
+          <b>Anúncio de concorrente que funcionou bem</b>
+          <p>Captura de um post com 200 reacções. Guardar o ângulo: falar do bairro primeiro, casa depois.</p>
+          <div class="thumb" style="background:#94a3b8;">imagem guardada</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="max-width:300px;">
+      <h3>Gaveta de detalhe (ao abrir uma peça)</h3>
+      <div class="body">
+        <b style="font-size:13px;">Moradia T3 Paços de Ferreira — lançamento</b>
+        <div class="drow"><span>Tipo</span><span>Post FB/IG</span></div>
+        <div class="drow"><span>Origem</span><span>✨ Criado no CRM</span></div>
+        <div class="drow"><span>Estado</span><span class="chip green">Publicado</span></div>
+        <div class="drow"><span>Imóvel ligado</span><span>Moradia T3 (ref. 1024)</span></div>
+        <div class="drow"><span>Tags</span><span>lançamento, paços</span></div>
+        <div class="drow"><span>Onde usei</span><span>FB 09/06 · IG 09/06</span></div>
+        <div class="drow"><span>Versões</span><span>v2 (esta) · v1</span></div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;">
+          <span class="btn sec">⧉ Duplicar</span>
+          <span class="btn sec">📌 Marcar onde usei</span>
+          <span class="btn sec">⬇ Descarregar</span>
+        </div>
+        <p class="muted" style="margin-top:10px;">"Marcar onde usei" pergunta canal + data. Duplicar cria peça nova já preenchida para mudar um detalhe. Versões nunca sobrescrevem.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="panel" style="max-width:340px;">
+      <h3>Menu "+ Adicionar"</h3>
+      <div class="body" style="font-size:12.5px; line-height:2;">
+        ⬆️ <b>Carregar ficheiro</b> — imagem, PDF, vídeo (bucket privado)<br/>
+        💡 <b>Nova ideia ou nota</b> — só texto, sem ficheiro<br/>
+        🔖 <b>Guardar referência</b> — coisa de fora que inspira<br/>
+        ✍️ <b>Texto manual</b> — já existia, mantém-se
+      </div>
+    </div>
+    <div class="panel">
+      <h3>O que muda por baixo (sem partir nada)</h3>
+      <div class="body" style="font-size:12.5px; line-height:1.7;">
+        A tabela <b>creative_archive</b> que já existe ganha: origem <span class="chip grey">criado / importado / referência</span>, tipos novos <span class="chip grey">idea / reference / flyer / organic_post / story_cover</span>, formato e dimensões da peça, ligação a imóvel (já existe) e <b>registo de utilizações</b> (canal + data, vezes sem conta). Os 3 estados que interessam ao João: <span class="chip">Rascunho</span> <span class="chip green">Aprovado</span> <span class="chip blue">Publicado</span>. Ficheiros no bucket privado <b>creative-archive</b>, servidos por URL assinado. Tudo multi-tenant com RLS desde a primeira migração.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ABA CRIAR ============ -->
+  <h2>Aba 2 — Criar (4 formatos, templates da marca, sem IA de imagem)</h2>
+  <div class="cols">
+    <div class="panel" style="flex:2; min-width:340px;">
+      <div class="tabs"><span>📚 Biblioteca</span><span class="on">✨ Criar</span></div>
+      <div class="fmt">
+        <div class="fcard"><div style="font-size:22px;">📣</div><b>Criativo para anúncio Meta</b><div class="dim">1080×1080 · imagem + copy do anúncio</div></div>
+        <div class="fcard"><div style="font-size:22px;">📱</div><b>Post orgânico FB/IG</b><div class="dim">1080×1080 · imagem + legenda</div></div>
+        <div class="fcard"><div style="font-size:22px;">🎬</div><b>Story / Reel</b><div class="dim">1080×1920 · capa + textos por cena</div></div>
+        <div class="fcard"><div style="font-size:22px;">📄</div><b>Flyer / One-pager</b><div class="dim">A4 · PDF pronto a imprimir</div></div>
+      </div>
+      <div class="steps">
+        <div><b>Escolher o formato</b> e, se for de imóvel, escolher o imóvel (puxa fotos, preço, tipologia).</div>
+        <div><b>Escolher o template da marca</b> — peças compostas com as cores, fontes e logo do Brand Kit (/settings/marca). Pré-visualização ao vivo.</div>
+        <div><b>Copy pela IA</b> no tom do João (reusa o Agente de Divulgação por canal) — editável antes de gerar.</div>
+        <div><b>Gerar</b> — o CRM renderiza a imagem ou o PDF no servidor. Cada Gerar = peça NOVA na Biblioteca (versões, nunca sobrescreve).</div>
+      </div>
+    </div>
+
+    <div class="panel" style="max-width:300px;">
+      <h3>Template da marca (exemplo)</h3>
+      <div class="body" style="text-align:center;">
+        <div class="tpl">
+          <span class="logo">JOÃO FONSECA · RE/MAX</span>
+          <span class="preco">285.000 €</span>
+          <div class="foto">foto real do imóvel (URL assinado)</div>
+          <div class="txt"><b>Moradia T3 com jardim</b><small>Paços de Ferreira · 3 quartos · 2 WC<br/>AMI 10092 · 919 000 000</small></div>
+        </div>
+        <p class="muted" style="margin-top:10px; text-align:left;">Determinista e sem custo de IA: cores e logo vêm do Brand Kit, foto do imóvel por URL assinado, textos da copy aprovada. 2 a 3 variantes de layout por formato no MVP.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PRIVACIDADE ============ -->
+  <h2>Peça pequena incluída — link de privacidade nas definições</h2>
+  <div class="cols">
+    <div class="panel" style="max-width:460px;">
+      <h3>Definições → campo novo</h3>
+      <div class="body" style="font-size:12.5px;">
+        <b>Política de privacidade</b>
+        <div class="search" style="margin-top:6px; color:#0f172a;">https://joaofilipefonseca.pt/privacidade</div>
+        <p class="muted" style="margin-top:8px;">A coluna <b>organization_settings.privacy_policy_url</b> já existe (criada na MKT-SEQUENCES). Falta só expor o campo na UI: é o link que aparece no rodapé dos emails de automação.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="note"><b>Plano de execução por fatias</b> (1 commit por fatia, tsc 0 + lint 0 + vitest + verificação real em produção mobile 375/540 + tablet 768 + desktop):
+  <b>Fatia 1</b> Repositório (schema estendido + abas + upload + ideias/notas + referências + filtros novos + gaveta com "onde usei").
+  <b>Fatia 2</b> Criação (templates da marca para os 4 formatos, render no servidor para imagem e PDF, copy IA, cada Gerar entra na Biblioteca).
+  <b>Fatia 3</b> Reuso e polish (duplicar e mudar um detalhe, marcar utilizações, campo privacy_policy_url nas definições).</p>
+</div>
+</body>
+</html>
