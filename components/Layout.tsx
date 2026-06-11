@@ -81,7 +81,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/anuncios': 'Anúncios',
   '/organico': 'Orgânico',
   '/cerebro': 'Cérebro de Marketing',
-  '/criativos': 'Criativos',
+  '/criativos': 'Biblioteca',
   '/settings': 'Configurações',
   '/profile': 'Perfil',
   '/ai': 'Assistente IA',

@@ -28,6 +28,10 @@ create index if not exists creative_archive_parent_idx
 create index if not exists creative_archive_imovel_idx
   on public.creative_archive (imovel_id) where imovel_id is not null;
 
+-- Storage: garantir o bucket privado (não existia na BD, ao contrário do que a doc dizia).
+insert into storage.buckets (id, name, public) values ('creative-archive', 'creative-archive', false)
+on conflict (id) do nothing;
+
 -- Storage: o bucket creative-archive é privado e não tinha políticas (só o service role chegava lá).
 -- Membros da org passam a ler/escrever no prefixo da própria org (1.º segmento do path = org id),
 -- como o imovel-fotos. Servimos sempre por URL assinado no código.
