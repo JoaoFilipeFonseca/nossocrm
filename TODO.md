@@ -41,7 +41,13 @@
 >    expor o campo na UI de definições — peça pequena dentro da biblioteca).
 > Recursos prontos a reusar: Brand Kit `/settings/marca`, creative_archive (15 tipos+métricas+UI), fotos dos
 > imóveis (URLs assinados), copy por canal do Agente de Divulgação (IMO-7), motor IA texto Gemini→Claude.
-> Hábito: maqueta primeiro.
+> Hábito: maqueta primeiro. Maqueta: `docs/mockups/mkt-biblioteca.html` (commit `20eb4de`).
+> **Decisões adicionais do João (11/06, feedback à maqueta):**
+> 5. **Posts orgânicos com DOIS rácios de raiz:** 1080×1080 (1:1) e **1080×1350 (4:5, o ideal do feed do
+>    Instagram)** — o mesmo template montado de raiz para os dois, com margens de segurança cuidadas em
+>    ambos; na criação há um botão por rácio (carrega num e vê 1080×1080, carrega noutro e vê 1080×1350).
+> 6. **Retenção:** TUDO o que entra na biblioteca fica guardado **até o João apagar** — nada expira nem se
+>    auto-apaga; apagar é sempre acção dele (soft-archive reversível, como a API do creative_archive já faz).
 
 > ## 🔔 LEMBRETE COM DATA — 18/06/2026: remover a agência do Business Manager (João pediu 11/06)
 > **Acção do João (eu não posso mexer em permissões):** remover **Muhammad Seedat** (muhammad.contacto@gmail.com),
