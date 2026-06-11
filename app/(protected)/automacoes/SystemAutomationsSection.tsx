@@ -58,6 +58,21 @@ export const SystemAutomationsSection: React.FC = () => {
   const [paramsValue, setParamsValue] = useState('');
   // SYS-FLOW: que automação tem o fluxo aberto (vê-se a montagem passo a passo).
   const [openFlow, setOpenFlow] = useState<string | null>(null);
+  // Secção colapsável: carregar em "Sistema" minimiza para chegar rápido às
+  // automações do utilizador. SSR-determinista (aberta); localStorage pós-montagem.
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('crm_sys_automations_collapsed') === '1') setCollapsed(true);
+    } catch { /* sem storage, fica aberta */ }
+  }, []);
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      try { localStorage.setItem('crm_sys_automations_collapsed', next ? '1' : '0'); } catch { /* ok */ }
+      return next;
+    });
+  };
 
   const load = () => {
     setLoading(true);
@@ -139,19 +154,31 @@ export const SystemAutomationsSection: React.FC = () => {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-3">
-        <div>
-          <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide flex items-center gap-2">
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          aria-expanded={!collapsed}
+          className="text-left group focus-visible-ring rounded-md"
+          title={collapsed ? 'Expandir secção Sistema' : 'Minimizar secção Sistema'}
+        >
+          <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide flex items-center gap-2 group-hover:text-slate-900">
             <Settings2 className="h-4 w-4" /> Sistema ({items.length})
+            {collapsed ? <ChevronRight className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Automações operacionais do CRM. Vê o fluxo de cada uma, liga/desliga, ajusta horário ou parâmetros sem código.
+            {collapsed
+              ? 'Secção minimizada. Carrega para ver as automações operacionais do CRM.'
+              : 'Automações operacionais do CRM. Vê o fluxo de cada uma, liga/desliga, ajusta horário ou parâmetros sem código.'}
           </p>
-        </div>
-        <button onClick={load} className="text-xs text-slate-500 hover:text-slate-900 inline-flex items-center gap-1">
-          <RefreshCw className="h-3 w-3" /> Recarregar
         </button>
+        {!collapsed && (
+          <button onClick={load} className="text-xs text-slate-500 hover:text-slate-900 inline-flex items-center gap-1">
+            <RefreshCw className="h-3 w-3" /> Recarregar
+          </button>
+        )}
       </div>
 
+      {collapsed ? null : (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {items.map((it) => (
           <div
@@ -308,6 +335,7 @@ export const SystemAutomationsSection: React.FC = () => {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };
