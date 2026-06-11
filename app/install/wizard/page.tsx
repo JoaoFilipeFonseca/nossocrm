@@ -1308,7 +1308,7 @@ export default function InstallWizardPage() {
       return;
     }
     if (pass !== confirm) {
-      setChangePasswordError('As senhas não conferem');
+      setChangePasswordError('As palavras-passe não coincidem');
       return;
     }
 

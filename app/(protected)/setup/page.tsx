@@ -80,12 +80,12 @@ export default function SetupPage() {
     if (checkingInit) return
 
     if (!isPasswordValid) {
-      setError('A senha não atende aos requisitos mínimos')
+      setError('A palavra-passe não cumpre os requisitos mínimos')
       return
     }
 
     if (!passwordsMatch) {
-      setError('As senhas não coincidem')
+      setError('As palavras-passe não coincidem')
       return
     }
 
@@ -190,7 +190,7 @@ export default function SetupPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Senha
+                Palavra-passe
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -234,7 +234,7 @@ export default function SetupPage() {
 
             <div>
               <label htmlFor="confirm-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Confirmar Senha
+                Confirmar palavra-passe
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -262,9 +262,9 @@ export default function SetupPage() {
               </div>
 
               {confirmPassword.length > 0 && !passwordsMatch && (
-                <p className="mt-1 text-xs text-red-500">As senhas não coincidem</p>
+                <p className="mt-1 text-xs text-red-500">As palavras-passe não coincidem</p>
               )}
-              {passwordsMatch && <p className="mt-1 text-xs text-green-500">✓ Senhas coincidem</p>}
+              {passwordsMatch && <p className="mt-1 text-xs text-green-500">✓ Palavras-passe coincidem</p>}
             </div>
 
             {error && (

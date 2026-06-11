@@ -548,7 +548,7 @@ export async function POST(req: Request) {
             });
 
             if (!login2.ok) {
-              throw new Error('Não conseguimos validar seu login com a senha informada. ' + login2.error);
+              throw new Error('Não conseguimos validar o seu login com a palavra-passe indicada. ' + login2.error);
             }
           },
           sendEvent,
