@@ -1,8 +1,9 @@
 /**
  * MobileNavDrawer — gaveta de navegação à ESQUERDA (mobile).
  *
- * Aberta pelo botão hambúrguer do header. Mostra a navegação COMPLETA
- * (FULL_NAV), deslizável na vertical (overflow-y-auto), full-height.
+ * Aberta pelo botão hambúrguer do header. Espelha a navegação da sidebar
+ * (NAV_TOP sempre à vista + famílias em acordeão, UX-1), deslizável na
+ * vertical (overflow-y-auto), full-height.
  * Fecha ao tocar num item, no fundo (backdrop) ou Escape.
  *
  * Mesmo padrão de acessibilidade/motion do ActionSheet, mas painel lateral.
@@ -11,11 +12,12 @@
 import React, { useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X } from 'lucide-react';
+import { X, ChevronDown, ChevronRight, User } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils/cn';
 import { FocusTrap, useFocusReturn } from '@/lib/a11y';
-import { FULL_NAV } from './navConfig';
+import { NAV_TOP, NAV_FAMILIES, type NavEntry } from './navConfig';
+import { useNavFamilies } from './useNavFamilies';
 
 export interface MobileNavDrawerProps {
   isOpen: boolean;
@@ -51,7 +53,34 @@ export function MobileNavDrawer({
     pathname === href ||
     (href === '/boards' && pathname === '/pipeline');
 
-  const items = FULL_NAV.filter((item) => !item.adminOnly || isAdmin);
+  // UX-1: as mesmas famílias da sidebar, em acordeão (a activa abre sozinha).
+  const { openFamilies, toggleFamily } = useNavFamilies(pathname);
+  const families = NAV_FAMILIES.map((fam) => ({
+    ...fam,
+    items: fam.items.filter((item) => !item.adminOnly || isAdmin),
+  }));
+
+  const renderItem = (item: NavEntry) => {
+    const Icon = item.icon;
+    const active = isHrefActive(item.href);
+    return (
+      <Link
+        key={item.id}
+        href={item.href}
+        onClick={onClose}
+        aria-current={active ? 'page' : undefined}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium focus-visible-ring',
+          active
+            ? 'border border-primary-200 bg-primary-500/10 text-primary-600 dark:border-primary-900/50 dark:text-primary-400'
+            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white'
+        )}
+      >
+        <Icon className={cn('h-5 w-5 shrink-0', active ? 'text-primary-500' : '')} aria-hidden="true" />
+        <span className="font-display tracking-wide">{item.label}</span>
+      </Link>
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -119,27 +148,33 @@ export function MobileNavDrawer({
                 aria-label="Navegação principal (mobile)"
                 className="flex-1 space-y-1 overflow-y-auto overscroll-contain p-3"
               >
-                {items.map((item) => {
-                  const Icon = item.icon;
-                  const active = isHrefActive(item.href);
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      onClick={onClose}
-                      aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium focus-visible-ring',
-                        active
-                          ? 'border border-primary-200 bg-primary-500/10 text-primary-600 dark:border-primary-900/50 dark:text-primary-400'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white'
-                      )}
+                {NAV_TOP.map(renderItem)}
+
+                {families.map((fam) => (
+                  <div key={fam.id} className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleFamily(fam.id)}
+                      aria-expanded={!!openFamilies[fam.id]}
+                      className="flex w-full items-center gap-2 px-4 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 transition-colors hover:text-slate-600 focus-visible-ring dark:text-slate-500 dark:hover:text-slate-300"
                     >
-                      <Icon className={cn('h-5 w-5 shrink-0', active ? 'text-primary-500' : '')} aria-hidden="true" />
-                      <span className="font-display tracking-wide">{item.label}</span>
-                    </Link>
-                  );
-                })}
+                      <span className="font-display">{fam.label}</span>
+                      {!openFamilies[fam.id] && (
+                        <span className="rounded-full bg-slate-100 px-1.5 text-[10px] font-semibold normal-case tracking-normal text-slate-500 dark:bg-white/10 dark:text-slate-400">{fam.items.length}</span>
+                      )}
+                      {openFamilies[fam.id]
+                        ? <ChevronDown size={14} className="ml-auto shrink-0" aria-hidden="true" />
+                        : <ChevronRight size={14} className="ml-auto shrink-0" aria-hidden="true" />}
+                    </button>
+                    {openFamilies[fam.id] && (
+                      <div className="mt-1 space-y-1">
+                        {fam.items.map(renderItem)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {renderItem({ id: 'profile', label: 'Perfil', href: '/profile', icon: User })}
               </nav>
 
               {/* Rodapé com identificação do utilizador */}

@@ -29,33 +29,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard,
-  KanbanSquare,
-  Users,
   Settings,
   Sun,
   Moon,
-  BarChart3,
-  Inbox,
-  MessageSquare,
   Sparkles,
   LogOut,
   User,
   Bug,
-  CheckSquare,
-  Home,
   PanelLeftClose,
   PanelLeftOpen,
-  Target,
-  Archive,
-  Zap,
-  Activity,
-  Megaphone,
   Menu,
-  Filter,
-  Share2,
-  Brain,
-  Wallet
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -64,7 +49,7 @@ import { prefetchRoute, RouteName } from '@/lib/prefetch';
 import { isDebugMode, enableDebugMode, disableDebugMode } from '@/lib/debug';
 import { SkipLink } from '@/lib/a11y';
 import { useResponsiveMode } from '@/hooks/useResponsiveMode';
-import { NavigationRail, MobileNavDrawer } from '@/components/navigation';
+import { NavigationRail, MobileNavDrawer, NAV_TOP, NAV_FAMILIES, useNavFamilies, type NavEntry } from '@/components/navigation';
 import { useUnreadCount } from '@/lib/query/hooks/useConversationsQuery';
 
 // Lazy load AI Assistant (deprecated - using UIChat now)
@@ -281,6 +266,9 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   // Track the last clicked menu item to maintain highlight during Suspense transitions
   const [clickedPath, setClickedPath] = useState<string | undefined>(undefined);
 
+  // UX-1 NAV-IA: famílias colapsáveis da sidebar (estado lembrado pós-montagem).
+  const { openFamilies, toggleFamily } = useNavFamilies(pathname);
+
   // Clear clickedPath only when the clicked route actually becomes active
   React.useEffect(() => {
     if (clickedPath) {
@@ -308,6 +296,64 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Gera iniciais do email
   const userInitials = profile?.email?.substring(0, 2).toUpperCase() || 'U';
+
+  // UX-1: famílias visíveis (Saúde só para admin) + render dos dois modos.
+  const isAdminUser = profile?.role === 'admin';
+  const visibleFamilies = NAV_FAMILIES.map((fam) => ({
+    ...fam,
+    items: fam.items.filter((item) => !item.adminOnly || isAdminUser),
+  }));
+
+  const navBadgeFor = (id: string) => (id === 'messaging' ? unreadMessagesCount : undefined);
+
+  const renderExpandedEntry = (item: NavEntry) => (
+    <NavItem
+      key={item.id}
+      to={item.href}
+      icon={item.icon}
+      label={item.label}
+      prefetch={item.prefetch}
+      clickedPath={clickedPath}
+      onItemClick={setClickedPath}
+      badge={navBadgeFor(item.id)}
+    />
+  );
+
+  const renderCollapsedEntry = (item: NavEntry) => {
+    const badge = navBadgeFor(item.id);
+    return (
+      <TooltipProvider key={item.id} delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href={item.href}
+              onMouseEnter={() => item.prefetch && prefetchRoute(item.prefetch)}
+              onClick={() => setClickedPath(item.href)}
+              className={(() => {
+                const isActive = pathname === item.href || (item.href === '/boards' && pathname === '/pipeline');
+                const wasJustClicked = clickedPath === item.href;
+                // If user clicked on a DIFFERENT item, immediately deactivate this one
+                const anotherItemWasClicked = clickedPath && clickedPath !== item.href;
+                const isActuallyActive = anotherItemWasClicked ? false : (isActive || wasJustClicked);
+                return `relative w-10 h-10 rounded-lg flex items-center justify-center ${isActuallyActive
+                  ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-900/50'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                  }`;
+              })()}
+            >
+              <item.icon size={20} />
+              {badge !== undefined && badge > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-0.5 text-[9px] font-bold text-white bg-red-500 rounded-full shadow-sm">
+                  {badge > 99 ? '99+' : badge}
+                </span>
+              )}
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">{item.label}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
 
   if (!loading && !user) return null;
 
@@ -350,85 +396,47 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
         </div>
 
         <nav className={`flex-1 min-h-0 overflow-y-auto p-4 space-y-2 flex flex-col ${sidebarCollapsed ? 'items-center px-2' : ''}`} aria-label="Navegação do sistema">
-          {[
-            { to: '/inbox', icon: Inbox, label: 'Inbox', prefetch: 'inbox' as const, badge: undefined },
-            { to: '/messaging', icon: MessageSquare, label: 'Mensagens', prefetch: undefined, badge: unreadMessagesCount },
-            { to: '/dashboard', icon: LayoutDashboard, label: 'Visão Geral', prefetch: 'dashboard' as const, badge: undefined },
-            { to: '/cruzamentos', icon: Target, label: 'Cruzamentos', prefetch: undefined, badge: undefined },
-            { to: '/matches', icon: Inbox, label: 'Matches', prefetch: undefined, badge: undefined },
-      { to: '/ai/workflows/angariacao', icon: Sparkles, label: 'Angariação IA', prefetch: undefined, badge: undefined },
-            { to: '/boards', icon: KanbanSquare, label: 'Boards', prefetch: 'boards' as const, badge: undefined },
-            { to: '/contacts', icon: Users, label: 'Contactos', prefetch: 'contacts' as const, badge: undefined },
-            { to: '/imoveis', icon: Home, label: 'Imóveis', prefetch: undefined, badge: undefined },
-            { to: '/activities', icon: CheckSquare, label: 'Actividades', prefetch: 'activities' as const, badge: undefined },
-            { to: '/reports', icon: BarChart3, label: 'Relatórios', prefetch: 'reports' as const, badge: undefined },
-            { to: '/funil', icon: Filter, label: 'Funil', prefetch: undefined, badge: undefined },
-            { to: '/financeiro', icon: Wallet, label: 'Financeiro', prefetch: undefined, badge: undefined },
-            { to: '/anuncios', icon: Megaphone, label: 'Anúncios', prefetch: undefined, badge: undefined },
-            { to: '/organico', icon: Share2, label: 'Orgânico', prefetch: undefined, badge: undefined },
-            { to: '/cerebro', icon: Brain, label: 'Cérebro', prefetch: undefined, badge: undefined },
-            { to: '/criativos', icon: Archive, label: 'Criativos', prefetch: undefined, badge: undefined },
-            { to: '/automacoes', icon: Zap, label: 'Automações', prefetch: undefined, badge: undefined },
-            ...(profile?.role === 'admin' ? [{ to: '/admin/saude', icon: Activity, label: 'Saúde', prefetch: undefined, badge: undefined }] : []),
-            { to: '/settings', icon: Settings, label: 'Configurações', prefetch: 'settings' as const, badge: undefined },
-          ].map((item) => {
-            if (sidebarCollapsed) {
-              return (
-                <TooltipProvider key={item.to} delayDuration={200}>
-      {/* back-arrow */}
-      {showBack && (
-        <button type="button" onClick={handleBack} aria-label="Voltar" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 10px)' }} className="md:hidden fixed left-3 z-50 h-10 w-10 rounded-full bg-slate-900/90 backdrop-blur ring-1 ring-white/10 text-white shadow-lg flex items-center justify-center active:scale-95 transition">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-      )}
+          {/* back-arrow */}
+          {showBack && (
+            <button type="button" onClick={handleBack} aria-label="Voltar" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 10px)' }} className="md:hidden fixed left-3 z-50 h-10 w-10 rounded-full bg-slate-900/90 backdrop-blur ring-1 ring-white/10 text-white shadow-lg flex items-center justify-center active:scale-95 transition">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+          )}
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link
-                        href={item.to}
-                        onMouseEnter={() => item.prefetch && prefetchRoute(item.prefetch)}
-                        onClick={() => setClickedPath(item.to)}
-                        className={(() => {
-                          const isActive = pathname === item.to || (item.to === '/boards' && pathname === '/pipeline');
-                          const wasJustClicked = clickedPath === item.to;
-                          // If user clicked on a DIFFERENT item, immediately deactivate this one
-                          const anotherItemWasClicked = clickedPath && clickedPath !== item.to;
-                          const isActuallyActive = anotherItemWasClicked ? false : (isActive || wasJustClicked);
-                          return `relative w-10 h-10 rounded-lg flex items-center justify-center ${isActuallyActive
-                            ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-900/50'
-                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
-                            }`;
-                        })()}
-                      >
-                        <item.icon size={20} />
-                        {(item.badge ?? 0) > 0 && (
-                          <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-0.5 text-[9px] font-bold text-white bg-red-500 rounded-full shadow-sm">
-                            {item.badge! > 99 ? '99+' : item.badge}
-                          </span>
-                        )}
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      {item.label}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              );
-            }
+          {/* O dia a dia: sempre à vista, sem família */}
+          {NAV_TOP.map((item) => (sidebarCollapsed ? renderCollapsedEntry(item) : renderExpandedEntry(item)))}
 
-            return (
-              <NavItem
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                prefetch={item.prefetch}
-                clickedPath={clickedPath}
-                onItemClick={setClickedPath}
-                badge={item.badge}
-              />
-            );
-          })}
+          {/* Famílias colapsáveis (recolhido: ícones com separador fino) */}
+          {visibleFamilies.map((fam) =>
+            sidebarCollapsed ? (
+              <React.Fragment key={fam.id}>
+                <div className="h-px w-8 my-1 shrink-0 bg-slate-200/70 dark:bg-white/10" aria-hidden="true" />
+                {fam.items.map(renderCollapsedEntry)}
+              </React.Fragment>
+            ) : (
+              <div key={fam.id} className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => toggleFamily(fam.id)}
+                  aria-expanded={!!openFamilies[fam.id]}
+                  className="w-full flex items-center gap-2 px-4 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors focus-visible-ring"
+                >
+                  <span className="font-display">{fam.label}</span>
+                  {!openFamilies[fam.id] && (
+                    <span className="text-[10px] font-semibold normal-case tracking-normal rounded-full px-1.5 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400">{fam.items.length}</span>
+                  )}
+                  {openFamilies[fam.id]
+                    ? <ChevronDown size={14} className="ml-auto shrink-0" aria-hidden="true" />
+                    : <ChevronRight size={14} className="ml-auto shrink-0" aria-hidden="true" />}
+                </button>
+                {openFamilies[fam.id] && (
+                  <div className="mt-1 space-y-2">
+                    {fam.items.map(renderExpandedEntry)}
+                  </div>
+                )}
+              </div>
+            )
+          )}
         </nav>
 
         {/* Sidebar Toggle Button (Footer) - Only visible when collapsed */}
