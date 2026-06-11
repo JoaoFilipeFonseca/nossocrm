@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Play, Edit2, Power, PowerOff, CheckCircle2, XCircle, Clock, Settings2, RefreshCw } from 'lucide-react';
+import { Play, Edit2, Power, PowerOff, CheckCircle2, XCircle, Clock, Settings2, RefreshCw, ListTree, ChevronDown, ChevronRight, SlidersHorizontal } from 'lucide-react';
+import { SYSTEM_FLOWS, SYSTEM_FLOW_COMMON_NOTE } from '@/lib/automations/systemFlows';
 
 type SystemAutomation = {
   id: string;
@@ -55,6 +56,8 @@ export const SystemAutomationsSection: React.FC = () => {
   const [editValue, setEditValue] = useState('');
   const [editingParams, setEditingParams] = useState<string | null>(null);
   const [paramsValue, setParamsValue] = useState('');
+  // SYS-FLOW: que automação tem o fluxo aberto (vê-se a montagem passo a passo).
+  const [openFlow, setOpenFlow] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -141,7 +144,7 @@ export const SystemAutomationsSection: React.FC = () => {
             <Settings2 className="h-4 w-4" /> Sistema ({items.length})
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Automações operacionais do CRM. Liga/desliga, ajusta horário ou parâmetros sem código.
+            Automações operacionais do CRM. Vê o fluxo de cada uma, liga/desliga, ajusta horário ou parâmetros sem código.
           </p>
         </div>
         <button onClick={load} className="text-xs text-slate-500 hover:text-slate-900 inline-flex items-center gap-1">
@@ -248,13 +251,59 @@ export const SystemAutomationsSection: React.FC = () => {
                 </div>
               )}
 
-              <button
-                onClick={() => trigger(it)}
-                disabled={busy === it.key}
-                className="w-full mt-2 inline-flex items-center justify-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-300 hover:border-violet-400 hover:bg-violet-50 text-slate-700 hover:text-violet-700 transition-colors disabled:opacity-50"
-              >
-                <Play className="h-3 w-3" /> Disparar agora
-              </button>
+              <div className="flex gap-2 mt-2">
+                {SYSTEM_FLOWS[it.key] && (
+                  <button
+                    onClick={() => setOpenFlow(openFlow === it.key ? null : it.key)}
+                    aria-expanded={openFlow === it.key}
+                    className="flex-1 inline-flex items-center justify-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-300 hover:border-violet-400 hover:bg-violet-50 text-slate-700 hover:text-violet-700 transition-colors"
+                  >
+                    <ListTree className="h-3 w-3" /> {openFlow === it.key ? 'Fechar fluxo' : 'Ver fluxo'}
+                    {openFlow === it.key ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                  </button>
+                )}
+                <button
+                  onClick={() => trigger(it)}
+                  disabled={busy === it.key}
+                  className="flex-1 inline-flex items-center justify-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-300 hover:border-violet-400 hover:bg-violet-50 text-slate-700 hover:text-violet-700 transition-colors disabled:opacity-50"
+                >
+                  <Play className="h-3 w-3" /> Disparar agora
+                </button>
+              </div>
+
+              {/* SYS-FLOW: a montagem passo a passo, na linguagem das outras automações */}
+              {openFlow === it.key && SYSTEM_FLOWS[it.key] && (
+                <div className="mt-3 rounded-md border border-violet-200 bg-violet-50/50 p-3">
+                  <ol className="space-y-2">
+                    {SYSTEM_FLOWS[it.key].steps.map((step, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="shrink-0 w-5 h-5 rounded-full bg-white border border-violet-200 text-violet-700 text-[10px] font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold text-slate-900">
+                            <span className="mr-1">{step.icon}</span>{step.title}
+                          </div>
+                          <p className="text-[11px] text-slate-600 leading-snug">{step.detail}</p>
+                          {step.params && step.params.length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {step.params.map((p) => (
+                                <span key={p} className="inline-flex items-center gap-0.5 text-[10px] font-mono bg-white border border-violet-200 text-violet-700 rounded px-1.5 py-0.5">
+                                  <SlidersHorizontal className="h-2.5 w-2.5" /> {p}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                  {SYSTEM_FLOWS[it.key].note && (
+                    <p className="mt-2 text-[11px] text-violet-800 font-medium">{SYSTEM_FLOWS[it.key].note}</p>
+                  )}
+                  <p className="mt-2 pt-2 border-t border-violet-200 text-[10px] text-slate-500 leading-snug">
+                    {SYSTEM_FLOW_COMMON_NOTE}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         ))}
