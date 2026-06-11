@@ -24,8 +24,24 @@
 > 2. **CONSTRUIR:** ✅ **MA-PIXEL-OWNERSHIP FEITO** `[11/06 — veredicto: NÃO há terreno alheio; os 4
 >    pixéis/datasets são propriedade do Business do João 761569255551287, incluindo o "Outlier Agency";
 >    nenhuma agência com acesso de parceiro. Detalhe na secção D.]`
-> 3. **Depois (escolha do João):** **DASH-2** (lead scoring) ou **MKT-BIBLIOTECA**.
+> 3. **Depois (escolha do João):** ✅ escolhido a 11/06 → **MKT-BIBLIOTECA** (ver bloco abaixo). DASH-2 fica na fila.
 > Já feitos (reclassificar, não re-propor): INT-DOMAIN, MA-CAPI, MKT-MEASURE(construível), AUTO-1 pause-on-touch.
+
+> ## ▶️▶️▶️ PRÓXIMO DECIDIDO (11/06/2026 fim do dia) — MKT-BIBLIOTECA, decisões do João JÁ TOMADAS (não re-perguntar)
+> **Visão (palavras dele):** "além de criar quero poder GUARDAR posts, ideias, tudo relacionado com o negócio:
+> a minha brand, conteúdo de referência, o que já criei, o que já postei — ter TUDO, todos os activos digitais."
+> 1. **Coração do MVP = REPOSITÓRIO** de todos os activos (guardar/organizar/reencontrar/reutilizar/duplicar),
+>    com a CRIAÇÃO em cima. **Assenta no `/criativos`** (estender `creative_archive` + bucket `creative-archive`,
+>    NÃO duplicar; não inchar a barra).
+> 2. **Criação MVP — os 4 formatos:** criativos para anúncios Meta · posts orgânicos FB/IG · stories/reels
+>    (capas+textos) · flyers/one-pagers PDF.
+> 3. **Imagens: TEMPLATES da marca primeiro** (peças compostas com cores/fontes/logo/fotos dos imóveis,
+>    renderizadas pelo CRM). **SEM IA de imagem no MVP** (iteração futura).
+> 4. **Privacidade: só o link nas definições** (`organization_settings.privacy_policy_url` já existe; falta
+>    expor o campo na UI de definições — peça pequena dentro da biblioteca).
+> Recursos prontos a reusar: Brand Kit `/settings/marca`, creative_archive (15 tipos+métricas+UI), fotos dos
+> imóveis (URLs assinados), copy por canal do Agente de Divulgação (IMO-7), motor IA texto Gemini→Claude.
+> Hábito: maqueta primeiro.
 
 > ## 🔔 LEMBRETE COM DATA — 18/06/2026: remover a agência do Business Manager (João pediu 11/06)
 > **Acção do João (eu não posso mexer em permissões):** remover **Muhammad Seedat** (muhammad.contacto@gmail.com),
