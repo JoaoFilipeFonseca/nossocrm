@@ -73,27 +73,63 @@ function eur(n: number | null | undefined): string | null {
   return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 }
 
+function mimeFromMagic(buf: Buffer): string | null {
+  if (buf.length > 4 && buf[0] === 0x89 && buf[1] === 0x50) return 'image/png';
+  if (buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8) return 'image/jpeg';
+  return null;
+}
+
 /**
  * As fotos originais podem ter vários MB e o satori embute-as no SVG → o resvg
  * rebenta o limite do parser ("Buffer size limit exceeded"). Redimensionamos no
- * servidor (sharp, respeita a orientação EXIF) para um data URI leve.
+ * servidor para um data URI leve, com cadeia de recurso:
+ * 1) sharp (respeita a orientação EXIF);
+ * 2) o optimizador de imagens do próprio Next (lambda própria com sharp garantido);
+ * 3) o original cru, se for pequeno o suficiente.
  */
-async function fotoToDataUri(url: string): Promise<string | null> {
+async function fotoToDataUri(url: string, origin: string): Promise<string | null> {
+  let buf: Buffer | null = null;
   try {
     const res = await fetch(url);
-    if (!res.ok) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
-    const sharp = (await import('sharp')).default;
-    const out = await sharp(buf)
-      .rotate()
-      .resize({ width: 1400, withoutEnlargement: true })
-      .jpeg({ quality: 80 })
-      .toBuffer();
-    return `data:image/jpeg;base64,${out.toString('base64')}`;
+    if (res.ok) buf = Buffer.from(await res.arrayBuffer());
   } catch (e) {
-    console.error('[criativos/render] foto resize falhou:', e);
-    return null;
+    console.error('[criativos/render] download da foto falhou:', e);
   }
+
+  if (buf) {
+    try {
+      const sharp = (await import('sharp')).default;
+      const out = await sharp(buf)
+        .rotate()
+        .resize({ width: 1400, withoutEnlargement: true })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+      return `data:image/jpeg;base64,${out.toString('base64')}`;
+    } catch (e) {
+      console.error('[criativos/render] sharp indisponível, a usar o optimizador:', e);
+    }
+  }
+
+  try {
+    const opt = await fetch(`${origin}/_next/image?url=${encodeURIComponent(url)}&w=1080&q=75`, {
+      headers: { accept: 'image/jpeg' },
+    });
+    if (opt.ok) {
+      const ct = (opt.headers.get('content-type') || '').split(';')[0];
+      if (ct === 'image/jpeg' || ct === 'image/png') {
+        const b = Buffer.from(await opt.arrayBuffer());
+        if (b.length < 8 * 1024 * 1024) return `data:${ct};base64,${b.toString('base64')}`;
+      }
+    }
+  } catch (e) {
+    console.error('[criativos/render] optimizador falhou:', e);
+  }
+
+  if (buf && buf.length < 3 * 1024 * 1024) {
+    const mime = mimeFromMagic(buf);
+    if (mime) return `data:${mime};base64,${buf.toString('base64')}`;
+  }
+  return null;
 }
 
 export async function POST(req: Request) {
@@ -151,7 +187,7 @@ export async function POST(req: Request) {
       }
       if (fotoPath) {
         const { data: signed } = await supabase.storage.from('imovel-fotos').createSignedUrl(fotoPath, 600);
-        fotoUrl = signed?.signedUrl ? await fotoToDataUri(signed.signedUrl) : null;
+        fotoUrl = signed?.signedUrl ? await fotoToDataUri(signed.signedUrl, new URL(req.url).origin) : null;
       }
 
       const detalhes = [
