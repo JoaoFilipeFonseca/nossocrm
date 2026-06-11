@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — Barra lateral por famílias (UX-1 NAV-IA)</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin:0; background:#f8fafc; color:#0f172a; }
+  .wrap { max-width:1060px; margin:0 auto; padding:24px; }
+  h1 { font-size:19px; margin:0 0 2px; }
+  .muted { color:#64748b; font-size:12.5px; }
+  .cols { display:flex; gap:22px; margin-top:18px; flex-wrap:wrap; align-items:flex-start; }
+  .panel { background:#fff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; }
+  .panel h3 { margin:0; padding:10px 14px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:#64748b; border-bottom:1px solid #eef2f7; background:#f8fafc; }
+  .sidebar { width:248px; padding:10px; }
+  .sidebar.old { width:218px; }
+  .item { display:flex; align-items:center; gap:10px; padding:7px 11px; border-radius:9px; font-size:13px; color:#475569; }
+  .item .ic { width:17px; text-align:center; }
+  .item.active { background:#eff6ff; color:#1d4ed8; font-weight:600; border:1px solid #bfdbfe; }
+  .item .badge { margin-left:auto; background:#ef4444; color:#fff; font-size:10px; font-weight:700; border-radius:999px; padding:1px 6px; }
+  .old .item { padding:4.5px 11px; }
+  .fam { margin-top:8px; }
+  .fam-head { display:flex; align-items:center; gap:7px; padding:6px 11px 4px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#94a3b8; cursor:pointer; user-select:none; }
+  .fam-head .chev { margin-left:auto; font-size:10px; color:#cbd5e1; }
+  .fam.closed .item { display:none; }
+  .fam.closed .fam-head .chev::before { content:"▸"; }
+  .fam.open .fam-head .chev::before { content:"▾"; }
+  .count { font-size:9.5px; background:#f1f5f9; color:#64748b; border-radius:999px; padding:1px 6px; font-weight:600; }
+  .sep { border-top:1px solid #eef2f7; margin:10px 4px 2px; }
+  .user { display:flex; align-items:center; gap:9px; margin:10px 4px 4px; padding:9px; border:1px solid #eef2f7; border-radius:11px; background:#f8fafc; font-size:12px; }
+  .user .av { width:30px; height:30px; border-radius:50%; background:#dbeafe; color:#1d4ed8; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .note { font-size:12.5px; color:#475569; max-width:480px; }
+  .note b { color:#0f172a; }
+  .note ul { padding-left:18px; margin:8px 0; }
+  .note li { margin:5px 0; }
+  .pill { display:inline-block; font-size:10px; font-weight:700; border-radius:6px; padding:1px 7px; background:#f0fdf4; color:#15803d; margin-right:5px; }
+  .pill.warn { background:#fff7ed; color:#c2410c; }
+  .mob { width:300px; }
+  .mob .item { font-size:13px; }
+  .scroll-hint { font-size:10.5px; color:#cbd5e1; text-align:center; padding:4px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧭 UX-1 — Barra lateral arrumada por famílias</h1>
+  <p class="muted">Hoje são 20 itens à fila (lista de compras). Proposta: 5 famílias, com o dia a dia sempre à vista e o resto colapsável. Zero rotas novas, zero páginas mexidas — só arrumação.</p>
+
+  <div class="cols">
+
+    <!-- ANTES -->
+    <div class="panel old">
+      <h3>Hoje (20 itens, rolar para ver tudo)</h3>
+      <div class="sidebar old">
+        <div class="item"><span class="ic">📥</span> Inbox</div>
+        <div class="item"><span class="ic">💬</span> Mensagens <span class="badge">3</span></div>
+        <div class="item"><span class="ic">📊</span> Visão Geral</div>
+        <div class="item"><span class="ic">🎯</span> Cruzamentos</div>
+        <div class="item"><span class="ic">📥</span> Matches</div>
+        <div class="item"><span class="ic">✨</span> Angariação IA</div>
+        <div class="item active"><span class="ic">🗂️</span> Boards</div>
+        <div class="item"><span class="ic">👥</span> Contactos</div>
+        <div class="item"><span class="ic">🏠</span> Imóveis</div>
+        <div class="item"><span class="ic">✅</span> Actividades</div>
+        <div class="item"><span class="ic">📈</span> Relatórios</div>
+        <div class="item"><span class="ic">🔻</span> Funil</div>
+        <div class="item"><span class="ic">💼</span> Financeiro</div>
+        <div class="item"><span class="ic">📣</span> Anúncios</div>
+        <div class="item"><span class="ic">🔗</span> Orgânico</div>
+        <div class="item"><span class="ic">🧠</span> Cérebro</div>
+        <div class="item"><span class="ic">🗃️</span> Criativos</div>
+        <div class="item"><span class="ic">⚡</span> Automações</div>
+        <div class="item"><span class="ic">🫀</span> Saúde</div>
+        <div class="item"><span class="ic">⚙️</span> Configurações</div>
+        <div class="scroll-hint">⌄ é preciso rolar ⌄</div>
+      </div>
+    </div>
+
+    <!-- DEPOIS -->
+    <div class="panel">
+      <h3>Proposta (famílias; aqui com "Vendas" aberta)</h3>
+      <div class="sidebar">
+        <div class="item"><span class="ic">📥</span> Inbox</div>
+        <div class="item"><span class="ic">💬</span> Mensagens <span class="badge">3</span></div>
+        <div class="item"><span class="ic">✅</span> Actividades</div>
+
+        <div class="fam open">
+          <div class="fam-head">Vendas <span class="chev"></span></div>
+          <div class="item active"><span class="ic">🗂️</span> Boards</div>
+          <div class="item"><span class="ic">👥</span> Contactos</div>
+          <div class="item"><span class="ic">🏠</span> Imóveis</div>
+          <div class="item"><span class="ic">🎯</span> Cruzamentos</div>
+          <div class="item"><span class="ic">📥</span> Matches</div>
+        </div>
+
+        <div class="fam closed">
+          <div class="fam-head">Marketing <span class="count">4</span><span class="chev"></span></div>
+          <div class="item"><span class="ic">📣</span> Anúncios</div>
+          <div class="item"><span class="ic">🔗</span> Orgânico</div>
+          <div class="item"><span class="ic">🗃️</span> Criativos</div>
+          <div class="item"><span class="ic">✨</span> Angariação IA</div>
+        </div>
+
+        <div class="fam closed">
+          <div class="fam-head">Análise <span class="count">5</span><span class="chev"></span></div>
+          <div class="item"><span class="ic">📊</span> Visão Geral</div>
+          <div class="item"><span class="ic">🔻</span> Funil</div>
+          <div class="item"><span class="ic">📈</span> Relatórios</div>
+          <div class="item"><span class="ic">💼</span> Financeiro</div>
+          <div class="item"><span class="ic">🧠</span> Cérebro</div>
+        </div>
+
+        <div class="fam closed">
+          <div class="fam-head">Sistema <span class="count">3</span><span class="chev"></span></div>
+          <div class="item"><span class="ic">⚡</span> Automações</div>
+          <div class="item"><span class="ic">🫀</span> Saúde</div>
+          <div class="item"><span class="ic">⚙️</span> Configurações</div>
+        </div>
+
+        <div class="sep"></div>
+        <div class="user"><span class="av">JF</span> João Fonseca<br/><span class="muted">Perfil · Sair</span></div>
+      </div>
+    </div>
+
+    <!-- NOTAS -->
+    <div class="note">
+      <p><b>Como funciona:</b></p>
+      <ul>
+        <li><b>O dia a dia fica sempre à vista</b> (Inbox, Mensagens, Actividades) — sem cabeçalho, sem cliques a mais.</li>
+        <li><b>4 famílias colapsáveis:</b> Vendas, Marketing, Análise, Sistema. Clique no cabeçalho abre/fecha.</li>
+        <li><b>A família do sítio onde estás abre sozinha</b> (se estás em /funil, "Análise" está aberta).</li>
+        <li><b>Lembra o que deixaste aberto</b> (guardado no dispositivo, aplicado depois de montar — sem risco de #418).</li>
+        <li><b>Modo recolhido (só ícones):</b> mantém-se como está, com separadores finos entre famílias.</li>
+        <li><b>Gaveta mobile:</b> espelha as mesmas famílias (acordeão).</li>
+        <li><span class="pill">Zero risco</span> nenhuma rota muda, nenhuma página mexe; só a arrumação do menu.</li>
+        <li><span class="pill warn">Nota</span> "Saúde" continua só para admin, dentro de Sistema.</li>
+      </ul>
+      <p><b>Vista por omissão</b> (tudo fechado): 3 itens + 4 cabeçalhos = <b>cabe sem rolar</b>, até num portátil pequeno.</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
