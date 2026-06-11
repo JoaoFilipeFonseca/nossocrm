@@ -22,6 +22,15 @@
 // ============================================================================
 
 import type { AtomDefinition, AtomOutput, ExecutionContext } from '../../types';
+import {
+  appendComplianceFooter,
+  buildUnsubscribeUrl,
+  DEFAULT_PRIVACY_POLICY_URL,
+  escapeIlike,
+  unsubscribeToken,
+} from '@/lib/messaging/emailCompliance';
+
+const APP_BASE_URL = process.env.APP_URL || 'https://crm.joaofilipefonseca.pt';
 
 interface ResendCreds {
   apiKey?: string;
@@ -91,6 +100,20 @@ export const actionSendEmail: AtomDefinition = {
     if (!subject) throw new Error('subject é obrigatório');
     if (!text) throw new Error('text é obrigatório');
 
+    // RGPD (MKT-SEQUENCES Fatia 1): contacto com opt-out nunca recebe.
+    // Não é erro — a automação continua; devolve skipped para auditoria.
+    const { data: optedOut, error: optErr } = await context.supabase
+      .from('contacts')
+      .select('id')
+      .eq('organization_id', context.organizationId)
+      .eq('email_opt_out', true)
+      .ilike('email', escapeIlike(to))
+      .limit(1);
+    if (optErr) throw new Error(`Falha a verificar opt-out: ${optErr.message}`);
+    if (optedOut && optedOut.length > 0) {
+      return { ok: false, skipped: 'opt_out', to, checked_at: new Date().toISOString() };
+    }
+
     // Carregar canal: override OU 1º Resend connected
     let channelQuery = context.supabase
       .from('messaging_channels')
@@ -126,14 +149,37 @@ export const actionSendEmail: AtomDefinition = {
     const fromHeader = creds.fromName ? `${creds.fromName} <${creds.fromEmail}>` : creds.fromEmail;
     const replyTo = replyToOverride || creds.replyTo;
 
+    // RGPD: rodapé com anular subscrição (token HMAC) + política de privacidade.
+    let unsubscribeUrl: string | null = null;
+    const { data: unsubSecret } = await context.supabase.rpc('get_email_unsubscribe_secret');
+    if (typeof unsubSecret === 'string' && unsubSecret.length > 0) {
+      const token = await unsubscribeToken(context.organizationId, to, unsubSecret);
+      unsubscribeUrl = buildUnsubscribeUrl(APP_BASE_URL, context.organizationId, to, token);
+    }
+    const { data: orgSettings } = await context.supabase
+      .from('organization_settings')
+      .select('privacy_policy_url')
+      .eq('organization_id', context.organizationId)
+      .maybeSingle();
+    const privacyPolicyUrl =
+      (orgSettings as { privacy_policy_url?: string | null } | null)?.privacy_policy_url || DEFAULT_PRIVACY_POLICY_URL;
+    const footered = appendComplianceFooter({
+      text,
+      html,
+      senderName: creds.fromName || creds.fromEmail,
+      unsubscribeUrl,
+      privacyPolicyUrl,
+    });
+
     const body: Record<string, unknown> = {
       from: fromHeader,
       to: [to],
       subject,
-      text,
+      text: footered.text,
     };
-    if (html) body.html = html;
+    if (footered.html) body.html = footered.html;
     if (replyTo) body.reply_to = replyTo;
+    if (unsubscribeUrl) body.headers = { 'List-Unsubscribe': `<${unsubscribeUrl}>` };
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',

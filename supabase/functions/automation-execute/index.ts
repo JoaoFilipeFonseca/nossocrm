@@ -186,7 +186,9 @@ const ATOMS: Record<string, AtomExecFn> = {
   },
 
   // action.send_email — envia via canal Resend connected da org (messaging_channels).
-  // Paridade com lib/automation-engine/plugins/actions/send-email.ts.
+  // Paridade com lib/automation-engine/plugins/actions/send-email.ts (incl. RGPD:
+  // opt-out + rodapé de anular subscrição/política — lógica espelhada de
+  // lib/messaging/emailCompliance.ts; mexer lá = mexer aqui).
   "action.send_email": async (ctx) => {
     const to = String(ctx.config.to ?? "").trim();
     const subject = String(ctx.config.subject ?? "").trim();
@@ -198,6 +200,19 @@ const ATOMS: Record<string, AtomExecFn> = {
     if (!to || !EMAIL_RE.test(to)) throw new Error(`to (email) inválido: ${to}`);
     if (!subject) throw new Error("subject é obrigatório");
     if (!text) throw new Error("text é obrigatório");
+
+    // RGPD (MKT-SEQUENCES Fatia 1): contacto com opt-out nunca recebe.
+    const { data: optedOut, error: optErr } = await ctx.supabase
+      .from("contacts")
+      .select("id")
+      .eq("organization_id", ctx.organizationId)
+      .eq("email_opt_out", true)
+      .ilike("email", to.replace(/[\\%_]/g, (m) => `\\${m}`))
+      .limit(1);
+    if (optErr) throw new Error(`Falha a verificar opt-out: ${optErr.message}`);
+    if (optedOut && optedOut.length > 0) {
+      return { ok: false, skipped: "opt_out", to, checked_at: new Date().toISOString() };
+    }
 
     let q = ctx.supabase
       .from("messaging_channels")
@@ -221,9 +236,56 @@ const ATOMS: Record<string, AtomExecFn> = {
     if (!creds.apiKey || !creds.fromEmail) throw new Error("Credenciais Resend incompletas (apiKey e fromEmail obrigatórios)");
     const fromHeader = creds.fromName ? `${creds.fromName} <${creds.fromEmail}>` : creds.fromEmail;
     const replyTo = replyToOverride || creds.replyTo;
-    const emailBody: Record<string, unknown> = { from: fromHeader, to: [to], subject, text };
-    if (html) emailBody.html = html;
+
+    // RGPD: rodapé com anular subscrição (HMAC do Vault) + política de privacidade.
+    let unsubscribeUrl: string | null = null;
+    const { data: unsubSecret } = await ctx.supabase.rpc("get_email_unsubscribe_secret");
+    if (typeof unsubSecret === "string" && unsubSecret.length > 0) {
+      const encUn = new TextEncoder();
+      const hmacKey = await crypto.subtle.importKey(
+        "raw", encUn.encode(unsubSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+      );
+      const sig = await crypto.subtle.sign(
+        "HMAC", hmacKey, encUn.encode(`${ctx.organizationId}:${to.toLowerCase()}`),
+      );
+      const tokenHex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      const unsubBase = Deno.env.get("CRM_APP_BASE_URL") ?? "https://crm.joaofilipefonseca.pt";
+      const u = new URL("/unsubscribe", unsubBase);
+      u.searchParams.set("o", ctx.organizationId);
+      u.searchParams.set("e", to.toLowerCase());
+      u.searchParams.set("t", tokenHex);
+      unsubscribeUrl = u.toString();
+    }
+    const { data: orgPrivacy } = await ctx.supabase
+      .from("organization_settings")
+      .select("privacy_policy_url")
+      .eq("organization_id", ctx.organizationId)
+      .maybeSingle();
+    const privacyPolicyUrl = (orgPrivacy as { privacy_policy_url?: string | null } | null)?.privacy_policy_url
+      || "https://joaofilipefonseca.pt/privacidade";
+    const senderName = creds.fromName || creds.fromEmail;
+    const reason = `Recebeu este email porque partilhou o seu contacto com ${senderName}.`;
+    const textFooterLines = ["", "", "____________________", "", reason];
+    if (unsubscribeUrl) textFooterLines.push(`Anular subscrição: ${unsubscribeUrl}`);
+    textFooterLines.push(`Política de privacidade: ${privacyPolicyUrl}`);
+    const footeredText = `${text}${textFooterLines.join("\n")}`;
+    let footeredHtml: string | undefined;
+    if (html) {
+      const links = [
+        unsubscribeUrl
+          ? `<a href="${unsubscribeUrl}" style="color:#64748b;text-decoration:underline;">Anular subscrição</a>`
+          : null,
+        `<a href="${privacyPolicyUrl}" style="color:#64748b;text-decoration:underline;">Política de privacidade</a>`,
+      ].filter(Boolean).join(" &nbsp;·&nbsp; ");
+      footeredHtml = `${html}<div style="margin-top:28px;padding-top:14px;border-top:1px solid #e2e8f0;`
+        + `font-size:12px;line-height:1.6;color:#64748b;font-family:Arial,Helvetica,sans-serif;">`
+        + `<p style="margin:0 0 6px;">${reason}</p><p style="margin:0;">${links}</p></div>`;
+    }
+
+    const emailBody: Record<string, unknown> = { from: fromHeader, to: [to], subject, text: footeredText };
+    if (footeredHtml) emailBody.html = footeredHtml;
     if (replyTo) emailBody.reply_to = replyTo;
+    if (unsubscribeUrl) emailBody.headers = { "List-Unsubscribe": `<${unsubscribeUrl}>` };
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${creds.apiKey}` },
@@ -384,7 +446,7 @@ const ATOMS: Record<string, AtomExecFn> = {
   "action.run_ai": async (ctx) => {
     const prompt = String(ctx.config.prompt ?? "").trim();
     if (!prompt) throw new Error("prompt é obrigatório");
-    const appBase = Deno.env.get("CRM_APP_BASE_URL") ?? "https://crm-joao.vercel.app";
+    const appBase = Deno.env.get("CRM_APP_BASE_URL") ?? "https://crm.joaofilipefonseca.pt";
     const serviceKey = Deno.env.get("CRM_SUPABASE_SECRET_KEY") ?? Deno.env.get("CRM_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     if (!serviceKey) throw new Error("service_role key em falta no Edge Function env");
 
