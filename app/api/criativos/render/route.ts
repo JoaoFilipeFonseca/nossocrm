@@ -73,6 +73,29 @@ function eur(n: number | null | undefined): string | null {
   return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 }
 
+/**
+ * As fotos originais podem ter vários MB e o satori embute-as no SVG → o resvg
+ * rebenta o limite do parser ("Buffer size limit exceeded"). Redimensionamos no
+ * servidor (sharp, respeita a orientação EXIF) para um data URI leve.
+ */
+async function fotoToDataUri(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    const sharp = (await import('sharp')).default;
+    const out = await sharp(buf)
+      .rotate()
+      .resize({ width: 1400, withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    return `data:image/jpeg;base64,${out.toString('base64')}`;
+  } catch (e) {
+    console.error('[criativos/render] foto resize falhou:', e);
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   if (!isAllowedOrigin(req)) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -128,7 +151,7 @@ export async function POST(req: Request) {
       }
       if (fotoPath) {
         const { data: signed } = await supabase.storage.from('imovel-fotos').createSignedUrl(fotoPath, 600);
-        fotoUrl = signed?.signedUrl ?? null;
+        fotoUrl = signed?.signedUrl ? await fotoToDataUri(signed.signedUrl) : null;
       }
 
       const detalhes = [
