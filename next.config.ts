@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BUILD_TAG: buildVersionTag(),
   },
+  // As fontes dos templates da marca são lidas por fs no render serverless (MKT-BIBLIOTECA).
+  outputFileTracingIncludes: {
+    '/api/criativos/render': ['./assets/fonts/**'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co' },

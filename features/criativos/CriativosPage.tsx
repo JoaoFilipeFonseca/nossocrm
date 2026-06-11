@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Archive, Star, Search, Filter, X, Mail, MessageCircle, Smartphone, Megaphone, FileText, Image as ImageIcon, FileCheck2, BookOpen, Pin, Trash2, Copy as CopyIcon, Plus, Upload, Lightbulb, Bookmark, PenLine, Home, Download, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddPieceModal, ADD_MODE_META, type AddMode } from './AddPieceModal';
+import { CreateStudio } from './CreateStudio';
 import { ImovelSearchCombobox, imovelLabel, type ImovelLite } from '@/components/ui/ImovelSearchCombobox';
 import {
   TYPE_LABELS as SHARED_TYPE_LABELS,
@@ -128,6 +129,14 @@ export const CriativosPage: React.FC = () => {
   const [addMode, setAddMode] = useState<AddMode | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
+  const [tab, setTab] = useState<'biblioteca' | 'criar'>('biblioteca');
+
+  // ?tab=criar abre a aba Criar (lido pós-montagem, sem mexer na hidratação).
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tab') === 'criar') {
+      setTab('criar');
+    }
+  }, []);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -227,7 +236,7 @@ export const CriativosPage: React.FC = () => {
             Todos os seus activos digitais: o que criou, importou e guardou como referência. Tudo fica guardado até apagar.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className={`flex items-center gap-3 ${tab === 'criar' ? 'hidden md:flex md:invisible' : ''}`}>
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {loading ? 'A carregar…' : `${filtered.length} ${filtered.length === 1 ? 'peça' : 'peças'}`}
           </span>
@@ -260,6 +269,28 @@ export const CriativosPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Abas Biblioteca / Criar (decisão MKT-BIBLIOTECA: tudo dentro do mesmo item, sem inchar a barra) */}
+      <div className="flex gap-1 border-b border-slate-200 dark:border-white/10 mb-6">
+        {([['biblioteca', '📚 Biblioteca'], ['criar', '✨ Criar']] as const).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors ${
+              tab === id
+                ? 'border-primary-600 text-slate-900 dark:text-white'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'criar' && (
+        <CreateStudio onSaved={() => { setTab('biblioteca'); load(); }} />
+      )}
+
+      {tab === 'biblioteca' && (<>
       {/* Search + filter bar */}
       <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-3">
@@ -524,6 +555,8 @@ export const CriativosPage: React.FC = () => {
           );
         })}
       </div>
+
+      </>)}
 
       {/* Add modal */}
       {addMode && (

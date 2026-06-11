@@ -1,0 +1,255 @@
+/**
+ * MKT-BIBLIOTECA Fatia 2 — POST /api/criativos/render
+ *
+ * Renderiza uma peça dos templates da marca no servidor (determinista, sem IA de imagem):
+ * cores/identidade do Brand Kit + foto do imóvel (URL assinado) + textos aprovados.
+ * - preview=true → devolve a imagem PNG (não guarda nada).
+ * - sem preview → PNG (ou PDF no flyer) vai para o bucket privado creative-archive e
+ *   nasce uma peça NOVA na biblioteca (versões, nunca sobrescreve; render_spec guarda
+ *   os parâmetros para duplicar/editar um detalhe).
+ */
+import crypto from 'crypto';
+import { ImageResponse } from 'next/og';
+import fs from 'fs';
+import path from 'path';
+import { z } from 'zod';
+import { PDFDocument } from 'pdf-lib';
+import { createClient } from '@/lib/supabase/server';
+import { createStaticAdminClient } from '@/lib/supabase/staticAdminClient';
+import { isAllowedOrigin } from '@/lib/security/sameOrigin';
+import {
+  buildTemplate,
+  brandFromKit,
+  dimensionsFor,
+  FORMAT_LABELS,
+  type RenderFormat,
+  type RenderRatio,
+  type TemplateVariant,
+  type TemplateImovel,
+} from '@/lib/criativos/templates';
+import type { CreativeType } from '@/lib/criativos/shared';
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+const BodySchema = z.object({
+  format: z.enum(['anuncio', 'post', 'story', 'flyer']),
+  ratio: z.enum(['square', 'portrait']).default('square'),
+  variant: z.enum(['classico', 'faixa']).default('classico'),
+  imovel_id: z.string().uuid().nullable().optional(),
+  foto_path: z.string().max(400).nullable().optional(),
+  texts: z.object({
+    headline: z.string().min(1).max(90),
+    sub: z.string().max(160).nullable().optional(),
+    cta: z.string().max(70).nullable().optional(),
+    descricao: z.string().max(600).nullable().optional(),
+    destaques: z.array(z.string().max(80)).max(6).optional(),
+  }),
+  legenda: z.string().max(3000).nullable().optional(),
+  preview: z.boolean().default(false),
+  parent_id: z.string().uuid().nullable().optional(),
+}).strict();
+
+const TYPE_FOR_FORMAT: Record<RenderFormat, CreativeType> = {
+  anuncio: 'banner',
+  post: 'organic_post',
+  story: 'story_cover',
+  flyer: 'flyer',
+};
+
+const CHANNEL_FOR_FORMAT: Record<RenderFormat, string> = {
+  anuncio: 'meta_ads',
+  post: 'facebook_instagram',
+  story: 'instagram',
+  flyer: 'impressao',
+};
+
+function loadFont(file: string): Buffer {
+  return fs.readFileSync(path.join(process.cwd(), 'assets', 'fonts', file));
+}
+
+function eur(n: number | null | undefined): string | null {
+  if (n == null) return null;
+  return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+}
+
+export async function POST(req: Request) {
+  if (!isAllowedOrigin(req)) return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('organization_id')
+    .eq('id', user.id)
+    .single();
+  const orgId = profile?.organization_id as string | undefined;
+  if (!orgId) return Response.json({ error: 'Profile not found' }, { status: 404 });
+
+  const raw = await req.json().catch(() => null);
+  const parsed = BodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return Response.json({ error: 'Invalid payload', details: parsed.error.flatten() }, { status: 400 });
+  }
+  const body = parsed.data;
+
+  try {
+    // Brand Kit (service-role; leitura é segura, só campos de identidade pública).
+    const admin = createStaticAdminClient();
+    const { data: kit } = await admin
+      .from('ai_brand_kits')
+      .select('brand_primary_color, brand_accent_color, nome_profissional, cargo, ami, telefone, website')
+      .eq('organization_id', orgId)
+      .maybeSingle();
+    const brand = brandFromKit(kit);
+
+    // Imóvel + foto (RLS valida a org; URL assinado de 10 minutos só para o render).
+    let imovel: TemplateImovel | null = null;
+    if (body.imovel_id) {
+      const { data: im } = await supabase
+        .from('imoveis')
+        .select('id, titulo_anuncio, tipo, tipologia, concelho, freguesia, preco_actual, area_util, quartos, wcs')
+        .eq('id', body.imovel_id)
+        .maybeSingle();
+      if (!im) return Response.json({ error: 'Imóvel não encontrado' }, { status: 404 });
+
+      let fotoUrl: string | null = null;
+      let fotoPath = body.foto_path ?? null;
+      if (!fotoPath) {
+        const { data: fotos } = await supabase
+          .from('imovel_fotos')
+          .select('storage_path, is_principal, ordem')
+          .eq('imovel_id', body.imovel_id)
+          .order('is_principal', { ascending: false })
+          .order('ordem', { ascending: true })
+          .limit(1);
+        fotoPath = fotos?.[0]?.storage_path ?? null;
+      }
+      if (fotoPath) {
+        const { data: signed } = await supabase.storage.from('imovel-fotos').createSignedUrl(fotoPath, 600);
+        fotoUrl = signed?.signedUrl ?? null;
+      }
+
+      const detalhes = [
+        im.tipologia || im.tipo,
+        im.area_util ? `${im.area_util} m²` : null,
+        im.quartos != null ? `${im.quartos} quartos` : null,
+        im.wcs != null ? `${im.wcs} WC` : null,
+      ].filter(Boolean).slice(0, 3).join(' · ');
+
+      imovel = {
+        titulo: (im.titulo_anuncio as string | null) || [im.tipologia, im.concelho].filter(Boolean).join(' em ') || 'Imóvel',
+        local: [im.freguesia, im.concelho].filter(Boolean).join(', ') || null,
+        preco: eur(im.preco_actual as number | null),
+        detalhes: detalhes || null,
+        fotoUrl,
+      };
+    }
+
+    const format = body.format as RenderFormat;
+    const ratio = body.ratio as RenderRatio;
+    const variant = body.variant as TemplateVariant;
+    const { width, height } = dimensionsFor(format, ratio);
+
+    const element = buildTemplate({
+      variant,
+      format,
+      ratio,
+      brand,
+      imovel,
+      texts: {
+        headline: body.texts.headline,
+        sub: body.texts.sub ?? null,
+        cta: body.texts.cta ?? null,
+        descricao: body.texts.descricao ?? null,
+        destaques: body.texts.destaques ?? [],
+      },
+    });
+
+    const image = new ImageResponse(element, {
+      width,
+      height,
+      fonts: [
+        { name: 'Inter', data: loadFont('inter-400.woff'), weight: 400, style: 'normal' },
+        { name: 'Inter', data: loadFont('inter-700.woff'), weight: 700, style: 'normal' },
+      ],
+    });
+    const png = Buffer.from(await image.arrayBuffer());
+
+    if (body.preview) {
+      return new Response(new Uint8Array(png), {
+        headers: { 'content-type': 'image/png', 'cache-control': 'no-store' },
+      });
+    }
+
+    // Flyer → embrulhar o PNG num PDF A4.
+    let fileBytes: Buffer = png;
+    let mime = 'image/png';
+    let ext = 'png';
+    if (format === 'flyer') {
+      const pdf = await PDFDocument.create();
+      const page = pdf.addPage([595.28, 841.89]); // A4 em pontos
+      const embedded = await pdf.embedPng(new Uint8Array(png));
+      page.drawImage(embedded, { x: 0, y: 0, width: 595.28, height: 841.89 });
+      fileBytes = Buffer.from(await pdf.save());
+      mime = 'application/pdf';
+      ext = 'pdf';
+    }
+
+    const storagePath = `${orgId}/gerados/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from('creative-archive')
+      .upload(storagePath, fileBytes, { contentType: mime, upsert: false });
+    if (upErr) {
+      console.error('[criativos/render] storage error:', upErr);
+      return Response.json({ error: 'Falhou guardar a peça no cofre' }, { status: 500 });
+    }
+
+    const dims = `${width}×${height}`;
+    const title = `${FORMAT_LABELS[format]} — ${body.texts.headline}`.slice(0, 120);
+    const { data: inserted, error: dbErr } = await supabase
+      .from('creative_archive')
+      .insert({
+        organization_id: orgId,
+        owner_id: user.id,
+        type: TYPE_FOR_FORMAT[format],
+        channel: CHANNEL_FOR_FORMAT[format],
+        origin: 'created',
+        source: 'auto_generator',
+        status: 'draft',
+        title,
+        content: body.legenda?.trim() || [body.texts.headline, body.texts.sub, body.texts.cta].filter(Boolean).join('\n'),
+        tags: [format, dims],
+        imovel_id: body.imovel_id ?? null,
+        parent_id: body.parent_id ?? null,
+        file_path: storagePath,
+        file_name: `${format}-${dims}.${ext}`,
+        file_size: fileBytes.length,
+        mime_type: mime,
+        render_spec: {
+          format,
+          ratio,
+          variant,
+          imovel_id: body.imovel_id ?? null,
+          foto_path: body.foto_path ?? null,
+          texts: body.texts,
+          legenda: body.legenda ?? null,
+          dims,
+        },
+      })
+      .select('id')
+      .single();
+
+    if (dbErr) {
+      await supabase.storage.from('creative-archive').remove([storagePath]).catch(() => {});
+      console.error('[criativos/render] db error:', dbErr);
+      return Response.json({ error: dbErr.message }, { status: 500 });
+    }
+
+    return Response.json({ ok: true, id: inserted.id }, { status: 201 });
+  } catch (e) {
+    console.error('[criativos/render] error:', e);
+    return Response.json({ error: e instanceof Error ? e.message : 'Falhou o render' }, { status: 500 });
+  }
+}
