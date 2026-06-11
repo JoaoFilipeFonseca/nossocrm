@@ -64,6 +64,13 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
+  // DADOS nunca passam pelo cache do SW: APIs internas (/api/*) e chamadas
+  // cross-origin (Supabase REST/Storage, URLs assinados). Com SWR nestes
+  // pedidos, leituras pós-escrita devolviam respostas obsoletas (a peça
+  // gravava mas a lista não a mostrava).
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+
   // Network-first para navegações, fallback cache se offline.
   if (req.mode === 'navigate') {
     event.respondWith(
