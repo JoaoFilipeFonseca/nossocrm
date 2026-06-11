@@ -60,9 +60,19 @@ contactos, 20 origens) → **481 de 484 negócios presos na 1.ª etapa "Oportuni
   gargalo.** O João vai **colocar os contadores a zero** mais tarde (reset deliberado da 1.ª etapa). Não
   testar/medir como problema. Eventual desenho de patamares por temperatura + email automático às frias
   continua capturado, mas só quando ele abrir o tema.
-- **B — Token Meta morto** (acção do João) — `meta-insights-sync` falha ("session invalidated… password/
-  Facebook"), também trava `social-inbox-sync`. **Reautorizar a Meta** em /settings → integrações. Já visível
-  em /automacoes ("19 execuções · 3 falhas").
+- **B — Token Meta** `[RESOLVIDO 11/06]` ✅ — **causa-raiz era o Facebook do João**, não o CRM. Ele andava
+  preso num loop diário: não entrava → "esqueceu palavra-passe" → o reset dava "algo correu mal" e a Meta
+  invalidava o token do CRM todos os dias. **Causa real (mensagem do próprio Facebook):** o PC era sempre
+  tratado como "dispositivo novo" → o Facebook **bloqueia a mudança de palavra-passe** até o dispositivo ser
+  usado "durante algum tempo" → ele nunca conseguia fixar uma palavra-passe → loop. **Resolução (Claude-in-
+  Chrome no browser dele):** entrou via **facebook.com/login/identify → código por email → 2FA por WhatsApp**
+  (não por palavra-passe), marcou **"Confiar neste dispositivo"** + **"Memorizar palavra-passe"**, e
+  **reautorizou a Meta no CRM** (/settings/integracoes#meta-ads → "Reautorizar" → OAuth Continuar). **Token
+  novo verificado VIVO:** `meta-insights-sync` 200 ok e `social-inbox-sync` last_run_ok=true (eram falhas de
+  token). **Pendente do João (comportamento):** NÃO voltar a fazer reset à palavra-passe; NÃO limpar
+  cookies/histórico nem fazer logout neste Chrome; deixar o dispositivo "envelhecer" uns dias → depois
+  consegue **definir uma palavra-passe fixa** (Centro de Contas → Palavra-passe e segurança → Alterar
+  palavra-passe) e gravar códigos de recuperação da 2FA. Ver [[reference-facebook-login-loop-joao]].
 
 **QA verificado VERDE em produção (2.ª parte da sessão, browser autenticado):**
 - ✅ **Ciclo de follow-up fecha:** cron cria tarefa "Retomar contacto" → aparece na mesa de trabalho
