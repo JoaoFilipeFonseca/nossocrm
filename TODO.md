@@ -11,6 +11,15 @@
 > 4. **IA-7** — Bot do CRM = tutor + assistente pessoal 360 (fica para o FIM, por decisão do João).
 > (Detalhe de cada peça nas secções B/D/G/J abaixo.)
 
+> ## ▶️▶️ PRÓXIMO DECIDIDO (11/06/2026) — arrancar JÁ por aqui
+> A sequência travada (CT-AUTO→SOCIAL-INBOX→IMO-7→IA-7) está TODA feita. Pós-QA (10-11/06), ordem decidida:
+> 1. **LIMAR primeiro:** **UX-1 NAV-IA** (barra lateral ~20 itens → famílias, regra "não inchar a barra")
+>    + **copy restante do QA** (B-012 `Contatos`→`Contactos` em `app/(protected)/contacts/page.tsx`;
+>    `Senha`→`Palavra-passe` no login do CRM; varrer `metadata.title` PT-BR). Maqueta primeiro.
+> 2. **CONSTRUIR:** **MA-PIXEL-OWNERSHIP** `P1` (risco "terreno alheio" — confirmar propriedade dos pixéis).
+> 3. **Depois (escolha do João):** **DASH-2** (lead scoring) ou **MKT-BIBLIOTECA**.
+> Já feitos (reclassificar, não re-propor): INT-DOMAIN, MA-CAPI, MKT-MEASURE(construível), AUTO-1 pause-on-touch.
+
 > **FONTE DE VERDADE ÚNICA do backlog.** Consolida (31/05/2026) o antigo `CAPTURE.md`
 > + o `crm/.claude/TODO.md` (1744 linhas, planeamento 14-18 Mai) + a memória viva.
 > Regra do João: **nada se perde.** Primeiro catalogamos tudo; depois ordenamos do mais
