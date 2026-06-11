@@ -9,7 +9,7 @@ interface Template {
   name: string;
   description: string;
   icon: string;
-  definition: { nodes: Array<{ id: string; atom: string; position: { x: number; y: number }; config: Record<string, unknown>; label?: string }>; edges: Array<{ id: string; source: string; target: string }> };
+  definition: { nodes: Array<{ id: string; atom: string; position: { x: number; y: number }; config: Record<string, unknown>; label?: string }>; edges: Array<{ id: string; source: string; target: string; sourceHandle?: string }> };
 }
 
 const TEMPLATES: Template[] = [
@@ -90,7 +90,9 @@ const TEMPLATES: Template[] = [
       ],
       edges: [
         { id: 'e1', source: 'n1', target: 'n2' },
-        { id: 'e2', source: 'n2', target: 'n3' },
+        // O filtro devolve o branch 'pass' — a edge TEM de levar sourceHandle
+        // 'pass', senão o runner não encontra sucessor e o ramo morre.
+        { id: 'e2', source: 'n2', target: 'n3', sourceHandle: 'pass' },
         { id: 'e3', source: 'n3', target: 'n4' },
         { id: 'e4', source: 'n4', target: 'n5' },
         { id: 'e5', source: 'n5', target: 'n6' },
