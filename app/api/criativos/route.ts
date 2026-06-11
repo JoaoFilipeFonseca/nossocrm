@@ -29,6 +29,12 @@ const CreateSchema = z.object({
   ai_cost_usd: z.number().nullable().optional(),
   ai_duration_ms: z.number().int().nullable().optional(),
   status: z.enum(CREATIVE_STATUSES).default('draft'),
+  // Duplicar uma peça com ficheiro mantém a referência ao MESMO objecto do bucket
+  // (org-scoped: assinar o URL falha se o path não for da org do utilizador).
+  file_path: z.string().max(400).nullable().optional(),
+  file_name: z.string().max(200).nullable().optional(),
+  file_size: z.number().int().nullable().optional(),
+  mime_type: z.string().max(100).nullable().optional(),
   tags: z.array(z.string()).default([]),
   is_template: z.boolean().default(false),
   is_favorite: z.boolean().default(false),
@@ -36,7 +42,7 @@ const CreateSchema = z.object({
 }).strict();
 
 const LIST_COLUMNS =
-  'id, type, channel, title, subject, content, deal_id, contact_id, imovel_id, tags, is_favorite, is_template, status, origin, file_path, file_name, file_size, mime_type, usages, parent_id, ai_provider, ai_model, ai_cost_usd, metric_opens, metric_replies, metric_clicks, metric_impressions, metric_conversions, performance_score, created_at, updated_at';
+  'id, type, channel, title, subject, content, deal_id, contact_id, imovel_id, tags, is_favorite, is_template, status, origin, file_path, file_name, file_size, mime_type, usages, parent_id, render_spec, ai_provider, ai_model, ai_cost_usd, metric_opens, metric_replies, metric_clicks, metric_impressions, metric_conversions, performance_score, created_at, updated_at';
 
 async function resolveProfile() {
   const supabase = await createClient();

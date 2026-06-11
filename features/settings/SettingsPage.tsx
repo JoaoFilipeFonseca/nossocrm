@@ -13,6 +13,7 @@ import { MetaAdsSection } from './components/MetaAdsSection';
 import { NottaImportSection } from './components/NottaImportSection';
 import { BusinessUnitsSection } from './components/BusinessUnitsSection';
 import { DataStorageSettings } from './components/DataStorageSettings';
+import { PrivacySection } from './components/PrivacySection';
 import { ProductsCatalogManager } from './components/ProductsCatalogManager';
 import { AICenterSettings } from './AICenterSettings';
 import { MarcaSettings } from './marca/MarcaSettings';
@@ -79,6 +80,8 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({ hash, isAdmin }) => {
 
       {isAdmin && (
         <>
+          <PrivacySection />
+
           <TagsManager
             availableTags={controller.availableTags}
             newTagName={controller.newTagName}

@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Archive, Star, Search, Filter, X, Mail, MessageCircle, Smartphone, Megaphone, FileText, Image as ImageIcon, FileCheck2, BookOpen, Pin, Trash2, Copy as CopyIcon, Plus, Upload, Lightbulb, Bookmark, PenLine, Home, Download, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddPieceModal, ADD_MODE_META, type AddMode } from './AddPieceModal';
-import { CreateStudio } from './CreateStudio';
+import { CreateStudio, type StudioPrefill } from './CreateStudio';
 import { ImovelSearchCombobox, imovelLabel, type ImovelLite } from '@/components/ui/ImovelSearchCombobox';
 import {
   TYPE_LABELS as SHARED_TYPE_LABELS,
@@ -40,6 +40,7 @@ type Creative = {
   file_url: string | null;
   usages: unknown;
   parent_id: string | null;
+  render_spec: Record<string, unknown> | null;
   ai_provider: string | null;
   ai_model: string | null;
   ai_cost_usd: number | null;
@@ -130,6 +131,13 @@ export const CriativosPage: React.FC = () => {
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<'biblioteca' | 'criar'>('biblioteca');
+  const [studioPrefill, setStudioPrefill] = useState<StudioPrefill | null>(null);
+  const [usageOpen, setUsageOpen] = useState(false);
+  const [usageChannel, setUsageChannel] = useState('Facebook');
+  const [usageChannelOther, setUsageChannelOther] = useState('');
+  const [usageDate, setUsageDate] = useState('');
+  const [usageNote, setUsageNote] = useState('');
+  const [usageSaving, setUsageSaving] = useState(false);
 
   // ?tab=criar abre a aba Criar (lido pós-montagem, sem mexer na hidratação).
   useEffect(() => {
@@ -223,6 +231,67 @@ export const CriativosPage: React.FC = () => {
     await fetch(`/api/criativos/${id}`, { method: 'DELETE' });
   };
 
+  /** Duplicar: peça gerada → abre a aba Criar pré-preenchida; restantes → cópia directa. */
+  const duplicar = async (it: Creative) => {
+    const spec = it.render_spec as StudioPrefill | null;
+    if (spec && spec.format) {
+      setStudioPrefill({ ...spec, imovel_id: spec.imovel_id ?? it.imovel_id, parent_id: it.id });
+      setSelected(null);
+      setTab('criar');
+      return;
+    }
+    const res = await fetch('/api/criativos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        type: it.type,
+        channel: it.channel,
+        title: `${it.title || 'Sem título'} (cópia)`,
+        subject: it.subject,
+        content: it.content,
+        tags: it.tags,
+        imovel_id: it.imovel_id,
+        origin: it.origin === 'reference' ? 'reference' : 'created',
+        status: 'draft',
+        parent_id: it.id,
+        file_path: it.file_path,
+        file_name: it.file_name,
+        file_size: it.file_size,
+        mime_type: it.mime_type,
+      }),
+    });
+    if (res.ok) {
+      setSelected(null);
+      load();
+    }
+  };
+
+  const marcarUso = async () => {
+    if (!selected) return;
+    const channel = usageChannel === 'Outro' ? usageChannelOther.trim() : usageChannel;
+    if (!channel || !/^\d{4}-\d{2}-\d{2}$/.test(usageDate)) return;
+    setUsageSaving(true);
+    try {
+      const note = usageNote.trim() || undefined;
+      const res = await fetch(`/api/criativos/${selected.id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ add_usage: { channel, used_on: usageDate, ...(note ? { note } : {}) } }),
+      });
+      if (res.ok) {
+        patchLocal(selected.id, { usages: [...parseUsages(selected.usages), { channel, used_on: usageDate, ...(note ? { note } : {}) }] });
+        setUsageOpen(false);
+        setUsageNote('');
+        setUsageChannelOther('');
+      }
+    } finally {
+      setUsageSaving(false);
+    }
+  };
+
+  // Ao mudar de peça na gaveta, fecha o formulário de utilização.
+  useEffect(() => { setUsageOpen(false); }, [selected?.id]);
+
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
       {/* Header */}
@@ -287,7 +356,11 @@ export const CriativosPage: React.FC = () => {
       </div>
 
       {tab === 'criar' && (
-        <CreateStudio onSaved={() => { setTab('biblioteca'); load(); }} />
+        <CreateStudio
+          key={studioPrefill?.parent_id ?? 'novo'}
+          prefill={studioPrefill}
+          onSaved={() => { setStudioPrefill(null); setTab('biblioteca'); load(); }}
+        />
       )}
 
       {tab === 'biblioteca' && (<>
@@ -650,12 +723,24 @@ export const CriativosPage: React.FC = () => {
                 {selected.ai_cost_usd != null && (<div><strong className="text-slate-700 dark:text-slate-200">Custo:</strong> ${selected.ai_cost_usd}</div>)}
               </div>
 
-              {(() => {
-                const usages = parseUsages(selected.usages);
-                if (usages.length === 0) return null;
-                return (
-                  <div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Onde usei</div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">Onde usei</div>
+                  {!usageOpen && (
+                    <button
+                      onClick={() => { setUsageOpen(true); setUsageDate(new Date().toISOString().slice(0, 10)); }}
+                      className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+                    >
+                      📌 Marcar onde usei
+                    </button>
+                  )}
+                </div>
+                {(() => {
+                  const usages = parseUsages(selected.usages);
+                  if (usages.length === 0 && !usageOpen) {
+                    return <p className="text-xs text-slate-400">Ainda sem utilizações registadas.</p>;
+                  }
+                  return (
                     <ul className="space-y-1">
                       {usages.map((u, i) => (
                         <li key={i} className="text-sm text-slate-700 dark:text-slate-200">
@@ -663,11 +748,92 @@ export const CriativosPage: React.FC = () => {
                         </li>
                       ))}
                     </ul>
+                  );
+                })()}
+                {usageOpen && (
+                  <div className="mt-2 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <select
+                        value={usageChannel}
+                        onChange={(e) => setUsageChannel(e.target.value)}
+                        aria-label="Canal onde usou"
+                        className="px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 text-slate-900 dark:text-slate-100"
+                      >
+                        {['Facebook', 'Instagram', 'Idealista', 'RE/MAX', 'WhatsApp', 'Email', 'Impressão', 'Outro'].map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="date"
+                        value={usageDate}
+                        onChange={(e) => setUsageDate(e.target.value)}
+                        aria-label="Data de utilização"
+                        className="px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                    {usageChannel === 'Outro' && (
+                      <input
+                        type="text"
+                        value={usageChannelOther}
+                        onChange={(e) => setUsageChannelOther(e.target.value)}
+                        placeholder="Qual canal?"
+                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 text-slate-900 dark:text-slate-100"
+                      />
+                    )}
+                    <input
+                      type="text"
+                      value={usageNote}
+                      onChange={(e) => setUsageNote(e.target.value)}
+                      placeholder="Nota (opcional), ex.: campanha de lançamento"
+                      maxLength={200}
+                      className="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 text-slate-900 dark:text-slate-100"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={marcarUso} disabled={usageSaving || (usageChannel === 'Outro' && !usageChannelOther.trim())}>
+                        {usageSaving ? 'A registar…' : 'Registar utilização'}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setUsageOpen(false)}>Cancelar</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {(() => {
+                const versoes = items.filter((i) => i.parent_id === selected.id);
+                const original = selected.parent_id ? items.find((i) => i.id === selected.parent_id) : null;
+                if (versoes.length === 0 && !selected.parent_id) return null;
+                return (
+                  <div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Versões</div>
+                    {selected.parent_id && (
+                      <p className="text-sm text-slate-700 dark:text-slate-200">
+                        Esta peça deriva de{' '}
+                        {original ? (
+                          <button onClick={() => setSelected(original)} className="text-primary-600 dark:text-primary-400 hover:underline">
+                            {original.title || 'outra peça'}
+                          </button>
+                        ) : (
+                          <span>outra peça da biblioteca</span>
+                        )}
+                      </p>
+                    )}
+                    {versoes.map((v) => (
+                      <p key={v.id} className="text-sm text-slate-700 dark:text-slate-200">
+                        ↳{' '}
+                        <button onClick={() => setSelected(v)} className="text-primary-600 dark:text-primary-400 hover:underline">
+                          {v.title || 'Versão'}
+                        </button>{' '}
+                        <span className="text-xs text-slate-400">({formatDate(v.created_at)})</span>
+                      </p>
+                    ))}
                   </div>
                 );
               })()}
 
               <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+                <Button size="sm" variant="outline" onClick={() => duplicar(selected)}>
+                  <Plus className="h-4 w-4 mr-1" /> Duplicar
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(selected.content)}>
                   <CopyIcon className="h-4 w-4 mr-1" /> Copiar
                 </Button>

@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Megaphone, Smartphone, Clapperboard, FileText, Home, Sparkles, Eye, Save, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ImovelSearchCombobox, imovelLabel, type ImovelLite } from '@/components/ui/ImovelSearchCombobox';
+import { ImovelSearchCombobox, imovelLabel, useImoveisLite, type ImovelLite } from '@/components/ui/ImovelSearchCombobox';
 import {
   FORMAT_LABELS,
   VARIANT_LABELS,
@@ -34,24 +34,47 @@ const FORMAT_HINTS: Record<RenderFormat, string> = {
   flyer: 'A4 · PDF pronto a imprimir',
 };
 
-interface Props {
-  onSaved: () => void;
+/** Pré-preenchimento ao duplicar uma peça gerada (render_spec): mudar um detalhe e gerar de novo. */
+export interface StudioPrefill {
+  format: RenderFormat;
+  ratio?: RenderRatio;
+  variant?: TemplateVariant;
+  imovel_id?: string | null;
+  foto_path?: string | null;
+  texts?: { headline?: string; sub?: string | null; cta?: string | null; descricao?: string | null; destaques?: string[] };
+  legenda?: string | null;
+  parent_id?: string | null;
 }
 
-export const CreateStudio: React.FC<Props> = ({ onSaved }) => {
-  const [format, setFormat] = useState<RenderFormat | null>(null);
-  const [ratio, setRatio] = useState<RenderRatio>('square');
-  const [variant, setVariant] = useState<TemplateVariant>('classico');
+interface Props {
+  onSaved: () => void;
+  prefill?: StudioPrefill | null;
+}
+
+export const CreateStudio: React.FC<Props> = ({ onSaved, prefill }) => {
+  const [format, setFormat] = useState<RenderFormat | null>(prefill?.format ?? null);
+  const [ratio, setRatio] = useState<RenderRatio>(prefill?.ratio ?? 'square');
+  const [variant, setVariant] = useState<TemplateVariant>(prefill?.variant ?? 'classico');
   const [imovel, setImovel] = useState<ImovelLite | null>(null);
   const [fotos, setFotos] = useState<FotoLite[]>([]);
-  const [fotoPath, setFotoPath] = useState<string | null>(null);
+  const [fotoPath, setFotoPath] = useState<string | null>(prefill?.foto_path ?? null);
   const [briefing, setBriefing] = useState('');
-  const [headline, setHeadline] = useState('');
-  const [sub, setSub] = useState('');
-  const [cta, setCta] = useState('');
-  const [descricao, setDescricao] = useState('');
-  const [destaques, setDestaques] = useState('');
-  const [legenda, setLegenda] = useState('');
+  const [headline, setHeadline] = useState(prefill?.texts?.headline ?? '');
+  const [sub, setSub] = useState(prefill?.texts?.sub ?? '');
+  const [cta, setCta] = useState(prefill?.texts?.cta ?? '');
+  const [descricao, setDescricao] = useState(prefill?.texts?.descricao ?? '');
+  const [destaques, setDestaques] = useState((prefill?.texts?.destaques ?? []).join('\n'));
+  const [legenda, setLegenda] = useState(prefill?.legenda ?? '');
+  const { data: imoveisLite = [] } = useImoveisLite();
+
+  // Resolver o imóvel do prefill (duplicar) quando a lista lite chegar.
+  useEffect(() => {
+    if (prefill?.imovel_id && !imovel) {
+      const found = imoveisLite.find((i) => i.id === prefill.imovel_id);
+      if (found) setImovel(found);
+    }
+     
+  }, [imoveisLite.length, prefill?.imovel_id]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [busyCopy, setBusyCopy] = useState(false);
   const [busyPreview, setBusyPreview] = useState(false);
@@ -62,8 +85,7 @@ export const CreateStudio: React.FC<Props> = ({ onSaved }) => {
   useEffect(() => {
     let cancelled = false;
     setFotos([]);
-    setFotoPath(null);
-    if (!imovel) return;
+    if (!imovel) { setFotoPath(null); return; }
     (async () => {
       try {
         const res = await fetch(`/api/criativos/imovel-fotos?imovelId=${imovel.id}`, { cache: 'no-store' });
@@ -71,14 +93,19 @@ export const CreateStudio: React.FC<Props> = ({ onSaved }) => {
         if (!cancelled && res.ok) {
           const list: FotoLite[] = data.fotos ?? [];
           setFotos(list);
-          const principal = list.find((f) => f.is_principal) ?? list[0];
-          setFotoPath(principal?.storage_path ?? null);
+          // Mantém a foto do prefill (duplicar) se ainda existir; senão a principal.
+          setFotoPath((current) => {
+            if (current && list.some((f) => f.storage_path === current)) return current;
+            const principal = list.find((f) => f.is_principal) ?? list[0];
+            return principal?.storage_path ?? null;
+          });
         }
       } catch {
         /* sem fotos não bloqueia: o template tem fundo da marca */
       }
     })();
     return () => { cancelled = true; };
+     
   }, [imovel?.id]);
 
   // Limpar o object URL da pré-visualização anterior.
@@ -100,6 +127,7 @@ export const CreateStudio: React.FC<Props> = ({ onSaved }) => {
       destaques: format === 'flyer' ? destaques.split('\n').map((d) => d.trim()).filter(Boolean).slice(0, 6) : [],
     },
     legenda: legenda.trim() || null,
+    parent_id: prefill?.parent_id ?? null,
     preview,
   });
 
