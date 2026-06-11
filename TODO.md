@@ -13,8 +13,11 @@
 
 > ## ▶️▶️ PRÓXIMO DECIDIDO (11/06/2026) — arrancar JÁ por aqui
 > A sequência travada (CT-AUTO→SOCIAL-INBOX→IMO-7→IA-7) está TODA feita. Pós-QA (10-11/06), ordem decidida:
-> 1. **LIMAR primeiro:** **UX-1 NAV-IA** (barra lateral ~20 itens → famílias, regra "não inchar a barra")
->    — maqueta `docs/mockups/ux1-nav-familias.html` criada 11/06, à espera do "avança" do João.
+> 1. **LIMAR primeiro:** ✅ **UX-1 NAV-IA FEITO** `[11/06, commit ae410b8, verificado em produção
+>    desktop 1280 + recolhido + mobile 375/540 + tablet 768, 0 erros consola]` — barra lateral por
+>    famílias (Inbox/Mensagens/Actividades sempre à vista + Vendas/Marketing/Análise/Sistema
+>    colapsáveis; activa abre sozinha; estado lembrado; gaveta mobile espelha; maqueta aprovada
+>    `docs/mockups/ux1-nav-familias.html`).
 >    + **copy restante do QA** ✅ `[FEITO 11/06, commit 6e86448, verificado em produção]` (B-012
 >    `Contatos`→`Contactos`; `Senha`→`Palavra-passe` no login, /setup, /join e instalador; varrido
 >    `metadata.title` — não havia mais PT-BR).
