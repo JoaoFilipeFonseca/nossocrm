@@ -27,6 +27,16 @@
 > 3. **Depois (escolha do João):** **DASH-2** (lead scoring) ou **MKT-BIBLIOTECA**.
 > Já feitos (reclassificar, não re-propor): INT-DOMAIN, MA-CAPI, MKT-MEASURE(construível), AUTO-1 pause-on-touch.
 
+> ## 🔔 LEMBRETE COM DATA — 18/06/2026: remover a agência do Business Manager (João pediu 11/06)
+> **Acção do João (eu não posso mexer em permissões):** remover **Muhammad Seedat** (muhammad.contacto@gmail.com),
+> ADMIN do Business `761569255551287` + acesso total à Página "João Fonseca" (o acesso à Página vem pelo
+> Business → **1 remoção corta tudo**): business.facebook.com → ⚙️ Definições → **Pessoas** → Muhammad → Remover.
+> **Pré-requisito (é por isso que é dia 18, não antes):** primeiro fixar a palavra-passe (Centro de Contas →
+> Palavra-passe e segurança) + guardar códigos 2FA — o dispositivo já deve estar "envelhecido". No muro de
+> reautenticação: método por CÓDIGO (WhatsApp), **NUNCA "Esqueceste-te da palavra-passe?"**, não insistir se falhar.
+> **Depois:** Claude re-verifica via API (`/761569255551287/business_users` deve ficar só o João; idem
+> `/104774959239895/assigned_users`). Varrimento de 11/06: conta de anúncios, pixels e convites pendentes já limpos.
+
 > **FONTE DE VERDADE ÚNICA do backlog.** Consolida (31/05/2026) o antigo `CAPTURE.md`
 > + o `crm/.claude/TODO.md` (1744 linhas, planeamento 14-18 Mai) + a memória viva.
 > Regra do João: **nada se perde.** Primeiro catalogamos tudo; depois ordenamos do mais
