@@ -226,6 +226,13 @@ export const queryKeys = {
      * Org-level + user settings query keys.
      */
     orgSettings: createQueryKeys('orgSettings'),
+
+    /**
+     * DASH-2 — lead scores (probabilidade por negócio aberto, derivada do histórico).
+     */
+    leadScores: {
+        all: ['leadScores'] as const,
+    },
 };
 
 /**

@@ -534,8 +534,18 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 - **DASH-1 · Fase 5 polish** `[PARCIAL]` `P?`
   Multi-select de pipelines em todos os widgets (5.1), funil cumulativo + conversão por etapa (5.4), tabela de fonte de leads com KPIs cruzados (5.7), tarefas inline com 3 filtros (5.5), acções manuais (5.6). Confirmar widget a widget o que já existe. (origem: Fase 5)
 
-- **DASH-2 · Lead scoring engine** `[POR FAZER]` `P?`
-  GHL "Manage Scoring": pontos por evento (+visita/+abriu email/−sem resposta 7d), score visível na DealCard. Não existe na BD. (origem: GHL Manage Scoring + #scoring)
+- **DASH-2 · Lead scoring engine** `[FEITO 12/06 — v1 em produção]` `P2`
+  Score 0-100 determinista por negócio aberto, derivado do histórico SEM tabelas novas: RPC
+  `my_deal_lead_score_signals` (migração `20260612160000`, espelha o padrão do followup) devolve os
+  sinais (etapa/recência do toque real/interacções/visitas/valor/adiado/opt-out/origem); lib pura
+  `lib/deals/leadScore.ts` calcula score+temperatura(quente≥65/morno≥35/frio)+razões PT (10 testes).
+  UI: chip na DealCard (🔥/🌤/❄/⏸ + score, tooltip com razões) + secção "Probabilidade da lead" no
+  DealDetailModal (score, barra, razões) + KPI "Prob" do modal usa o score real (antes era 50% fixo).
+  Decisão honesta: a ORIGEM aparece nas razões mas NÃO pontua (sem histórico de conversões por canal
+  não há base — entra com a medição vitalícia). Maqueta: docs/mockups/dash2-lead-scoring.html.
+  **Capturado p/ iteração (não fazer sem ordem):** leva diária do lead-followups ordenada pelo score
+  (hoje ordena etapa+recência, proxy razoável); pesos por canal quando houver conversões; score na
+  lista /contacts.
 
 - **DASH-3 · Painel de actividade do consultor (métricas do que fiz)** `[POR FAZER]` `P?` (CAPTURE 01/06, ideia do João)
   "Quero saber quantas visitas fiz no ano, quantas reuniões com proprietários, quantas avaliações." **Dados já existem** em `deal_activities` (tipos call/meeting/visit/whatsapp/email). **Falta:** painel agregado por período (ano/mês) com contagens por tipo + **subtipos** que hoje não há (ex.: "reunião com proprietário", "reunião de avaliação") — decidir se via subtipo/tag no `metadata` ou novos tipos. Sai automático, sem trabalho extra do João. Liga a DASH-1 (Fase 5) e a /relatorios.

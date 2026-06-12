@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maqueta — DASH-2 Lead scoring (probabilidade por negócio)</title>
+<style>
+  :root { --primary:#16324f; --accent:#c8a24b; --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0; }
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,Segoe UI,sans-serif; background:var(--bg); margin:0; padding:24px; color:#0f172a; }
+  h1 { font-size:18px; } h2 { font-size:14px; color:#475569; margin:24px 0 8px; }
+  .note { font-size:12px; color:#64748b; max-width:720px; line-height:1.5; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px; width:260px; }
+  .card h3 { font-size:13px; margin:0 0 4px; }
+  .meta { font-size:11px; color:#64748b; }
+  .chips { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .chip { font-size:11px; padding:2px 8px; border-radius:999px; font-weight:600; }
+  .quente { background:#fee2e2; color:#b91c1c; }
+  .morno { background:#fef3c7; color:#92400e; }
+  .frio { background:#e0f2fe; color:#075985; }
+  .adiado { background:#f1f5f9; color:#64748b; border:1px dashed #cbd5e1; }
+  .modal { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; width:420px; }
+  .score-line { display:flex; align-items:center; gap:12px; }
+  .score-num { font-size:28px; font-weight:700; }
+  .bar { flex:1; height:8px; border-radius:4px; background:#e2e8f0; overflow:hidden; }
+  .bar > div { height:100%; border-radius:4px; }
+  ul.razoes { margin:10px 0 0; padding-left:18px; font-size:13px; color:#334155; line-height:1.7; }
+  ul.razoes li.mais::marker { color:#16a34a; } ul.razoes li.menos::marker { color:#dc2626; }
+  @media (max-width:540px){ .card,.modal{ width:100%; } body{ padding:12px; } }
+</style>
+</head>
+<body>
+<h1>DASH-2 — Probabilidade da lead (score por negócio)</h1>
+<p class="note">Score 0 a 100 determinista, calculado dos sinais que JÁ existem (etapa, recência do
+último toque real, interacções, valor, adiado, opt-out). Sem tabelas novas: RPC devolve os sinais,
+uma lib pura calcula score + temperatura + razões. Aparece na DealCard (chip) e no modal (secção).</p>
+
+<h2>1 · Chip na DealCard (kanban) — três temperaturas + adiado</h2>
+<div class="row">
+  <div class="card">
+    <h3>Marco Sousa — T3 Paços</h3>
+    <div class="meta">Comprador · 285 000 €</div>
+    <div class="chips"><span class="chip quente">🔥 78 · quente</span></div>
+  </div>
+  <div class="card">
+    <h3>Cátia Ferreira</h3>
+    <div class="meta">Vendedor · Seroa</div>
+    <div class="chips"><span class="chip morno">🌤 52 · morno</span></div>
+  </div>
+  <div class="card">
+    <h3>Lead Meta sem toque</h3>
+    <div class="meta">Oportunidade · sem valor</div>
+    <div class="chips"><span class="chip frio">❄ 18 · frio</span></div>
+  </div>
+  <div class="card">
+    <h3>Bruno Carvalho</h3>
+    <div class="meta">Adiado até 12/12/2026</div>
+    <div class="chips"><span class="chip adiado">⏸ adiado</span></div>
+  </div>
+</div>
+
+<h2>2 · Secção "Probabilidade" no modal do negócio (com razões)</h2>
+<div class="modal">
+  <div style="font-size:12px;color:#64748b;margin-bottom:6px">Probabilidade da lead</div>
+  <div class="score-line">
+    <span class="score-num" style="color:#b91c1c">78</span>
+    <span class="chip quente">🔥 quente</span>
+    <div class="bar"><div style="width:78%;background:#dc2626"></div></div>
+  </div>
+  <ul class="razoes">
+    <li class="mais">Etapa avançada do funil (Proposta)</li>
+    <li class="mais">Último contacto há 3 dias</li>
+    <li class="mais">2 visitas e 5 interacções registadas</li>
+    <li class="mais">Valor definido (285 000 €)</li>
+    <li class="menos">Origem: Meta Ads (campanha Seroa)</li>
+  </ul>
+</div>
+
+<h2>Regras do score (v1, afinável com o uso)</h2>
+<p class="note">Etapa do funil até 35 pontos (proporcional à posição; 1.ª etapa = 0) · último toque
+real: ≤7d +30 · ≤30d +20 · ≤90d +8 · interacções: ≥5 +15 / ≥2 +10 / ≥1 +5, visita ou reunião +10 ·
+valor &gt; 0 +5 · adiado → chip próprio (sem score) · contacto com opt-out de email −10. Temperatura:
+≥65 quente · 35 a 64 morno · &lt;35 frio. A origem aparece nas razões mas não pontua (ainda não há
+histórico de conversões por canal que o justifique — entra quando a medição vitalícia o der).</p>
+</body>
+</html>

@@ -5,6 +5,7 @@ import { isDealRotting, getActivityStatus } from '@/features/boards/hooks/useBoa
 import { MoveToStageModal } from '../Modals/MoveToStageModal';
 import { SkeletonDealCard } from '@/components/ui/Skeleton';
 import { useLifecycleStages } from '@/lib/query/hooks/useLifecycleStagesQuery';
+import { useLeadScoresQuery } from '@/lib/query/hooks/useLeadScoresQuery';
 
 /**
  * UI: Drop highlight should follow the stage color.
@@ -117,6 +118,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   isLoading = false,
 }) => {
   const { data: lifecycleStages = [] } = useLifecycleStages();
+  // DASH-2: mapa deal_id → probabilidade (score/temperatura) para o chip da DealCard.
+  const { data: leadScores } = useLeadScoresQuery();
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   
   // State for move-to-stage modal (keyboard accessibility alternative to drag-and-drop)
@@ -296,6 +299,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 <div key={deal.id} role="listitem">
                   <DealCard
                     deal={deal}
+                    leadScore={leadScores?.[deal.id]}
                     isRotting={
                       isDealRotting(deal) &&
                       !deal.isWon &&

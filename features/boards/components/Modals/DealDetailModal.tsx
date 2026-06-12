@@ -23,6 +23,8 @@ import { useToast } from '@/context/ToastContext';
 import { ConfirmDialog as ConfirmModal } from '@/components/ui/confirm-dialog';
 import { LossReasonModal } from '@/components/ui/LossReasonModal';
 import { SnoozeDealModal } from '@/components/ui/SnoozeDealModal';
+import { useLeadScoresQuery } from '@/lib/query/hooks/useLeadScoresQuery';
+import { TEMPERATURE_ICONS } from '@/lib/deals/leadScore';
 import { DealImovelField } from '@/components/ui/ImovelSearchCombobox';
 import { useMoveDealSimple } from '@/lib/query/hooks';
 import { DEALS_VIEW_KEY } from '@/lib/query';
@@ -226,6 +228,10 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   const contact = deal ? (contactsById.get(deal.contactId) ?? null) : null;
 
   // CT-AUTO — "Adiar em vez de perder": grava snoozedUntil em custom_fields.
+  // DASH-2: probabilidade da lead (score derivado do histórico) para este negócio.
+  const { data: leadScores } = useLeadScoresQuery({ enabled: isOpen });
+  const leadScore = deal ? leadScores?.[deal.id] : undefined;
+
   const snoozedUntilRaw = (deal?.customFields?.snoozedUntil as string | undefined) || undefined;
   const isSnoozed = !!snoozedUntilRaw && new Date(snoozedUntilRaw) > new Date();
   const handleSnooze = (iso: string, reason: string) => {
@@ -1191,7 +1197,13 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     </div>
                     <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-3 text-center">
                       <div className="text-[10px] text-slate-500 uppercase tracking-wide">Prob</div>
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">{deal.probability ?? 50}%</div>
+                      {leadScore && leadScore.temperature !== 'adiado' ? (
+                        <div className={`text-2xl font-bold ${leadScore.temperature === 'quente' ? 'text-rose-600 dark:text-rose-400' : leadScore.temperature === 'morno' ? 'text-amber-600 dark:text-amber-400' : 'text-sky-600 dark:text-sky-400'}`}>
+                          {leadScore.score}
+                        </div>
+                      ) : (
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">{leadScore ? '⏸' : `${deal.probability ?? 50}%`}</div>
+                      )}
                     </div>
                     <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-3 text-center">
                       <div className="text-[10px] text-slate-500 uppercase tracking-wide">Valor</div>
@@ -1220,6 +1232,41 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       onLink={(id) => updateDeal(deal.id, { imovelId: id })}
                     />
                   </div>
+
+                  {/* DASH-2 — Probabilidade da lead (score derivado do histórico) com razões */}
+                  {leadScore && (
+                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Probabilidade da lead</span>
+                      </div>
+                      <div className="flex items-center gap-3 mb-2">
+                        {leadScore.temperature !== 'adiado' && (
+                          <span className={`text-2xl font-bold ${leadScore.temperature === 'quente' ? 'text-rose-600 dark:text-rose-400' : leadScore.temperature === 'morno' ? 'text-amber-600 dark:text-amber-400' : 'text-sky-600 dark:text-sky-400'}`}>
+                            {leadScore.score}
+                          </span>
+                        )}
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          {TEMPERATURE_ICONS[leadScore.temperature]} {leadScore.temperature}
+                        </span>
+                        {leadScore.temperature !== 'adiado' && (
+                          <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${leadScore.temperature === 'quente' ? 'bg-rose-500' : leadScore.temperature === 'morno' ? 'bg-amber-500' : 'bg-sky-500'}`}
+                              style={{ width: `${leadScore.score}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <ul className="space-y-1">
+                        {leadScore.reasons.map((r, i) => (
+                          <li key={i} className="text-xs text-slate-600 dark:text-slate-300">{r}</li>
+                        ))}
+                      </ul>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">
+                        Calculado do histórico (etapa, recência, interacções, valor). Afinável com o uso.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 

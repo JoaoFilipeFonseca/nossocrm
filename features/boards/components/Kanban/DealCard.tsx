@@ -6,6 +6,15 @@ import { ActivityStatusIcon } from './ActivityStatusIcon';
 import { LogCHQQuick } from './LogCHQQuick';
 import { daysInStage, stageAgeBucket } from '@/features/boards/utils';
 import { priorityAriaLabelPtBr } from '@/lib/utils/priority';
+import { TEMPERATURE_ICONS, type LeadScore } from '@/lib/deals/leadScore';
+
+/** DASH-2: classes do chip de temperatura (mesma família visual dos restantes badges). */
+const TEMP_CHIP_CLASSES: Record<LeadScore['temperature'], string> = {
+  quente: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-700/50',
+  morno: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700/50',
+  frio: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-700/50',
+  adiado: 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-dashed border-slate-300 dark:border-white/10',
+};
 
 interface DealCardProps {
   deal: DealView;
@@ -29,6 +38,8 @@ interface DealCardProps {
   setLastMouseDownDealId: (id: string | null) => void;
   /** Callback to open move-to-stage modal for keyboard accessibility */
   onMoveToStage?: (dealId: string) => void;
+  /** DASH-2: probabilidade da lead (score+temperatura) — só calculada para negócios abertos. */
+  leadScore?: LeadScore;
 }
 
 // Check if deal is closed (won or lost)
@@ -59,6 +70,7 @@ const DealCardComponent: React.FC<DealCardProps> = ({
   onQuickAddActivity,
   setLastMouseDownDealId,
   onMoveToStage,
+  leadScore,
 }) => {
   const [localDragging, setLocalDragging] = useState(false);
   const isClosed = isDealClosed(deal);
@@ -225,6 +237,16 @@ const DealCardComponent: React.FC<DealCardProps> = ({
             title="Automações deste deal estão pausadas. Abre o deal para retomar."
           >
             ⏸ AUTO PAUSADAS
+          </span>
+        )}
+        {/* DASH-2: probabilidade da lead (score + temperatura) — só em deals abertos */}
+        {!isClosed && leadScore && (
+          <span
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${TEMP_CHIP_CLASSES[leadScore.temperature]}`}
+            title={leadScore.reasons.join(' · ')}
+          >
+            {TEMPERATURE_ICONS[leadScore.temperature]}{' '}
+            {leadScore.temperature === 'adiado' ? 'adiado' : `${leadScore.score} · ${leadScore.temperature}`}
           </span>
         )}
         {/* Sprint 14 c1: badge "Xd na fase" — só em deals abertos */}
