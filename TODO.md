@@ -27,7 +27,35 @@
 > 3. **Depois (escolha do João):** ✅ escolhido a 11/06 → **MKT-BIBLIOTECA** (ver bloco abaixo). DASH-2 fica na fila.
 > Já feitos (reclassificar, não re-propor): INT-DOMAIN, MA-CAPI, MKT-MEASURE(construível), AUTO-1 pause-on-touch.
 
-> ## ▶️▶️▶️ PRÓXIMO DECIDIDO (11/06/2026 fim do dia) — MKT-BIBLIOTECA, decisões do João JÁ TOMADAS (não re-perguntar)
+> ## ✅ MKT-BIBLIOTECA — CONSTRUÍDA (12/06/2026, sessão terminou por limite de créditos)
+> **Estado real e honesto:**
+> - **Fatia 1 (Repositório) ✅ FEITA E VERIFICADA em produção** (commits `61589c8`+`340f30f`): /criativos é a
+>   Biblioteca (abas 📚 Biblioteca/✨ Criar, nav "Biblioteca"); origem/estado/usages/parent_id/render_spec na
+>   creative_archive (migração `20260611190000`); + Adicionar (ficheiro/ideia/referência/texto); upload real
+>   verde; filtros origem/estado/imóvel; gaveta com estado editável + descarregar; URLs assinados em lote.
+>   Verificado desktop 1280 + mobile 375/540 + tablet 768, 0 erros. **🚨 BUG GRAVE corrigido de caminho
+>   (`fef2395`): o service worker fazia SWR a TODOS os GETs incl. /api/* e Supabase → leituras pós-escrita
+>   vinham obsoletas em TODO o app.** Agora só cacheia assets estáticos da mesma origem. **O bucket
+>   creative-archive NÃO existia** (memória errada) → criado + políticas org-scoped na migração.
+> - **Fatia 2 (Criar) ✅ CONSTRUÍDA, backend VERIFICADO em produção** (commits `b8536b7`+`1c97a0a`+`ec14c30`):
+>   4 formatos (anúncio 1080×1080 · post ◻1:1/▯4:5 ideal IG, botão por rácio · story 1080×1920 · flyer A4 PDF),
+>   2 variantes (clássico/imersivo), Brand Kit + foto do imóvel + copy IA (Gemini→Claude, copy real verificada
+>   fiel ao imóvel). VERIFICADO via API em produção: render com foto = PNG 1,5MB ✅; flyer guardado = PDF A4 no
+>   bucket + peça na biblioteca com URL assinado ✅; preview na UI ✅ (à data do teste a foto ainda falhava — o
+>   fix `ec14c30` entrou depois e foi verificado via API). 🧠 Gotchas: satori embute a foto no SVG → originais
+>   de MB rebentam o resvg → resize servidor (sharp → fallback /_next/image → original <3MB); fontes woff
+>   fontsource em assets/fonts + outputFileTracingIncludes.
+> - **Fatia 3 (Reuso+polish) ✅ CONSTRUÍDA, backend verificado, ⚠️ UI POR VERIFICAR no browser** (commit
+>   `6ddd490`): Duplicar (gerada→Criar pré-preenchido via render_spec+parent_id; texto/ficheiro→cópia directa),
+>   Marcar onde usei (add_usage ✅ verificado via API na F1), secção Versões, campo Política de privacidade em
+>   Definições→Geral (admin) + GET/PUT /api/settings/privacidade.
+> **⚠️ FALTA (1.ª coisa da próxima sessão): verificação visual em produção da aba Criar com foto (preview +
+> guardar pela UI), do Duplicar/Marcar usei/Versões na gaveta, do campo privacidade, e mobile 375/540 da aba
+> Criar. Depois: maqueta tem ainda por fazer = nada estrutural; polish capturado abaixo.**
+> Polish capturado (não executar sem ordem): editar tags na gaveta; alias upload de vídeo no Criar; logo do
+> Brand Kit no template (hoje é o nome em texto); mais variantes de layout.
+>
+> ## (feito) PRÓXIMO DECIDIDO (11/06/2026 fim do dia) — MKT-BIBLIOTECA, decisões do João JÁ TOMADAS (não re-perguntar)
 > **Visão (palavras dele):** "além de criar quero poder GUARDAR posts, ideias, tudo relacionado com o negócio:
 > a minha brand, conteúdo de referência, o que já criei, o que já postei — ter TUDO, todos os activos digitais."
 > 1. **Coração do MVP = REPOSITÓRIO** de todos os activos (guardar/organizar/reencontrar/reutilizar/duplicar),
