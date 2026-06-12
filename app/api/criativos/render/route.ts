@@ -27,7 +27,7 @@ import {
   type TemplateVariant,
   type TemplateImovel,
 } from '@/lib/criativos/templates';
-import type { CreativeType } from '@/lib/criativos/shared';
+import { svgDimensions, type CreativeType } from '@/lib/criativos/shared';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -134,17 +134,21 @@ async function fotoToDataUri(url: string, origin: string): Promise<string | null
 
 /**
  * Logos do Brand Kit chegam como data URI (muitas vezes SVG) ou URL. O satori precisa de
- * raster com dimensões explícitas → convertemos com o sharp para um PNG pequeno. Sem sharp
- * (ou com logo inválido) devolvemos null e o template cai para o nome em texto — nunca falha.
+ * imagem com dimensões explícitas → 1) sharp converte para PNG pequeno; 2) sem sharp (a
+ * lambda da Vercel pode não o ter — gotcha conhecido), um SVG segue CRU com as dimensões
+ * lidas do viewBox (o satori/resvg suportam SVG em <image>). Tudo falhou → null e o
+ * template cai para o nome em texto — o render nunca falha por causa do logo.
  */
 async function logoToTemplateLogo(value: string | null | undefined): Promise<{ uri: string; width: number; height: number } | null> {
   if (!value) return null;
   try {
     let buf: Buffer | null = null;
+    let mime = '';
     if (value.startsWith('data:')) {
       const comma = value.indexOf(',');
       if (comma < 0) return null;
       const meta = value.slice(5, comma);
+      mime = meta.split(';')[0];
       const payload = value.slice(comma + 1);
       buf = meta.includes('base64')
         ? Buffer.from(payload, 'base64')
@@ -152,21 +156,40 @@ async function logoToTemplateLogo(value: string | null | undefined): Promise<{ u
     } else if (/^https?:\/\//.test(value)) {
       const res = await fetch(value);
       if (!res.ok) return null;
+      mime = (res.headers.get('content-type') || '').split(';')[0];
       buf = Buffer.from(await res.arrayBuffer());
     }
     if (!buf || buf.length === 0 || buf.length > 2 * 1024 * 1024) return null;
 
-    const sharp = (await import('sharp')).default;
-    const out = await sharp(buf, { density: 300 })
-      .resize({ height: 160, withoutEnlargement: false })
-      .png()
-      .toBuffer({ resolveWithObject: true });
-    if (!out.info.width || !out.info.height) return null;
-    return {
-      uri: `data:image/png;base64,${out.data.toString('base64')}`,
-      width: out.info.width,
-      height: out.info.height,
-    };
+    try {
+      const sharp = (await import('sharp')).default;
+      const out = await sharp(buf, { density: 300 })
+        .resize({ height: 160, withoutEnlargement: false })
+        .png()
+        .toBuffer({ resolveWithObject: true });
+      if (out.info.width && out.info.height) {
+        return {
+          uri: `data:image/png;base64,${out.data.toString('base64')}`,
+          width: out.info.width,
+          height: out.info.height,
+        };
+      }
+    } catch (e) {
+      console.error('[criativos/render] sharp indisponível para o logo, a tentar SVG cru:', e);
+    }
+
+    const text = buf.toString('utf8');
+    if (mime === 'image/svg+xml' || text.trimStart().startsWith('<svg') || text.includes('<svg')) {
+      const dims = svgDimensions(text);
+      if (dims) {
+        return {
+          uri: `data:image/svg+xml;base64,${buf.toString('base64')}`,
+          width: dims.width,
+          height: dims.height,
+        };
+      }
+    }
+    return null;
   } catch (e) {
     console.error('[criativos/render] logo indisponível (fallback para texto):', e);
     return null;

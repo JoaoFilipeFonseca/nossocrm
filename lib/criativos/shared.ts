@@ -135,3 +135,19 @@ export const UPLOAD_MIME_TO_EXT: Record<string, string> = {
   'video/quicktime': 'mov',
   'video/webm': 'webm',
 };
+
+/** Dimensões de um SVG cru (width/height ou viewBox) — para dar medidas explícitas ao satori. */
+export function svgDimensions(svg: string): { width: number; height: number } | null {
+  const open = svg.match(/<svg\b[^>]*>/i)?.[0];
+  if (!open) return null;
+  const attr = (name: string): number | null => {
+    const m = open.match(new RegExp(`${name}\s*=\s*"([0-9.]+)(?:px)?"`, 'i'));
+    return m ? parseFloat(m[1]) : null;
+  };
+  const w = attr('width');
+  const h = attr('height');
+  if (w && h) return { width: Math.round(w), height: Math.round(h) };
+  const vb = open.match(/viewBox\s*=\s*"\s*[0-9.-]+[\s,]+[0-9.-]+[\s,]+([0-9.]+)[\s,]+([0-9.]+)\s*"/i);
+  if (vb) return { width: Math.round(parseFloat(vb[1])), height: Math.round(parseFloat(vb[2])) };
+  return null;
+}

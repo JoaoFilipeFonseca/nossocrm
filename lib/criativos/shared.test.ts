@@ -12,6 +12,7 @@ import {
   defaultTypeForMime,
   UPLOAD_ALLOWED_TYPES,
   UPLOAD_MIME_TO_EXT,
+  svgDimensions,
 } from './shared';
 
 describe('criativos/shared — fonte única', () => {
@@ -69,5 +70,20 @@ describe('upload helpers', () => {
     expect(defaultTypeForMime('application/pdf')).toBe('flyer');
     expect(defaultTypeForMime('video/mp4')).toBe('story');
     expect(defaultTypeForMime('image/jpeg')).toBe('banner');
+  });
+});
+
+describe('svgDimensions — medidas para o satori (logo do Brand Kit)', () => {
+  it('lê width/height explícitos', () => {
+    expect(svgDimensions('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="160"></svg>'))
+      .toEqual({ width: 320, height: 160 });
+  });
+  it('cai para o viewBox quando não há width/height', () => {
+    expect(svgDimensions('<svg viewBox="0 0 841.9 595.3"></svg>')).toEqual({ width: 842, height: 595 });
+    expect(svgDimensions('<svg viewBox="0,0,100,50"></svg>')).toEqual({ width: 100, height: 50 });
+  });
+  it('devolve null para conteúdo sem medidas ou que não é SVG', () => {
+    expect(svgDimensions('<svg></svg>')).toBeNull();
+    expect(svgDimensions('isto não é um svg')).toBeNull();
   });
 });
