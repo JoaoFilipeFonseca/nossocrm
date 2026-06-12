@@ -321,7 +321,7 @@ export const CreateStudio: React.FC<Props> = ({ onSaved, prefill }) => {
 
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Indicações para a IA (opcional)</label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
                 type="text"
                 value={briefing}
@@ -414,7 +414,7 @@ export const CreateStudio: React.FC<Props> = ({ onSaved, prefill }) => {
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
             <Button size="sm" variant="outline" onClick={preVisualizar} disabled={busyPreview}>
               <Eye className="h-4 w-4 mr-1" /> {busyPreview ? 'A compor…' : 'Pré-visualizar'}
             </Button>
