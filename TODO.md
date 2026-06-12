@@ -3,7 +3,8 @@
 > ## 🎯🎯 RUMO A 22 JUN (decidido e confirmado pelo João a 12/06/2026) — ORDEM TRAVADA
 > **Objectivo: CRM terminado, todo verificado e testado a 22/06; depois melhora-se com o uso.**
 > **ÂMBITO CONGELADO: não entra nada de novo até 22/06 — ideias capturam-se aqui e ficam para depois.**
-> 12-13: polish biblioteca (logo Brand Kit · tags na gaveta · 1 variante · alias vídeo) →
+> ✅ 12: polish biblioteca FEITO+VERIFICADO em produção (logo Brand Kit nos templates `fcc9969`+`835c62b`,
+> variante Claro, etiquetas na gaveta, alias vídeo; logo sem sharp na lambda → fallback SVG cru) →
 > 15-16: **DASH-2 lead scoring** (maqueta primeiro) → 17: reserva (SYS-EDIT só com "avança"; senão
 > antecipar QA) → 18: João remove Muhammad do BM + QA percurso da lead → 19: QA páginas/estados/
 > mobile/escuro → 20 manhã: QA automações+segurança → 22: copy PT-PT + vitest verde (incl. mock
@@ -71,8 +72,10 @@
 >   Definições→Geral (admin) + GET/PUT /api/settings/privacidade.
 > ✅ (feito 12/06, 2.ª sessão) verificação visual em produção: aba Criar com foto, Duplicar/Marcar usei/Versões,
 > campo privacidade, mobile 375/540 — tudo verde, ver bloco no topo.
-> Polish capturado (não executar sem ordem): editar tags na gaveta; alias upload de vídeo no Criar; logo do
-> Brand Kit no template (hoje é o nome em texto); mais variantes de layout.
+> ✅ Polish FEITO (12/06 tarde, `fcc9969`+`835c62b`, verificado em produção): logo do Brand Kit nos templates
+> (chip + cabeçalho do flyer com inverso; fallback nome em texto), variante "Claro (fundo branco editorial)",
+> etiquetas editáveis na gaveta, atalho de upload de vídeo/imagem na aba Criar. 🧠 sharp não carrega na lambda
+> também para o logo → fallback SVG cru com dimensões do viewBox (satori/resvg aceitam SVG em image).
 >
 > ## (feito) PRÓXIMO DECIDIDO (11/06/2026 fim do dia) — MKT-BIBLIOTECA, decisões do João JÁ TOMADAS (não re-perguntar)
 > **Visão (palavras dele):** "além de criar quero poder GUARDAR posts, ideias, tudo relacionado com o negócio:
