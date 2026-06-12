@@ -8,7 +8,7 @@ import React from 'react';
 
 export type RenderFormat = 'anuncio' | 'post' | 'story' | 'flyer';
 export type RenderRatio = 'square' | 'portrait';
-export type TemplateVariant = 'classico' | 'faixa';
+export type TemplateVariant = 'classico' | 'faixa' | 'claro';
 
 export const FORMAT_LABELS: Record<RenderFormat, string> = {
   anuncio: 'Criativo para anúncio Meta',
@@ -20,6 +20,7 @@ export const FORMAT_LABELS: Record<RenderFormat, string> = {
 export const VARIANT_LABELS: Record<TemplateVariant, string> = {
   classico: 'Clássico (foto + faixa da marca)',
   faixa: 'Imersivo (foto inteira + gradiente)',
+  claro: 'Claro (fundo branco editorial)',
 };
 
 /** Dimensões certas por formato. Posts têm DOIS rácios de raiz (decisão do João 11/06). */
@@ -36,6 +37,13 @@ export function hexOrDefault(value: string | null | undefined, fallback: string)
   return value && HEX_RE.test(value.trim()) ? value.trim() : fallback;
 }
 
+/** Logo já convertido para PNG data URI leve (o satori precisa de dimensões explícitas). */
+export interface TemplateLogo {
+  uri: string;
+  width: number;
+  height: number;
+}
+
 export interface TemplateBrand {
   primary: string;
   accent: string;
@@ -44,6 +52,10 @@ export interface TemplateBrand {
   telefone: string | null;
   ami: string | null;
   website: string | null;
+  /** Logo principal (fundo claro, ex.: dentro do chip branco). null → nome em texto. */
+  logo: TemplateLogo | null;
+  /** Logo inverso (para fundos escuros da marca, ex.: cabeçalho do flyer). */
+  logoInverse: TemplateLogo | null;
 }
 
 export interface TemplateImovel {
@@ -82,6 +94,8 @@ export function brandFromKit(kit: Record<string, unknown> | null | undefined): T
     telefone: k.telefone ?? null,
     ami: k.ami ?? null,
     website: k.website ?? null,
+    logo: null,
+    logoInverse: null,
   };
 }
 
@@ -94,6 +108,9 @@ function footerLine(brand: TemplateBrand): string {
 /* Elementos auxiliares (satori: flexbox apenas, containers com children precisam de display flex). */
 
 function BrandChip({ brand, size }: { brand: TemplateBrand; size: number }) {
+  const logo = brand.logo;
+  const logoH = Math.round(size * 1.7);
+  const logoW = logo ? Math.max(1, Math.round(logoH * (logo.width / logo.height))) : 0;
   return (
     <div
       style={{
@@ -108,7 +125,12 @@ function BrandChip({ brand, size }: { brand: TemplateBrand; size: number }) {
         letterSpacing: 1,
       }}
     >
-      {brand.nome.toUpperCase()}
+      {logo ? (
+
+        <img src={logo.uri} width={logoW} height={logoH} alt="" />
+      ) : (
+        brand.nome.toUpperCase()
+      )}
     </div>
   );
 }
@@ -293,6 +315,82 @@ function TemplateFaixa({ format, ratio, brand, imovel, texts }: TemplateProps) {
   );
 }
 
+/**
+ * Variante "claro" (editorial): fundo branco, foto em cima, bloco de texto claro em baixo
+ * com a headline na cor da marca. Mesmas margens de segurança do clássico.
+ */
+function TemplateClaro({ format, ratio, brand, imovel, texts }: TemplateProps) {
+  const { width, height } = dimensionsFor(format, ratio);
+  const isStory = format === 'story';
+  const pad = Math.round(width * 0.06);
+  const fotoH = Math.round(height * (isStory ? 0.52 : ratio === 'portrait' ? 0.56 : 0.54));
+  const headlineSize = Math.round(width * (isStory ? 0.062 : 0.052));
+  const subSize = Math.round(width * 0.031);
+  const metaSize = Math.round(width * 0.024);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', width, height, backgroundColor: '#ffffff', fontFamily: 'Inter' }}>
+      {isStory && <div style={{ display: 'flex', height: Math.round(height * 0.07) }} />}
+      <div style={{ display: 'flex', position: 'relative', width, height: fotoH }}>
+        <Foto url={imovel?.fotoUrl ?? null} width={width} height={fotoH} />
+        <div style={{ display: 'flex', position: 'absolute', top: pad * 0.6, left: pad * 0.6 }}>
+          <BrandChip brand={brand} size={metaSize} />
+        </div>
+        {imovel?.preco && (
+          <div style={{ display: 'flex', position: 'absolute', top: pad * 0.6, right: pad * 0.6 }}>
+            <PriceChip brand={brand} preco={imovel.preco} size={metaSize} />
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, padding: `${pad * 0.8}px ${pad}px` }}>
+        <div style={{ display: 'flex', fontSize: headlineSize, fontWeight: 700, lineHeight: 1.15, color: brand.primary }}>
+          {texts.headline}
+        </div>
+        {texts.sub && (
+          <div style={{ display: 'flex', fontSize: subSize, marginTop: Math.round(pad * 0.35), color: '#334155', lineHeight: 1.3 }}>
+            {texts.sub}
+          </div>
+        )}
+        {imovel?.detalhes && (
+          <div style={{ display: 'flex', fontSize: metaSize, marginTop: Math.round(pad * 0.35), color: '#64748b' }}>
+            {[imovel.detalhes, imovel.local].filter(Boolean).join('   ·   ')}
+          </div>
+        )}
+        <div style={{ display: 'flex', flexGrow: 1 }} />
+        {texts.cta && (
+          <div
+            style={{
+              display: 'flex',
+              alignSelf: 'flex-start',
+              backgroundColor: brand.accent,
+              color: '#10212f',
+              fontSize: subSize,
+              fontWeight: 700,
+              padding: `${Math.round(pad * 0.3)}px ${Math.round(pad * 0.6)}px`,
+              borderRadius: 14,
+            }}
+          >
+            {texts.cta}
+          </div>
+        )}
+        <div
+          style={{
+            display: 'flex',
+            marginTop: Math.round(pad * 0.45),
+            paddingTop: Math.round(pad * 0.3),
+            borderTop: '1px solid #e2e8f0',
+            fontSize: metaSize * 0.9,
+            color: '#64748b',
+          }}
+        >
+          {footerLine(brand)}
+        </div>
+      </div>
+      {isStory && <div style={{ display: 'flex', height: Math.round(height * 0.05) }} />}
+    </div>
+  );
+}
+
 /** Flyer A4 (one-pager): cabeçalho da marca, foto, título, descrição, destaques e contacto. */
 function TemplateFlyer({ brand, imovel, texts }: TemplateProps) {
   const { width, height } = dimensionsFor('flyer');
@@ -312,7 +410,17 @@ function TemplateFlyer({ brand, imovel, texts }: TemplateProps) {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 34, fontWeight: 700, letterSpacing: 1 }}>{brand.nome.toUpperCase()}</div>
+          {brand.logoInverse ? (
+
+            <img
+              src={brand.logoInverse.uri}
+              width={Math.max(1, Math.round(64 * (brand.logoInverse.width / brand.logoInverse.height)))}
+              height={64}
+              alt=""
+            />
+          ) : (
+            <div style={{ display: 'flex', fontSize: 34, fontWeight: 700, letterSpacing: 1 }}>{brand.nome.toUpperCase()}</div>
+          )}
           {brand.cargo && <div style={{ display: 'flex', fontSize: 20, opacity: 0.85, marginTop: 4 }}>{brand.cargo}</div>}
         </div>
         {imovel?.preco && <PriceChip brand={brand} preco={imovel.preco} size={30} />}
@@ -377,5 +485,6 @@ function TemplateFlyer({ brand, imovel, texts }: TemplateProps) {
 export function buildTemplate(props: TemplateProps): React.ReactElement {
   if (props.format === 'flyer') return <TemplateFlyer {...props} />;
   if (props.variant === 'faixa') return <TemplateFaixa {...props} />;
+  if (props.variant === 'claro') return <TemplateClaro {...props} />;
   return <TemplateClassico {...props} />;
 }

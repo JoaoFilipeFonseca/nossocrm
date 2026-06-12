@@ -35,7 +35,7 @@ export const maxDuration = 60;
 const BodySchema = z.object({
   format: z.enum(['anuncio', 'post', 'story', 'flyer']),
   ratio: z.enum(['square', 'portrait']).default('square'),
-  variant: z.enum(['classico', 'faixa']).default('classico'),
+  variant: z.enum(['classico', 'faixa', 'claro']).default('classico'),
   imovel_id: z.string().uuid().nullable().optional(),
   foto_path: z.string().max(400).nullable().optional(),
   texts: z.object({
@@ -132,6 +132,47 @@ async function fotoToDataUri(url: string, origin: string): Promise<string | null
   return null;
 }
 
+/**
+ * Logos do Brand Kit chegam como data URI (muitas vezes SVG) ou URL. O satori precisa de
+ * raster com dimensões explícitas → convertemos com o sharp para um PNG pequeno. Sem sharp
+ * (ou com logo inválido) devolvemos null e o template cai para o nome em texto — nunca falha.
+ */
+async function logoToTemplateLogo(value: string | null | undefined): Promise<{ uri: string; width: number; height: number } | null> {
+  if (!value) return null;
+  try {
+    let buf: Buffer | null = null;
+    if (value.startsWith('data:')) {
+      const comma = value.indexOf(',');
+      if (comma < 0) return null;
+      const meta = value.slice(5, comma);
+      const payload = value.slice(comma + 1);
+      buf = meta.includes('base64')
+        ? Buffer.from(payload, 'base64')
+        : Buffer.from(decodeURIComponent(payload), 'utf8');
+    } else if (/^https?:\/\//.test(value)) {
+      const res = await fetch(value);
+      if (!res.ok) return null;
+      buf = Buffer.from(await res.arrayBuffer());
+    }
+    if (!buf || buf.length === 0 || buf.length > 2 * 1024 * 1024) return null;
+
+    const sharp = (await import('sharp')).default;
+    const out = await sharp(buf, { density: 300 })
+      .resize({ height: 160, withoutEnlargement: false })
+      .png()
+      .toBuffer({ resolveWithObject: true });
+    if (!out.info.width || !out.info.height) return null;
+    return {
+      uri: `data:image/png;base64,${out.data.toString('base64')}`,
+      width: out.info.width,
+      height: out.info.height,
+    };
+  } catch (e) {
+    console.error('[criativos/render] logo indisponível (fallback para texto):', e);
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   if (!isAllowedOrigin(req)) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -158,10 +199,13 @@ export async function POST(req: Request) {
     const admin = createStaticAdminClient();
     const { data: kit } = await admin
       .from('ai_brand_kits')
-      .select('brand_primary_color, brand_accent_color, nome_profissional, cargo, ami, telefone, website')
+      .select('brand_primary_color, brand_accent_color, nome_profissional, cargo, ami, telefone, website, logo_full_url, logo_inverse_url')
       .eq('organization_id', orgId)
       .maybeSingle();
     const brand = brandFromKit(kit);
+    brand.logo = await logoToTemplateLogo(kit?.logo_full_url as string | null);
+    // Só o inverso é seguro sobre o cabeçalho escuro do flyer; sem ele, fica o nome em texto.
+    brand.logoInverse = await logoToTemplateLogo(kit?.logo_inverse_url as string | null);
 
     // Imóvel + foto (RLS valida a org; URL assinado de 10 minutos só para o render).
     let imovel: TemplateImovel | null = null;

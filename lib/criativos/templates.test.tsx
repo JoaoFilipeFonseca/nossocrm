@@ -42,7 +42,7 @@ describe('buildTemplate', () => {
 
   it('devolve um elemento React para cada formato e variante', () => {
     for (const format of ['anuncio', 'post', 'story', 'flyer'] as const) {
-      for (const variant of ['classico', 'faixa'] as const) {
+      for (const variant of ['classico', 'faixa', 'claro'] as const) {
         const el = buildTemplate({ variant, format, ratio: 'portrait', brand, imovel, texts });
         expect(el).toBeTruthy();
         expect(typeof el.type).toBe('function');
@@ -52,6 +52,47 @@ describe('buildTemplate', () => {
 
   it('labels completos', () => {
     expect(Object.keys(FORMAT_LABELS)).toHaveLength(4);
-    expect(Object.keys(VARIANT_LABELS)).toHaveLength(2);
+    expect(Object.keys(VARIANT_LABELS)).toHaveLength(3);
+  });
+
+  it('brandFromKit arranca sem logo (preenchido pelo route quando existe)', () => {
+    expect(brandFromKit(null).logo).toBeNull();
+    expect(brandFromKit(null).logoInverse).toBeNull();
+  });
+});
+
+describe('logo do Brand Kit nos templates', () => {
+  const texts = { headline: 'Moradia T3 com jardim', sub: null, cta: null };
+  const logo = { uri: 'data:image/png;base64,AAAA', width: 320, height: 160 };
+
+  /** Procura recursivamente um <img> com o src dado na árvore React (sem renderizar). */
+  function findImg(node: unknown, src: string): boolean {
+    if (!node || typeof node !== 'object') return false;
+    const el = node as { type?: unknown; props?: Record<string, unknown> };
+    if (el.type === 'img' && el.props?.src === src) return true;
+    if (typeof el.type === 'function') {
+      const rendered = (el.type as (p: unknown) => unknown)(el.props);
+      return findImg(rendered, src);
+    }
+    const children = el.props?.children;
+    const list = Array.isArray(children) ? children : children != null ? [children] : [];
+    return list.some((c) => findImg(c, src));
+  }
+
+  it('com logo, o chip da marca usa a imagem em vez do nome', () => {
+    const brand = { ...brandFromKit(null), logo };
+    const el = buildTemplate({ variant: 'classico', format: 'post', ratio: 'square', brand, imovel: null, texts });
+    expect(findImg(el, logo.uri)).toBe(true);
+  });
+
+  it('sem logo, não há imagem de marca (cai para o nome em texto)', () => {
+    const el = buildTemplate({ variant: 'classico', format: 'post', ratio: 'square', brand: brandFromKit(null), imovel: null, texts });
+    expect(findImg(el, logo.uri)).toBe(false);
+  });
+
+  it('o flyer usa o logo inverso no cabeçalho escuro', () => {
+    const brand = { ...brandFromKit(null), logoInverse: logo };
+    const el = buildTemplate({ variant: 'classico', format: 'flyer', brand, imovel: null, texts });
+    expect(findImg(el, logo.uri)).toBe(true);
   });
 });

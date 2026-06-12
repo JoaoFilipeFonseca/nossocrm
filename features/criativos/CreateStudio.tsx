@@ -49,9 +49,11 @@ export interface StudioPrefill {
 interface Props {
   onSaved: () => void;
   prefill?: StudioPrefill | null;
+  /** Atalho para quem já tem o ficheiro pronto (vídeo/imagem): abre o + Adicionar da biblioteca. */
+  onQuickUpload?: () => void;
 }
 
-export const CreateStudio: React.FC<Props> = ({ onSaved, prefill }) => {
+export const CreateStudio: React.FC<Props> = ({ onSaved, prefill, onQuickUpload }) => {
   const [format, setFormat] = useState<RenderFormat | null>(prefill?.format ?? null);
   const [ratio, setRatio] = useState<RenderRatio>(prefill?.ratio ?? 'square');
   const [variant, setVariant] = useState<TemplateVariant>(prefill?.variant ?? 'classico');
@@ -230,6 +232,15 @@ export const CreateStudio: React.FC<Props> = ({ onSaved, prefill }) => {
         <p className="md:col-span-2 text-xs text-slate-500 dark:text-slate-400">
           Peças compostas com as cores e identidade do Brand Kit (Definições → Marca) e as fotos reais do imóvel. Cada "Gerar e guardar" cria uma peça NOVA na biblioteca, nunca substitui nada.
         </p>
+        {onQuickUpload && (
+          <p className="md:col-span-2 text-xs text-slate-500 dark:text-slate-400">
+            Já tem um vídeo ou uma imagem prontos?{' '}
+            <button onClick={onQuickUpload} className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+              Carregue o ficheiro directamente para a biblioteca
+            </button>
+            .
+          </p>
+        )}
       </div>
     );
   }

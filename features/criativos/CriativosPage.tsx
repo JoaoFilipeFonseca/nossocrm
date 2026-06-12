@@ -138,6 +138,7 @@ export const CriativosPage: React.FC = () => {
   const [usageDate, setUsageDate] = useState('');
   const [usageNote, setUsageNote] = useState('');
   const [usageSaving, setUsageSaving] = useState(false);
+  const [tagInput, setTagInput] = useState('');
 
   // ?tab=criar abre a aba Criar (lido pós-montagem, sem mexer na hidratação).
   useEffect(() => {
@@ -289,8 +290,31 @@ export const CriativosPage: React.FC = () => {
     }
   };
 
-  // Ao mudar de peça na gaveta, fecha o formulário de utilização.
-  useEffect(() => { setUsageOpen(false); }, [selected?.id]);
+  /** Etiquetas editáveis na gaveta (optimista + PATCH; o backend já aceita tags). */
+  const saveTags = async (id: string, tags: string[]) => {
+    patchLocal(id, { tags });
+    await fetch(`/api/criativos/${id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tags }),
+    });
+  };
+
+  const addTag = () => {
+    if (!selected) return;
+    const t = tagInput.trim().toLowerCase().replace(/\s+/g, '-').slice(0, 40);
+    if (!t || selected.tags.includes(t)) { setTagInput(''); return; }
+    setTagInput('');
+    void saveTags(selected.id, [...selected.tags, t]);
+  };
+
+  const removeTag = (t: string) => {
+    if (!selected) return;
+    void saveTags(selected.id, selected.tags.filter((x) => x !== t));
+  };
+
+  // Ao mudar de peça na gaveta, fecha o formulário de utilização e limpa a etiqueta a meio.
+  useEffect(() => { setUsageOpen(false); setTagInput(''); }, [selected?.id]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
@@ -360,6 +384,7 @@ export const CriativosPage: React.FC = () => {
           key={studioPrefill?.parent_id ?? 'novo'}
           prefill={studioPrefill}
           onSaved={() => { setStudioPrefill(null); setTab('biblioteca'); load(); }}
+          onQuickUpload={() => { setTab('biblioteca'); setAddMode('file'); }}
         />
       )}
 
@@ -721,6 +746,37 @@ export const CriativosPage: React.FC = () => {
                 )}
                 {selected.ai_model && (<div><strong className="text-slate-700 dark:text-slate-200">Modelo IA:</strong> {selected.ai_model}</div>)}
                 {selected.ai_cost_usd != null && (<div><strong className="text-slate-700 dark:text-slate-200">Custo:</strong> ${selected.ai_cost_usd}</div>)}
+              </div>
+
+              <div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Etiquetas</div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {selected.tags.map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200"
+                    >
+                      {t}
+                      <button
+                        onClick={() => removeTag(t)}
+                        aria-label={`Remover etiqueta ${t}`}
+                        className="text-slate-400 hover:text-rose-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                    onBlur={() => { if (tagInput.trim()) addTag(); }}
+                    placeholder="+ etiqueta (Enter)"
+                    maxLength={40}
+                    className="px-2 py-0.5 text-xs rounded-full border border-dashed border-slate-300 dark:border-white/20 bg-transparent text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary-500 w-36"
+                  />
+                </div>
               </div>
 
               <div>
