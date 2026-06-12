@@ -27,8 +27,19 @@
 > 3. **Depois (escolha do João):** ✅ escolhido a 11/06 → **MKT-BIBLIOTECA** (ver bloco abaixo). DASH-2 fica na fila.
 > Já feitos (reclassificar, não re-propor): INT-DOMAIN, MA-CAPI, MKT-MEASURE(construível), AUTO-1 pause-on-touch.
 
-> ## ✅ MKT-BIBLIOTECA — CONSTRUÍDA (12/06/2026, sessão terminou por limite de créditos)
-> **Estado real e honesto:**
+> ## ✅✅ MKT-BIBLIOTECA — FECHADA E VERIFICADA EM PRODUÇÃO (12/06/2026)
+> **Verificação visual final FEITA a 12/06 (2.ª sessão):** post com imóvel real (T6 Seroa, Ref. 124321316-18)
+> → copy IA fiel (1 650 000 €, PT-PT, sem traços) → **preview na UI COM A FOTO DO IMÓVEL** nos dois rácios
+> (◻1080×1080 e ▯1080×1350, naturalWidth confere) → guardado pela UI → peça na Biblioteca com miniatura
+> assinada do bucket ✅. Gaveta: **Duplicar** de peça gerada abre o Criar pré-preenchido (headline/copy/imóvel)
+> ✅; **Marcar onde usei** (Facebook+data+nota → "📌 Usei em: Facebook (12/06/2026)" no cartão e na gaveta) ✅;
+> **Duplicar peça de texto** cria "(cópia)" em rascunho e a secção **Versões** liga ao original ✅. **Política
+> de privacidade** em Definições→Geral guardada (https://joaofilipefonseca.pt/privacidade, confirmada na BD) ✅.
+> Mobile 375/540 + tablet 768 da aba Criar sem overflow ✅ (**fix `8646d68`**: as filas de botões "Gerar copy
+> com IA" e "Pré-visualizar/Gerar e guardar" não tinham flex-wrap e ficavam cortadas a 375px). Consola 0 erros
+> em /criativos (ambas as abas) e /settings ✅. Dados de teste 100% limpos (2 linhas + PNG do bucket); restam
+> as 3 seed de Maio. tsc0/lint0/vitest533/5.
+> **Estado real e honesto (histórico da construção):**
 > - **Fatia 1 (Repositório) ✅ FEITA E VERIFICADA em produção** (commits `61589c8`+`340f30f`): /criativos é a
 >   Biblioteca (abas 📚 Biblioteca/✨ Criar, nav "Biblioteca"); origem/estado/usages/parent_id/render_spec na
 >   creative_archive (migração `20260611190000`); + Adicionar (ficheiro/ideia/referência/texto); upload real
@@ -49,9 +60,8 @@
 >   `6ddd490`): Duplicar (gerada→Criar pré-preenchido via render_spec+parent_id; texto/ficheiro→cópia directa),
 >   Marcar onde usei (add_usage ✅ verificado via API na F1), secção Versões, campo Política de privacidade em
 >   Definições→Geral (admin) + GET/PUT /api/settings/privacidade.
-> **⚠️ FALTA (1.ª coisa da próxima sessão): verificação visual em produção da aba Criar com foto (preview +
-> guardar pela UI), do Duplicar/Marcar usei/Versões na gaveta, do campo privacidade, e mobile 375/540 da aba
-> Criar. Depois: maqueta tem ainda por fazer = nada estrutural; polish capturado abaixo.**
+> ✅ (feito 12/06, 2.ª sessão) verificação visual em produção: aba Criar com foto, Duplicar/Marcar usei/Versões,
+> campo privacidade, mobile 375/540 — tudo verde, ver bloco no topo.
 > Polish capturado (não executar sem ordem): editar tags na gaveta; alias upload de vídeo no Criar; logo do
 > Brand Kit no template (hoje é o nome em texto); mais variantes de layout.
 >
