@@ -1,5 +1,14 @@
 # TODO — Foco Imo (CRM) — CATÁLOGO ÚNICO
 
+> ## 🎯🎯 RUMO A 22 JUN (decidido e confirmado pelo João a 12/06/2026) — ORDEM TRAVADA
+> **Objectivo: CRM terminado, todo verificado e testado a 22/06; depois melhora-se com o uso.**
+> **ÂMBITO CONGELADO: não entra nada de novo até 22/06 — ideias capturam-se aqui e ficam para depois.**
+> 12-13: polish biblioteca (logo Brand Kit · tags na gaveta · 1 variante · alias vídeo) →
+> 15-16: **DASH-2 lead scoring** (maqueta primeiro) → 17: reserva (SYS-EDIT só com "avança"; senão
+> antecipar QA) → 18: João remove Muhammad do BM + QA percurso da lead → 19: QA páginas/estados/
+> mobile/escuro → 20 manhã: QA automações+segurança → 22: copy PT-PT + vitest verde (incl. mock
+> rbac privacidade) + stress test + **relatório final**. Detalhe diário: `memory/plano_rumo_22junho.md`.
+
 > ## ▶️ ORDEM DE EXECUÇÃO DECIDIDA PELO JOÃO (08/06/2026) — seguir sem saltar
 > O épico **MKT-MEASURE** está fechado na parte construível (CAPI + Funil + Orgânico + Cérebro).
 > O Cérebro expôs o gargalo: **centenas de leads, 0 fecham → o problema está DENTRO do CRM**
