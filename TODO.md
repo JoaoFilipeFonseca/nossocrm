@@ -127,7 +127,20 @@
 
 ## 🗓️ Registo da sessão 13 Jun 2026 — QA TOTAL (antecipada, plano RUMO A 22) — HEAD `1df3180`
 QA exaustiva em produção (Playwright autenticado + Supabase MCP). Os 4 passos do plano corridos +
-varrimento TOTAL de TODAS as rotas (56) × mobile 375 × consola, com smoke HTTP a 200 em todas.
+varrimento TOTAL de TODAS as rotas (56) × mobile 375 × consola + **testes funcionais a clicar**
+(criar lead, mover etapa, validações) — foi a clicar que apareceram os bugs que o carregamento de
+páginas não via.
+**Corrigido na hora (commits `1df3180`, `9dafc93`, `6eafede`, `24f8b32`, verificado em produção):**
+- **Proveniência furada no Novo Negócio — `6eafede`:** a criação inline de contacto (botão "+ Novo"
+  no modal Novo Negócio) não pedia origem (nem telefone) → entravam leads sem proveniência (foi por
+  aqui que entrou o "sr teste com tudo"). Agora: origens em fonte única `lib/contacts/origins.ts`
+  (reusada pelo form standalone + inline), campo Origem obrigatório (`<select required>`), `source`
+  reencaminhado em `useCreateDealWithContact`, e `Contact.source` alargado de união estreita
+  (WEBSITE|LINKEDIN|REFERRAL|MANUAL) para `string` (condiz com a realidade; o mapper já castava).
+  Verificado: bloqueia sem origem ("Selecione um item"); lead criada fica com `source='Telefone'`.
+- **deal_items 400 — `24f8b32`:** `deals.ts` (getById + updateItems) selecionava `unit, discount,
+  total, updated_at` de `deal_items` — colunas inexistentes → PostgREST 400 ao abrir um negócio.
+  Select alinhado com a tabela/`DbDealItem`. (CreateDealModalV2 é código morto, não usado.)
 **Corrigido na hora (commits `1df3180`, `9dafc93`, verificado em produção):**
 - **BUG React #418 (hidratação) — `9dafc93`:** `hooks/usePersistedState.ts` lia o localStorage no
   inicializador do `useState` → SSR rende o default mas o 1.º render do cliente usava o valor
@@ -158,7 +171,12 @@ verify_jwt=false (curl→403); **advisors 0 ERROR** (security+performance); 13 b
 em todas as tabelas; RGPD (/unsubscribe gracioso + privacy_policy_url); copy visível sem
 brasileirismos/AO-1990; emails sem mojibake (UTF-8).
 
-**Achados capturados (P3, não corrigidos — âmbito congelado; rever pós-22):**
+**Achados capturados (rever pós-22):**
+- 🔴 **A INVESTIGAR — `/api/ai/tasks/deals/analyze` devolve 500** ao mudar um negócio de etapa
+  (análise IA do novo estágio): "[AI Analysis] Error: Erro ao executar tarefa de IA." Disparou num
+  negócio NOVO/vazio; o cockpit de um negócio real sem mudar etapa não dá erro. Causa provável:
+  falha do provedor de IA/schema ou prompt `task_deals_analyze` vazio/edge case de negócio sem
+  contexto. Precisa dos logs Vercel para a causa exacta + degradar com graça (não 500 → toast).
 - ⚠️ `messaging-webhook-meta` tem **verify_jwt=true** (curl→401). Webhook da Meta não envia JWT →
   se um dia activarem Meta Cloud API (WhatsApp/IG messaging) os POSTs morrem no gateway. Dormente
   hoje (0 mensagens). Pôr verify_jwt=false + verificar assinatura X-Hub-Signature dentro da função.
