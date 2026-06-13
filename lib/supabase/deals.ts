@@ -311,7 +311,7 @@ export const dealsService = {
       }
       const [dealResult, itemsResult] = await Promise.all([
         supabase.from('deals').select('*').eq('id', id).maybeSingle(),
-        supabase.from('deal_items').select('id, organization_id, deal_id, product_id, name, quantity, price, unit, discount, total, created_at, updated_at').eq('deal_id', id),
+        supabase.from('deal_items').select('id, organization_id, deal_id, product_id, name, quantity, price, created_at').eq('deal_id', id),
       ]);
 
       if (dealResult.error) return { data: null, error: dealResult.error };
@@ -453,7 +453,7 @@ export const dealsService = {
       // Fetch items
       const { data: items } = await supabase
         .from('deal_items')
-        .select('id, organization_id, deal_id, product_id, name, quantity, price, unit, discount, total, created_at, updated_at')
+        .select('id, organization_id, deal_id, product_id, name, quantity, price, created_at')
         .eq('deal_id', data.id);
 
       return {
