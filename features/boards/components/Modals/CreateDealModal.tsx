@@ -7,6 +7,7 @@ import { X, Building2, User, Mail, Phone, AlertCircle, Loader2 } from 'lucide-re
 import { DebugFillButton } from '@/components/debug/DebugFillButton';
 import { fakeDeal, fakeContact, fakeCompany } from '@/lib/debug';
 import { ContactSearchCombobox } from '@/components/ui/ContactSearchCombobox';
+import { ORIGEM_OPTIONS, ORIGEM_PLACEHOLDER } from '@/lib/contacts/origins';
 
 interface CreateDealModalProps {
     isOpen: boolean;
@@ -45,7 +46,8 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
         name: '',
         email: '',
         phone: '',
-        companyName: ''
+        companyName: '',
+        source: '' // origem obrigatória (regra: toda lead tem proveniência)
     });
 
     // Estado do deal
@@ -62,7 +64,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
         setSelectedContact(null);
         setSelectedCompany(null);
         setIsCreatingNew(false);
-        setNewContactData({ name: '', email: '', phone: '', companyName: '' });
+        setNewContactData({ name: '', email: '', phone: '', companyName: '', source: '' });
         setDealData({ title: '', value: '' });
         setError(null);
         setIsSubmitting(false);
@@ -83,7 +85,8 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
             name: contact.name,
             email: contact.email,
             phone: contact.phone,
-            companyName: company.name
+            companyName: company.name,
+            source: 'Outro'
         });
     };
 
@@ -182,7 +185,8 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                         contact: {
                             name: newContactData.name,
                             email: newContactData.email,
-                            phone: newContactData.phone
+                            phone: newContactData.phone,
+                            source: newContactData.source
                         }
                     }
                 });
@@ -357,6 +361,21 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                                         onChange={(e) => setNewContactData(prev => ({ ...prev, companyName: e.target.value }))}
                                         className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
                                     />
+                                </div>
+
+                                {/* Origem obrigatória — regra: toda lead criada à mão tem proveniência */}
+                                <div>
+                                    <select
+                                        required={isCreatingNew}
+                                        aria-label="Origem do contacto"
+                                        value={newContactData.source}
+                                        onChange={(e) => setNewContactData(prev => ({ ...prev, source: e.target.value }))}
+                                        className="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
+                                    >
+                                        <option value="" disabled>{ORIGEM_PLACEHOLDER} *</option>
+                                        {ORIGEM_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                                    </select>
+                                    <p className="text-[10px] text-slate-400 mt-1">Origem obrigatória — para saber de onde vêm os contactos.</p>
                                 </div>
                             </div>
                         )}

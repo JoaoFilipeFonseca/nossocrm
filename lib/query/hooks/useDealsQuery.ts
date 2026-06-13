@@ -604,6 +604,7 @@ export const useCreateDealWithContact = () => {
           name: relatedData.contact.name,
           email: relatedData.contact.email || '',
           phone: relatedData.contact.phone || '',
+          source: relatedData.contact.source || '',
           companyId: finalCompanyId,
           status: 'ACTIVE',
           stage: 'LEAD',

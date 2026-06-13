@@ -7,6 +7,7 @@ import { FocusTrap, useFocusReturn } from '@/lib/a11y';
 
 import ContactFilesPanel from './ContactFilesPanel';
 import { MetaAttribution } from '@/components/MetaAttribution';
+import { ORIGEM_OPTIONS, ORIGEM_PLACEHOLDER } from '@/lib/contacts/origins';
 interface ContactFormData {
   name: string;
   email: string;
@@ -16,19 +17,7 @@ interface ContactFormData {
   source: string; // AUD-B1 — origem obrigatória (regra: toda lead tem proveniência)
 }
 
-// Origens manuais (filtráveis/reportáveis). "Outro" cobre os restantes casos.
-const ORIGEM_OPTIONS = [
-  'Telefone',
-  'Indicação',
-  'Conhecimento pessoal',
-  'Portal Idealista',
-  'Portal Imovirtual',
-  'Facebook / Instagram',
-  'Site',
-  'Loja / Walk-in',
-  'Publicidade / Cartaz',
-  'Outro',
-];
+// Origens manuais: fonte única em @/lib/contacts/origins (reutilizada na criação inline do Novo Negócio).
 
 interface ContactFormModalProps {
   isOpen: boolean;
@@ -206,7 +195,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
               value={formData.source}
               onChange={e => setFormData({ ...formData, source: e.target.value })}
             >
-              <option value="" disabled>Como chegou este contacto?</option>
+              <option value="" disabled>{ORIGEM_PLACEHOLDER}</option>
               {ORIGEM_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
             <p className="text-[10px] text-slate-400 mt-1">Obrigatório — para saber de onde vêm os contactos (medição por canal).</p>
