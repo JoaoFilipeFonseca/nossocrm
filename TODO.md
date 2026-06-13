@@ -162,6 +162,7 @@ brasileirismos/AO-1990; emails sem mojibake (UTF-8).
   0×0 no estado vazio) — dar minHeight/condicionar render quando dimensionado.
 - `/settings/automation-logs` e `/unsubscribe` sem `<title>` específico (genérico "Foco Imo").
 - `/admin/saude`: cabeçalho "Saúde do CRM" não é `<h1>` (h1 vazio) — nit a11y.
+- Modal **Novo Negócio** (board) não tem `role="dialog"` (o Novo Contacto tem) — inconsistência a11y.
 - `automation-schedule-tick` run_count=0 apesar de last_run_at recente (semântica: conta execuções
   com trabalho real?); `backup-weekly` regista pela 1.ª vez no domingo 14/06 (record-run entrou 10/06).
 
