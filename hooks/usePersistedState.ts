@@ -27,7 +27,7 @@
  * ```
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * Opções para usePersistedState
@@ -91,25 +91,40 @@ export const usePersistedState = <T>(
   // Chave versionada: "my-key" -> "my-key:v1" (se version fornecida)
   const storageKey = options?.version ? `${key}:v${options.version}` : key;
 
-  const [state, setState] = useState<T>(() => {
-    // SSR safety: only access localStorage in browser
-    if (typeof window === 'undefined') {
-      return initialValue;
-    }
+  // IMPORTANTE (hidratação): o estado inicial é SEMPRE o initialValue, tanto no
+  // servidor como no primeiro render do cliente. Ler o localStorage no inicializador
+  // do useState faria o primeiro render do cliente divergir do HTML do servidor
+  // (que não tem localStorage) -> React error #418. O valor guardado é carregado
+  // só depois de montar, no useEffect abaixo.
+  const [state, setState] = useState<T>(initialValue);
+
+  // Salta a primeira execução do efeito de escrita (a do mount), para não
+  // sobrescrever o valor guardado com o default antes de o termos carregado.
+  const skipFirstWrite = useRef(true);
+
+  // Carregar o valor persistido após montar (só no browser).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const item = localStorage.getItem(storageKey);
-      return item ? JSON.parse(item) : initialValue;
+      if (item !== null) {
+        setState(JSON.parse(item));
+      }
     } catch (error) {
-      // Em caso de erro de parse (JSON inválido), retorna valor inicial
-      // Isso pode acontecer se o schema mudou e o dado antigo é incompatível
+      // JSON inválido (ex.: schema mudou) -> mantém o initialValue
       console.error(`Error reading localStorage key "${storageKey}":`, error);
-      return initialValue;
     }
-  });
+  }, [storageKey]);
 
   useEffect(() => {
     // SSR safety: only access localStorage in browser
     if (typeof window === 'undefined') {
+      return;
+    }
+    // Não escrever no mount (evita gravar o default por cima do valor guardado
+    // antes de o efeito de carregamento correr).
+    if (skipFirstWrite.current) {
+      skipFirstWrite.current = false;
       return;
     }
     try {
