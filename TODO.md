@@ -126,8 +126,16 @@
 ---
 
 ## 🗓️ Registo da sessão 13 Jun 2026 — QA TOTAL (antecipada, plano RUMO A 22) — HEAD `1df3180`
-QA exaustiva em produção (Playwright autenticado + Supabase MCP). Os 4 passos do plano corridos.
-**Corrigido na hora (commit `1df3180`, verificado em produção):**
+QA exaustiva em produção (Playwright autenticado + Supabase MCP). Os 4 passos do plano corridos +
+varrimento TOTAL de TODAS as rotas (56) × mobile 375 × consola, com smoke HTTP a 200 em todas.
+**Corrigido na hora (commits `1df3180`, `9dafc93`, verificado em produção):**
+- **BUG React #418 (hidratação) — `9dafc93`:** `hooks/usePersistedState.ts` lia o localStorage no
+  inicializador do `useState` → SSR rende o default mas o 1.º render do cliente usava o valor
+  guardado → divergência de hidratação → **#418 em /inbox** (viewMode 'list'/'focus'), e latente
+  em boards/settings. Agora inicia sempre com o initialValue e carrega o guardado num useEffect
+  pós-mount (1.ª escrita saltada para não sobrescrever). Verificado: /inbox com viewMode='list' →
+  0 erros (era 1 erro #418 consistente). **Apanhado só no varrimento mobile** (no desktop o
+  localStorage tinha o default e não disparava).
 - **BUG pesquisa PostgREST (stress test):** /contacts e Mensagens embutiam o termo cru em
   `.or(name.ilike.%termo%...)` → caracteres `\ ( ) * ,` davam pedido malformado (400 sem CORS →
   erros de consola). Passou a usar `sanitizePostgrestValue()` em `lib/supabase/contacts.ts`,
@@ -163,6 +171,9 @@ brasileirismos/AO-1990; emails sem mojibake (UTF-8).
 - `/settings/automation-logs` e `/unsubscribe` sem `<title>` específico (genérico "Foco Imo").
 - `/admin/saude`: cabeçalho "Saúde do CRM" não é `<h1>` (h1 vazio) — nit a11y.
 - Modal **Novo Negócio** (board) não tem `role="dialog"` (o Novo Contacto tem) — inconsistência a11y.
+- `<title>` de `/deals/[id]/cockpit` mostra o UUID cru ("Deal 997cb2b8…") em vez do nome do contacto.
+- Avisos VERBOSE do browser "Password field is not contained in a form" em Definições (campos de
+  chave/segredo fora de `<form>`) — não é erro; opcional envolver em form para password managers.
 - `automation-schedule-tick` run_count=0 apesar de last_run_at recente (semântica: conta execuções
   com trabalho real?); `backup-weekly` regista pela 1.ª vez no domingo 14/06 (record-run entrou 10/06).
 
