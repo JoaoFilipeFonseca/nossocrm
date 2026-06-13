@@ -125,6 +125,46 @@
 
 ---
 
+## 🗓️ Registo da sessão 13 Jun 2026 — QA TOTAL (antecipada, plano RUMO A 22) — HEAD `1df3180`
+QA exaustiva em produção (Playwright autenticado + Supabase MCP). Os 4 passos do plano corridos.
+**Corrigido na hora (commit `1df3180`, verificado em produção):**
+- **BUG pesquisa PostgREST (stress test):** /contacts e Mensagens embutiam o termo cru em
+  `.or(name.ilike.%termo%...)` → caracteres `\ ( ) * ,` davam pedido malformado (400 sem CORS →
+  erros de consola). Passou a usar `sanitizePostgrestValue()` em `lib/supabase/contacts.ts`,
+  `useMessagingConversationsQuery.ts`, `api/messaging/conversations/route.ts`. Input realista
+  ("O'Brien (T3) 100% ção") → 0 erros. (Sem injecção: PostgREST parametriza.)
+- **Ruído vitest:** mock de `PrivacySection` em `SettingsPage.rbac.test.tsx` elimina o fetch não
+  tratado a `/api/settings/privacidade` → vitest 550/5 **sem unhandled errors**.
+- **Dados de teste limpos + bug de dados:** contacto "sr teste com tudo" (órfão) eliminado; estava
+  como sobrevivente de um merge de teste mal feito que **escondia um lead REAL** ("Mário Carlos
+  capelas Sarmento", Calculadora FR). Lead restaurado (merged_into_id + deleted_at a null). 🧠 o
+  merge de contactos faz **soft-delete** (deleted_at) do source — reverter exige limpar ambos.
+- 0 contactos sem origem (regra de proveniência 100%); form Novo Contacto bloqueia origem vazia ✓.
+
+**Verificado verde (não exige acção):** percurso da lead E2E (proveniência→board→follow-up→caixa
+social→funil/cérebro honestos; CAPI `meta-capi-forward` vivo, 0 envios porque 0 ganhos — correcto);
+todas as páginas 0 erros de consola em desktop/tablet 768/mobile 375 + modo escuro (0 overflow
+horizontal); /admin/saude limpo (backup W23, erros 24h=0); client_errors = 35 todos resolvidos no
+domínio antigo (0/24h); /automacoes lista os 10 crons com contagens reais (sem "nunca"); crons
+verify_jwt=false (curl→403); **advisors 0 ERROR** (security+performance); 13 buckets privados; RLS
+em todas as tabelas; RGPD (/unsubscribe gracioso + privacy_policy_url); copy visível sem
+brasileirismos/AO-1990; emails sem mojibake (UTF-8).
+
+**Achados capturados (P3, não corrigidos — âmbito congelado; rever pós-22):**
+- ⚠️ `messaging-webhook-meta` tem **verify_jwt=true** (curl→401). Webhook da Meta não envia JWT →
+  se um dia activarem Meta Cloud API (WhatsApp/IG messaging) os POSTs morrem no gateway. Dormente
+  hoje (0 mensagens). Pôr verify_jwt=false + verificar assinatura X-Hub-Signature dentro da função.
+- Pesquisa: `sanitizePostgrestValue` não neutraliza wildcards `%`/`_` nem apanha o fetch falhado →
+  input patológico extremo (`'; DROP… %_\`) ainda gera 400/erros de consola (seguro, sem fuga).
+  Melhorar o sanitizer partilhado (escapar `%`/`_`) e/ou try/catch — afecta TODOS os pontos de busca.
+- Pesquisa multi-token não adjacente ("mario sarmento") não casa (é substring `ilike`). Unaccent OK.
+- Warning Recharts `width(-1)/height(-1)` na consola de /dashboard e /reports (gráfico em container
+  0×0 no estado vazio) — dar minHeight/condicionar render quando dimensionado.
+- `/settings/automation-logs` e `/unsubscribe` sem `<title>` específico (genérico "Foco Imo").
+- `/admin/saude`: cabeçalho "Saúde do CRM" não é `<h1>` (h1 vazio) — nit a11y.
+- `automation-schedule-tick` run_count=0 apesar de last_run_at recente (semântica: conta execuções
+  com trabalho real?); `backup-weekly` regista pela 1.ª vez no domingo 14/06 (record-run entrou 10/06).
+
 ## 🗓️ Registo da sessão 10 Jun 2026 — QA A FUNDO (percurso da lead) — HEAD `c978c18`
 Sessão de QA guiada (não construir features). Foco do João: **o caminho da lead** — entra,
 onde para, que sequência, follow-up, automações. Recon na BD + verificação ao vivo em produção.
