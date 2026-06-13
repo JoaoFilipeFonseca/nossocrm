@@ -93,6 +93,16 @@ vi.mock('./components/ai/AIAgentConfigSection', () => ({
   ),
 }))
 
+// PrivacySection faz fetch('/api/settings/privacidade') no mount; mockada para o teste
+// não depender da rede (evita NetworkError não tratado), seguindo o padrão das outras secções.
+vi.mock('./components/PrivacySection', () => ({
+  PrivacySection: () => (
+    <div>
+      <h3>Política de Privacidade</h3>
+    </div>
+  ),
+}))
+
 import SettingsPage from './SettingsPage'
 import { useAuth } from '@/context/AuthContext'
 

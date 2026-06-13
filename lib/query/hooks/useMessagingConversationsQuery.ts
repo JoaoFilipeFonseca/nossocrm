@@ -16,6 +16,7 @@ import {
 import { queryKeys } from '../queryKeys';
 import { getClient } from '@/lib/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { sanitizePostgrestValue } from '@/lib/utils/sanitize';
 import type {
   MessagingConversation,
   ConversationView,
@@ -97,7 +98,10 @@ export function useMessagingConversations(filters?: ConversationFilters) {
         query = query.gt('unread_count', 0);
       }
       if (filters?.search) {
-        query = query.or(`external_contact_name.ilike.%${filters.search}%,last_message_preview.ilike.%${filters.search}%`);
+        const safeSearch = sanitizePostgrestValue(filters.search);
+        if (safeSearch) {
+          query = query.or(`external_contact_name.ilike.%${safeSearch}%,last_message_preview.ilike.%${safeSearch}%`);
+        }
       }
 
       // Apply sorting

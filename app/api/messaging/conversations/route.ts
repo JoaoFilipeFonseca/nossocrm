@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 import { normalizePhoneE164 } from '@/lib/phone';
+import { sanitizePostgrestValue } from '@/lib/utils/sanitize';
 import type { ConversationStatus, ConversationPriority } from '@/lib/messaging/types';
 
 function json<T>(body: T, status = 200): Response {
@@ -92,7 +93,10 @@ export async function GET(req: Request) {
   }
 
   if (search) {
-    query = query.or(`external_contact_name.ilike.%${search}%,external_contact_id.ilike.%${search}%`);
+    const safeSearch = sanitizePostgrestValue(search);
+    if (safeSearch) {
+      query = query.or(`external_contact_name.ilike.%${safeSearch}%,external_contact_id.ilike.%${safeSearch}%`);
+    }
   }
 
   // Ordering and pagination

@@ -15,6 +15,7 @@
 import { supabase } from './client';
 import { Contact, CRMCompany, OrganizationId, PaginationState, PaginatedResponse, ContactsServerFilters, MetaAdAttribution, ContactCustomFields } from '@/types';
 import { sanitizeUUID, sanitizeText, sanitizeNumber } from './utils';
+import { sanitizePostgrestValue } from '@/lib/utils/sanitize';
 import { normalizePhoneE164 } from '@/lib/phone';
 
 async function getCurrentOrganizationId(): Promise<string | null> {
@@ -353,8 +354,12 @@ export const contactsService = {
       if (filters) {
         // T007: Search filter (name OR email)
         if (filters.search && filters.search.trim()) {
-          const searchTerm = filters.search.trim();
-          query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+          // Sanitizar antes de embutir no filtro PostgREST .or(): remove , ( ) * \\
+          // que quebram a sintaxe do filtro (input sujo provocava pedido malformado → falha de rede).
+          const searchTerm = sanitizePostgrestValue(filters.search.trim());
+          if (searchTerm) {
+            query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+          }
         }
 
         // T008: Stage filter
