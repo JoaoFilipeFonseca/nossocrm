@@ -47,6 +47,10 @@
 | **Análise — Cérebro** | Render + filtros 30/90/12 meses | ✅ dados reais, 0 overflow, 0 erros | 15 Jun |
 | **Análise — Funil** | Render | ✅ funil, 0 overflow | 15 Jun |
 | **Matches (Inbox Bruto)** | Render (é tool de colar texto→IA) | ✅ 0 overflow (não criei matches p/ não poluir) | 15 Jun |
+| **Cruzamentos — estado de match** | Mudar estado (novo→visto) + reverter | ✅ BD muda; "Novos" engloba novo+visto | 15 Jun |
+| **Automações — criar + builder + activar** | Criar rascunho (201) + builder carrega + activar vazio | ✅ 201; activação sem gatilho → 400 gracioso | 15 Jun |
+| **Importação bulk (`/api/import/contacts/bulk`)** | Linhas sujas (sem nome, dup, xss, gigante, email inválido) | ✅ 200; defaults `source='import'`/`name='Sem nome'`; permissivo (sem dedup) | 15 Jun |
+| **Merge de contactos** | Juntar par duplicado | ✅ 200, move registos, soft-delete do source | 15 Jun |
 | **Automações / crons (10)** | /automacoes conta corridas; curl→403 (verify_jwt) | ✅ | 13 Jun |
 | **Segurança** (advisors, RLS, buckets, secrets) | Advisors 0 ERROR; 13 buckets privados; RLS | ✅ | 13 Jun |
 | **RGPD** (/unsubscribe, rodapé, privacy_policy_url) | Verificado | ✅ | 13 Jun |
@@ -80,6 +84,8 @@
 | **Fragilidade IA tasks:** os 8 `/api/ai/tasks/**` têm "IA falha → 500" (só o analyze foi endurecido) | 🟠 Média | Aplicar degradação graciosa aos outros 7 (clique do utilizador, toast visível) |
 | **SSRF cego em `imoveis/[id]/fotos/from-url`:** servidor faz `fetch` de qualquer URL sem validar host (loopback/IP privado/metadata) | 🟠 Média‑alta | Exfil mínima hoje (só extrai `<img>`, corpo não volta ao cliente, operador‑only). Relevante p/ multi‑tenant. Fix: validar host/IP resolvido (bloquear privados/loopback/link‑local), revalidar em redirect. Nota: usa `r.jina.ai` como fallback (a URL alvo vai p/ 3.º) |
 | **Rascunho IA da Caixa Social ignora o conteúdo da mensagem** (gerou boas‑vindas de venda para uma DM de golpe) | 🟢 Baixa | Humano revê sempre antes de enviar; melhorar prompt p/ ter em conta a mensagem recebida / detectar spam |
+| **`contact_merge_log.target_contact_id` NOT NULL + FK ON DELETE SET NULL** (contradição → hard‑delete de um contacto que foi alvo de merge falha) | 🟢 Baixa | Dormente (app faz soft‑delete). Corrigir: tornar a coluna nullable OU mudar a FK p/ ON DELETE CASCADE |
+| **Importação bulk permissiva:** sem dedup de email, aceita email/telefone inválidos | 🟢 Baixa | É endpoint cru; a UI usa `/api/contacts/import` com modos de dedup. Defaults de nome/origem ok |
 | `messaging-webhook-meta` com `verify_jwt=true` (curl→401) | 🟠 Média | Dormente hoje; se activarem Meta Cloud messaging, POSTs morrem no gateway → `verify_jwt=false` + X‑Hub‑Signature |
 | Pesquisa: wildcards `%`/`_` não escapados → sobre‑correspondência | 🟢 Baixa | Melhorar `sanitizePostgrestValue` |
 | Pesquisa multi‑token não adjacente ("mario sarmento") não casa (substring ilike) | 🟢 Baixa | — |
@@ -98,11 +104,11 @@
 
 - ✅ **Mensagens / Caixa Social** (15 Jun): conversa abre, rascunho IA gera (200, PT‑PT), sem Enviar. Falta só: marcar tratada (mutação real, não testada p/ não mexer em dados reais) + pesquisa de conversas com lista cheia.
 - 🟡 **Imóveis** (15 Jun, parcial): criar via API (201) + ficha completa renderiza ✅; SSRF do from‑url capturado ⚠️. **Falta:** form de 50+ campos pela UI, upload real de fotos, adicionar/editar CMI + mandatos + proprietários + documentos, Agente de Divulgação (IMO‑7), Custo & ROI (NS‑3) com dados.
-- 🟡 **Cruzamentos / Matches:** Matches (Inbox Bruto) renderiza ✅; falta: colar texto→IA cruza (cria matches), mudar estado de match (PATCH /api/matches/[id]), /cruzamentos a fundo.
+- ✅ **Cruzamentos / Matches** (15 Jun): Matches (Inbox Bruto) renderiza; /cruzamentos estado de match (novo→visto→revertido) ✅. Falta: colar texto→IA cruza (cria matches).
 - 🟡 **Análise:** Cérebro ✅ (filtros 30/90/12m) + Funil ✅ exercitados; **falta:** Relatórios / Financeiro / Visão Geral a fundo (filtros/datas/exportações/estados vazios).
 - 🟡 **Meta Ads / Marketing** (/anuncios, /criativos/Biblioteca, /funil, /organico): criar/editar anúncio (gated pela Meta), criar criativo nos 4 formatos, duplicar, "marcar onde usei". (Construído e verificado por API antes; falta re‑exercitar UI a clicar.)
-- 🟡 **Automações — builder:** criar/editar/activar uma automação no editor de nós; triggers.
-- 🟡 **Importação de contactos (CSV/XLSX):** ficheiro válido, sujo, duplicados, mapping; merge de contactos.
+- ✅ **Automações — builder** (15 Jun): criar rascunho (201) + builder carrega + activação sem gatilho → 400 gracioso. Falta: montar nós + activar uma real com trigger (cuidado: pode disparar envios).
+- ✅ **Importação bulk + merge** (15 Jun): bulk com linhas sujas → 200 (defaults ok); merge → soft‑delete do source. Falta: **UI import CSV/XLSX** (`/api/contacts/import` — multipart, mapping, modos de dedup).
 - ⬜ **Percurso da lead com dados REAIS (18/06):** anúncio→lead entra→board certo→tag→follow‑up→mensagens→negócio ganho→CAPI→funil/cérebro reflectem.
 - ⬜ **Re‑passagem páginas × estados (19/06):** vazio/erro/cheio/modais/forms/thank‑you × 375/768/desktop × escuro, em TODAS.
 - ⬜ **Re‑verificação automações + segurança (20/06):** todas em /automacoes contam certo; advisors 0 ERROR; buckets privados; secrets no Vault.
