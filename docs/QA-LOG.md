@@ -18,8 +18,10 @@
   + stress do processo central — FEITOS. Re‑passagem de profundidade em curso: **Mensagens/Caixa Social ✅**
   e **Imóveis COMPLETO ✅** (form 50+ campos, mandatos/proprietários/documentos, upload real de fotos,
   IMO‑7, NS‑3, delete‑cascade) feitos 15/06 — **1 bug real corrigido+deployado+reconfirmado (#12, órfãos
-  no storage).** Seguem as restantes áreas 🟡/⬜ abaixo (import CSV/XLSX, marketing, exportações) ao longo
-  de 15‑22; 18/06 percurso da lead com dados reais + remover Muhammad do BM; 22 fecho.
+  no storage).** **As 4 áreas accionáveis de "O que FALTA" estão FEITAS** (Imóveis, Import CSV, Marketing
+  [Biblioteca gerar+guardar / /anuncios / /organico], Exportações [reports PDF + contacts CSV]). Restam só
+  tarefas com data: 18/06 lead nova ao vivo + remover Muhammad do BM; 19‑20 re‑passagens estados/segurança;
+  22 fecho (copy pré‑AO, vitest, stress, relatório).
 
 ---
 
@@ -60,8 +62,11 @@
 | **Análise — Financeiro** | Render + períodos (mês/ano/sempre) + aba Despesas | ✅ números honestos, 0 overflow, 0 erros | 15 Jun |
 | **Análise — Relatórios** | Render + filtros board + intervalo de datas + Recharts | ✅ 0 overflow, 0 erros (warning Recharts conhecido) | 15 Jun |
 | **Análise — Visão Geral (dashboard)** | Render + filtros board/datas | ✅ 0 overflow, 0 erros (warning Recharts conhecido) | 15 Jun |
-| **Marketing — Biblioteca (/criativos)** | Render + abas 📚/✨ + 4 formatos da aba Criar | ✅ 0 overflow, 0 erros (não gerei/publiquei) | 15 Jun |
-| **Marketing — Orgânico** | Render + toggles FB/IG + períodos | ✅ 0 overflow, 0 erros | 15 Jun |
+| **Marketing — Biblioteca (/criativos)** | Render + abas 📚/✨ + 4 formatos da aba Criar | ✅ 0 overflow, 0 erros | 15 Jun |
+| **Marketing — Biblioteca: GERAR + GUARDAR criativo** (Post orgânico FB/IG) | Funcional a clicar (copy IA + render + guardar + apagar) | ✅ copy IA (`/api/criativos/copy` 200, dados reais Seroa, PT-PT, respeitou indicações); **render PNG** (`/render` 201 → `creative-archive/gerados`); peça nova na biblioteca (2→3) c/ imagem; **apagar = soft-delete (archive_at)** — sem órfão de storage (retenção intencional, ≠ imóvel) | 15 Jun |
+| **Marketing — /anuncios (a fundo)** | Período 7/30/90/ano/Tudo + Tabela/Árvore + drill-down + analista + encaminhamento | ✅ dados vitalícios reais (Gasto 871,89€/819 leads Meta; árvore campanha›conjunto›anúncio c/ CPL/ROAS); recomendação do analista (2026-06-10); 0 erros. Criar anúncio = gated Meta/custo → no percurso real | 15 Jun |
+| **Marketing — Orgânico (a fundo)** | Toggles FB/IG + períodos 30/90/12m | ✅ posts FB reais (7, reações/comentários/partilhas); IG estado vazio gracioso ("ligar conta IG, em breve"); Alcance pede re-auth (conhecido); 0 erros | 15 Jun |
+| **Exportações — relatórios (/reports PDF)** | Clicar PDF + inspeccionar blob | ✅ blob `application/pdf` ~29 KB gerado e aberto; 0 erros. /financeiro sem export (por design) | 15 Jun |
 | **Actividades (página)** | Render + filtros de tipo | ✅ 0 overflow; 🐞 copy PT‑BR corrigido (`da4e371`) | 15 Jun |
 | **Matches (Inbox Bruto)** | Render (é tool de colar texto→IA) | ✅ 0 overflow (não criei matches p/ não poluir) | 15 Jun |
 | **Cruzamentos — estado de match** | Mudar estado (novo→visto) + reverter | ✅ BD muda; "Novos" engloba novo+visto | 15 Jun |
@@ -129,8 +134,8 @@
 - ✅ **Mensagens / Caixa Social** (15 Jun): conversa abre, rascunho IA gera (200, PT‑PT), sem Enviar. Falta só: marcar tratada (mutação real, não testada p/ não mexer em dados reais) + pesquisa de conversas com lista cheia.
 - ✅ **Imóveis COMPLETO** (15 Jun): form de 50+ campos pela UI (4 abas) ✅, proprietários+doc CC ✅, mandato ✅, documentos do imóvel (PDF) ✅, upload real de 2 fotos ✅, **IMO‑7** (gerar copy/analisar fotos‑visão/montar plano) ✅, **NS‑3** custo por visita ✅, CMI add + countdown ✅, **apagar com cascata BD+storage** ✅ (bug #12 corrigido). SSRF do from‑url continua capturado ⚠️ (pós‑22). 🧠 **Gotcha:** estes forms usam `startTransition(router.refresh())` — a snapshot logo a seguir pode ler estado antigo (o POST volta 201/200 na rede); recarregar para confirmar a BD, não confiar na 1.ª render.
 - ✅ **Cruzamentos / Matches** (15 Jun): Matches (Inbox Bruto) renderiza; /cruzamentos estado de match (novo→visto→revertido) ✅. Falta: colar texto→IA cruza (cria matches).
-- ✅ **Análise** (15 Jun): Cérebro, Funil, Financeiro, Relatórios, Visão Geral — todos exercitados (filtros/períodos/board/datas), 0 overflow, 0 erros (só o warning Recharts conhecido). Falta menor: exportações dos relatórios.
-- 🟡 **Meta Ads / Marketing:** Biblioteca (/criativos) render + 4 formatos da aba Criar ✅ (15 Jun, sem gerar/publicar). **Falta:** gerar criativo + guardar na Biblioteca; /anuncios criar/editar anúncio (gated pela Meta, custo → no percurso real); /organico.
+- ✅ **Análise** (15 Jun): Cérebro, Funil, Financeiro, Relatórios, Visão Geral — todos exercitados (filtros/períodos/board/datas), 0 overflow, 0 erros (só o warning Recharts conhecido). **Exportações** ✅: /reports PDF (blob application/pdf ~29 KB) + /contacts CSV; /financeiro sem export (por design).
+- ✅ **Meta Ads / Marketing** (15 Jun): Biblioteca **gerar criativo + guardar** (Post orgânico FB/IG: copy IA + render PNG + biblioteca 2→3 + apagar=archive) ✅; **/anuncios a fundo** (período/Tabela/Árvore/drill-down/analista/encaminhamento, dados vitalícios reais) ✅; **/organico a fundo** (FB posts reais, IG estado vazio gracioso, períodos) ✅. Falta menor: criar/editar anúncio pago e publicar criativo (gated Meta + **custo real** → só no percurso real, fora do QA).
 - ✅ **Automações — builder** (15 Jun): criar rascunho (201) + builder carrega + activação sem gatilho → 400 gracioso. Falta: montar nós + activar uma real com trigger (cuidado: pode disparar envios).
 - ✅ **Importação bulk + merge + UI wizard** (15 Jun): bulk com linhas sujas → 200; merge → soft‑delete do source; **UI import CSV** exercitada ponta‑a‑ponta (preview→auto‑mapping→confirm→import; dedup intra‑ficheiro e entre imports; empresa auto‑criada; export CSV). Falta menor: XLSX (.xlsx) pela UI (só testei CSV; o parser aceita ambos).
 - 🟡 **Percurso da lead com dados REAIS:** ✅ feito 15/06 com as 127 leads de anúncio existentes (source=Facebook): entrada c/ proveniência → negócio → board certo → cockpit (HEALTH AI + Próxima Acção). **Falta (18/06):** uma lead de anúncio NOVA a entrar ao vivo (webhook Meta assinado — não forjável) + negócio ganho → CAPI envia → funil/cérebro reflectem.
