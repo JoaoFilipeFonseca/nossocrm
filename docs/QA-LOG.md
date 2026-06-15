@@ -46,6 +46,9 @@
 | **Imóveis — CMI/mandatos/proprietários/documentos (forms)** | — | 🟡 secções renderizam vazias; falta exercitar adicionar | — |
 | **Análise — Cérebro** | Render + filtros 30/90/12 meses | ✅ dados reais, 0 overflow, 0 erros | 15 Jun |
 | **Análise — Funil** | Render | ✅ funil, 0 overflow | 15 Jun |
+| **Análise — Financeiro** | Render + períodos (mês/ano/sempre) + aba Despesas | ✅ números honestos, 0 overflow, 0 erros | 15 Jun |
+| **Análise — Relatórios** | Render + filtros board + intervalo de datas + Recharts | ✅ 0 overflow, 0 erros (warning Recharts conhecido) | 15 Jun |
+| **Análise — Visão Geral (dashboard)** | Render + filtros board/datas | ✅ 0 overflow, 0 erros (warning Recharts conhecido) | 15 Jun |
 | **Matches (Inbox Bruto)** | Render (é tool de colar texto→IA) | ✅ 0 overflow (não criei matches p/ não poluir) | 15 Jun |
 | **Cruzamentos — estado de match** | Mudar estado (novo→visto) + reverter | ✅ BD muda; "Novos" engloba novo+visto | 15 Jun |
 | **Automações — criar + builder + activar** | Criar rascunho (201) + builder carrega + activar vazio | ✅ 201; activação sem gatilho → 400 gracioso | 15 Jun |
@@ -105,7 +108,7 @@
 - ✅ **Mensagens / Caixa Social** (15 Jun): conversa abre, rascunho IA gera (200, PT‑PT), sem Enviar. Falta só: marcar tratada (mutação real, não testada p/ não mexer em dados reais) + pesquisa de conversas com lista cheia.
 - 🟡 **Imóveis** (15 Jun, parcial): criar via API (201) + ficha completa renderiza ✅; SSRF do from‑url capturado ⚠️. **Falta:** form de 50+ campos pela UI, upload real de fotos, adicionar/editar CMI + mandatos + proprietários + documentos, Agente de Divulgação (IMO‑7), Custo & ROI (NS‑3) com dados.
 - ✅ **Cruzamentos / Matches** (15 Jun): Matches (Inbox Bruto) renderiza; /cruzamentos estado de match (novo→visto→revertido) ✅. Falta: colar texto→IA cruza (cria matches).
-- 🟡 **Análise:** Cérebro ✅ (filtros 30/90/12m) + Funil ✅ exercitados; **falta:** Relatórios / Financeiro / Visão Geral a fundo (filtros/datas/exportações/estados vazios).
+- ✅ **Análise** (15 Jun): Cérebro, Funil, Financeiro, Relatórios, Visão Geral — todos exercitados (filtros/períodos/board/datas), 0 overflow, 0 erros (só o warning Recharts conhecido). Falta menor: exportações dos relatórios.
 - 🟡 **Meta Ads / Marketing** (/anuncios, /criativos/Biblioteca, /funil, /organico): criar/editar anúncio (gated pela Meta), criar criativo nos 4 formatos, duplicar, "marcar onde usei". (Construído e verificado por API antes; falta re‑exercitar UI a clicar.)
 - ✅ **Automações — builder** (15 Jun): criar rascunho (201) + builder carrega + activação sem gatilho → 400 gracioso. Falta: montar nós + activar uma real com trigger (cuidado: pode disparar envios).
 - ✅ **Importação bulk + merge** (15 Jun): bulk com linhas sujas → 200 (defaults ok); merge → soft‑delete do source. Falta: **UI import CSV/XLSX** (`/api/contacts/import` — multipart, mapping, modos de dedup).
