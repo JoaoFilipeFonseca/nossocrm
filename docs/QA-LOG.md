@@ -67,6 +67,8 @@
 | **Cruzamentos — estado de match** | Mudar estado (novo→visto) + reverter | ✅ BD muda; "Novos" engloba novo+visto | 15 Jun |
 | **Automações — criar + builder + activar** | Criar rascunho (201) + builder carrega + activar vazio | ✅ 201; activação sem gatilho → 400 gracioso | 15 Jun |
 | **Importação bulk (`/api/import/contacts/bulk`)** | Linhas sujas (sem nome, dup, xss, gigante, email inválido) | ✅ 200; defaults `source='import'`/`name='Sem nome'`; permissivo (sem dedup) | 15 Jun |
+| **Importação UI (wizard CSV/XLSX)** — upload→preview→mapear→confirmar→importar | Funcional a clicar (CSV com origem/dup/acento/sem‑email) | ✅ preview detecta "CSV·vírgula·utf‑8·4 linhas"; auto‑mapeia name/email/phone/company + extra origem; 1.ª import 3 criados+1 dedup intra‑ficheiro; **2.ª import 0 criados+3 actualizados** (dedup por email+phone entre imports); empresa auto‑criada+ligada (`crm_companies`); telefone normalizado +351 | 15 Jun |
+| **Exportação contactos (CSV)** | Clicar Exportar CSV + inspeccionar blob | ✅ 10 campos (name…updated_at), respeita lista, UTF‑8, download `contactos-YYYY-MM-DD.csv` | 15 Jun |
 | **Merge de contactos** | Juntar par duplicado | ✅ 200, move registos, soft-delete do source | 15 Jun |
 | **Automações / crons (10)** | /automacoes conta corridas; curl→403 (verify_jwt) | ✅ | 13 Jun |
 | **Segurança** (advisors, RLS, buckets, secrets) | Advisors 0 ERROR; 13 buckets privados; RLS | ✅ | 13 Jun |
@@ -130,7 +132,7 @@
 - ✅ **Análise** (15 Jun): Cérebro, Funil, Financeiro, Relatórios, Visão Geral — todos exercitados (filtros/períodos/board/datas), 0 overflow, 0 erros (só o warning Recharts conhecido). Falta menor: exportações dos relatórios.
 - 🟡 **Meta Ads / Marketing:** Biblioteca (/criativos) render + 4 formatos da aba Criar ✅ (15 Jun, sem gerar/publicar). **Falta:** gerar criativo + guardar na Biblioteca; /anuncios criar/editar anúncio (gated pela Meta, custo → no percurso real); /organico.
 - ✅ **Automações — builder** (15 Jun): criar rascunho (201) + builder carrega + activação sem gatilho → 400 gracioso. Falta: montar nós + activar uma real com trigger (cuidado: pode disparar envios).
-- ✅ **Importação bulk + merge** (15 Jun): bulk com linhas sujas → 200 (defaults ok); merge → soft‑delete do source. Falta: **UI import CSV/XLSX** (`/api/contacts/import` — multipart, mapping, modos de dedup).
+- ✅ **Importação bulk + merge + UI wizard** (15 Jun): bulk com linhas sujas → 200; merge → soft‑delete do source; **UI import CSV** exercitada ponta‑a‑ponta (preview→auto‑mapping→confirm→import; dedup intra‑ficheiro e entre imports; empresa auto‑criada; export CSV). Falta menor: XLSX (.xlsx) pela UI (só testei CSV; o parser aceita ambos).
 - 🟡 **Percurso da lead com dados REAIS:** ✅ feito 15/06 com as 127 leads de anúncio existentes (source=Facebook): entrada c/ proveniência → negócio → board certo → cockpit (HEALTH AI + Próxima Acção). **Falta (18/06):** uma lead de anúncio NOVA a entrar ao vivo (webhook Meta assinado — não forjável) + negócio ganho → CAPI envia → funil/cérebro reflectem.
 - ⬜ **Re‑passagem páginas × estados (19/06):** vazio/erro/cheio/modais/forms/thank‑you × 375/768/desktop × escuro, em TODAS.
 - ⬜ **Re‑verificação automações + segurança (20/06):** todas em /automacoes contam certo; advisors 0 ERROR; buckets privados; secrets no Vault.
