@@ -125,6 +125,47 @@
 
 ---
 
+## 🗓️ Registo da sessão 15 Jun 2026 — QA funcional a clicar (cont.) — HEAD `31857a3`
+Continuação dos TESTES FUNCIONAIS a clicar (Playwright autenticado + Supabase MCP), pela ordem do
+handover 13 Jun. Os 5 passos do "PRÓXIMO" corridos.
+
+**Verificado VERDE (a clicar, 0 erros de consola):**
+- **Filtros COM resultados — /contacts:** estados Leads(193)/MQL(1)/Prospects(290)/Clientes(0)/
+  Outros-Perdidos(0) filtram certo (contagem 0 → estado vazio "Nenhum contacto encontrado");
+  Pessoas(484)/Empresas(3) alterna; pesquisa "Mário" → 5 resultados (unaccent OK, inclui o lead
+  real restaurado "Mário Carlos capelas Sarmento").
+- **Filtros COM resultados — board Proprietários:** estado Em Aberto(125)/Ganhos(0)/Perdidos(0)/
+  Todos(125) — coerente com 0 ganhos/0 perdidos; dono Meus(18)/Todos(125).
+- **Inbox (mutações reversíveis numa tarefa "QA" criada e apagada):** Adiar 1 dia → data +1 na BD +
+  toast "Adiado"; Concluir → `completed=true` na BD + toast "Actividade concluída!" + sai da lista.
+  🧠 a vista Lista limita o render por secção; pus a tarefa QA com data antiga p/ surgir no topo de
+  ATRASADOS. Tabela é `activities` (não `tasks`); o menu "⋯" é React simples (botões "Adiar 1 dia"/
+  "Remover", sem role=menuitem).
+- **Definições:** campo que escreve na BD (Política de privacidade) → Guardar muda
+  `organization_settings.privacy_policy_url` na BD → revertido ao valor original e reconfirmado na BD.
+- **Assistente IA (/ai):** POST /api/ai/crm-agent → 200; resposta em PT-PT coerente e honesta sobre
+  limites da ferramenta. Funciona.
+
+**🐞 BUG CORRIGIDO+DEPLOYADO — `/api/ai/tasks/deals/analyze` 500 (`31857a3`):** o 🔴 do handover.
+Reproduzido e diagnosticado: o schema de saída é apertado (`action`≤50, `reason`≤80 chars) e o Gemini
+gera MESMO no limite (vi actionLen=50 exacto, reasonLen=73); quando ocasionalmente excede, `Output.object`
+esgota os 3+1 retries e **lançava → 500 genérico** ("Erro ao executar tarefa de IA" ao mudar etapa).
+Intermitente (8/8 chamadas de teste deram 200; era flaky). **Fix:** a geração IA passou a ter try/catch
+próprio — em falha (provedor 5xx/timeout OU validação esgotada) devolve sugestão neutra determinista
+(200) em vez de 500; parse de input continua 400 e auth continua a propagar. **Também:** corrigido typo
+no template do catálogo `task_deals_analyze` (`{{dealValue} €}`→`{{dealValue}} €`) — o valor do negócio
+nunca era substituído no prompt (sem override na BD → produção usava o catálogo). tsc0/lint0/vitest550/5.
+
+**Achados capturados (rever pós-22, âmbito congelado):**
+- ⚠️ **Definições — Etiquetas/Campos Personalizados/Página Inicial são só localStorage** (`crm_tags`,
+  `crm_custom_fields`, `crm_default_route`; `// TODO: Migrate ... to Supabase` em useSettingsController).
+  Criar/remover funciona mas NÃO sincroniza com a BD nem entre dispositivos; e as etiquetas daqui são
+  SEPARADAS da tabela `tags` real (60+) usada em contactos/negócios → enganador ("Tag adicionada!" mas
+  não fica na BD). Migrar para Supabase (unir com a tabela `tags`).
+- Assistente IA escreveu "diretamente" (grafia AO-1990) em vez de "directamente" (pré-AO). Reforçar
+  pré-AO no system prompt do crm-agent (output de runtime do Gemini; prioridade baixa).
+- Pesquisa multi-token e wildcards %/_ (já no registo de 13 Jun) mantêm-se.
+
 ## 🗓️ Registo da sessão 13 Jun 2026 — QA TOTAL (antecipada, plano RUMO A 22) — HEAD `1df3180`
 QA exaustiva em produção (Playwright autenticado + Supabase MCP). Os 4 passos do plano corridos +
 varrimento TOTAL de TODAS as rotas (56) × mobile 375 × consola + **testes funcionais a clicar**
