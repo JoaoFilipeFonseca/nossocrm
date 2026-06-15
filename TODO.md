@@ -165,6 +165,15 @@ nunca era substituído no prompt (sem override na BD → produção usava o cat�
 - Assistente IA escreveu "diretamente" (grafia AO-1990) em vez de "directamente" (pré-AO). Reforçar
   pré-AO no system prompt do crm-agent (output de runtime do Gemini; prioridade baixa).
 - Pesquisa multi-token e wildcards %/_ (já no registo de 13 Jun) mantêm-se.
+- 🆕 **IDEIA DO JOÃO (15/06, capturar p/ depois — NÃO executar agora):** **mover a Política de
+  privacidade das Configurações para a BIBLIOTECA (/criativos), numa sub-aba "Activos digitais"** onde
+  o João possa ir **acrescentando mais activos à medida que cria**. Ou seja: a Biblioteca passa a ter
+  uma secção de "activos digitais" do negócio (links/recursos institucionais — política de privacidade,
+  e o que mais ele for juntando), em vez de o link viver perdido nas Definições. Encaixa no épico
+  MKT-BIBLIOTECA (estender `creative_archive`/sub-aba em `/criativos`; mover o campo
+  `organization_settings.privacy_policy_url` ou referenciá-lo aí). Liga-se ao achado de que as
+  Etiquetas/Campos/Página Inicial das Definições são só localStorage — a arrumação das Definições é tema
+  para rever em conjunto pós-22.
 
 ## 🗓️ Registo da sessão 13 Jun 2026 — QA TOTAL (antecipada, plano RUMO A 22) — HEAD `1df3180`
 QA exaustiva em produção (Playwright autenticado + Supabase MCP). Os 4 passos do plano corridos +
