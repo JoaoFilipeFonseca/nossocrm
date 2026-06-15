@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { Deal, Activity, Contact, Board } from '@/types';
 import { useAIDealAnalysis, deriveHealthFromProbability } from '../hooks/useAIDealAnalysis';
+import { useLeadScoresQuery } from '@/lib/query/hooks/useLeadScoresQuery';
 import { useDealNotes } from '../hooks/useDealNotes';
 import { useDealFiles } from '../hooks/useDealFiles';
 import { useQuickScripts } from '../hooks/useQuickScripts';
@@ -220,6 +221,15 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
         currentStage?.label
     );
 
+    // DASH-2 — % de fecho por SINAIS REAIS (etapa, recência do toque, visitas, valor…): começa
+    // baixa numa lead nova e sobe com visita/resposta/qualificação. NÃO usar o palpite da IA nem
+    // um default de 50. Ver lib/deals/leadScore.ts. (Fase 2: a IA aprende os pesos com os resultados.)
+    const { data: leadScores } = useLeadScoresQuery();
+    const leadScore = leadScores?.[deal.id];
+    const probabilityScore = leadScore && leadScore.temperature !== 'adiado'
+        ? leadScore.score
+        : (deal.probability ?? 0);
+
     // Deal notes from database
     const { notes, isLoading: isNotesLoading, createNote, deleteNote } = useDealNotes(deal.id);
 
@@ -336,11 +346,10 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
         return Math.floor(diff / (1000 * 60 * 60 * 24));
     }, [deal.lastStageChangeDate, deal.createdAt]);
 
-    // Derive health from AI probability or fallback
+    // Health/% de fecho vem do score por SINAIS REAIS (probabilityScore), não da IA nem de 50.
     const healthScore = useMemo(() => {
-        const probability = aiAnalysis?.probabilityScore ?? deal.probability ?? 50;
-        return deriveHealthFromProbability(probability);
-    }, [aiAnalysis?.probabilityScore, deal.probability]);
+        return deriveHealthFromProbability(probabilityScore);
+    }, [probabilityScore]);
 
     // NBA suggestion from AI or fallback
     const nextBestAction = useMemo(() => {
@@ -924,7 +933,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                 </div>
                                 <div className="text-center">
                                     <span className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold block">Prob</span>
-                                    <p className="text-lg font-mono font-bold text-emerald-400">{deal.probability || 50}%</p>
+                                    <p className="text-lg font-mono font-bold text-emerald-400">{probabilityScore}%</p>
                                 </div>
                                 <div className="text-center">
                                     <span className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold block">Activ</span>
@@ -1032,7 +1041,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                 </div>
                                 <div>
                                     <span className="text-slate-600">Probabilidade</span>
-                                    <p className="text-slate-300 font-semibold">{deal.probability || 50}%</p>
+                                    <p className="text-slate-300 font-semibold">{probabilityScore}%</p>
                                 </div>
                                 <div>
                                     <span className="text-slate-600">Criado em</span>
