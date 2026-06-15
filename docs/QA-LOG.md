@@ -15,8 +15,9 @@
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
-  + stress do processo central — FEITOS. Seguem re‑passagens de profundidade (áreas 🟡/⬜ abaixo) ao
-  longo de 15‑22; 18/06 percurso da lead com dados reais + remover Muhammad do BM; 22 fecho.
+  + stress do processo central — FEITOS. Re‑passagem de profundidade em curso: **Mensagens/Caixa Social ✅**
+  e **Imóveis (parcial) ✅** feitos 15/06. Seguem as restantes áreas 🟡/⬜ abaixo ao longo de 15‑22;
+  18/06 percurso da lead com dados reais + remover Muhammad do BM; 22 fecho.
 
 ---
 
@@ -39,6 +40,10 @@
 | **Definições — Etiquetas/Campos/Página Inicial** | Funcional | 🐞/⚠️ só localStorage (não BD) | 15 Jun |
 | **Assistente IA (/ai)** | Pergunta real + prompt injection | ✅ PT‑PT, recusa injecção, sem tool de apagar | 10/15 Jun |
 | **Endpoints `/api/ai/tasks/**` (8)** | Payload válido + vazio | ✅ 200 / 400; fragilidade 500‑on‑AI‑fail (⚠️) | 15 Jun |
+| **Mensagens — Conversas + Caixa Social** | Abrir conversa, gerar rascunho IA (sem enviar) | ✅ rascunho 200 PT‑PT; sem botão Enviar (João envia no Messenger); 0 overflow | 15 Jun |
+| **Imóveis — criar (POST /api/imoveis) + ficha** | Criar (201) + render de todas as secções | ✅ ficha completa, 0 overflow, 0 erros | 15 Jun |
+| **Imóveis — fotos `from-url`** | Probe SSRF (metadata/loopback) | ⚠️ SSRF cego (servidor faz fetch; exfil mínima) | 15 Jun |
+| **Imóveis — CMI/mandatos/proprietários/documentos (forms)** | — | 🟡 secções renderizam vazias; falta exercitar adicionar | — |
 | **Automações / crons (10)** | /automacoes conta corridas; curl→403 (verify_jwt) | ✅ | 13 Jun |
 | **Segurança** (advisors, RLS, buckets, secrets) | Advisors 0 ERROR; 13 buckets privados; RLS | ✅ | 13 Jun |
 | **RGPD** (/unsubscribe, rodapé, privacy_policy_url) | Verificado | ✅ | 13 Jun |
@@ -70,6 +75,8 @@
 | **Proveniência só na UI:** `contacts.source` e `contacts.phone` são nullable na BD (só `name` é NOT NULL) | 🔴 Alta (regra crítica) | Falta NOT NULL / RLS check / validação server. Ver [[regra-lead-tag-proveniencia-obrigatoria]] |
 | **Definições Etiquetas/Campos/Página Inicial só localStorage** (não sincroniza BD nem entre dispositivos; etiquetas ≠ tabela `tags` real) | 🟠 Média | `// TODO: Migrate to Supabase` em useSettingsController. João quer mover Política de privacidade p/ sub‑aba "Activos digitais" na Biblioteca |
 | **Fragilidade IA tasks:** os 8 `/api/ai/tasks/**` têm "IA falha → 500" (só o analyze foi endurecido) | 🟠 Média | Aplicar degradação graciosa aos outros 7 (clique do utilizador, toast visível) |
+| **SSRF cego em `imoveis/[id]/fotos/from-url`:** servidor faz `fetch` de qualquer URL sem validar host (loopback/IP privado/metadata) | 🟠 Média‑alta | Exfil mínima hoje (só extrai `<img>`, corpo não volta ao cliente, operador‑only). Relevante p/ multi‑tenant. Fix: validar host/IP resolvido (bloquear privados/loopback/link‑local), revalidar em redirect. Nota: usa `r.jina.ai` como fallback (a URL alvo vai p/ 3.º) |
+| **Rascunho IA da Caixa Social ignora o conteúdo da mensagem** (gerou boas‑vindas de venda para uma DM de golpe) | 🟢 Baixa | Humano revê sempre antes de enviar; melhorar prompt p/ ter em conta a mensagem recebida / detectar spam |
 | `messaging-webhook-meta` com `verify_jwt=true` (curl→401) | 🟠 Média | Dormente hoje; se activarem Meta Cloud messaging, POSTs morrem no gateway → `verify_jwt=false` + X‑Hub‑Signature |
 | Pesquisa: wildcards `%`/`_` não escapados → sobre‑correspondência | 🟢 Baixa | Melhorar `sanitizePostgrestValue` |
 | Pesquisa multi‑token não adjacente ("mario sarmento") não casa (substring ilike) | 🟢 Baixa | — |
@@ -86,8 +93,8 @@
 > Estas áreas foram **carregadas/smoke‑tested** no varrimento das 56 rotas (🟡), mas ainda **não foram
 > exercitadas a clicar** (criar/editar/gravar) com profundidade e inputs sujos.
 
-- 🟡 **Mensagens / Caixa Social:** abrir conversa, gerar rascunho IA, marcar tratada, "Abrir no Messenger"; pesquisa de conversas (sanitizer).
-- 🟡 **Imóveis:** criar/editar imóvel (form de 50+ campos), upload de fotos (from‑url, SSRF?), documentos, CMI, mandatos, proprietários, Agente de Divulgação (IMO‑7), Custo & ROI (NS‑3).
+- ✅ **Mensagens / Caixa Social** (15 Jun): conversa abre, rascunho IA gera (200, PT‑PT), sem Enviar. Falta só: marcar tratada (mutação real, não testada p/ não mexer em dados reais) + pesquisa de conversas com lista cheia.
+- 🟡 **Imóveis** (15 Jun, parcial): criar via API (201) + ficha completa renderiza ✅; SSRF do from‑url capturado ⚠️. **Falta:** form de 50+ campos pela UI, upload real de fotos, adicionar/editar CMI + mandatos + proprietários + documentos, Agente de Divulgação (IMO‑7), Custo & ROI (NS‑3) com dados.
 - 🟡 **Cruzamentos / Matches:** gerar/ver cruzamentos, mudar estado de match.
 - 🟡 **Análise** (Funil / Relatórios / Financeiro / Cérebro / Visão Geral): exercitar filtros/datas/boards, estados vazios, exportações.
 - 🟡 **Meta Ads / Marketing** (/anuncios, /criativos/Biblioteca, /funil, /organico): criar/editar anúncio (gated pela Meta), criar criativo nos 4 formatos, duplicar, "marcar onde usei". (Construído e verificado por API antes; falta re‑exercitar UI a clicar.)
