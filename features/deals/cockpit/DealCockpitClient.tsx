@@ -30,6 +30,7 @@ import { useMoveDealSimple } from '@/lib/query/hooks';
 import { normalizePhoneE164 } from '@/lib/phone';
 
 import { useAIDealAnalysis, deriveHealthFromProbability } from '@/features/inbox/hooks/useAIDealAnalysis';
+import { useLeadScoresQuery } from '@/lib/query/hooks/useLeadScoresQuery';
 import { useDealNotes } from '@/features/inbox/hooks/useDealNotes';
 import { useDealFiles } from '@/features/inbox/hooks/useDealFiles';
 import { useQuickScripts } from '@/features/inbox/hooks/useQuickScripts';
@@ -631,10 +632,17 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
     selectedDeal?.stageLabel
   );
 
+  // DASH-2 — a % de fecho vem dos SINAIS REAIS (etapa, recência do toque, visitas, valor…),
+  // não de um palpite da IA nem de um default de 50. Lead nova = score baixo real; sobe com
+  // visita/resposta/qualificação. Ver lib/deals/leadScore.ts. (Fase 2: a IA aprende os pesos.)
+  const { data: leadScores } = useLeadScoresQuery();
+  const leadScore = selectedDeal ? leadScores?.[selectedDeal.id] : undefined;
+
   const health = useMemo(() => {
-    const probability = aiAnalysis?.probabilityScore ?? selectedDeal?.probability ?? 50;
+    const signalScore = leadScore && leadScore.temperature !== 'adiado' ? leadScore.score : undefined;
+    const probability = signalScore ?? selectedDeal?.probability ?? 0;
     return deriveHealthFromProbability(probability);
-  }, [aiAnalysis?.probabilityScore, selectedDeal?.probability]);
+  }, [leadScore, selectedDeal?.probability]);
 
   const nextBestAction = useMemo(() => {
     if (aiAnalysis?.action && !aiAnalysis.error) {
@@ -1453,7 +1461,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                 />
               </div>
               <div className="mt-2 flex items-center justify-between gap-2">
-                <div className="text-[11px] text-slate-500">IA + probabilidade do deal.</div>
+                <div className="text-[11px] text-slate-500">Probabilidade por sinais reais (etapa, toque, visitas).</div>
                 <button
                   type="button"
                   className="rounded-xl border border-white/10 bg-white/3 px-2.5 py-1 text-[11px] font-semibold text-slate-200 hover:bg-white/5"
