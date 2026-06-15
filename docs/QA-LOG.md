@@ -11,13 +11,15 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 15/06/2026 · **HEAD origin/main:** `059f3df` · **build em produção:** `260615_1058`.
+- **Data:** 15/06/2026 · **HEAD origin/main:** `6c9366b` · **build em produção:** `260615_1454`.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
   + stress do processo central — FEITOS. Re‑passagem de profundidade em curso: **Mensagens/Caixa Social ✅**
-  e **Imóveis (parcial) ✅** feitos 15/06. Seguem as restantes áreas 🟡/⬜ abaixo ao longo de 15‑22;
-  18/06 percurso da lead com dados reais + remover Muhammad do BM; 22 fecho.
+  e **Imóveis COMPLETO ✅** (form 50+ campos, mandatos/proprietários/documentos, upload real de fotos,
+  IMO‑7, NS‑3, delete‑cascade) feitos 15/06 — **1 bug real corrigido+deployado+reconfirmado (#12, órfãos
+  no storage).** Seguem as restantes áreas 🟡/⬜ abaixo (import CSV/XLSX, marketing, exportações) ao longo
+  de 15‑22; 18/06 percurso da lead com dados reais + remover Muhammad do BM; 22 fecho.
 
 ---
 
@@ -45,7 +47,14 @@
 | **Imóveis — criar (POST /api/imoveis) + ficha** | Criar (201) + render de todas as secções | ✅ ficha completa, 0 overflow, 0 erros | 15 Jun |
 | **Imóveis — fotos `from-url`** | Probe SSRF (metadata/loopback) | ⚠️ SSRF cego (servidor faz fetch; exfil mínima) | 15 Jun |
 | **Imóveis — CMI (add + countdown)** | Criar CMI (data_fim +10d) + render | ✅ 201; ficha mostra "10 dias faltam" (banda âmbar) | 15 Jun |
-| **Imóveis — mandatos/proprietários/documentos (forms)** | — | 🟡 mesmo padrão do CMI; falta exercitar | — |
+| **Imóveis — form de 50+ campos pela UI** (4 abas: Essencial/Localização/Características/Comercial) | Criar a clicar + render | ✅ persistiu tudo; XSS `<b>` mostrado como texto; acentos ok | 15 Jun |
+| **Imóveis — proprietários (criar) + documento do proprietário (upload CC)** | Funcional a clicar | ✅ 201; doc no bucket `proprietario-documentos`, URL assinado | 15 Jun |
+| **Imóveis — mandato (comprador) (criar)** | Funcional a clicar | ✅ 201; exclusivo/activo/5%/pago comprador | 15 Jun |
+| **Imóveis — documentos do imóvel (upload PDF)** | Funcional a clicar | ✅ 201; bucket `imovel-documentos`, URL assinado | 15 Jun |
+| **Imóveis — upload real de fotos (2)** | Funcional a clicar | ✅ renderizam via `/_next/image`; reordenar/★/× | 15 Jun |
+| **Imóveis — IMO‑7 Agente de Divulgação** (gerar copy + analisar fotos visão + montar plano) | Funcional a clicar (3 chamadas IA) | ✅ 200; dados reais, PT‑PT, CTA "Quando lhe for oportuno"; visão viu mesmo as fotos (identificou que são de teste) | 15 Jun |
+| **Imóveis — NS‑3 Custo & ROI (alterar custo por visita)** | Funcional a clicar | ✅ PATCH `/api/financeiro/visit-cost` 200; persiste 12,50 € | 15 Jun |
+| **Imóveis — apagar (cascata BD + storage)** | Funcional + verificação SQL/storage | 🐞→✅ #12: deixava ficheiros órfãos no storage; corrigido (`6c9366b`) e reconfirmado (0 órfãos pós‑delete) | 15 Jun |
 | **Análise — Cérebro** | Render + filtros 30/90/12 meses | ✅ dados reais, 0 overflow, 0 erros | 15 Jun |
 | **Análise — Funil** | Render | ✅ funil, 0 overflow | 15 Jun |
 | **Análise — Financeiro** | Render + períodos (mês/ano/sempre) + aba Despesas | ✅ números honestos, 0 overflow, 0 erros | 15 Jun |
@@ -82,6 +91,7 @@
 | 9 | Typo template `{{dealValue} €}` (valor não injectado no prompt) | 15 Jun | `31857a3` | ✅ corrigido |
 | 10 | Copy PT‑BR em Actividades/Perfil/Definições (`gerenciar`, `senha`, `Salvar`, `atende`, `Meu Perfil`) | 15 Jun | `da4e371` | ✅ corrigido (gerir/palavra‑passe/Guardar) |
 | 11 | Lead nova mostrava 50% de fecho (palpite da IA / default 50) no cockpit | 15 Jun | `39330a9` | ✅ corrigido+verificado: % por sinais (0% nova, 48% c/ sinais). Residual prosa IA → fase 2 |
+| 12 | Apagar imóvel deixava ficheiros órfãos no storage (fotos/docs do imóvel/docs do proprietário) — cascata só na BD; **risco de privacidade** (CC do proprietário persistia após "apagar definitivamente") | 15 Jun | `6c9366b` | ✅ corrigido+reconfirmado em produção: DELETE recolhe `storage_path` antes do delete e remove dos 3 buckets (best‑effort); 0 órfãos pós‑delete |
 
 ---
 
@@ -115,7 +125,7 @@
 > exercitadas a clicar** (criar/editar/gravar) com profundidade e inputs sujos.
 
 - ✅ **Mensagens / Caixa Social** (15 Jun): conversa abre, rascunho IA gera (200, PT‑PT), sem Enviar. Falta só: marcar tratada (mutação real, não testada p/ não mexer em dados reais) + pesquisa de conversas com lista cheia.
-- 🟡 **Imóveis** (15 Jun, quase): criar via API (201) ✅, ficha completa ✅, **CMI add + countdown ✅**, SSRF do from‑url capturado ⚠️. **Falta:** form de 50+ campos pela UI, upload real de fotos, mandatos/proprietários/documentos (mesmo padrão do CMI), Agente de Divulgação (IMO‑7) e Custo & ROI (NS‑3) com dados reais.
+- ✅ **Imóveis COMPLETO** (15 Jun): form de 50+ campos pela UI (4 abas) ✅, proprietários+doc CC ✅, mandato ✅, documentos do imóvel (PDF) ✅, upload real de 2 fotos ✅, **IMO‑7** (gerar copy/analisar fotos‑visão/montar plano) ✅, **NS‑3** custo por visita ✅, CMI add + countdown ✅, **apagar com cascata BD+storage** ✅ (bug #12 corrigido). SSRF do from‑url continua capturado ⚠️ (pós‑22). 🧠 **Gotcha:** estes forms usam `startTransition(router.refresh())` — a snapshot logo a seguir pode ler estado antigo (o POST volta 201/200 na rede); recarregar para confirmar a BD, não confiar na 1.ª render.
 - ✅ **Cruzamentos / Matches** (15 Jun): Matches (Inbox Bruto) renderiza; /cruzamentos estado de match (novo→visto→revertido) ✅. Falta: colar texto→IA cruza (cria matches).
 - ✅ **Análise** (15 Jun): Cérebro, Funil, Financeiro, Relatórios, Visão Geral — todos exercitados (filtros/períodos/board/datas), 0 overflow, 0 erros (só o warning Recharts conhecido). Falta menor: exportações dos relatórios.
 - 🟡 **Meta Ads / Marketing:** Biblioteca (/criativos) render + 4 formatos da aba Criar ✅ (15 Jun, sem gerar/publicar). **Falta:** gerar criativo + guardar na Biblioteca; /anuncios criar/editar anúncio (gated pela Meta, custo → no percurso real); /organico.
