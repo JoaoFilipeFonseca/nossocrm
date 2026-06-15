@@ -49,6 +49,7 @@
 | **Análise — Financeiro** | Render + períodos (mês/ano/sempre) + aba Despesas | ✅ números honestos, 0 overflow, 0 erros | 15 Jun |
 | **Análise — Relatórios** | Render + filtros board + intervalo de datas + Recharts | ✅ 0 overflow, 0 erros (warning Recharts conhecido) | 15 Jun |
 | **Análise — Visão Geral (dashboard)** | Render + filtros board/datas | ✅ 0 overflow, 0 erros (warning Recharts conhecido) | 15 Jun |
+| **Marketing — Biblioteca (/criativos)** | Render + abas 📚/✨ + 4 formatos da aba Criar | ✅ 0 overflow, 0 erros (não gerei/publiquei) | 15 Jun |
 | **Matches (Inbox Bruto)** | Render (é tool de colar texto→IA) | ✅ 0 overflow (não criei matches p/ não poluir) | 15 Jun |
 | **Cruzamentos — estado de match** | Mudar estado (novo→visto) + reverter | ✅ BD muda; "Novos" engloba novo+visto | 15 Jun |
 | **Automações — criar + builder + activar** | Criar rascunho (201) + builder carrega + activar vazio | ✅ 201; activação sem gatilho → 400 gracioso | 15 Jun |
@@ -109,7 +110,7 @@
 - 🟡 **Imóveis** (15 Jun, parcial): criar via API (201) + ficha completa renderiza ✅; SSRF do from‑url capturado ⚠️. **Falta:** form de 50+ campos pela UI, upload real de fotos, adicionar/editar CMI + mandatos + proprietários + documentos, Agente de Divulgação (IMO‑7), Custo & ROI (NS‑3) com dados.
 - ✅ **Cruzamentos / Matches** (15 Jun): Matches (Inbox Bruto) renderiza; /cruzamentos estado de match (novo→visto→revertido) ✅. Falta: colar texto→IA cruza (cria matches).
 - ✅ **Análise** (15 Jun): Cérebro, Funil, Financeiro, Relatórios, Visão Geral — todos exercitados (filtros/períodos/board/datas), 0 overflow, 0 erros (só o warning Recharts conhecido). Falta menor: exportações dos relatórios.
-- 🟡 **Meta Ads / Marketing** (/anuncios, /criativos/Biblioteca, /funil, /organico): criar/editar anúncio (gated pela Meta), criar criativo nos 4 formatos, duplicar, "marcar onde usei". (Construído e verificado por API antes; falta re‑exercitar UI a clicar.)
+- 🟡 **Meta Ads / Marketing:** Biblioteca (/criativos) render + 4 formatos da aba Criar ✅ (15 Jun, sem gerar/publicar). **Falta:** gerar criativo + guardar na Biblioteca; /anuncios criar/editar anúncio (gated pela Meta, custo → no percurso real); /organico.
 - ✅ **Automações — builder** (15 Jun): criar rascunho (201) + builder carrega + activação sem gatilho → 400 gracioso. Falta: montar nós + activar uma real com trigger (cuidado: pode disparar envios).
 - ✅ **Importação bulk + merge** (15 Jun): bulk com linhas sujas → 200 (defaults ok); merge → soft‑delete do source. Falta: **UI import CSV/XLSX** (`/api/contacts/import` — multipart, mapping, modos de dedup).
 - ⬜ **Percurso da lead com dados REAIS (18/06):** anúncio→lead entra→board certo→tag→follow‑up→mensagens→negócio ganho→CAPI→funil/cérebro reflectem.
