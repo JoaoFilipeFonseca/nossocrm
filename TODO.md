@@ -183,7 +183,13 @@ nunca era substituído no prompt (sem override na BD → produção usava o cat�
   [DealCockpitClient.tsx:634‑637](nossocrm/features/deals/cockpit/DealCockpitClient.tsx): `health = deriveHealthFromProbability(aiAnalysis?.probabilityScore ?? selectedDeal?.probability ?? 50)`.
   A `deals.probability` gravada das 127 leads de anúncio é **0** (correcto), mas a **IA `task_deals_analyze` devolve `probabilityScore` ~50 sem contexto** → é esse palpite que o cockpit usa. Ou seja, mostra um chute de 50%, não um valor por sinais.
   **O que JÁ existe e faz o certo (reusar, não reinventar):** o lead score DASH‑2 — `lib/deals/leadScore.ts` (puro, determinista) + RPC `my_deal_lead_score_signals` (sinais: etapa, recência do toque REAL, interacções, visitas, valor, adiado, opt‑out, origem). Começa baixo (frio=0) e sobe com sinais — exactamente o que o João quer.
-  **Correcção (fase 1):** o cockpit "HEALTH AI / % de fecho" deve usar o **score por sinais** (DASH‑2) como base, NÃO o palpite da IA nem o default 50. Lead nova = % baixa; sobe com visita/resposta/qualificação(BANT). Tirar o `?? 50`.
+  **Correcção (fase 1) ✅ FEITA E VERIFICADA EM PRODUÇÃO (15/06, build `260615_1418`):** o cockpit real
+  (`FocusContextPanel`, usado por `/deals/[id]/cockpit` e pelo Foco do Inbox) + o `DealCockpitClient`
+  (cockpit‑v2) passam a usar o **score por sinais** (`useLeadScoresQuery`/DASH‑2). Removidos os defaults
+  de 50 (incl. `deal.probability || 50` que tornava 0→50). Verificado: lead nova (nunca tocada) = **0%**;
+  lead com 5 toques+3 visitas (etapa avançada) = **48%** (= score exacto por sinais). ⚠️ Residual p/ fase 2:
+  a IA na "Próxima Acção" ainda diz na prosa "a 50%" (o `task_deals_analyze` assume ~50 sem contexto) —
+  alinhar quando a IA passar a receber/usar o score por sinais.
   **Épico (fase 2 — aprendizagem):** a IA **aprende sozinha os PESOS dos sinais** a partir dos RESULTADOS reais (que sinais precederam os fechos vs as perdas), e recalibra ao longo do tempo (medição vitalícia, ver [[feedback-medicao-vitalicia-e-ciclo]]). Sem dados de fecho ainda (0 ganhos) → arranca com pesos sensatos e recalibra quando houver histórico. **Honestidade:** não inventar % por canal sem base (já foi decisão no DASH‑2).
   Refs: `useAIDealAnalysis.deriveHealthFromProbability`, `task_deals_analyze` (prompt+schema), `lib/deals/leadScore.ts`, RPC `my_deal_lead_score_signals`.
 

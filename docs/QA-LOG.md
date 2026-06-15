@@ -81,6 +81,7 @@
 | 8 | `/api/ai/tasks/deals/analyze` 500 ao mudar etapa (schema apertado → retries esgotam) | 13→15 Jun | `31857a3` | ✅ corrigido+reconfirmado |
 | 9 | Typo template `{{dealValue} €}` (valor não injectado no prompt) | 15 Jun | `31857a3` | ✅ corrigido |
 | 10 | Copy PT‑BR em Actividades/Perfil/Definições (`gerenciar`, `senha`, `Salvar`, `atende`, `Meu Perfil`) | 15 Jun | `da4e371` | ✅ corrigido (gerir/palavra‑passe/Guardar) |
+| 11 | Lead nova mostrava 50% de fecho (palpite da IA / default 50) no cockpit | 15 Jun | `39330a9` | ✅ corrigido+verificado: % por sinais (0% nova, 48% c/ sinais). Residual prosa IA → fase 2 |
 
 ---
 
