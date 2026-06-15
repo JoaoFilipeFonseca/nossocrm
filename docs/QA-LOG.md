@@ -51,6 +51,8 @@
 | **Análise — Relatórios** | Render + filtros board + intervalo de datas + Recharts | ✅ 0 overflow, 0 erros (warning Recharts conhecido) | 15 Jun |
 | **Análise — Visão Geral (dashboard)** | Render + filtros board/datas | ✅ 0 overflow, 0 erros (warning Recharts conhecido) | 15 Jun |
 | **Marketing — Biblioteca (/criativos)** | Render + abas 📚/✨ + 4 formatos da aba Criar | ✅ 0 overflow, 0 erros (não gerei/publiquei) | 15 Jun |
+| **Marketing — Orgânico** | Render + toggles FB/IG + períodos | ✅ 0 overflow, 0 erros | 15 Jun |
+| **Actividades (página)** | Render + filtros de tipo | ✅ 0 overflow; 🐞 copy PT‑BR corrigido (`da4e371`) | 15 Jun |
 | **Matches (Inbox Bruto)** | Render (é tool de colar texto→IA) | ✅ 0 overflow (não criei matches p/ não poluir) | 15 Jun |
 | **Cruzamentos — estado de match** | Mudar estado (novo→visto) + reverter | ✅ BD muda; "Novos" engloba novo+visto | 15 Jun |
 | **Automações — criar + builder + activar** | Criar rascunho (201) + builder carrega + activar vazio | ✅ 201; activação sem gatilho → 400 gracioso | 15 Jun |
@@ -77,6 +79,7 @@
 | 7 | Sanitização da pesquisa PostgREST (.or ilike com `\ ( ) * ,`) | 13 Jun | `1df3180` | ✅ corrigido+verificado |
 | 8 | `/api/ai/tasks/deals/analyze` 500 ao mudar etapa (schema apertado → retries esgotam) | 13→15 Jun | `31857a3` | ✅ corrigido+reconfirmado |
 | 9 | Typo template `{{dealValue} €}` (valor não injectado no prompt) | 15 Jun | `31857a3` | ✅ corrigido |
+| 10 | Copy PT‑BR em Actividades/Perfil/Definições (`gerenciar`, `senha`, `Salvar`, `atende`, `Meu Perfil`) | 15 Jun | `da4e371` | ✅ corrigido (gerir/palavra‑passe/Guardar) |
 
 ---
 
