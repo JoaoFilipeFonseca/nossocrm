@@ -80,6 +80,15 @@ interface DealDetailModalProps {
 // Performance: reuse date formatter instance.
 const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
 
+// Formata uma data com segurança: datas em falta ou inválidas devolvem '—' em vez de
+// rebentar (Intl.format(new Date(undefined)) lança RangeError e crashava o modal inteiro
+// num re-render pós-mutação em que deal.createdAt fica momentaneamente undefined).
+function formatDateSafe(value: string | number | Date | null | undefined): string {
+  if (value == null) return '—';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '—' : PT_BR_DATE_FORMATTER.format(d);
+}
+
 function ContactInlineField({ icon, value, placeholder, type = 'text', onSave }: {
   icon: any;
   value: string;
@@ -906,7 +915,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     </span>
                     <span className="inline-flex items-center gap-1 text-slate-500">
                       <span className="uppercase tracking-wide text-[10px] text-slate-400">Criado</span>
-                      <span className="text-slate-900 dark:text-white font-medium">{PT_BR_DATE_FORMATTER.format(new Date(deal.createdAt))}</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{formatDateSafe(deal.createdAt)}</span>
                     </span>
                     <span className="inline-flex items-center gap-1 text-slate-500">
                       <span className="uppercase tracking-wide text-[10px] text-slate-400">Prob</span>
