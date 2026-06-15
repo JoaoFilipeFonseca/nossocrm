@@ -26,6 +26,7 @@
 | Área | Nível de teste feito | Resultado | Última sessão |
 |---|---|---|---|
 | **Percurso da lead E2E** (entra→board→tag→follow‑up→caixa social→funil/cérebro→CAPI) | Mapeado + verificado ao vivo | ✅ honesto (0 ganhos = real) | 10/13 Jun |
+| **Percurso da lead de ANÚNCIO com dados REAIS** (127 leads source=Facebook) | DB agregado + trace de 1 na UI | ✅ 127/127 com negócio, routing certo (Compradores/Oport.); cockpit com HEALTH AI + Próxima Acção; ⚠️ origem não visível na ficha do contacto; gargalo conhecido (6/127 trabalhadas) | 15 Jun |
 | **Varrimento das 56 rotas** (smoke HTTP, consola, overflow, escuro) | Desktop 1280 + mobile 375 + tablet 768 | ✅ 0 erros, 0 overflow | 13 Jun |
 | **Contactos — filtros** (Leads/MQL/Prospects/Clientes/Outros; Pessoas/Empresas) | Funcional a clicar | ✅ filtram, estado vazio ok | 15 Jun |
 | **Contactos — pesquisa** (nome real, unaccent; inputs patológicos `% _ \ ( ) , * <script> '; --`) | Funcional + stress | ✅ 0 falhas/erros; wildcard %/_ sobre‑corresponde (⚠️) | 15 Jun |
@@ -94,6 +95,8 @@
 | **Rascunho IA da Caixa Social ignora o conteúdo da mensagem** (gerou boas‑vindas de venda para uma DM de golpe) | 🟢 Baixa | Humano revê sempre antes de enviar; melhorar prompt p/ ter em conta a mensagem recebida / detectar spam |
 | **`contact_merge_log.target_contact_id` NOT NULL + FK ON DELETE SET NULL** (contradição → hard‑delete de um contacto que foi alvo de merge falha) | 🟢 Baixa | Dormente (app faz soft‑delete). Corrigir: tornar a coluna nullable OU mudar a FK p/ ON DELETE CASCADE |
 | **Importação bulk permissiva:** sem dedup de email, aceita email/telefone inválidos | 🟢 Baixa | É endpoint cru; a UI usa `/api/contacts/import` com modos de dedup. Defaults de nome/origem ok |
+| **Proveniência (origem) não visível na ficha do contacto** | 🟠 Média | A origem (ex.: Facebook) aparece na lista e no cockpit do negócio, mas NÃO na ficha individual do contacto. Regra crítica = saber de onde veio a lead. Mostrar a origem no cabeçalho/Resumo da ficha |
+| **Grafias AO‑1990 em copy visível** ("Próxima Ação", "interações") em vez de pré‑AO ("Acção", "interacções") | 🟢 Baixa | Para o varrimento de copy de 22/06 (regra PT‑PT pré‑AO total) |
 | `messaging-webhook-meta` com `verify_jwt=true` (curl→401) | 🟠 Média | Dormente hoje; se activarem Meta Cloud messaging, POSTs morrem no gateway → `verify_jwt=false` + X‑Hub‑Signature |
 | Pesquisa: wildcards `%`/`_` não escapados → sobre‑correspondência | 🟢 Baixa | Melhorar `sanitizePostgrestValue` |
 | Pesquisa multi‑token não adjacente ("mario sarmento") não casa (substring ilike) | 🟢 Baixa | — |
@@ -117,7 +120,7 @@
 - 🟡 **Meta Ads / Marketing:** Biblioteca (/criativos) render + 4 formatos da aba Criar ✅ (15 Jun, sem gerar/publicar). **Falta:** gerar criativo + guardar na Biblioteca; /anuncios criar/editar anúncio (gated pela Meta, custo → no percurso real); /organico.
 - ✅ **Automações — builder** (15 Jun): criar rascunho (201) + builder carrega + activação sem gatilho → 400 gracioso. Falta: montar nós + activar uma real com trigger (cuidado: pode disparar envios).
 - ✅ **Importação bulk + merge** (15 Jun): bulk com linhas sujas → 200 (defaults ok); merge → soft‑delete do source. Falta: **UI import CSV/XLSX** (`/api/contacts/import` — multipart, mapping, modos de dedup).
-- ⬜ **Percurso da lead com dados REAIS (18/06):** anúncio→lead entra→board certo→tag→follow‑up→mensagens→negócio ganho→CAPI→funil/cérebro reflectem.
+- 🟡 **Percurso da lead com dados REAIS:** ✅ feito 15/06 com as 127 leads de anúncio existentes (source=Facebook): entrada c/ proveniência → negócio → board certo → cockpit (HEALTH AI + Próxima Acção). **Falta (18/06):** uma lead de anúncio NOVA a entrar ao vivo (webhook Meta assinado — não forjável) + negócio ganho → CAPI envia → funil/cérebro reflectem.
 - ⬜ **Re‑passagem páginas × estados (19/06):** vazio/erro/cheio/modais/forms/thank‑you × 375/768/desktop × escuro, em TODAS.
 - ⬜ **Re‑verificação automações + segurança (20/06):** todas em /automacoes contam certo; advisors 0 ERROR; buckets privados; secrets no Vault.
 - ⬜ **Fecho (22/06):** copy PT‑PT pré‑AO (varrer brasileirismos/traços/encoding nos emails); vitest verde; stress final dos forms principais; **relatório final**.
