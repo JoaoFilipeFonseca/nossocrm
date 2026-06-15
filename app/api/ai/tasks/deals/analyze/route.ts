@@ -44,23 +44,41 @@ export async function POST(req: Request) {
       probability: deal?.probability || 50,
     });
 
-    const { result } = await runWithAIFallback(
-      () => generateText({ model, maxRetries: 3, output: Output.object({ schema: AnalyzeLeadOutputSchema }), prompt }),
-      fallbackModel ? () => generateText({ model: fallbackModel, maxRetries: 1, output: Output.object({ schema: AnalyzeLeadOutputSchema }), prompt }) : null,
-    );
+    // A IA pode falhar (provedor 5xx/timeout) ou o modelo pode exceder os limites
+    // apertados do schema (action ≤50, reason ≤80) e esgotar os retries. Antes isso
+    // caía no catch geral → 500, que aparecia como toast de erro ao mudar de etapa.
+    // Degradamos com graça: devolvemos uma sugestão neutra e determinista (200).
+    let output: z.infer<typeof AnalyzeLeadOutputSchema>;
+    try {
+      const { result } = await runWithAIFallback(
+        () => generateText({ model, maxRetries: 3, output: Output.object({ schema: AnalyzeLeadOutputSchema }), prompt }),
+        fallbackModel ? () => generateText({ model: fallbackModel, maxRetries: 1, output: Output.object({ schema: AnalyzeLeadOutputSchema }), prompt }) : null,
+      );
+      output = result.output;
 
-    void (supabase as any).from('ai_conversation_log').insert({
-      organization_id: organizationId,
-      ai_response: '',
-      tokens_used: result.usage?.totalTokens ?? 0,
-      model_used: modelId,
-      action_taken: 'analyze_lead',
-      context_snapshot: {},
-    }).then(({ error }: { error: unknown }) => {
-      if (error) console.error('[AI] log failed:', error);
-    });
+      void (supabase as any).from('ai_conversation_log').insert({
+        organization_id: organizationId,
+        ai_response: '',
+        tokens_used: result.usage?.totalTokens ?? 0,
+        model_used: modelId,
+        action_taken: 'analyze_lead',
+        context_snapshot: {},
+      }).then(({ error }: { error: unknown }) => {
+        if (error) console.error('[AI] log failed:', error);
+      });
+    } catch (aiErr) {
+      console.error('[api/ai/tasks/deals/analyze] AI indisponível, fallback neutro:', aiErr);
+      const prob = typeof deal?.probability === 'number' ? deal.probability : 50;
+      output = {
+        action: 'Dar o próximo passo no negócio',
+        reason: 'Análise automática indisponível. Reveja e avance.',
+        actionType: 'TASK',
+        urgency: 'medium',
+        probabilityScore: prob,
+      };
+    }
 
-    return json(result.output);
+    return json(output);
   } catch (err: unknown) {
     if (err instanceof AITaskHttpError) return err.toResponse();
     if (err instanceof z.ZodError) {
