@@ -44,6 +44,9 @@
 | **Imóveis — criar (POST /api/imoveis) + ficha** | Criar (201) + render de todas as secções | ✅ ficha completa, 0 overflow, 0 erros | 15 Jun |
 | **Imóveis — fotos `from-url`** | Probe SSRF (metadata/loopback) | ⚠️ SSRF cego (servidor faz fetch; exfil mínima) | 15 Jun |
 | **Imóveis — CMI/mandatos/proprietários/documentos (forms)** | — | 🟡 secções renderizam vazias; falta exercitar adicionar | — |
+| **Análise — Cérebro** | Render + filtros 30/90/12 meses | ✅ dados reais, 0 overflow, 0 erros | 15 Jun |
+| **Análise — Funil** | Render | ✅ funil, 0 overflow | 15 Jun |
+| **Matches (Inbox Bruto)** | Render (é tool de colar texto→IA) | ✅ 0 overflow (não criei matches p/ não poluir) | 15 Jun |
 | **Automações / crons (10)** | /automacoes conta corridas; curl→403 (verify_jwt) | ✅ | 13 Jun |
 | **Segurança** (advisors, RLS, buckets, secrets) | Advisors 0 ERROR; 13 buckets privados; RLS | ✅ | 13 Jun |
 | **RGPD** (/unsubscribe, rodapé, privacy_policy_url) | Verificado | ✅ | 13 Jun |
@@ -95,8 +98,8 @@
 
 - ✅ **Mensagens / Caixa Social** (15 Jun): conversa abre, rascunho IA gera (200, PT‑PT), sem Enviar. Falta só: marcar tratada (mutação real, não testada p/ não mexer em dados reais) + pesquisa de conversas com lista cheia.
 - 🟡 **Imóveis** (15 Jun, parcial): criar via API (201) + ficha completa renderiza ✅; SSRF do from‑url capturado ⚠️. **Falta:** form de 50+ campos pela UI, upload real de fotos, adicionar/editar CMI + mandatos + proprietários + documentos, Agente de Divulgação (IMO‑7), Custo & ROI (NS‑3) com dados.
-- 🟡 **Cruzamentos / Matches:** gerar/ver cruzamentos, mudar estado de match.
-- 🟡 **Análise** (Funil / Relatórios / Financeiro / Cérebro / Visão Geral): exercitar filtros/datas/boards, estados vazios, exportações.
+- 🟡 **Cruzamentos / Matches:** Matches (Inbox Bruto) renderiza ✅; falta: colar texto→IA cruza (cria matches), mudar estado de match (PATCH /api/matches/[id]), /cruzamentos a fundo.
+- 🟡 **Análise:** Cérebro ✅ (filtros 30/90/12m) + Funil ✅ exercitados; **falta:** Relatórios / Financeiro / Visão Geral a fundo (filtros/datas/exportações/estados vazios).
 - 🟡 **Meta Ads / Marketing** (/anuncios, /criativos/Biblioteca, /funil, /organico): criar/editar anúncio (gated pela Meta), criar criativo nos 4 formatos, duplicar, "marcar onde usei". (Construído e verificado por API antes; falta re‑exercitar UI a clicar.)
 - 🟡 **Automações — builder:** criar/editar/activar uma automação no editor de nós; triggers.
 - 🟡 **Importação de contactos (CSV/XLSX):** ficheiro válido, sujo, duplicados, mapping; merge de contactos.
