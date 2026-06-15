@@ -247,12 +247,12 @@ export const ProfilePage: React.FC = () => {
         e.preventDefault();
 
         if (newPassword !== confirmPassword) {
-            setMessage({ type: 'error', text: 'As senhas não coincidem.' });
+            setMessage({ type: 'error', text: 'As palavras-passe não coincidem.' });
             return;
         }
 
         if (!isPasswordValid) {
-            setMessage({ type: 'error', text: 'A senha não atende aos requisitos mínimos.' });
+            setMessage({ type: 'error', text: 'A palavra-passe não cumpre os requisitos mínimos.' });
             return;
         }
 
@@ -266,7 +266,7 @@ export const ProfilePage: React.FC = () => {
 
             if (error) throw error;
 
-            setMessage({ type: 'success', text: 'Senha alterada com sucesso!' });
+            setMessage({ type: 'success', text: 'Palavra-passe alterada com sucesso!' });
             setIsChangingPassword(false);
             setNewPassword('');
             setConfirmPassword('');
@@ -302,10 +302,10 @@ export const ProfilePage: React.FC = () => {
             {/* Header */}
             <div className="mb-10">
                 <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
-                    Meu Perfil
+                    O Meu Perfil
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 mt-2">
-                    Gerencie suas informações pessoais e segurança.
+                    Faça a gestão dos seus dados pessoais e segurança.
                 </p>
             </div>
 
@@ -585,7 +585,7 @@ export const ProfilePage: React.FC = () => {
                             Segurança
                         </h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                            Gerencie sua senha de acesso.
+                            Faça a gestão da sua palavra-passe de acesso.
                         </p>
                     </div>
                     {!isChangingPassword && (
@@ -593,7 +593,7 @@ export const ProfilePage: React.FC = () => {
                             onClick={() => setIsChangingPassword(true)}
                             className="px-4 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
                         >
-                            Alterar Senha
+                            Alterar Palavra-passe
                         </button>
                     )}
                 </div>
@@ -602,7 +602,7 @@ export const ProfilePage: React.FC = () => {
                     <form onSubmit={handleChangePassword} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                Nova Senha
+                                Nova Palavra-passe
                             </label>
                             <div className="relative">
                                 <input
@@ -647,7 +647,7 @@ export const ProfilePage: React.FC = () => {
 
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                Confirmar Nova Senha
+                                Confirmar Nova Palavra-passe
                             </label>
                             <input
                                 type={showPasswords ? 'text' : 'password'}
@@ -659,14 +659,14 @@ export const ProfilePage: React.FC = () => {
                                         : 'border-red-500 focus:border-red-500'
                                     : 'border-slate-200 dark:border-slate-700 focus:border-primary-500'
                                     }`}
-                                placeholder="Digite novamente"
+                                placeholder="Escreva novamente"
                                 required
                             />
                             {confirmPassword.length > 0 && newPassword !== confirmPassword && (
-                                <p className="mt-1 text-xs text-red-500">As senhas não coincidem</p>
+                                <p className="mt-1 text-xs text-red-500">As palavras-passe não coincidem</p>
                             )}
                             {confirmPassword.length > 0 && newPassword === confirmPassword && (
-                                <p className="mt-1 text-xs text-green-500">✓ Senhas coincidem</p>
+                                <p className="mt-1 text-xs text-green-500">✓ Palavras-passe coincidem</p>
                             )}
                         </div>
 
@@ -703,7 +703,7 @@ export const ProfilePage: React.FC = () => {
                                 ) : (
                                     <>
                                         <Check className="w-4 h-4" />
-                                        Salvar Senha
+                                        Guardar Palavra-passe
                                     </>
                                 )}
                             </button>
@@ -713,7 +713,7 @@ export const ProfilePage: React.FC = () => {
 
                 {!isChangingPassword && (
                     <div className="text-sm text-slate-500 dark:text-slate-400">
-                        Sua senha está configurada. Clique em "Alterar Senha" para modificá-la.
+                        A sua palavra-passe está configurada. Carregue em "Alterar Palavra-passe" para a modificar.
                     </div>
                 )}
             </div>

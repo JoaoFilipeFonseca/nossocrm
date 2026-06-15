@@ -346,7 +346,7 @@ export const McpSection: React.FC = () => {
                 </button>
               </div>
               <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-                Precisa revogar/ver histórico? <button type="button" onClick={navigateToApiKeys} className="underline">Gerenciar API keys</button>
+                Precisa revogar/ver histórico? <button type="button" onClick={navigateToApiKeys} className="underline">Gerir API keys</button>
               </div>
             </div>
           )}

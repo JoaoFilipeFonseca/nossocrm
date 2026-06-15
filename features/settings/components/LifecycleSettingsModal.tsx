@@ -87,7 +87,7 @@ export const LifecycleSettingsModal: React.FC<LifecycleSettingsModalProps> = ({ 
 
                 <div className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 rounded-xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
-                        <h3 id={headingId} className="font-bold text-slate-900 dark:text-white">Gerenciar Ciclos de Vida</h3>
+                        <h3 id={headingId} className="font-bold text-slate-900 dark:text-white">Gerir Ciclos de Vida</h3>
                         <button
                             onClick={onClose}
                             aria-label="Fechar modal"

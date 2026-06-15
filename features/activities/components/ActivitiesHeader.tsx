@@ -46,7 +46,7 @@ export const ActivitiesHeader: React.FC<ActivitiesHeaderProps> = ({
           Actividades
         </h1>
         <div className="mt-1 flex items-center gap-2">
-          <p className="text-slate-500 dark:text-slate-400">Gerencie suas tarefas e compromissos</p>
+          <p className="text-slate-500 dark:text-slate-400">Faça a gestão das suas tarefas e compromissos</p>
           {filterLabel && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
               Filtro: {filterLabel}
