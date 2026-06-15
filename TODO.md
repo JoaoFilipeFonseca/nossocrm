@@ -125,6 +125,8 @@
 
 ---
 
+> 🧪 **HISTÓRICO DE TESTES vive em `docs/QA-LOG.md`** (matriz de cobertura + bugs + o que falta). Ler/actualizar lá em cada sessão de QA.
+
 ## 🗓️ Registo da sessão 15 Jun 2026 — QA funcional a clicar (cont.) — HEAD `31857a3`
 Continuação dos TESTES FUNCIONAIS a clicar (Playwright autenticado + Supabase MCP), pela ordem do
 handover 13 Jun. Os 5 passos do "PRÓXIMO" corridos.
