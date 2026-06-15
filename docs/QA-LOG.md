@@ -11,7 +11,7 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 15/06/2026 · **HEAD origin/main:** `6c9366b` · **build em produção:** `260615_1454`.
+- **Data:** 15/06/2026 · **HEAD origin/main:** `fd73724` · **build em produção:** `260615_1557`.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
@@ -40,6 +40,7 @@
 | **Negócios — mover etapa** (dispara IA‑analyze) | Funcional + stress (valores extremos, injecção) | ✅ 200 (após fix `31857a3`) | 13/15 Jun |
 | **Negócios — render adversarial** (XSS, título 5k, valor ~1 bilião, prob 250%/‑10%) | Board + cockpit | ✅ não parte; chip DASH‑2 clampa | 15 Jun |
 | **Negócios — abrir cockpit / aba Produtos (deal_items)** | Funcional | ✅ (após fix `24f8b32`) | 13 Jun |
+| **Negócios — CICLO DE VIDA completo** (criar inline c/ proveniência obrigatória → mover etapa → **add produto personalizado** → **GANHO**) | Funcional a clicar (deal QA criado/movido/ganho/limpo) | 🐞→✅ #13: add produto crashava o modal (`Invalid time value`); corrigido (`fd73724`) e reconfirmado. Criar guarda `source`; GANHO grava `is_won=true`+`closed_at`; valor do deal passa a soma dos produtos | 15 Jun |
 | **Inbox/tarefas — concluir/adiar/reverter** | Funcional a clicar (tarefa QA) | ✅ BD + toasts | 15 Jun |
 | **Definições — gravar campo na BD (Política de privacidade)** | Gravar + reverter | ✅ BD muda e restaura | 15 Jun |
 | **Definições — Etiquetas/Campos/Página Inicial** | Funcional | 🐞/⚠️ só localStorage (não BD) | 15 Jun |
@@ -99,6 +100,7 @@
 | 10 | Copy PT‑BR em Actividades/Perfil/Definições (`gerenciar`, `senha`, `Salvar`, `atende`, `Meu Perfil`) | 15 Jun | `da4e371` | ✅ corrigido (gerir/palavra‑passe/Guardar) |
 | 11 | Lead nova mostrava 50% de fecho (palpite da IA / default 50) no cockpit | 15 Jun | `39330a9` | ✅ corrigido+verificado: % por sinais (0% nova, 48% c/ sinais). Residual prosa IA → fase 2 |
 | 12 | Apagar imóvel deixava ficheiros órfãos no storage (fotos/docs do imóvel/docs do proprietário) — cascata só na BD; **risco de privacidade** (CC do proprietário persistia após "apagar definitivamente") | 15 Jun | `6c9366b` | ✅ corrigido+reconfirmado em produção: DELETE recolhe `storage_path` antes do delete e remove dos 3 buckets (best‑effort); 0 órfãos pós‑delete |
+| 13 | **DealDetailModal crashava** (`RangeError: Invalid time value`) ao adicionar produto a um negócio — `format(new Date(deal.createdAt))` sem guarda; no re‑render pós‑mutação `deal.createdAt` fica momentaneamente `undefined` → `Intl.format(Invalid)` lança → modal inteiro fechava | 15 Jun | `fd73724` | ✅ corrigido+reconfirmado: helper `formatDateSafe` (data em falta/inválida → "—"); add produto deixa de crashar, modal mantém‑se aberto |
 
 ---
 
@@ -142,6 +144,24 @@
 - ⬜ **Re‑passagem páginas × estados (19/06):** vazio/erro/cheio/modais/forms/thank‑you × 375/768/desktop × escuro, em TODAS.
 - ⬜ **Re‑verificação automações + segurança (20/06):** todas em /automacoes contam certo; advisors 0 ERROR; buckets privados; secrets no Vault.
 - ⬜ **Fecho (22/06):** copy PT‑PT pré‑AO (varrer brasileirismos/traços/encoding nos emails); vitest verde; stress final dos forms principais; **relatório final**.
+
+### 🔎 Fluxos funcionais do NÚCLEO ainda por exercitar a fundo (destapado 15/06 — só smoke até agora)
+> As 4 áreas da lista original ("Imóveis, Import, Marketing, Exportações") estão feitas, mas o CRM tem mais
+> fluxos centrais que só foram **carregados** (smoke) ou testados em fatia. A clicar com profundidade falta:
+- ✅ **Negócios — ciclo de vida** (criar→etapa→produto→GANHO) FEITO 15/06 (+ bug #13). **Falta ainda:** PERDIDO
+  (com motivo), Adiar, editar título/valor/dono, mover entre boards, aba IA Insights, aba Financeiro do deal,
+  **adicionar Nota** (Timeline write) e tarefa dentro do deal.
+- ⬜ **Ficha do contacto a fundo:** editar campos, timeline/`lead_eventos`, adicionar nota/tarefa/actividade,
+  ligar a imóvel/deal, ver proveniência no cabeçalho (achado P3). Só criar+render foram testados.
+- ⬜ **Boards (CRUD):** criar board, criar/editar/reordenar etapas, "Definir Estratégia do Board" (meta/agente/
+  gatilhos). Só filtros + mover etapa.
+- ⬜ **Automações — activar uma REAL com gatilho** (montar nós + disparar). ⚠️ cuidado: pode enviar de verdade.
+- ⬜ **Mensagens — enviar de verdade + marcar tratada** (só rascunho IA até agora). ⚠️ envio real.
+- ⬜ **Cruzamentos — colar texto → IA cria matches** (só mudar estado de match foi testado).
+- ⬜ **Definições a fundo:** Marca/Brand Kit (gravar), integrações (Meta reautorizar), canais de mensagens,
+  Repositório de Prompts, equipa/utilizadores. Só 1 campo (privacidade) foi gravado+revertido.
+- ⬜ **Perfil** (editar + mudar palavra‑passe funcional), **Notificações (sino)**, **Ditar/Registar Conversa**
+  (voz→transcrição: `process-call`/`process-voice`), **Decisões** (feature), **Visão de Gestor** do Financeiro.
 
 ---
 
