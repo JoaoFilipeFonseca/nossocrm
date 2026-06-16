@@ -73,6 +73,7 @@
 | **Actividades (página)** | Render + filtros de tipo | ✅ 0 overflow; 🐞 copy PT‑BR corrigido (`da4e371`) | 15 Jun |
 | **Matches (Inbox Bruto)** | Render (é tool de colar texto→IA) | ✅ 0 overflow (não criei matches p/ não poluir) | 15 Jun |
 | **Cruzamentos — estado de match** | Mudar estado (novo→visto) + reverter | ✅ BD muda; "Novos" engloba novo+visto | 15 Jun |
+| **Boards — CRUD + Estratégia** (criar board do zero, add/renomear etapa, Definir Estratégia) | Funcional a clicar (board QA criado/exercitado/apagado) | ✅ wizard "Começar do zero"→`boards`+`board_stages` (4 etapas na ordem: Nova/Em Progresso/Concluído/QA Etapa Extra); add etapa + renomear persistem; **Estratégia do Board**→`entry_trigger`/`goal_kpi`/`agent_name` gravam. ⚠️ copy "OBJETIVO"→pré‑AO; reordenar etapas (drag) não testado | 16 Jun |
 | **Automações — criar + builder + activar** | Criar rascunho (201) + builder carrega + activar vazio | ✅ 201; activação sem gatilho → 400 gracioso | 15 Jun |
 | **Importação bulk (`/api/import/contacts/bulk`)** | Linhas sujas (sem nome, dup, xss, gigante, email inválido) | ✅ 200; defaults `source='import'`/`name='Sem nome'`; permissivo (sem dedup) | 15 Jun |
 | **Importação UI (wizard CSV/XLSX)** — upload→preview→mapear→confirmar→importar | Funcional a clicar (CSV com origem/dup/acento/sem‑email) | ✅ preview detecta "CSV·vírgula·utf‑8·4 linhas"; auto‑mapeia name/email/phone/company + extra origem; 1.ª import 3 criados+1 dedup intra‑ficheiro; **2.ª import 0 criados+3 actualizados** (dedup por email+phone entre imports); empresa auto‑criada+ligada (`crm_companies`); telefone normalizado +351 | 15 Jun |
@@ -166,8 +167,10 @@
   coerente ✅. Timeline = `deal_activities` (NÃO `lead_eventos` — essa é do Portal F&R, não existe neste CRM).
   ⚠️ proveniência (`source`) não aparece no cabeçalho (P3, pós‑22). Falta menor: "Comentar" (`contact_comments`)
   e "ligar a imóvel/deal" (não exercitados).
-- ⬜ **Boards (CRUD):** criar board, criar/editar/reordenar etapas, "Definir Estratégia do Board" (meta/agente/
-  gatilhos). Só filtros + mover etapa.
+- ✅ **Boards (CRUD)** (16/06): criar board do zero (wizard)→`boards`+4 `board_stages` na ordem ✅; add etapa +
+  renomear ✅; **Definir Estratégia do Board** (regras de entrada/objetivo/agente)→grava `entry_trigger`/`goal_kpi`/
+  `agent_name` ✅. Falta menor: reordenar etapas por drag; criar via IA/playbook/template; apagar board pela UI
+  (DeleteBoardModal — apaguei o QA por SQL). ⚠️ copy pré‑AO "OBJETIVO" no painel de estratégia.
 - ⬜ **Automações — activar uma REAL com gatilho** (montar nós + disparar). ⚠️ cuidado: pode enviar de verdade.
 - ⬜ **Mensagens — enviar de verdade + marcar tratada** (só rascunho IA até agora). ⚠️ envio real.
 - ⬜ **Cruzamentos — colar texto → IA cria matches** (só mudar estado de match foi testado).
