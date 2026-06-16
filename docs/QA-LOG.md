@@ -11,7 +11,7 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 16/06/2026 · **HEAD origin/main:** `70d63ed`+ · **build em produção:** `260616_1026`+.
+- **Data:** 16/06/2026 · **HEAD origin/main:** `af827cc`+ · **build em produção:** `260616_1102`+.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
@@ -45,6 +45,7 @@
 | **Negócios — RESTO do ciclo** (Nota/Timeline, Adiar, editar título/valor, abas IA Insights/Financeiro, touchpoints, PERDIDO com motivo) | Funcional a clicar (deal QA criado/exercitado/limpo) | ✅ Nota→`activities` NOTE (acentos ok); Adiar 3m→`custom_fields.snoozedUntil`+estado UI (Reagendar/Retomar); editar título e valor (175k) persistem; IA Insights "Analisar Negócio" 200 PT-PT coerente; Financeiro recalcula comissão+add custo→`expenses` (org-scoped); Agendar→`activities` MEETING+CHQ, visita→só CHQ; PERDIDO "Preço"→`is_lost`+`loss_reason`+`closed_at`. 🐞→✅ copy PT-BR "te ajuda"→"ajuda-o" (`9017c92`, reconfirmado em produção). ⚠️ sem editar-dono e sem mover-entre-boards na UI (ver achados) | 16 Jun |
 | **Inbox/tarefas — concluir/adiar/reverter** | Funcional a clicar (tarefa QA) | ✅ BD + toasts | 15 Jun |
 | **Definições — gravar campo na BD (Política de privacidade)** | Gravar + reverter | ✅ BD muda e restaura | 15 Jun |
+| **Definições — Brand Kit / Marca pessoal (`/settings/marca`)** | Gravar + reverter (font_body) | 🐞→✅ #15: gravava sempre 400 (`select('*')` + `.strict()`); corrigido (`af827cc`), PUT 400→200, BD grava+restaura | 16 Jun |
 | **Definições — Etiquetas/Campos/Página Inicial** | Funcional | 🐞/⚠️ só localStorage (não BD) | 15 Jun |
 | **Assistente IA (/ai)** | Pergunta real + prompt injection | ✅ PT‑PT, recusa injecção, sem tool de apagar | 10/15 Jun |
 | **Endpoints `/api/ai/tasks/**` (8)** | Payload válido + vazio | ✅ 200 / 400; fragilidade 500‑on‑AI‑fail (⚠️) | 15 Jun |
@@ -105,6 +106,7 @@
 | 12 | Apagar imóvel deixava ficheiros órfãos no storage (fotos/docs do imóvel/docs do proprietário) — cascata só na BD; **risco de privacidade** (CC do proprietário persistia após "apagar definitivamente") | 15 Jun | `6c9366b` | ✅ corrigido+reconfirmado em produção: DELETE recolhe `storage_path` antes do delete e remove dos 3 buckets (best‑effort); 0 órfãos pós‑delete |
 | 13 | **DealDetailModal crashava** (`RangeError: Invalid time value`) ao adicionar produto a um negócio — `format(new Date(deal.createdAt))` sem guarda; no re‑render pós‑mutação `deal.createdAt` fica momentaneamente `undefined` → `Intl.format(Invalid)` lança → modal inteiro fechava | 15 Jun | `fd73724` | ✅ corrigido+reconfirmado: helper `formatDateSafe` (data em falta/inválida → "—"); add produto deixa de crashar, modal mantém‑se aberto |
 | 14 | Copy PT‑BR no DealDetailModal → aba IA Insights → Objection Killer: "A IA **te ajuda** a negociar" (próclise brasileira) | 16 Jun | `9017c92` | ✅ corrigido+reconfirmado em produção (build `260616_1026`): "A IA **ajuda‑o** a negociar" |
+| 15 | **Brand Kit (`/settings/marca`) gravava sempre 400** "Invalid payload" — o GET faz `select('*')` (devolve `id`/`organization_id`/`created_at`/`updated_at`); o cliente fazia `setKit({...emptyKit, ...data.kit})` e depois `PUT JSON.stringify(kit)` com essas colunas só‑BD, que o `KitSchema.strict()` do servidor rejeita. **A marca pessoal — base de todos os criativos/templates — não conseguia gravar pela UI.** | 16 Jun | `af827cc` | ✅ corrigido+reconfirmado em produção (build `260616_1102`): cliente envia só as chaves de `emptyKit`; PUT 400→200, `font_body` gravou e foi restaurado. `.strict()` mantido como defesa |
 
 ---
 
@@ -175,8 +177,8 @@
 - ⬜ **Mensagens — enviar de verdade + marcar tratada** (só rascunho IA até agora). ⚠️ envio real.
 - ✅ **Cruzamentos — colar texto → IA cria matches** (16/06): `/api/inbox-raw/process` 200; IA classificou e
   extraiu a procura (tipo/T3/zona/budget/features/contacto), 95%, contagem subiu. Dados QA limpos.
-- ⬜ **Definições a fundo:** Marca/Brand Kit (gravar), integrações (Meta reautorizar), canais de mensagens,
-  Repositório de Prompts, equipa/utilizadores. Só 1 campo (privacidade) foi gravado+revertido.
+- 🟡 **Definições a fundo:** **Marca/Brand Kit gravar FEITO 16/06** (🐞→✅ #15, 400→200, gravou+restaurou).
+  Falta: integrações (Meta reautorizar — gated), canais de mensagens, Repositório de Prompts, equipa/utilizadores.
 - ⬜ **Perfil** (editar + mudar palavra‑passe funcional), **Notificações (sino)**, **Ditar/Registar Conversa**
   (voz→transcrição: `process-call`/`process-voice`), **Decisões** (feature), **Visão de Gestor** do Financeiro.
 
