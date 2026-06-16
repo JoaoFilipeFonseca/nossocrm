@@ -237,10 +237,16 @@ export const MarcaSettings: React.FC = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Enviar SÓ os campos editáveis. O GET faz select('*') e devolve colunas
+      // só da BD (id, organization_id, created_at, updated_at) que o schema
+      // .strict() do servidor rejeita (400). Filtramos pelas chaves do emptyKit.
+      const payload = Object.fromEntries(
+        (Object.keys(emptyKit) as (keyof BrandKit)[]).map((k) => [k, kit[k]])
+      );
       const res = await fetch('/api/settings/brand-kit', {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(kit),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
