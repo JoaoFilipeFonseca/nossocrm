@@ -11,7 +11,7 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 16/06/2026 · **HEAD origin/main:** `af827cc`+ · **build em produção:** `260616_1102`+.
+- **Data:** 16/06/2026 · **HEAD origin/main:** `7bcdb6b`+ · **build em produção:** `260616_1102`+.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
@@ -61,6 +61,10 @@
 | **Imóveis — IMO‑7 Agente de Divulgação** (gerar copy + analisar fotos visão + montar plano) | Funcional a clicar (3 chamadas IA) | ✅ 200; dados reais, PT‑PT, CTA "Quando lhe for oportuno"; visão viu mesmo as fotos (identificou que são de teste) | 15 Jun |
 | **Imóveis — NS‑3 Custo & ROI (alterar custo por visita)** | Funcional a clicar | ✅ PATCH `/api/financeiro/visit-cost` 200; persiste 12,50 € | 15 Jun |
 | **Imóveis — apagar (cascata BD + storage)** | Funcional + verificação SQL/storage | 🐞→✅ #12: deixava ficheiros órfãos no storage; corrigido (`6c9366b`) e reconfirmado (0 órfãos pós‑delete) | 15 Jun |
+| **Perfil** (editar nome/apelido + palavra‑passe) | Funcional (editar `nickname`+revert; validação pw) | ✅ editar→`profiles.nickname` grava+revertido; validação pw mismatch bloqueia ("não coincidem"), **pw do João intacta**. 🐞→✅ copy "Salvar"→"Guardar" + telefone +55→+351 (`7bcdb6b`). ⚠️ "sobrenome"/"apelido"/"alcunha" a relabel (22/06) | 16 Jun |
+| **Sino (Notificações)** | Abrir painel | ✅ "Tudo limpo! Não tem notificações", PT‑PT, 0 erros | 16 Jun |
+| **Ditar / Voz para o CRM** | Abrir widget de gravação | ✅ render + afordância "começar a gravar"; transcrição real não testável (sem áudio via Playwright). ⚠️ copy "Tap"→"Toque" | 16 Jun |
+| **Decisões (Central de Decisões)** | Analisar Agora (IA) | ✅ gerou 13 decisões reais (12 críticas) de tarefas atrasadas reais; efémeras (`ai_decisions`=0, não persiste→sem poluição). ⚠️ copy "Por que estou sugerindo isso"/"Ação" (22/06) | 16 Jun |
 | **Análise — Cérebro** | Render + filtros 30/90/12 meses | ✅ dados reais, 0 overflow, 0 erros | 15 Jun |
 | **Análise — Funil** | Render | ✅ funil, 0 overflow | 15 Jun |
 | **Análise — Financeiro** | Render + períodos (mês/ano/sempre) + aba Despesas | ✅ números honestos, 0 overflow, 0 erros | 15 Jun |
@@ -132,6 +136,7 @@
 | `/settings/automation-logs` e `/unsubscribe` sem `<title>` próprio; `/admin/saude` h1 vazio; título de `/deals/[id]/cockpit` mostra UUID | 🟢 Baixa (a11y/nit) | — |
 | IA runtime escreveu "diretamente" (AO‑1990) em vez de "directamente"; e **omite hífens de clíticos** ("encontra se"/"mostrou se" em vez de "encontra‑se") no Assistente 360 | 🟢 Baixa | Reforçar pré‑AO + hífens de clíticos no system prompt (crm‑agent + contact assistant). Output de runtime |
 | Placeholder PT‑BR no form Novo Contacto: "Ex: Ana **Souza**" (apelido grafado à brasileira; PT‑PT = "Sousa") | 🟢 Baixa | Trocar para "Ex.: Ana Sousa" no varrimento de copy de 22/06 |
+| **Lote copy 22/06 (varridos 16/06, ainda por corrigir):** Perfil campo "sobrenome"→"apelido"/"alcunha" (relabel, precisa decisão); Voz para o CRM "Tap para começar"→"Toque"; Decisões "Por que estou sugerindo isso?"→"Porque é que sugiro isto?" + "Ação sugerida"→"Acção"; Estratégia do Board "OBJETIVO"→"OBJECTIVO" | 🟢 Baixa | Juntar ao varrimento PT‑PT pré‑AO de 22/06 (com "Ação"/"interações" já listados) |
 | **Reatribuir dono/responsável não existe na UI** do DealDetailModal (nem do board) | 🟢 Baixa (single‑op) | Org de 1 utilizador (João) → moot hoje; relevante p/ multi‑tenant ("serve qualquer consultor"). Capturado pós‑22 |
 | **Mover negócio entre boards/funis não existe** (cada deal pertence a 1 funil; `handleSelectBoard` só troca a vista) | 🟢 Baixa | Provável por desenho (Proprietários vs Compradores são pipelines distintos). Confirmar com o João se quer "reatribuir funil"; senão fechar como intencional |
 | **"Registar visita" só faz `logCHQ` (deal_activities), sem `recordTouchpoint`** → visita não aparece na Timeline do deal (chamada/email/reunião aparecem) | 🟢 Baixa | Inconsistência cosmética; a visita conta para métricas CHQ honestas. Considerar acrescentar `recordTouchpoint('VISIT'…)` p/ a timeline |
@@ -179,8 +184,11 @@
   extraiu a procura (tipo/T3/zona/budget/features/contacto), 95%, contagem subiu. Dados QA limpos.
 - 🟡 **Definições a fundo:** **Marca/Brand Kit gravar FEITO 16/06** (🐞→✅ #15, 400→200, gravou+restaurou).
   Falta: integrações (Meta reautorizar — gated), canais de mensagens, Repositório de Prompts, equipa/utilizadores.
-- ⬜ **Perfil** (editar + mudar palavra‑passe funcional), **Notificações (sino)**, **Ditar/Registar Conversa**
-  (voz→transcrição: `process-call`/`process-voice`), **Decisões** (feature), **Visão de Gestor** do Financeiro.
+- ✅ **Perifericos FEITOS 16/06:** **Perfil** (editar `nickname`+revert ✅; validação pw mismatch ✅, pw intacta;
+  copy "Salvar"→"Guardar" + telefone +351 corrigidos `7bcdb6b`); **Sino** (painel vazio gracioso ✅); **Ditar/Voz**
+  (widget de gravação renderiza ✅; transcrição real não testável via Playwright — sem áudio); **Decisões**
+  (Analisar Agora → 13 decisões reais, efémeras ✅). Falta: **Visão de Gestor** do Financeiro; transcrição de voz
+  com áudio real; copy de Decisões/Ditar p/ varrimento 22/06.
 
 ---
 
