@@ -29,6 +29,11 @@ export const META_OAUTH_SCOPES = [
   'pages_messaging', // Facebook Messenger (receber/enviar DMs da Página)
   'instagram_basic', // ler a conta Instagram Business ligada à Página
   'instagram_manage_messages', // Instagram DM (receber/enviar)
+  // ORG-IG Fatia 2 (Alcance/Impressões orgânicas) — Página FB + conta IG.
+  // Avançadas (App Review p/ live); o João (admin/tester) usa em modo de
+  // desenvolvimento. Exige RELIGAR a conta para a Meta conceder ao token.
+  'read_insights', // Alcance/impressões orgânicas da Página de Facebook
+  'instagram_manage_insights', // Alcance/impressões/guardados da conta Instagram
 ].join(',');
 
 // Nome canónico do segredo do Vault que guarda o token de longa duração de uma

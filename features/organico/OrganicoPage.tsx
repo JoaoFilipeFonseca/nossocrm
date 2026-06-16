@@ -14,6 +14,7 @@ type Summary = {
   top: Post[];
   timeline: Array<{ label: string; value: number }>;
   by_type: Array<{ type: string; label: string; value: number }>;
+  reach: number | null;
   reach_available: boolean;
 };
 type Period = '30d' | '90d' | '12m' | 'custom';
@@ -98,7 +99,9 @@ export function OrganicoPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Kpi label="Publicações" value={loading ? '—' : nf(k?.posts ?? 0)} sub="no período" />
         <Kpi label="Interações totais" value={loading ? '—' : nf(k?.interactions ?? 0)} sub="reações + comentários + partilhas" />
-        <Kpi label="Alcance" value="—" sub="requer re-autorização" warn />
+        {data?.reach_available
+          ? <Kpi label="Alcance" value={loading ? '—' : nf(data.reach ?? 0)} sub="pessoas alcançadas (período)" />
+          : <Kpi label="Alcance" value="—" sub="requer re-autorização" warn />}
         <Kpi label="Média por post" value={loading ? '—' : nf(k?.avg ?? 0)} sub="interações/post" />
       </div>
 

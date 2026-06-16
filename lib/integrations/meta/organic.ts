@@ -67,7 +67,10 @@ export interface OrganicSummary {
   top: OrganicPost[];
   timeline: Array<{ label: string; value: number }>;
   by_type: Array<{ type: string; label: string; value: number }>;
-  reach_available: false;
+  // Alcance no período (ORG-IG Fatia 2). null + reach_available:false enquanto a
+  // conta não for religada com read_insights/instagram_manage_insights.
+  reach: number | null;
+  reach_available: boolean;
 }
 
 /** Agrega os posts num resumo para o painel. Puro e determinista. */
@@ -94,8 +97,15 @@ export function summarizeOrganic(posts: OrganicPost[]): OrganicSummary {
 
   return {
     kpis: { posts: posts.length, interactions: total, avg: posts.length ? Math.round(total / posts.length) : 0 },
-    top, timeline, by_type, reach_available: false,
+    top, timeline, by_type, reach: null, reach_available: false,
   };
+}
+
+/** Soma os valores diários de uma série de insights (data[0].values[].value). */
+function sumDailyInsight(json: unknown): number {
+  const data = (json as { data?: Array<{ values?: Array<{ value?: unknown }> }> })?.data;
+  const values = data?.[0]?.values ?? [];
+  return values.reduce((s, v) => s + num(v?.value), 0);
 }
 
 /** Busca os posts da Página no intervalo. Lança em erro da Graph. */
@@ -206,4 +216,65 @@ export async function fetchInstagramMedia(
   const json = (await res.json().catch(() => ({}))) as { data?: RawIgMedia[]; error?: { message?: string } };
   if (!res.ok || json.error) throw new Error(json.error?.message ?? `Graph ${res.status}`);
   return (json.data ?? []).map(normalizeIgMedia);
+}
+
+// ============================================================================
+// Alcance no período (ORG-IG Fatia 2) — devolve null se a permissão de insights
+// ainda não estiver no token (conta por religar). NUNCA lança: o alcance é
+// best-effort e não pode partir o resto do painel.
+// ============================================================================
+
+const dayUnix = (iso: string | null, fallbackDaysAgo: number): number =>
+  iso ? Math.floor(new Date(iso).getTime() / 1000) : Math.floor((Date.now() - fallbackDaysAgo * 864e5) / 1000);
+
+/** Alcance orgânico da Página de Facebook no período (soma de page_impressions_unique/dia). null se sem permissão. */
+export async function fetchPageReach(
+  pageId: string,
+  pageToken: string,
+  sinceISO: string | null,
+  untilISO: string | null,
+): Promise<number | null> {
+  try {
+    const params = new URLSearchParams({
+      metric: 'page_impressions_unique',
+      period: 'day',
+      since: String(dayUnix(sinceISO, 90)),
+      until: String(dayUnix(untilISO, 0)),
+      access_token: pageToken,
+    });
+    const res = await fetch(`${META_GRAPH_BASE}/${pageId}/insights?${params.toString()}`, {
+      headers: { 'User-Agent': 'FocoImoCRM/1.0' },
+    });
+    const json = (await res.json().catch(() => ({}))) as { data?: unknown; error?: unknown };
+    if (!res.ok || (json as { error?: unknown }).error) return null; // sem read_insights → null (mostra "—")
+    return sumDailyInsight(json);
+  } catch {
+    return null;
+  }
+}
+
+/** Alcance orgânico da conta Instagram no período (soma de reach/dia). null se sem permissão. */
+export async function fetchInstagramReach(
+  igUserId: string,
+  pageToken: string,
+  sinceISO: string | null,
+  untilISO: string | null,
+): Promise<number | null> {
+  try {
+    const params = new URLSearchParams({
+      metric: 'reach',
+      period: 'day',
+      since: String(dayUnix(sinceISO, 90)),
+      until: String(dayUnix(untilISO, 0)),
+      access_token: pageToken,
+    });
+    const res = await fetch(`${META_GRAPH_BASE}/${igUserId}/insights?${params.toString()}`, {
+      headers: { 'User-Agent': 'FocoImoCRM/1.0' },
+    });
+    const json = (await res.json().catch(() => ({}))) as { data?: unknown; error?: unknown };
+    if (!res.ok || (json as { error?: unknown }).error) return null; // sem instagram_manage_insights → null
+    return sumDailyInsight(json);
+  } catch {
+    return null;
+  }
 }
