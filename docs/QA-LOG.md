@@ -71,7 +71,7 @@
 | **Marketing — Orgânico (a fundo)** | Toggles FB/IG + períodos 30/90/12m | ✅ posts FB reais (7, reações/comentários/partilhas); IG estado vazio gracioso ("ligar conta IG, em breve"); Alcance pede re-auth (conhecido); 0 erros | 15 Jun |
 | **Exportações — relatórios (/reports PDF)** | Clicar PDF + inspeccionar blob | ✅ blob `application/pdf` ~29 KB gerado e aberto; 0 erros. /financeiro sem export (por design) | 15 Jun |
 | **Actividades (página)** | Render + filtros de tipo | ✅ 0 overflow; 🐞 copy PT‑BR corrigido (`da4e371`) | 15 Jun |
-| **Matches (Inbox Bruto)** | Render (é tool de colar texto→IA) | ✅ 0 overflow (não criei matches p/ não poluir) | 15 Jun |
+| **Matches (Inbox Bruto) — colar texto → IA** | Funcional a clicar (raw_intel QA criado/processado/limpo) | ✅ `/api/inbox-raw/process` 200; IA extraiu Procura T3/Paços de Ferreira/200k/garagem+varanda/nome+telefone (95%), contagem 10→11, PT‑PT correcto. Limpo (`raw_intel`+`matches`) | 16 Jun |
 | **Cruzamentos — estado de match** | Mudar estado (novo→visto) + reverter | ✅ BD muda; "Novos" engloba novo+visto | 15 Jun |
 | **Boards — CRUD + Estratégia** (criar board do zero, add/renomear etapa, Definir Estratégia) | Funcional a clicar (board QA criado/exercitado/apagado) | ✅ wizard "Começar do zero"→`boards`+`board_stages` (4 etapas na ordem: Nova/Em Progresso/Concluído/QA Etapa Extra); add etapa + renomear persistem; **Estratégia do Board**→`entry_trigger`/`goal_kpi`/`agent_name` gravam. ⚠️ copy "OBJETIVO"→pré‑AO; reordenar etapas (drag) não testado | 16 Jun |
 | **Automações — criar + builder + activar** | Criar rascunho (201) + builder carrega + activar vazio | ✅ 201; activação sem gatilho → 400 gracioso | 15 Jun |
@@ -173,7 +173,8 @@
   (DeleteBoardModal — apaguei o QA por SQL). ⚠️ copy pré‑AO "OBJETIVO" no painel de estratégia.
 - ⬜ **Automações — activar uma REAL com gatilho** (montar nós + disparar). ⚠️ cuidado: pode enviar de verdade.
 - ⬜ **Mensagens — enviar de verdade + marcar tratada** (só rascunho IA até agora). ⚠️ envio real.
-- ⬜ **Cruzamentos — colar texto → IA cria matches** (só mudar estado de match foi testado).
+- ✅ **Cruzamentos — colar texto → IA cria matches** (16/06): `/api/inbox-raw/process` 200; IA classificou e
+  extraiu a procura (tipo/T3/zona/budget/features/contacto), 95%, contagem subiu. Dados QA limpos.
 - ⬜ **Definições a fundo:** Marca/Brand Kit (gravar), integrações (Meta reautorizar), canais de mensagens,
   Repositório de Prompts, equipa/utilizadores. Só 1 campo (privacidade) foi gravado+revertido.
 - ⬜ **Perfil** (editar + mudar palavra‑passe funcional), **Notificações (sino)**, **Ditar/Registar Conversa**
