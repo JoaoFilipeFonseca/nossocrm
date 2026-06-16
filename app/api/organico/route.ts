@@ -1,14 +1,15 @@
 // GET /api/organico — Orgânico da Página (MKT-ORGANIC-INSIGHTS).
 // Lê os posts da Página ao vivo (Graph API) e devolve o resumo agregado.
 // Reusa o token do Vault → token da Página. Admin + org. Nunca 5xx em erro lógico.
-// v1: só Facebook Page. Instagram + Alcance (read_insights) = follow-ups.
+// Facebook Page + Instagram (posts/interacções, ORG-IG Fatia 1, instagram_basic).
+// Alcance/impressões (read_insights / instagram_manage_insights) = Fatia 2 (re-autorização).
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 import { NextRequest } from 'next/server';
 import { resolveMetaAdminContext, metaJson } from '@/lib/integrations/meta/server';
 import { getPageAccessToken } from '@/lib/integrations/meta/leadforms';
-import { fetchPagePosts, summarizeOrganic } from '@/lib/integrations/meta/organic';
+import { fetchPagePosts, summarizeOrganic, fetchInstagramAccountId, fetchInstagramMedia } from '@/lib/integrations/meta/organic';
 
 export async function GET(req: NextRequest) {
   const resolved = await resolveMetaAdminContext();
@@ -24,7 +25,22 @@ export async function GET(req: NextRequest) {
   const network = searchParams.get('network') ?? 'facebook';
 
   if (network === 'instagram') {
-    return metaJson({ error: 'instagram_pending', message: 'O Instagram precisa de ligar a conta IG à Página (em breve).', summary: null }, 200);
+    try {
+      const pageToken = await getPageAccessToken(c.pageId, c.token);
+      const igId = await fetchInstagramAccountId(c.pageId, pageToken);
+      if (!igId) {
+        return metaJson({
+          error: 'instagram_not_linked',
+          message: 'Para ver o orgânico do Instagram, ligue a conta Instagram Business à Página nas Definições da Página da Meta (Contas ligadas → Instagram).',
+          summary: null,
+        }, 200);
+      }
+      const media = await fetchInstagramMedia(igId, pageToken, since, until);
+      const summary = summarizeOrganic(media);
+      return metaJson({ summary });
+    } catch (e) {
+      return metaJson({ error: e instanceof Error ? e.message : 'Não foi possível ler o orgânico do Instagram.', summary: null }, 200);
+    }
   }
 
   try {

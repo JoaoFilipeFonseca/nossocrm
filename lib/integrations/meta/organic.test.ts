@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizePost, summarizeOrganic, type OrganicPost } from './organic';
+import { normalizePost, normalizeIgMedia, summarizeOrganic, type OrganicPost } from './organic';
 
 describe('normalizePost', () => {
   it('soma interações e deriva tipo do anexo', () => {
@@ -22,6 +22,32 @@ describe('normalizePost', () => {
     expect(p.interactions).toBe(0);
     expect(p.media_type).toBe('status');
     expect(p.message).toBe('');
+  });
+});
+
+describe('normalizeIgMedia', () => {
+  it('mapeia gostos+comentários (sem partilhas) e tipo IMAGE→photo', () => {
+    const p = normalizeIgMedia({
+      id: 'ig1', caption: ' Casa nova ', media_type: 'IMAGE', media_product_type: 'FEED',
+      timestamp: '2026-06-10T09:00:00+0000', permalink: 'https://instagram.com/p/abc',
+      thumbnail_url: null as unknown as string, media_url: 'https://cdn/ig1.jpg',
+      like_count: 120, comments_count: 8,
+    });
+    expect(p.message).toBe('Casa nova');
+    expect(p.media_type).toBe('photo');
+    expect(p.reactions).toBe(120);
+    expect(p.comments).toBe(8);
+    expect(p.shares).toBe(0); // IG orgânico não tem partilhas na API
+    expect(p.interactions).toBe(128);
+    expect(p.picture).toBe('https://cdn/ig1.jpg'); // cai para media_url quando sem thumbnail
+  });
+
+  it('REELS→reel, CAROUSEL_ALBUM→carousel, sem métricas→zeros', () => {
+    expect(normalizeIgMedia({ id: 'r', media_type: 'VIDEO', media_product_type: 'REELS', timestamp: '2026-06-01T00:00:00+0000' }).media_type).toBe('reel');
+    const c = normalizeIgMedia({ id: 'c', media_type: 'CAROUSEL_ALBUM', timestamp: '2026-06-01T00:00:00+0000' });
+    expect(c.media_type).toBe('carousel');
+    expect(c.interactions).toBe(0);
+    expect(c.message).toBe('');
   });
 });
 

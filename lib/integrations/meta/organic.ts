@@ -59,6 +59,7 @@ export function normalizePost(r: RawPost): OrganicPost {
 const TYPE_LABEL: Record<string, string> = {
   photo: 'Fotos', video: 'Vídeos', link: 'Ligações', status: 'Texto',
   album: 'Álbuns', share: 'Partilhas', event: 'Eventos', note: 'Notas',
+  reel: 'Reels', carousel: 'Carrosséis',
 };
 
 export interface OrganicSummary {
@@ -121,4 +122,88 @@ export async function fetchPagePosts(
   const json = (await res.json().catch(() => ({}))) as { data?: RawPost[]; error?: { message?: string } };
   if (!res.ok || json.error) throw new Error(json.error?.message ?? `Graph ${res.status}`);
   return (json.data ?? []).map(normalizePost);
+}
+
+// ============================================================================
+// Instagram (ORG-IG, Fatia 1) — posts + interacções (gostos + comentários).
+// Reusa instagram_basic (já nos scopes). like_count/comments_count são contagens
+// básicas (não "insights"). Alcance/impressões/guardados = Fatia 2 (precisa de
+// instagram_manage_insights → re-autorização). Não há "partilhas" na API orgânica
+// do IG → shares=0. O token usado é o token da Página ligada à conta IG Business.
+// ============================================================================
+
+interface RawIgMedia {
+  id: string;
+  caption?: string;
+  media_type?: string; // IMAGE | VIDEO | CAROUSEL_ALBUM
+  media_product_type?: string; // FEED | REELS | ...
+  timestamp?: string;
+  permalink?: string;
+  media_url?: string;
+  thumbnail_url?: string;
+  like_count?: number;
+  comments_count?: number;
+}
+
+/** Mapeia o tipo de media do IG para a chave usada em TYPE_LABEL. */
+function igMediaType(r: RawIgMedia): string {
+  if ((r.media_product_type ?? '').toUpperCase() === 'REELS') return 'reel';
+  switch ((r.media_type ?? '').toUpperCase()) {
+    case 'VIDEO': return 'video';
+    case 'CAROUSEL_ALBUM': return 'carousel';
+    case 'IMAGE': return 'photo';
+    default: return 'photo';
+  }
+}
+
+/** Normaliza uma media crua do IG num OrganicPost (mesmo shape do FB). */
+export function normalizeIgMedia(r: RawIgMedia): OrganicPost {
+  const reactions = num(r.like_count); // gostos
+  const comments = num(r.comments_count);
+  return {
+    id: r.id,
+    message: (r.caption ?? '').trim(),
+    created_time: r.timestamp ?? '',
+    permalink: r.permalink ?? null,
+    picture: r.thumbnail_url ?? r.media_url ?? null,
+    media_type: igMediaType(r),
+    reactions,
+    comments,
+    shares: 0, // não disponível na API orgânica do IG
+    interactions: reactions + comments,
+  };
+}
+
+/** Resolve o id da conta Instagram Business ligada à Página. null se não houver. */
+export async function fetchInstagramAccountId(pageId: string, pageToken: string): Promise<string | null> {
+  const params = new URLSearchParams({ fields: 'instagram_business_account', access_token: pageToken });
+  const res = await fetch(`${META_GRAPH_BASE}/${pageId}?${params.toString()}`, {
+    headers: { 'User-Agent': 'FocoImoCRM/1.0' },
+  });
+  const json = (await res.json().catch(() => ({}))) as { instagram_business_account?: { id?: string }; error?: { message?: string } };
+  if (!res.ok || json.error) throw new Error(json.error?.message ?? `Graph ${res.status}`);
+  return json.instagram_business_account?.id ?? null;
+}
+
+/** Busca as publicações do IG no intervalo. Lança em erro da Graph. */
+export async function fetchInstagramMedia(
+  igUserId: string,
+  pageToken: string,
+  sinceISO: string | null,
+  untilISO: string | null,
+): Promise<OrganicPost[]> {
+  const fields = [
+    'caption', 'media_type', 'media_product_type', 'timestamp', 'permalink',
+    'media_url', 'thumbnail_url', 'like_count', 'comments_count',
+  ].join(',');
+  const params = new URLSearchParams({ fields, limit: '100', access_token: pageToken });
+  if (sinceISO) params.set('since', String(Math.floor(new Date(sinceISO).getTime() / 1000)));
+  if (untilISO) params.set('until', String(Math.floor(new Date(untilISO).getTime() / 1000)));
+
+  const res = await fetch(`${META_GRAPH_BASE}/${igUserId}/media?${params.toString()}`, {
+    headers: { 'User-Agent': 'FocoImoCRM/1.0' },
+  });
+  const json = (await res.json().catch(() => ({}))) as { data?: RawIgMedia[]; error?: { message?: string } };
+  if (!res.ok || json.error) throw new Error(json.error?.message ?? `Graph ${res.status}`);
+  return (json.data ?? []).map(normalizeIgMedia);
 }
