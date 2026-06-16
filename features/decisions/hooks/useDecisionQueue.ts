@@ -3,7 +3,7 @@
  * Hook principal para gerenciar a fila de decisões
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   useDealsView,
   useActivities,
@@ -29,20 +29,24 @@ export function useDecisionQueue() {
   const addActivity = (activity: Parameters<typeof createActivityMutation.mutateAsync>[0]['activity']) => createActivityMutation.mutateAsync({ activity });
   const updateActivity = (id: string, updates: Parameters<typeof updateActivityMutation.mutateAsync>[0]['updates']) => updateActivityMutation.mutateAsync({ id, updates });
 
-  const [decisions, setDecisions] = useState<Decision[]>(() =>
-    decisionQueueService.getPendingDecisions()
-  );
+  // Iniciar com defaults SSR‑safe (vazio). Ler o localStorage só pós‑mount num
+  // useEffect — senão o 1.º render do cliente diverge do HTML do servidor e dá
+  // hydration mismatch (React #418). Mesmo padrão de `usePersistedState` (bug #4).
+  const [decisions, setDecisions] = useState<Decision[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [executingIds, setExecutingIds] = useState<Set<string>>(new Set());
-  const [lastAnalyzedAt, setLastAnalyzedAt] = useState<string | undefined>(
-    decisionQueueService.getLastAnalyzedAt()
-  );
+  const [lastAnalyzedAt, setLastAnalyzedAt] = useState<string | undefined>(undefined);
 
   // Refresh decisions from storage
   const refreshDecisions = useCallback(() => {
     setDecisions(decisionQueueService.getPendingDecisions());
     setLastAnalyzedAt(decisionQueueService.getLastAnalyzedAt());
   }, []);
+
+  // Carregar o estado guardado depois da hidratação (não no render inicial).
+  useEffect(() => {
+    refreshDecisions();
+  }, [refreshDecisions]);
 
   // Calculate stats
   const stats: DecisionStats = useMemo(() => {
