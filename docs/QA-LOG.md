@@ -11,7 +11,7 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 16/06/2026 · **HEAD origin/main:** `1c071dd` · **build em produção:** `260616_1125`.
+- **Data:** 16/06/2026 · **HEAD origin/main:** `995256e` · **build em produção:** `260616_1225`+.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
@@ -73,7 +73,7 @@
 | **Marketing — Biblioteca (/criativos)** | Render + abas 📚/✨ + 4 formatos da aba Criar | ✅ 0 overflow, 0 erros | 15 Jun |
 | **Marketing — Biblioteca: GERAR + GUARDAR criativo** (Post orgânico FB/IG) | Funcional a clicar (copy IA + render + guardar + apagar) | ✅ copy IA (`/api/criativos/copy` 200, dados reais Seroa, PT-PT, respeitou indicações); **render PNG** (`/render` 201 → `creative-archive/gerados`); peça nova na biblioteca (2→3) c/ imagem; **apagar = soft-delete (archive_at)** — sem órfão de storage (retenção intencional, ≠ imóvel) | 15 Jun |
 | **Marketing — /anuncios (a fundo)** | Período 7/30/90/ano/Tudo + Tabela/Árvore + drill-down + analista + encaminhamento | ✅ dados vitalícios reais (Gasto 871,89€/819 leads Meta; árvore campanha›conjunto›anúncio c/ CPL/ROAS); recomendação do analista (2026-06-10); 0 erros. Criar anúncio = gated Meta/custo → no percurso real | 15 Jun |
-| **Marketing — Orgânico (a fundo)** | Toggles FB/IG + períodos 30/90/12m | ✅ posts FB reais; **Instagram LIVE (ORG-IG Fatia 1, 16/06, `4af1a99`)**: dados reais (6 posts do João, 11 interacções, melhores/por tipo), 200, 0 erros. Alcance/Impressões = Fatia 2 (re-auth, capturado). Antes era stub "em breve" | 15/16 Jun |
+| **Marketing — Orgânico (a fundo)** | Toggles FB/IG + períodos + **Alcance** | ✅ **FB+IG completos (ORG-IG, 16/06)**: posts/interacções reais (IG 6 posts/12 interacções; antes era stub) + **Alcance LIVE** após re-auth do João: **FB 106 030 / IG 32 022** pessoas (90d), KPI renderiza. 🧠 reach IG em janelas de 30d (limite Graph). Commits `4af1a99`+`40124e8`+`f3b23fc`. Impressões/guardados por post = futuro opcional | 16 Jun |
 | **Exportações — relatórios (/reports PDF)** | Clicar PDF + inspeccionar blob | ✅ blob `application/pdf` ~29 KB gerado e aberto; 0 erros. /financeiro sem export (por design) | 15 Jun |
 | **Actividades (página)** | Render + filtros de tipo | ✅ 0 overflow; 🐞 copy PT‑BR corrigido (`da4e371`) | 15 Jun |
 | **Matches (Inbox Bruto) — colar texto → IA** | Funcional a clicar (raw_intel QA criado/processado/limpo) | ✅ `/api/inbox-raw/process` 200; IA extraiu Procura T3/Paços de Ferreira/200k/garagem+varanda/nome+telefone (95%), contagem 10→11, PT‑PT correcto. Limpo (`raw_intel`+`matches`) | 16 Jun |
