@@ -11,7 +11,7 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 16/06/2026 · **HEAD origin/main:** `7bcdb6b`+ · **build em produção:** `260616_1102`+.
+- **Data:** 16/06/2026 · **HEAD origin/main:** `1c071dd` · **build em produção:** `260616_1125`.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
@@ -64,7 +64,7 @@
 | **Perfil** (editar nome/apelido + palavra‑passe) | Funcional (editar `nickname`+revert; validação pw) | ✅ editar→`profiles.nickname` grava+revertido; validação pw mismatch bloqueia ("não coincidem"), **pw do João intacta**. 🐞→✅ copy "Salvar"→"Guardar" + telefone +55→+351 (`7bcdb6b`). ⚠️ "sobrenome"/"apelido"/"alcunha" a relabel (22/06) | 16 Jun |
 | **Sino (Notificações)** | Abrir painel | ✅ "Tudo limpo! Não tem notificações", PT‑PT, 0 erros | 16 Jun |
 | **Ditar / Voz para o CRM** | Abrir widget de gravação | ✅ render + afordância "começar a gravar"; transcrição real não testável (sem áudio via Playwright). ⚠️ copy "Tap"→"Toque" | 16 Jun |
-| **Decisões (Central de Decisões)** | Analisar Agora (IA) | ✅ gerou 13 decisões reais (12 críticas) de tarefas atrasadas reais; efémeras (`ai_decisions`=0, não persiste→sem poluição). ⚠️ copy "Por que estou sugerindo isso"/"Ação" (22/06) | 16 Jun |
+| **Decisões (Central de Decisões)** | Analisar Agora (IA) + reload | ✅ gerou 13 decisões reais (12 críticas) de tarefas atrasadas reais; guardadas em `localStorage` (não na BD `ai_decisions`). 🐞→✅ #16: reload com decisões guardadas dava React #418 (hydration); corrigido (`1c071dd`), 0 erros reconfirmado. ⚠️ copy "Por que estou sugerindo isso"/"Ação" (22/06) | 16 Jun |
 | **Análise — Cérebro** | Render + filtros 30/90/12 meses | ✅ dados reais, 0 overflow, 0 erros | 15 Jun |
 | **Análise — Funil** | Render | ✅ funil, 0 overflow | 15 Jun |
 | **Análise — Financeiro** | Render + períodos (mês/ano/sempre) + aba Despesas | ✅ números honestos, 0 overflow, 0 erros | 15 Jun |
@@ -110,6 +110,7 @@
 | 12 | Apagar imóvel deixava ficheiros órfãos no storage (fotos/docs do imóvel/docs do proprietário) — cascata só na BD; **risco de privacidade** (CC do proprietário persistia após "apagar definitivamente") | 15 Jun | `6c9366b` | ✅ corrigido+reconfirmado em produção: DELETE recolhe `storage_path` antes do delete e remove dos 3 buckets (best‑effort); 0 órfãos pós‑delete |
 | 13 | **DealDetailModal crashava** (`RangeError: Invalid time value`) ao adicionar produto a um negócio — `format(new Date(deal.createdAt))` sem guarda; no re‑render pós‑mutação `deal.createdAt` fica momentaneamente `undefined` → `Intl.format(Invalid)` lança → modal inteiro fechava | 15 Jun | `fd73724` | ✅ corrigido+reconfirmado: helper `formatDateSafe` (data em falta/inválida → "—"); add produto deixa de crashar, modal mantém‑se aberto |
 | 14 | Copy PT‑BR no DealDetailModal → aba IA Insights → Objection Killer: "A IA **te ajuda** a negociar" (próclise brasileira) | 16 Jun | `9017c92` | ✅ corrigido+reconfirmado em produção (build `260616_1026`): "A IA **ajuda‑o** a negociar" |
+| 16 | **React #418 (hydration) na `/decisions`** — consistente após existirem decisões guardadas. `useDecisionQueue` inicializava `decisions`/`lastAnalyzedAt` no `useState` a partir do `localStorage` (`decisionQueueService`), divergindo do HTML do servidor (vazio) | 16 Jun | `1c071dd` | ✅ corrigido+reconfirmado em produção (build `260616_1125`): estado inicial SSR‑safe + `useEffect` pós‑mount; 0 erros, decisões renderizam. Mesmo padrão do #4 |
 | 15 | **Brand Kit (`/settings/marca`) gravava sempre 400** "Invalid payload" — o GET faz `select('*')` (devolve `id`/`organization_id`/`created_at`/`updated_at`); o cliente fazia `setKit({...emptyKit, ...data.kit})` e depois `PUT JSON.stringify(kit)` com essas colunas só‑BD, que o `KitSchema.strict()` do servidor rejeita. **A marca pessoal — base de todos os criativos/templates — não conseguia gravar pela UI.** | 16 Jun | `af827cc` | ✅ corrigido+reconfirmado em produção (build `260616_1102`): cliente envia só as chaves de `emptyKit`; PUT 400→200, `font_body` gravou e foi restaurado. `.strict()` mantido como defesa |
 
 ---
