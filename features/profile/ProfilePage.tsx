@@ -214,7 +214,7 @@ export const ProfilePage: React.FC = () => {
             if (normalizedPhone && !isE164(normalizedPhone)) {
                 setMessage({
                     type: 'error',
-                    text: 'Telefone inválido. Use o formato E.164 (ex.: +5511999999999).',
+                    text: 'Telefone inválido. Use o formato E.164 (ex.: +351912345678).',
                 });
                 return;
             }
@@ -464,7 +464,7 @@ export const ProfilePage: React.FC = () => {
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     className="w-full pl-11 pr-4 py-2.5 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-primary-500 transition-all"
-                                    placeholder="+5511999999999"
+                                    placeholder="+351912345678"
                                 />
                             </div>
                         </div>
@@ -495,7 +495,7 @@ export const ProfilePage: React.FC = () => {
                                 ) : (
                                     <>
                                         <Save className="w-4 h-4" />
-                                        Salvar
+                                        Guardar
                                     </>
                                 )}
                             </button>
