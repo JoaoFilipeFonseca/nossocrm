@@ -115,14 +115,16 @@
 > porque é sua" — carrossel, 7 interacções), 11 interacções totais, média 2/post, melhores publicações, por tipo
 > (Carrosséis/Fotos), 0 erros consola. **A conta IG já estava ligada à Página** (o pré-requisito já estava feito).
 > `/api/organico?network=instagram` → 200; se algum dia desligar a conta, devolve `instagram_not_linked` com instrução.
-> ## ✅ ORG-IG Fatia 2 (ALCANCE) FEITA E VERIFICADA EM PRODUÇÃO (16/06, commits `40124e8`+`f3b23fc`+`995256e`)
-> Scopes `read_insights`+`instagram_manage_insights` adicionados; o João reautorizou a Meta. **Alcance LIVE nos dois canais:**
-> **Facebook 106 030** pessoas (90d) · **Instagram 32 022** pessoas (90d), KPI renderiza ("pessoas alcançadas (período)").
-> 🧠 **Gotcha:** o `reach` do IG com `period=day` está limitado a **30 dias por pedido** → 90d dava erro → dividir em
-> janelas ≤30d e somar (`fetchInstagramReach`). FB (`page_impressions_unique`) não tem esse limite. Critério "soma diária"
-> nos dois (não é único do período — consistente). Debug temporário usado e removido. **ORG-IG está FECHADO** (FB+IG: posts+interacções+Alcance).
-> Resto opcional p/ o futuro (NÃO agora): impressões/guardados por post; reach único do período (em vez de soma diária).
-> ### (Fatia 1, histórico)
+> ## ⚠️ ORG-IG Fatia 2 (ALCANCE) — TENTADA E PUXADA POR HONESTIDADE (16/06). Posts+interacções FECHADOS; Alcance POR FAZER bem.
+> Scopes `read_insights`+`instagram_manage_insights` adicionados (`40124e8`) e o **João reautorizou a Meta** (permissões concedidas, confirmado).
+> Implementei o Alcance somando o `reach` **diário** (FB `page_impressions_unique`, IG `reach` em janelas de 30d). **REVERTIDO (`196d5f7`)**
+> porque **não é honesto**: (1) somar o alcance diário conta a mesma pessoa N dias (sobre-contagem, não é "pessoas alcançadas");
+> (2) os números do IG vinham **incoerentes** — 30d recente = 534, mas um mês antigo SEM posts = 22 458; FB devolvia 51 655 num mês de 0 posts.
+> KPI Alcance voltou a "—" (sub "em breve"). **Posts + interacções (reais) mantêm-se LIVE** (Fatia 1, FB+IG).
+> **PARA FAZER BEM (quando se pegar nisto):** usar `metric=reach&metric_type=total_value` (alcance ÚNICO do período que a Meta já dedup),
+> respeitar o limite de janela (~30d) — para >30d mostrar "—" ou só o último mês com rótulo claro; **validar o número contra a própria
+> app/Insights da Meta** antes de voltar a expor. As permissões já estão no token (não é preciso novo re-login). Scopes ficam (inofensivos).
+> ### (Fatia 1, histórico — FEITA e LIVE)
 >
 > ### (histórico) Captura original 16/06 — ORG-IG: Instagram orgânico (canal PRINCIPAL do João, URGENTE p/ ele)
 > **Pedido do João (16/06):** o IG é o canal principal, já está a postar e quer ver resultados; o `/organico`
