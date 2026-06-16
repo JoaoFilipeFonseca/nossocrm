@@ -109,7 +109,16 @@
 > **Depois:** Claude re-verifica via API (`/761569255551287/business_users` deve ficar só o João; idem
 > `/104774959239895/assigned_users`). Varrimento de 11/06: conta de anúncios, pixels e convites pendentes já limpos.
 
-> ## 🔴 CAPTURADO 16/06 — ORG-IG: Instagram orgânico (canal PRINCIPAL do João, URGENTE p/ ele)
+> ## ✅ ORG-IG Fatia 1 FEITA E VERIFICADA EM PRODUÇÃO (16/06, commit `4af1a99`, build `260616_1158`)
+> O João autorizou "agora" (override do congelamento, decisão dele). **Instagram orgânico LIVE:** o `/organico`
+> aba Instagram mostra **dados reais** — 6 posts dele dos últimos 90 dias (ex.: "A sua casa não vale mais só
+> porque é sua" — carrossel, 7 interacções), 11 interacções totais, média 2/post, melhores publicações, por tipo
+> (Carrosséis/Fotos), 0 erros consola. **A conta IG já estava ligada à Página** (o pré-requisito já estava feito).
+> `/api/organico?network=instagram` → 200; se algum dia desligar a conta, devolve `instagram_not_linked` com instrução.
+> **FALTA Fatia 2 (Alcance/Impressões/Guardados):** acrescentar `instagram_manage_insights` aos scopes + **re-login Meta**
+> + `/{igId}/insights` e `/{mediaId}/insights`. Juntar com o "Alcance re-autorizar" do FB (mesma re-autorização).
+>
+> ### (histórico) Captura original 16/06 — ORG-IG: Instagram orgânico (canal PRINCIPAL do João, URGENTE p/ ele)
 > **Pedido do João (16/06):** o IG é o canal principal, já está a postar e quer ver resultados; o `/organico`
 > mostra "O Instagram precisa de ligar a conta IG à Página (em breve)". Pediu para fazer assim que terminem os
 > testes OU já, se o programador vir que é melhor para depois testar. **Âmbito congelado → decisão de QUANDO é do João.**
