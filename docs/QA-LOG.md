@@ -11,7 +11,7 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 15/06/2026 · **HEAD origin/main:** `fd73724` · **build em produção:** `260615_1557`.
+- **Data:** 16/06/2026 · **HEAD origin/main:** `9017c92` · **build em produção:** `260616_1026`.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
@@ -41,6 +41,7 @@
 | **Negócios — render adversarial** (XSS, título 5k, valor ~1 bilião, prob 250%/‑10%) | Board + cockpit | ✅ não parte; chip DASH‑2 clampa | 15 Jun |
 | **Negócios — abrir cockpit / aba Produtos (deal_items)** | Funcional | ✅ (após fix `24f8b32`) | 13 Jun |
 | **Negócios — CICLO DE VIDA completo** (criar inline c/ proveniência obrigatória → mover etapa → **add produto personalizado** → **GANHO**) | Funcional a clicar (deal QA criado/movido/ganho/limpo) | 🐞→✅ #13: add produto crashava o modal (`Invalid time value`); corrigido (`fd73724`) e reconfirmado. Criar guarda `source`; GANHO grava `is_won=true`+`closed_at`; valor do deal passa a soma dos produtos | 15 Jun |
+| **Negócios — RESTO do ciclo** (Nota/Timeline, Adiar, editar título/valor, abas IA Insights/Financeiro, touchpoints, PERDIDO com motivo) | Funcional a clicar (deal QA criado/exercitado/limpo) | ✅ Nota→`activities` NOTE (acentos ok); Adiar 3m→`custom_fields.snoozedUntil`+estado UI (Reagendar/Retomar); editar título e valor (175k) persistem; IA Insights "Analisar Negócio" 200 PT-PT coerente; Financeiro recalcula comissão+add custo→`expenses` (org-scoped); Agendar→`activities` MEETING+CHQ, visita→só CHQ; PERDIDO "Preço"→`is_lost`+`loss_reason`+`closed_at`. 🐞→✅ copy PT-BR "te ajuda"→"ajuda-o" (`9017c92`, reconfirmado em produção). ⚠️ sem editar-dono e sem mover-entre-boards na UI (ver achados) | 16 Jun |
 | **Inbox/tarefas — concluir/adiar/reverter** | Funcional a clicar (tarefa QA) | ✅ BD + toasts | 15 Jun |
 | **Definições — gravar campo na BD (Política de privacidade)** | Gravar + reverter | ✅ BD muda e restaura | 15 Jun |
 | **Definições — Etiquetas/Campos/Página Inicial** | Funcional | 🐞/⚠️ só localStorage (não BD) | 15 Jun |
@@ -101,6 +102,7 @@
 | 11 | Lead nova mostrava 50% de fecho (palpite da IA / default 50) no cockpit | 15 Jun | `39330a9` | ✅ corrigido+verificado: % por sinais (0% nova, 48% c/ sinais). Residual prosa IA → fase 2 |
 | 12 | Apagar imóvel deixava ficheiros órfãos no storage (fotos/docs do imóvel/docs do proprietário) — cascata só na BD; **risco de privacidade** (CC do proprietário persistia após "apagar definitivamente") | 15 Jun | `6c9366b` | ✅ corrigido+reconfirmado em produção: DELETE recolhe `storage_path` antes do delete e remove dos 3 buckets (best‑effort); 0 órfãos pós‑delete |
 | 13 | **DealDetailModal crashava** (`RangeError: Invalid time value`) ao adicionar produto a um negócio — `format(new Date(deal.createdAt))` sem guarda; no re‑render pós‑mutação `deal.createdAt` fica momentaneamente `undefined` → `Intl.format(Invalid)` lança → modal inteiro fechava | 15 Jun | `fd73724` | ✅ corrigido+reconfirmado: helper `formatDateSafe` (data em falta/inválida → "—"); add produto deixa de crashar, modal mantém‑se aberto |
+| 14 | Copy PT‑BR no DealDetailModal → aba IA Insights → Objection Killer: "A IA **te ajuda** a negociar" (próclise brasileira) | 16 Jun | `9017c92` | ✅ corrigido+reconfirmado em produção (build `260616_1026`): "A IA **ajuda‑o** a negociar" |
 
 ---
 
@@ -125,6 +127,11 @@
 | Warning Recharts `width/height(-1)` em /dashboard e /reports (gráfico vazio 0×0) | 🟢 Baixa | minHeight/condicionar render |
 | `/settings/automation-logs` e `/unsubscribe` sem `<title>` próprio; `/admin/saude` h1 vazio; título de `/deals/[id]/cockpit` mostra UUID | 🟢 Baixa (a11y/nit) | — |
 | IA runtime escreveu "diretamente" (AO‑1990) em vez de "directamente" | 🟢 Baixa | Reforçar pré‑AO no system prompt do crm‑agent |
+| **Reatribuir dono/responsável não existe na UI** do DealDetailModal (nem do board) | 🟢 Baixa (single‑op) | Org de 1 utilizador (João) → moot hoje; relevante p/ multi‑tenant ("serve qualquer consultor"). Capturado pós‑22 |
+| **Mover negócio entre boards/funis não existe** (cada deal pertence a 1 funil; `handleSelectBoard` só troca a vista) | 🟢 Baixa | Provável por desenho (Proprietários vs Compradores são pipelines distintos). Confirmar com o João se quer "reatribuir funil"; senão fechar como intencional |
+| **"Registar visita" só faz `logCHQ` (deal_activities), sem `recordTouchpoint`** → visita não aparece na Timeline do deal (chamada/email/reunião aparecem) | 🟢 Baixa | Inconsistência cosmética; a visita conta para métricas CHQ honestas. Considerar acrescentar `recordTouchpoint('VISIT'…)` p/ a timeline |
+| **`custom_fields.snoozedUntil` permanece após PERDIDO/GANHO** (deal fechado mantém data de adiamento) | 🟢 Baixa | Inócuo (fechados saem do follow‑up); limpar o snooze ao fechar seria mais limpo |
+| **DealDetailModal cockpit (HEALTH/PROB) e aba IA Insights usam `deals.probability` (default 10% à criação), não o score por sinais DASH‑2** | 🟠 Média | 3.ª superfície de % a alinhar na **fase 2 do épico %** (FocusContextPanel/cockpit‑v2 já corrigidos no #11). Lead nova mostra 10% fixo aqui. Pós‑22, âmbito congelado |
 
 ---
 
@@ -148,9 +155,10 @@
 ### 🔎 Fluxos funcionais do NÚCLEO ainda por exercitar a fundo (destapado 15/06 — só smoke até agora)
 > As 4 áreas da lista original ("Imóveis, Import, Marketing, Exportações") estão feitas, mas o CRM tem mais
 > fluxos centrais que só foram **carregados** (smoke) ou testados em fatia. A clicar com profundidade falta:
-- ✅ **Negócios — ciclo de vida** (criar→etapa→produto→GANHO) FEITO 15/06 (+ bug #13). **Falta ainda:** PERDIDO
-  (com motivo), Adiar, editar título/valor/dono, mover entre boards, aba IA Insights, aba Financeiro do deal,
-  **adicionar Nota** (Timeline write) e tarefa dentro do deal.
+- ✅ **Negócios — ciclo de vida** (criar→etapa→produto→GANHO) FEITO 15/06 (+ bug #13). **RESTO FEITO 16/06:**
+  PERDIDO com motivo ✅, Adiar ✅, editar título/valor ✅, Nota/Timeline ✅, touchpoints (Agendar/visita) ✅,
+  abas IA Insights ✅ (Analisar 200) e Financeiro ✅ (comissão + add custo→`expenses`). 1 copy PT‑BR corrigida
+  (#14). **Não existe na UI:** editar dono e mover‑entre‑boards (ver achados — single‑op / por desenho).
 - ⬜ **Ficha do contacto a fundo:** editar campos, timeline/`lead_eventos`, adicionar nota/tarefa/actividade,
   ligar a imóvel/deal, ver proveniência no cabeçalho (achado P3). Só criar+render foram testados.
 - ⬜ **Boards (CRUD):** criar board, criar/editar/reordenar etapas, "Definir Estratégia do Board" (meta/agente/
