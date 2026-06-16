@@ -101,7 +101,7 @@ export function OrganicoPage() {
         <Kpi label="Interações totais" value={loading ? '—' : nf(k?.interactions ?? 0)} sub="reações + comentários + partilhas" />
         {data?.reach_available
           ? <Kpi label="Alcance" value={loading ? '—' : nf(data.reach ?? 0)} sub="pessoas alcançadas (período)" />
-          : <Kpi label="Alcance" value="—" sub="em breve" warn />}
+          : <Kpi label="Alcance" value="—" sub="em breve" />}
         <Kpi label="Média por post" value={loading ? '—' : nf(k?.avg ?? 0)} sub="interações/post" />
       </div>
 
