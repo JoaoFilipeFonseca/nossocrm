@@ -1589,7 +1589,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                             Objection Killer
                           </h3>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            O cliente está difícil? A IA te ajuda a negociar.
+                            O cliente está difícil? A IA ajuda-o a negociar.
                           </p>
                         </div>
                       </div>
