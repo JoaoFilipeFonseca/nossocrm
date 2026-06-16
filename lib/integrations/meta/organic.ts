@@ -290,13 +290,3 @@ export async function fetchInstagramReach(
     return null;
   }
 }
-
-/** DEBUG temporário (ORG-IG): devolve o erro cru da Graph para o reach do IG (1.ª janela). */
-export async function debugInstagramReach(igUserId: string, pageToken: string, sinceISO: string | null, untilISO: string | null): Promise<unknown> {
-  const startTs = dayUnix(sinceISO, 90);
-  const endTs = Math.min(startTs + 30 * 86400, dayUnix(untilISO, 0));
-  const params = new URLSearchParams({ metric: 'reach', period: 'day', since: String(startTs), until: String(endTs), access_token: pageToken });
-  const res = await fetch(`${META_GRAPH_BASE}/${igUserId}/insights?${params.toString()}`, { headers: { 'User-Agent': 'FocoImoCRM/1.0' } });
-  const json = await res.json().catch(() => ({}));
-  return { status: res.status, body: json };
-}

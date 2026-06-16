@@ -9,7 +9,7 @@ export const maxDuration = 30;
 import { NextRequest } from 'next/server';
 import { resolveMetaAdminContext, metaJson } from '@/lib/integrations/meta/server';
 import { getPageAccessToken } from '@/lib/integrations/meta/leadforms';
-import { fetchPagePosts, summarizeOrganic, fetchInstagramAccountId, fetchInstagramMedia, fetchPageReach, fetchInstagramReach, debugInstagramReach } from '@/lib/integrations/meta/organic';
+import { fetchPagePosts, summarizeOrganic, fetchInstagramAccountId, fetchInstagramMedia, fetchPageReach, fetchInstagramReach } from '@/lib/integrations/meta/organic';
 
 export async function GET(req: NextRequest) {
   const resolved = await resolveMetaAdminContext();
@@ -38,10 +38,7 @@ export async function GET(req: NextRequest) {
       const media = await fetchInstagramMedia(igId, pageToken, since, until);
       const summary = summarizeOrganic(media);
       const reach = await fetchInstagramReach(igId, pageToken, since, until);
-      const debug = searchParams.get('debug') === '1' && reach == null
-        ? await debugInstagramReach(igId, pageToken, since, until)
-        : undefined;
-      return metaJson({ summary: { ...summary, reach, reach_available: reach != null }, ...(debug ? { _dbg: debug } : {}) });
+      return metaJson({ summary: { ...summary, reach, reach_available: reach != null } });
     } catch (e) {
       return metaJson({ error: e instanceof Error ? e.message : 'Não foi possível ler o orgânico do Instagram.', summary: null }, 200);
     }
