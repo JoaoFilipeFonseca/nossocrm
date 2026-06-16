@@ -9,7 +9,7 @@ export const maxDuration = 30;
 import { NextRequest } from 'next/server';
 import { resolveMetaAdminContext, metaJson } from '@/lib/integrations/meta/server';
 import { getPageAccessToken } from '@/lib/integrations/meta/leadforms';
-import { fetchPagePosts, summarizeOrganic, fetchInstagramAccountId, fetchInstagramMedia, fetchPageReach, fetchInstagramReach } from '@/lib/integrations/meta/organic';
+import { fetchPagePosts, summarizeOrganic, fetchInstagramAccountId, fetchInstagramMedia } from '@/lib/integrations/meta/organic';
 
 export async function GET(req: NextRequest) {
   const resolved = await resolveMetaAdminContext();
@@ -37,8 +37,11 @@ export async function GET(req: NextRequest) {
       }
       const media = await fetchInstagramMedia(igId, pageToken, since, until);
       const summary = summarizeOrganic(media);
-      const reach = await fetchInstagramReach(igId, pageToken, since, until);
-      return metaJson({ summary: { ...summary, reach, reach_available: reach != null } });
+      // Alcance (Fatia 2) DESLIGADO: a soma do alcance diário sobre-conta (mesma
+      // pessoa contada vários dias) e os valores do IG vêm incoerentes — não é
+      // honesto mostrá-lo como "pessoas alcançadas". Caminho certo no TODO
+      // (metric_type=total_value, ≤30d, validado contra a app da Meta).
+      return metaJson({ summary });
     } catch (e) {
       return metaJson({ error: e instanceof Error ? e.message : 'Não foi possível ler o orgânico do Instagram.', summary: null }, 200);
     }
@@ -48,8 +51,8 @@ export async function GET(req: NextRequest) {
     const pageToken = await getPageAccessToken(c.pageId, c.token);
     const posts = await fetchPagePosts(c.pageId, pageToken, since, until);
     const summary = summarizeOrganic(posts);
-    const reach = await fetchPageReach(c.pageId, pageToken, since, until);
-    return metaJson({ summary: { ...summary, reach, reach_available: reach != null } });
+    // Alcance (Fatia 2) desligado — ver nota no ramo do Instagram. TODO: total_value.
+    return metaJson({ summary });
   } catch (e) {
     return metaJson({ error: e instanceof Error ? e.message : 'Não foi possível ler o orgânico da Página.' }, 200);
   }

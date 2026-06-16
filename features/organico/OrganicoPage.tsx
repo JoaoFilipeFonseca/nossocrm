@@ -101,7 +101,7 @@ export function OrganicoPage() {
         <Kpi label="Interações totais" value={loading ? '—' : nf(k?.interactions ?? 0)} sub="reações + comentários + partilhas" />
         {data?.reach_available
           ? <Kpi label="Alcance" value={loading ? '—' : nf(data.reach ?? 0)} sub="pessoas alcançadas (período)" />
-          : <Kpi label="Alcance" value="—" sub="requer re-autorização" warn />}
+          : <Kpi label="Alcance" value="—" sub="em breve" warn />}
         <Kpi label="Média por post" value={loading ? '—' : nf(k?.avg ?? 0)} sub="interações/post" />
       </div>
 
@@ -154,7 +154,7 @@ export function OrganicoPage() {
       </div>
 
       <p className="text-xs text-slate-400 dark:text-slate-500 border-t border-dashed border-slate-200 dark:border-white/10 pt-3">
-        Fonte: API da Página (posts + reações/comentários/partilhas). O alcance/impressões precisa de 1 re-autorização da Meta (read_insights) — acção do João. Liga ao analista IA e, mais tarde, ao MKT-BRAIN.
+        Fonte: API da Página e do Instagram (publicações + reações/comentários/partilhas, dados reais). O alcance único do período está a ser afinado para corresponder aos números da própria app da Meta. Liga ao analista IA e, mais tarde, ao MKT-BRAIN.
       </p>
     </div>
   );
