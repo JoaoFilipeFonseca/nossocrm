@@ -109,6 +109,26 @@
 > **Depois:** Claude re-verifica via API (`/761569255551287/business_users` deve ficar só o João; idem
 > `/104774959239895/assigned_users`). Varrimento de 11/06: conta de anúncios, pixels e convites pendentes já limpos.
 
+> ## 🔴 CAPTURADO 16/06 — ORG-IG: Instagram orgânico (canal PRINCIPAL do João, URGENTE p/ ele)
+> **Pedido do João (16/06):** o IG é o canal principal, já está a postar e quer ver resultados; o `/organico`
+> mostra "O Instagram precisa de ligar a conta IG à Página (em breve)". Pediu para fazer assim que terminem os
+> testes OU já, se o programador vir que é melhor para depois testar. **Âmbito congelado → decisão de QUANDO é do João.**
+> **Estado real do código (auditado 16/06):** Facebook orgânico FEITO; **Instagram é stub** — `app/api/organico/route.ts:26`
+> devolve `instagram_pending` fixo (zero código a buscar dados IG). O token Meta **já tem `instagram_basic`**
+> (`lib/integrations/meta/config.ts:30`) → posts/gostos/comentários/legendas/datas/permalink são buscáveis **sem nova
+> autorização**. **Falta `instagram_manage_insights`** (não está nos scopes) → Alcance/Impressões IG exigem **re-login**
+> da Meta (mesmo buraco do "Alcance re-autorizar" do FB) → 2.ª fatia.
+> **Pré-requisito do João (2 min, só ele):** conta IG = Business/Creator **ligada à Página "João Fonseca"** (Definições
+> da Página → Contas ligadas). Sem isto o Graph não devolve `instagram_business_account`.
+> **Plano de execução (quando o João disser "avança"):**
+> - **Fatia 1 (~meio dia): posts + interacções.** No `route.ts` ramo `network==='instagram'`: `GET /{pageId}?fields=
+>   instagram_business_account` → `GET /{igId}/media?fields=id,caption,media_type,timestamp,like_count,comments_count,
+>   permalink,media_url,thumbnail_url` no intervalo → `summarizeOrganic` (adaptar o mapper FB→IG em `lib/integrations/
+>   meta/organic.ts`). Cartões Publicações/Interações totais/Média por post/Melhores publicações ficam reais.
+> - **Fatia 2 (depois): Alcance/Impressões.** Acrescentar `instagram_manage_insights` aos scopes + re-login Meta +
+>   `/{igId}/insights` (reach/impressions) e `/{mediaId}/insights` (saves/reach por post). (Junta com o "Alcance re-autorizar" do FB.)
+> **Nota de honestidade:** não é semanas; a Fatia 1 é focada. O bloqueio principal é o pré-requisito do João (ligar IG↔Página).
+
 > **FONTE DE VERDADE ÚNICA do backlog.** Consolida (31/05/2026) o antigo `CAPTURE.md`
 > + o `crm/.claude/TODO.md` (1744 linhas, planeamento 14-18 Mai) + a memória viva.
 > Regra do João: **nada se perde.** Primeiro catalogamos tudo; depois ordenamos do mais
