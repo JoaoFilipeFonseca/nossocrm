@@ -183,8 +183,11 @@
 - ⬜ **Mensagens — enviar de verdade + marcar tratada** (só rascunho IA até agora). ⚠️ envio real.
 - ✅ **Cruzamentos — colar texto → IA cria matches** (16/06): `/api/inbox-raw/process` 200; IA classificou e
   extraiu a procura (tipo/T3/zona/budget/features/contacto), 95%, contagem subiu. Dados QA limpos.
-- 🟡 **Definições a fundo:** **Marca/Brand Kit gravar FEITO 16/06** (🐞→✅ #15, 400→200, gravou+restaurou).
-  Falta: integrações (Meta reautorizar — gated), canais de mensagens, Repositório de Prompts, equipa/utilizadores.
+- 🟡 **Definições a fundo:** abas reais = Geral · Produtos/Serviços · Unidades · Integrações · Central de I.A ·
+  Marca · Metas · Checklists · Dados · Equipa. **Gravar testado a fundo:** Geral/privacidade (15/06) ✅ +
+  **Marca/Brand Kit** (16/06, 🐞→✅ #15 400→200) ✅. **`/settings/prompts` = 404** (o `plano_repositorio_prompts_ui`
+  não foi construído como página; prompts vivem na BD — não re‑propor, é só nota). Falta gravar a fundo:
+  Produtos/Serviços, Unidades, Metas, Checklists, Equipa; integrações Meta (gated); Central de I.A (não mexer em chaves).
 - ✅ **Perifericos FEITOS 16/06:** **Perfil** (editar `nickname`+revert ✅; validação pw mismatch ✅, pw intacta;
   copy "Salvar"→"Guardar" + telefone +351 corrigidos `7bcdb6b`); **Sino** (painel vazio gracioso ✅); **Ditar/Voz**
   (widget de gravação renderiza ✅; transcrição real não testável via Playwright — sem áudio); **Decisões**
