@@ -11,7 +11,7 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 16/06/2026 · **HEAD origin/main:** `9017c92` · **build em produção:** `260616_1026`.
+- **Data:** 16/06/2026 · **HEAD origin/main:** `70d63ed`+ · **build em produção:** `260616_1026`+.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
@@ -36,6 +36,7 @@
 | **Contactos — pesquisa** (nome real, unaccent; inputs patológicos `% _ \ ( ) , * <script> '; --`) | Funcional + stress | ✅ 0 falhas/erros; wildcard %/_ sobre‑corresponde (⚠️) | 15 Jun |
 | **Contactos — criação (form)** | Validação client (nome/telefone/origem obrigatórios) | ✅ bloqueia inválido | 13/15 Jun |
 | **Contactos — render adversarial** (XSS, 20k chars, RTL/emoji, origem nula) | Lista + ficha, desktop+375 | ✅ XSS não executa, 0 overflow | 15 Jun |
+| **Contactos — FICHA a fundo** (editar campos, Registar interação/timeline, Assistente 360/Analisar com IA) | Funcional a clicar (contacto QA criado/exercitado/limpo) | ✅ Editar campos→`contacts.notes`+`custom_fields` (acentos ok); Registar interação Nota→`deal_activities` (contact_id, via=timeline‑manual, sobrevive reload); **Assistente 360** `/api/contacts/[id]/assistant` 200, retrato PT‑PT coerente c/ dados reais (família/objectivo/interação). ⚠️ proveniência (`source`) não visível no cabeçalho (P3); ⚠️ IA runtime omite hífens de clíticos ("encontra se") | 16 Jun |
 | **Negócios — filtros board** (estado Em Aberto/Ganhos/Perdidos/Todos; dono) | Funcional a clicar | ✅ filtram | 15 Jun |
 | **Negócios — mover etapa** (dispara IA‑analyze) | Funcional + stress (valores extremos, injecção) | ✅ 200 (após fix `31857a3`) | 13/15 Jun |
 | **Negócios — render adversarial** (XSS, título 5k, valor ~1 bilião, prob 250%/‑10%) | Board + cockpit | ✅ não parte; chip DASH‑2 clampa | 15 Jun |
@@ -126,7 +127,8 @@
 | Probabilidade fora de [0,100] mostra‑se crua no cockpit ("250%") | 🟢 Baixa | Cosmético; chip DASH‑2 clampa |
 | Warning Recharts `width/height(-1)` em /dashboard e /reports (gráfico vazio 0×0) | 🟢 Baixa | minHeight/condicionar render |
 | `/settings/automation-logs` e `/unsubscribe` sem `<title>` próprio; `/admin/saude` h1 vazio; título de `/deals/[id]/cockpit` mostra UUID | 🟢 Baixa (a11y/nit) | — |
-| IA runtime escreveu "diretamente" (AO‑1990) em vez de "directamente" | 🟢 Baixa | Reforçar pré‑AO no system prompt do crm‑agent |
+| IA runtime escreveu "diretamente" (AO‑1990) em vez de "directamente"; e **omite hífens de clíticos** ("encontra se"/"mostrou se" em vez de "encontra‑se") no Assistente 360 | 🟢 Baixa | Reforçar pré‑AO + hífens de clíticos no system prompt (crm‑agent + contact assistant). Output de runtime |
+| Placeholder PT‑BR no form Novo Contacto: "Ex: Ana **Souza**" (apelido grafado à brasileira; PT‑PT = "Sousa") | 🟢 Baixa | Trocar para "Ex.: Ana Sousa" no varrimento de copy de 22/06 |
 | **Reatribuir dono/responsável não existe na UI** do DealDetailModal (nem do board) | 🟢 Baixa (single‑op) | Org de 1 utilizador (João) → moot hoje; relevante p/ multi‑tenant ("serve qualquer consultor"). Capturado pós‑22 |
 | **Mover negócio entre boards/funis não existe** (cada deal pertence a 1 funil; `handleSelectBoard` só troca a vista) | 🟢 Baixa | Provável por desenho (Proprietários vs Compradores são pipelines distintos). Confirmar com o João se quer "reatribuir funil"; senão fechar como intencional |
 | **"Registar visita" só faz `logCHQ` (deal_activities), sem `recordTouchpoint`** → visita não aparece na Timeline do deal (chamada/email/reunião aparecem) | 🟢 Baixa | Inconsistência cosmética; a visita conta para métricas CHQ honestas. Considerar acrescentar `recordTouchpoint('VISIT'…)` p/ a timeline |
@@ -159,8 +161,11 @@
   PERDIDO com motivo ✅, Adiar ✅, editar título/valor ✅, Nota/Timeline ✅, touchpoints (Agendar/visita) ✅,
   abas IA Insights ✅ (Analisar 200) e Financeiro ✅ (comissão + add custo→`expenses`). 1 copy PT‑BR corrigida
   (#14). **Não existe na UI:** editar dono e mover‑entre‑boards (ver achados — single‑op / por desenho).
-- ⬜ **Ficha do contacto a fundo:** editar campos, timeline/`lead_eventos`, adicionar nota/tarefa/actividade,
-  ligar a imóvel/deal, ver proveniência no cabeçalho (achado P3). Só criar+render foram testados.
+- ✅ **Ficha do contacto a fundo** (16/06): editar campos (notes+custom_fields, acentos ok) ✅; Registar
+  interação/timeline → `deal_activities` (sobrevive reload) ✅; **Assistente 360** (Analisar com IA) 200 PT‑PT
+  coerente ✅. Timeline = `deal_activities` (NÃO `lead_eventos` — essa é do Portal F&R, não existe neste CRM).
+  ⚠️ proveniência (`source`) não aparece no cabeçalho (P3, pós‑22). Falta menor: "Comentar" (`contact_comments`)
+  e "ligar a imóvel/deal" (não exercitados).
 - ⬜ **Boards (CRUD):** criar board, criar/editar/reordenar etapas, "Definir Estratégia do Board" (meta/agente/
   gatilhos). Só filtros + mover etapa.
 - ⬜ **Automações — activar uma REAL com gatilho** (montar nós + disparar). ⚠️ cuidado: pode enviar de verdade.
