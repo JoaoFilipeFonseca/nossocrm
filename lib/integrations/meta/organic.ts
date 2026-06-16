@@ -101,11 +101,11 @@ export function summarizeOrganic(posts: OrganicPost[]): OrganicSummary {
   };
 }
 
-/** Soma os valores diários de uma série de insights (data[0].values[].value). */
+/** Lê o valor de uma série de insights: total_value.value (novo) ou soma de values[].value (period=day). */
 function sumDailyInsight(json: unknown): number {
-  const data = (json as { data?: Array<{ values?: Array<{ value?: unknown }> }> })?.data;
-  const values = data?.[0]?.values ?? [];
-  return values.reduce((s, v) => s + num(v?.value), 0);
+  const d = (json as { data?: Array<{ values?: Array<{ value?: unknown }>; total_value?: { value?: unknown } }> })?.data?.[0];
+  if (d?.total_value && d.total_value.value != null) return num(d.total_value.value);
+  return (d?.values ?? []).reduce((s, v) => s + num(v?.value), 0);
 }
 
 /** Busca os posts da Página no intervalo. Lança em erro da Graph. */
@@ -253,7 +253,11 @@ export async function fetchPageReach(
   }
 }
 
-/** Alcance orgânico da conta Instagram no período (soma de reach/dia). null se sem permissão. */
+/**
+ * Alcance orgânico da conta Instagram no período. null se sem permissão/erro.
+ * O IG limita o `reach` com period=day a janelas de 30 dias por pedido → dividimos
+ * o intervalo em janelas ≤30 dias e somamos (mesmo critério "soma diária" do FB).
+ */
 export async function fetchInstagramReach(
   igUserId: string,
   pageToken: string,
@@ -261,20 +265,38 @@ export async function fetchInstagramReach(
   untilISO: string | null,
 ): Promise<number | null> {
   try {
-    const params = new URLSearchParams({
-      metric: 'reach',
-      period: 'day',
-      since: String(dayUnix(sinceISO, 90)),
-      until: String(dayUnix(untilISO, 0)),
-      access_token: pageToken,
-    });
-    const res = await fetch(`${META_GRAPH_BASE}/${igUserId}/insights?${params.toString()}`, {
-      headers: { 'User-Agent': 'FocoImoCRM/1.0' },
-    });
-    const json = (await res.json().catch(() => ({}))) as { data?: unknown; error?: unknown };
-    if (!res.ok || (json as { error?: unknown }).error) return null; // sem instagram_manage_insights → null
-    return sumDailyInsight(json);
+    const startTs = dayUnix(sinceISO, 90);
+    const endTs = dayUnix(untilISO, 0);
+    const WINDOW = 30 * 86400; // 30 dias em segundos (limite do IG p/ reach/dia)
+    let total = 0;
+    let any = false;
+    for (let s = startTs; s < endTs; s += WINDOW) {
+      const u = Math.min(s + WINDOW, endTs);
+      const params = new URLSearchParams({
+        metric: 'reach', period: 'day',
+        since: String(s), until: String(u),
+        access_token: pageToken,
+      });
+      const res = await fetch(`${META_GRAPH_BASE}/${igUserId}/insights?${params.toString()}`, {
+        headers: { 'User-Agent': 'FocoImoCRM/1.0' },
+      });
+      const json = (await res.json().catch(() => ({}))) as { data?: unknown; error?: unknown };
+      if (!res.ok || (json as { error?: unknown }).error) return null; // sem instagram_manage_insights ou erro real
+      total += sumDailyInsight(json);
+      any = true;
+    }
+    return any ? total : null;
   } catch {
     return null;
   }
+}
+
+/** DEBUG temporário (ORG-IG): devolve o erro cru da Graph para o reach do IG (1.ª janela). */
+export async function debugInstagramReach(igUserId: string, pageToken: string, sinceISO: string | null, untilISO: string | null): Promise<unknown> {
+  const startTs = dayUnix(sinceISO, 90);
+  const endTs = Math.min(startTs + 30 * 86400, dayUnix(untilISO, 0));
+  const params = new URLSearchParams({ metric: 'reach', period: 'day', since: String(startTs), until: String(endTs), access_token: pageToken });
+  const res = await fetch(`${META_GRAPH_BASE}/${igUserId}/insights?${params.toString()}`, { headers: { 'User-Agent': 'FocoImoCRM/1.0' } });
+  const json = await res.json().catch(() => ({}));
+  return { status: res.status, body: json };
 }
