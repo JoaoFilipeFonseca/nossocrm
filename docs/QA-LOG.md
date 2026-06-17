@@ -11,7 +11,14 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 16/06/2026 · **HEAD origin/main:** `196d5f7` · **build em produção:** `260616_1225`+.
+- **Data:** 17/06/2026 · **HEAD origin/main:** `a37f3d7` · **build em produção:** `260616_1639`+. **Núcleo: QA de
+  Definições escritas (Produtos/Metas/Unidades/Checklists/Equipa) + Visão de Gestor — TODAS FEITAS a clicar, escrita
+  na BD confirmada, dados QA limpos, 0 erros de consola.** **Automações — activar REAL + disparar + CONTAR FEITO**
+  (automação QA segura trigger→criar tarefa interna, sem envio): activar→executar→**bug real #17 (contadores nunca
+  subiam)** corrigido por trigger de BD `20260617110000` e reconfirmado (0→1 totais). Dados QA limpos. **Falta do
+  ponto 2: Mensagens enviar de verdade + marcar tratada** — é envio outward irreversível, precisa do destino de teste
+  do próprio João (a confirmar antes de disparar). Depois: datas 18→22.
+- **Data (anterior):** 16/06/2026 · **HEAD:** `196d5f7` · **build:** `260616_1225`+.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
 - **Onde estamos no plano** ([[plano-rumo-22junho]]): QA TOTAL 1.ª passagem + testes funcionais a clicar
@@ -47,6 +54,12 @@
 | **Definições — gravar campo na BD (Política de privacidade)** | Gravar + reverter | ✅ BD muda e restaura | 15 Jun |
 | **Definições — Brand Kit / Marca pessoal (`/settings/marca`)** | Gravar + reverter (font_body) | 🐞→✅ #15: gravava sempre 400 (`select('*')` + `.strict()`); corrigido (`af827cc`), PUT 400→200, BD grava+restaura | 16 Jun |
 | **Definições — Etiquetas/Campos/Página Inicial** | Funcional | 🐞/⚠️ só localStorage (não BD) | 15 Jun |
+| **Definições — Produtos/Serviços** (`products`) | CRUD a fundo a clicar (produto QA criado/exercitado/limpo) | ✅ criar (preço 1500,50/SKU/descrição acentuada)→editar (nome+preço 2750)→desactivar (`active=false`)→eliminar (confirm); BD bate em cada passo, org-scoped, 0 órfãos | 17 Jun |
+| **Definições — Metas** (`org_revenue_goals`) | Gravar a fundo (ano QA 2027 p/ não tocar 2026 real) | ✅ anual 60 000 € auto-distribui 5000×12, CHQ/dia 5, notas acentuadas; BD confirma; limpo (só 2026 real fica) | 17 Jun |
+| **Definições — Unidades de Negócio** (`business_units`) | CRUD a clicar (unidade QA) | ✅ criar (slug auto sem acento)→editar (toggle auto_create_deal=true)→eliminar (soft-delete `deleted_at`, sai da lista); BD confirma; limpo | 17 Jun |
+| **Definições — Checklists por fase** (`stage_checklists`) | Gravar a clicar (item QA) | ✅ + adicionar item + obrigatório→Guardar→upsert grava `[{label,required:true}]` acentos ok; BD confirma; limpo | 17 Jun |
+| **Definições — Equipa** (`organization_invites`) | Gerar+revogar convite (link, SEM email) | ✅ Gerar Link (admin, expira +7d, used_at null)→BD confirma→Revogar→linha removida; convite vendedor real intacto; sem envio de email (convite por link) | 17 Jun |
+| **Financeiro — Visão de Gestor** | Render + números honestos + toggle período | ✅ Investimento 871,89 € (=gasto vitalício anúncios), Custo/lead 1,06 € (871,89÷819 ✓), Comissões 0 € (BD: 0 `is_won` de 484), Lucro −871,89 €, Margem/Retorno —/0× honestos; toggle "Este ano" re-render 0 erros | 17 Jun |
 | **Assistente IA (/ai)** | Pergunta real + prompt injection | ✅ PT‑PT, recusa injecção, sem tool de apagar | 10/15 Jun |
 | **Endpoints `/api/ai/tasks/**` (8)** | Payload válido + vazio | ✅ 200 / 400; fragilidade 500‑on‑AI‑fail (⚠️) | 15 Jun |
 | **Mensagens — Conversas + Caixa Social** | Abrir conversa, gerar rascunho IA (sem enviar) | ✅ rascunho 200 PT‑PT; sem botão Enviar (João envia no Messenger); 0 overflow | 15 Jun |
@@ -80,6 +93,7 @@
 | **Cruzamentos — estado de match** | Mudar estado (novo→visto) + reverter | ✅ BD muda; "Novos" engloba novo+visto | 15 Jun |
 | **Boards — CRUD + Estratégia** (criar board do zero, add/renomear etapa, Definir Estratégia) | Funcional a clicar (board QA criado/exercitado/apagado) | ✅ wizard "Começar do zero"→`boards`+`board_stages` (4 etapas na ordem: Nova/Em Progresso/Concluído/QA Etapa Extra); add etapa + renomear persistem; **Estratégia do Board**→`entry_trigger`/`goal_kpi`/`agent_name` gravam. ⚠️ copy "OBJETIVO"→pré‑AO; reordenar etapas (drag) não testado | 16 Jun |
 | **Automações — criar + builder + activar** | Criar rascunho (201) + builder carrega + activar vazio | ✅ 201; activação sem gatilho → 400 gracioso | 15 Jun |
+| **Automações — activar REAL + disparar + CONTAR** (automação QA segura: trigger→criar tarefa interna, sem envio) | Activar→Executar (teste)→Executar real→confirmar contagem na BD/UI | 🐞→✅ #17: execução completava e criava a tarefa interna na BD, mas `automations.total_executions`/`success_count`/`last_execution_at` ficavam a 0 (cartão /automacoes e cabeçalho do builder mostravam sempre "0 execuções"). Trigger de BD `tg_automation_exec_counters` (mig. `20260617110000`); execução real passou a contar (1 totais · 1 OK), teste continua a não inflar. Dados QA limpos | 17 Jun |
 | **Importação bulk (`/api/import/contacts/bulk`)** | Linhas sujas (sem nome, dup, xss, gigante, email inválido) | ✅ 200; defaults `source='import'`/`name='Sem nome'`; permissivo (sem dedup) | 15 Jun |
 | **Importação UI (wizard CSV/XLSX)** — upload→preview→mapear→confirmar→importar | Funcional a clicar (CSV com origem/dup/acento/sem‑email) | ✅ preview detecta "CSV·vírgula·utf‑8·4 linhas"; auto‑mapeia name/email/phone/company + extra origem; 1.ª import 3 criados+1 dedup intra‑ficheiro; **2.ª import 0 criados+3 actualizados** (dedup por email+phone entre imports); empresa auto‑criada+ligada (`crm_companies`); telefone normalizado +351 | 15 Jun |
 | **Exportação contactos (CSV)** | Clicar Exportar CSV + inspeccionar blob | ✅ 10 campos (name…updated_at), respeita lista, UTF‑8, download `contactos-YYYY-MM-DD.csv` | 15 Jun |
@@ -112,6 +126,7 @@
 | 14 | Copy PT‑BR no DealDetailModal → aba IA Insights → Objection Killer: "A IA **te ajuda** a negociar" (próclise brasileira) | 16 Jun | `9017c92` | ✅ corrigido+reconfirmado em produção (build `260616_1026`): "A IA **ajuda‑o** a negociar" |
 | 16 | **React #418 (hydration) na `/decisions`** — consistente após existirem decisões guardadas. `useDecisionQueue` inicializava `decisions`/`lastAnalyzedAt` no `useState` a partir do `localStorage` (`decisionQueueService`), divergindo do HTML do servidor (vazio) | 16 Jun | `1c071dd` | ✅ corrigido+reconfirmado em produção (build `260616_1125`): estado inicial SSR‑safe + `useEffect` pós‑mount; 0 erros, decisões renderizam. Mesmo padrão do #4 |
 | 15 | **Brand Kit (`/settings/marca`) gravava sempre 400** "Invalid payload" — o GET faz `select('*')` (devolve `id`/`organization_id`/`created_at`/`updated_at`); o cliente fazia `setKit({...emptyKit, ...data.kit})` e depois `PUT JSON.stringify(kit)` com essas colunas só‑BD, que o `KitSchema.strict()` do servidor rejeita. **A marca pessoal — base de todos os criativos/templates — não conseguia gravar pela UI.** | 16 Jun | `af827cc` | ✅ corrigido+reconfirmado em produção (build `260616_1102`): cliente envia só as chaves de `emptyKit`; PUT 400→200, `font_body` gravou e foi restaurado. `.strict()` mantido como defesa |
+| 17 | **Contadores de execução das automações do utilizador nunca subiam** — a edge function `automation-execute` finaliza `automation_executions` (completed/failed) mas NUNCA actualizava `automations.total_executions`/`success_count`/`failure_count`/`last_execution_at`, e não havia trigger. O cartão em /automacoes e o cabeçalho do builder ("X totais · Y OK") mostravam sempre "0 execuções" mesmo depois de a automação correr e completar (a lista de execuções aparecia, só o contador é que ficava preso a 0) | 17 Jun | migração `20260617110000_automation_exec_counters` | ✅ corrigido+reconfirmado em produção: trigger `tg_automation_exec_counters` incrementa na transição p/ estado terminal, uma vez por execução, só para `is_test=false`; execução real passou a contar (0→1 totais · 1 OK na UI), teste não infla. Cobre todos os caminhos (manual/cron-tick/resume). Sem código de app alterado (só BD) |
 
 ---
 
@@ -183,16 +198,17 @@
 - ⬜ **Mensagens — enviar de verdade + marcar tratada** (só rascunho IA até agora). ⚠️ envio real.
 - ✅ **Cruzamentos — colar texto → IA cria matches** (16/06): `/api/inbox-raw/process` 200; IA classificou e
   extraiu a procura (tipo/T3/zona/budget/features/contacto), 95%, contagem subiu. Dados QA limpos.
-- 🟡 **Definições a fundo:** abas reais = Geral · Produtos/Serviços · Unidades · Integrações · Central de I.A ·
+- ✅ **Definições a fundo (FEITO 17/06):** abas reais = Geral · Produtos/Serviços · Unidades · Integrações · Central de I.A ·
   Marca · Metas · Checklists · Dados · Equipa. **Gravar testado a fundo:** Geral/privacidade (15/06) ✅ +
-  **Marca/Brand Kit** (16/06, 🐞→✅ #15 400→200) ✅. **`/settings/prompts` = 404** (o `plano_repositorio_prompts_ui`
+  **Marca/Brand Kit** (16/06, 🐞→✅ #15 400→200) ✅ + **Produtos/Serviços (CRUD), Metas (2027), Unidades (CRUD),
+  Checklists, Equipa (convite link+revogar)** (17/06) ✅ — escrita confirmada na BD em cada uma, dados QA limpos. **`/settings/prompts` = 404** (o `plano_repositorio_prompts_ui`
   não foi construído como página; prompts vivem na BD — não re‑propor, é só nota). Falta gravar a fundo:
   Produtos/Serviços, Unidades, Metas, Checklists, Equipa; integrações Meta (gated); Central de I.A (não mexer em chaves).
 - ✅ **Perifericos FEITOS 16/06:** **Perfil** (editar `nickname`+revert ✅; validação pw mismatch ✅, pw intacta;
   copy "Salvar"→"Guardar" + telefone +351 corrigidos `7bcdb6b`); **Sino** (painel vazio gracioso ✅); **Ditar/Voz**
   (widget de gravação renderiza ✅; transcrição real não testável via Playwright — sem áudio); **Decisões**
-  (Analisar Agora → 13 decisões reais, efémeras ✅). Falta: **Visão de Gestor** do Financeiro; transcrição de voz
-  com áudio real; copy de Decisões/Ditar p/ varrimento 22/06.
+  (Analisar Agora → 13 decisões reais, efémeras ✅). **Visão de Gestor do Financeiro FEITA 17/06** ✅ (números
+  honestos cruzados com a BD). Falta: transcrição de voz com áudio real; copy de Decisões/Ditar p/ varrimento 22/06.
 
 ---
 
