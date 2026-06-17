@@ -16,8 +16,9 @@
   na BD confirmada, dados QA limpos, 0 erros de consola.** **Automações — activar REAL + disparar + CONTAR FEITO**
   (automação QA segura trigger→criar tarefa interna, sem envio): activar→executar→**bug real #17 (contadores nunca
   subiam)** corrigido por trigger de BD `20260617110000` e reconfirmado (0→1 totais). Dados QA limpos. **Falta do
-  ponto 2: Mensagens enviar de verdade + marcar tratada** — é envio outward irreversível, precisa do destino de teste
-  do próprio João (a confirmar antes de disparar). Depois: datas 18→22.
+  ponto 2: Mensagens** — "marcar tratada" (interno) ✅ + **envio real por email Resend ✅** (autorizado pelo João,
+  `ok:true` com id da Resend). WhatsApp/Messenger in-app não existem hoje → capturados (MSG-2/MSG-5). **PONTO 2
+  COMPLETO.** Próximo: tarefas com data 18→22 (date-gated; hoje é 17) e ORG-IG Fatia 2 (Alcance).
 - **Data (anterior):** 16/06/2026 · **HEAD:** `196d5f7` · **build:** `260616_1225`+.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
@@ -63,6 +64,8 @@
 | **Assistente IA (/ai)** | Pergunta real + prompt injection | ✅ PT‑PT, recusa injecção, sem tool de apagar | 10/15 Jun |
 | **Endpoints `/api/ai/tasks/**` (8)** | Payload válido + vazio | ✅ 200 / 400; fragilidade 500‑on‑AI‑fail (⚠️) | 15 Jun |
 | **Mensagens — Conversas + Caixa Social** | Abrir conversa, gerar rascunho IA (sem enviar) | ✅ rascunho 200 PT‑PT; sem botão Enviar (João envia no Messenger); 0 overflow | 15 Jun |
+| **Mensagens — Caixa Social "Marcar tratada"** (mutação interna) | Marcar tratada + restaurar (conversa de sistema "Businesses Administrar") | ✅ `/api/social-inbox/[id]/status` → `social_conversations.status='handled'`+`needs_response=false`; restaurado p/ open/true (conversa real). Caixa Social **não envia por desenho** ("A IA nunca envia… o rascunho é teu"; só Abrir no Messenger/Copiar) | 17 Jun |
+| **Mensagens — ENVIO REAL (email Resend)** | Disparar `send_email` real para destino do próprio João (autorizado) | ✅ enviado via canal email `connected`; nó `ok:true` com `external_message_id` da Resend (`cd065292…`) para fonsecajoao1983@gmail.com (rodapé RGPD). Sem WhatsApp (0 canais) nem conversas → envio in-app de WhatsApp/Messenger fica capturado (MSG-2/MSG-5, pós-22). Dados QA limpos | 17 Jun |
 | **Imóveis — criar (POST /api/imoveis) + ficha** | Criar (201) + render de todas as secções | ✅ ficha completa, 0 overflow, 0 erros | 15 Jun |
 | **Imóveis — fotos `from-url`** | Probe SSRF (metadata/loopback) | ⚠️ SSRF cego (servidor faz fetch; exfil mínima) | 15 Jun |
 | **Imóveis — CMI (add + countdown)** | Criar CMI (data_fim +10d) + render | ✅ 201; ficha mostra "10 dias faltam" (banda âmbar) | 15 Jun |

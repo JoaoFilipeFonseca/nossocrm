@@ -586,6 +586,10 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
 
 - **MSG-2 · WhatsApp Cloud API (Meta) — standby externo** `[PARCIAL]` `P?`
   Átomo `action.send_whatsapp` deployado; falta o João montar WABA/número + token permanente e dar `phoneNumberId`/`accessToken` → inserir canal `meta_cloud`.
+  **(17/06, pedido do João na QA do ponto 2):** o João quer **responder a WhatsApp pela app** — envio sempre manual mas com mensagem já pensada/gerada pela IA na hora. Decidir Cloud API (MSG-2) vs número próprio (MSG-1) e ligar o input de Conversas a esse canal. Hoje: 0 canais WhatsApp, 0 conversas → o input de envio do WhatsApp não tem por onde enviar.
+
+- **MSG-5 · Responder ao Messenger DENTRO do CRM (não só rascunho)** `[POR FAZER]` `P2` (CAPTURE 17/06, pedido do João na QA do ponto 2)
+  Hoje a Caixa Social só prepara rascunho IA + "Abrir no Messenger"/"Copiar" (o João envia fora). O João **vai pouco ao Facebook** e quer **enviar a resposta a partir do CRM**. Precisa de envio outbound de Messenger (Graph API `messages` na Página, janela de 24h/tags) ligado ao botão de envio da Caixa Social. Rever janela de 24h e políticas Meta. Pós-22 (âmbito congelado).
 
 - **MSG-3 · Email — evolução do Resend** `[POR FAZER]` `P?`
   Tracking open/click, inbound emails → timeline do deal (In-Reply-To matching), bounce/complaint webhooks, logar como `activity`. (origem: estudo Resend 18 Mai)
