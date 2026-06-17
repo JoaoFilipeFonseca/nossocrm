@@ -115,7 +115,16 @@
 > porque é sua" — carrossel, 7 interacções), 11 interacções totais, média 2/post, melhores publicações, por tipo
 > (Carrosséis/Fotos), 0 erros consola. **A conta IG já estava ligada à Página** (o pré-requisito já estava feito).
 > `/api/organico?network=instagram` → 200; se algum dia desligar a conta, devolve `instagram_not_linked` com instrução.
-> ## ⚠️ ORG-IG Fatia 2 (ALCANCE) — TENTADA E PUXADA POR HONESTIDADE (16/06). Posts+interacções FECHADOS; Alcance POR FAZER bem.
+> ## ✅✅ ORG-IG Fatia 2 (ALCANCE do Instagram) — FEITA E VALIDADA EM PRODUÇÃO (17/06, commits `4e255ee`+`03a665d`, build `260617_1202`)
+> Reimplementado da forma honesta: `fetchInstagramReach` pede o reach AGREGADO do período com `metric=reach&period=day&
+> **metric_type=total_value**` (a Meta devolve já de-duplicado em `total_value.value`) — NUNCA somar `values[]` diário
+> (`parseIgReach` devolve null nesse caso). Janela clampada a ≤30d (`clampReachWindow`) com rótulo "(últimos 30 dias)" quando
+> a janela pedida é maior. **VALIDADO contra o Meta Business Suite (Instagram, últimos 28 dias): Alcance = 290 nos dois** →
+> `reach_available` ligado, KPI exposto. +6 testes (parseIgReach/clampReachWindow). 🧠 a app da Meta mostra "Alcance" para IG
+> em Estatísticas → Resultados (filtro Instagram). **FB Page reach continua "em breve"** (page_impressions_unique não suporta
+> total_value da mesma forma; fica para quando se pegar — não re-propor como urgente). Consola limpa, captura `org-ig-alcance-290.png`.
+>
+> ### (histórico) ⚠️ Fatia 2 tentada e puxada por honestidade (16/06)
 > Scopes `read_insights`+`instagram_manage_insights` adicionados (`40124e8`) e o **João reautorizou a Meta** (permissões concedidas, confirmado).
 > Implementei o Alcance somando o `reach` **diário** (FB `page_impressions_unique`, IG `reach` em janelas de 30d). **REVERTIDO (`196d5f7`)**
 > porque **não é honesto**: (1) somar o alcance diário conta a mesma pessoa N dias (sobre-contagem, não é "pessoas alcançadas");

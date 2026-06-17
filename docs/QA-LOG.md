@@ -18,7 +18,8 @@
   subiam)** corrigido por trigger de BD `20260617110000` e reconfirmado (0→1 totais). Dados QA limpos. **Falta do
   ponto 2: Mensagens** — "marcar tratada" (interno) ✅ + **envio real por email Resend ✅** (autorizado pelo João,
   `ok:true` com id da Resend). WhatsApp/Messenger in-app não existem hoje → capturados (MSG-2/MSG-5). **PONTO 2
-  COMPLETO.** Próximo: tarefas com data 18→22 (date-gated; hoje é 17) e ORG-IG Fatia 2 (Alcance).
+  COMPLETO.** **ORG-IG Fatia 2 (Alcance IG) FEITA E VALIDADA** (`metric_type=total_value`, ≤30d; CRM 290 = Meta
+  Business Suite 290; KPI exposto; commits `4e255ee`+`03a665d`). Próximo: tarefas com data 18→22 (date-gated; hoje é 17).
 - **Data (anterior):** 16/06/2026 · **HEAD:** `196d5f7` · **build:** `260616_1225`+.
 - **URL produção:** crm.joaofilipefonseca.pt · **Supabase:** `zcqbbqrdbszzkpydrlmz` · **org:** `29455d22-…`.
 - **Verificação:** Playwright autenticado + Supabase MCP. `tsc 0 / lint 0 / vitest 550/5`.
@@ -89,7 +90,7 @@
 | **Marketing — Biblioteca (/criativos)** | Render + abas 📚/✨ + 4 formatos da aba Criar | ✅ 0 overflow, 0 erros | 15 Jun |
 | **Marketing — Biblioteca: GERAR + GUARDAR criativo** (Post orgânico FB/IG) | Funcional a clicar (copy IA + render + guardar + apagar) | ✅ copy IA (`/api/criativos/copy` 200, dados reais Seroa, PT-PT, respeitou indicações); **render PNG** (`/render` 201 → `creative-archive/gerados`); peça nova na biblioteca (2→3) c/ imagem; **apagar = soft-delete (archive_at)** — sem órfão de storage (retenção intencional, ≠ imóvel) | 15 Jun |
 | **Marketing — /anuncios (a fundo)** | Período 7/30/90/ano/Tudo + Tabela/Árvore + drill-down + analista + encaminhamento | ✅ dados vitalícios reais (Gasto 871,89€/819 leads Meta; árvore campanha›conjunto›anúncio c/ CPL/ROAS); recomendação do analista (2026-06-10); 0 erros. Criar anúncio = gated Meta/custo → no percurso real | 15 Jun |
-| **Marketing — Orgânico (a fundo)** | Toggles FB/IG + períodos + mobile 375 | ✅ **posts/interacções FB+IG reais e LIVE** (ORG-IG Fatia 1, `4af1a99`; IG 6 posts/12 interacções, antes era stub), mobile 375 0 overflow, 0 erros. ⚠️ **Alcance TENTADO e PUXADO por honestidade** (`196d5f7`): soma diária sobre-conta + valores IG incoerentes (534 mês recente vs 22 458 mês antigo s/ posts) → KPI "—/em breve". Re-auth do João feito; refazer com `metric_type=total_value` validado contra a app da Meta (TODO) | 16 Jun |
+| **Marketing — Orgânico (a fundo)** | Toggles FB/IG + períodos + mobile 375 | ✅ **posts/interacções FB+IG reais e LIVE** (ORG-IG Fatia 1, `4af1a99`; IG 6 posts/12 interacções, antes era stub), mobile 375 0 overflow, 0 erros. 🐞→✅ **Alcance**: 1.ª tentativa somava reach diário (sobre-contava) → PUXADO (`196d5f7`). **REFEITO E VALIDADO 17/06** (`4e255ee`+`03a665d`): `fetchInstagramReach` com `metric_type=total_value` (de-duplicado), janela ≤30d com rótulo; **CRM 290 = Meta Business Suite 290** (Instagram, 28d) → KPI exposto. FB Page reach continua "em breve". +6 testes | 16-17 Jun |
 | **Exportações — relatórios (/reports PDF)** | Clicar PDF + inspeccionar blob | ✅ blob `application/pdf` ~29 KB gerado e aberto; 0 erros. /financeiro sem export (por design) | 15 Jun |
 | **Actividades (página)** | Render + filtros de tipo | ✅ 0 overflow; 🐞 copy PT‑BR corrigido (`da4e371`) | 15 Jun |
 | **Matches (Inbox Bruto) — colar texto → IA** | Funcional a clicar (raw_intel QA criado/processado/limpo) | ✅ `/api/inbox-raw/process` 200; IA extraiu Procura T3/Paços de Ferreira/200k/garagem+varanda/nome+telefone (95%), contagem 10→11, PT‑PT correcto. Limpo (`raw_intel`+`matches`) | 16 Jun |
