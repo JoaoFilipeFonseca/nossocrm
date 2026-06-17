@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizePost, normalizeIgMedia, summarizeOrganic, type OrganicPost } from './organic';
+import { normalizePost, normalizeIgMedia, summarizeOrganic, parseIgReach, clampReachWindow, type OrganicPost } from './organic';
 
 describe('normalizePost', () => {
   it('soma interações e deriva tipo do anexo', () => {
@@ -87,5 +87,46 @@ describe('summarizeOrganic', () => {
     const s = summarizeOrganic(posts);
     expect(s.timeline.length).toBe(2);
     expect(s.timeline[0].label < s.timeline[1].label).toBe(true); // Abril antes de Maio
+  });
+});
+
+describe('parseIgReach (ORG-IG Fatia 2)', () => {
+  it('lê o total_value (de-duplicado) do reach', () => {
+    expect(parseIgReach({ data: [{ name: 'reach', total_value: { value: 1234 } }] })).toBe(1234);
+  });
+
+  it('só veio values[] diário (sem total_value) → null (NUNCA somar = sobre-contar)', () => {
+    expect(parseIgReach({ data: [{ name: 'reach', values: [{ value: 100 }, { value: 200 }] }] })).toBeNull();
+  });
+
+  it('resposta vazia ou erro → null', () => {
+    expect(parseIgReach({})).toBeNull();
+    expect(parseIgReach({ data: [] })).toBeNull();
+    expect(parseIgReach({ error: { message: 'boom' } })).toBeNull();
+  });
+});
+
+describe('clampReachWindow (≤30 dias)', () => {
+  const now = '2026-06-17T12:00:00Z';
+
+  it('janela dentro de 30d fica intacta (não clampa)', () => {
+    const w = clampReachWindow('2026-05-25T00:00:00Z', '2026-06-17T23:59:59Z', now);
+    expect(w.clamped).toBe(false);
+    expect(w.since.startsWith('2026-05-25')).toBe(true);
+  });
+
+  it('janela > 30d é reduzida aos últimos 30d (until fixo, since recua)', () => {
+    const w = clampReachWindow('2026-01-01T00:00:00Z', '2026-06-17T23:59:59Z', now);
+    expect(w.clamped).toBe(true);
+    expect(w.days).toBe(30);
+    // since = until - 30d ≈ 2026-05-18
+    expect(w.since.startsWith('2026-05-18')).toBe(true);
+  });
+
+  it('sem datas → últimos 30d até agora', () => {
+    const w = clampReachWindow(null, null, now);
+    expect(w.clamped).toBe(false);
+    expect(w.days).toBe(30);
+    expect(w.until.startsWith('2026-06-17')).toBe(true);
   });
 });

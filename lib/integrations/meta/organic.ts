@@ -211,8 +211,100 @@ export async function fetchInstagramMedia(
   return (json.data ?? []).map(normalizeIgMedia);
 }
 
-// NOTA (ORG-IG): o Alcance/Impressões orgânico foi DESLIGADO (não exposto) porque a
-// soma do alcance diário sobre-conta a mesma pessoa e os valores do IG vinham
-// incoerentes — não é honesto mostrá-lo como "pessoas alcançadas". Reimplementar
-// com metric_type=total_value (alcance único do período, ≤30 dias) e validar contra
-// os números da própria app da Meta antes de voltar a expor. Ver TODO ORG-IG.
+// ============================================================================
+// ORG-IG Fatia 2 — ALCANCE do Instagram (reach único do período).
+// ----------------------------------------------------------------------------
+// A 1.ª tentativa somava o reach DIÁRIO → sobre-contava a mesma pessoa em dias
+// diferentes (não é "pessoas alcançadas"). O caminho honesto é pedir o reach
+// AGREGADO do período com `metric_type=total_value`, que a Meta devolve já
+// de-duplicado em `total_value.value`. A janela do reach de conta é limitada a
+// ~30 dias por pedido, por isso clampamos para os últimos 30 dias e sinalizamos.
+// ⚠️ O número TEM de ser validado contra a app/Insights da Meta antes de ser
+// exposto como KPI (reach_available só passa a true depois dessa validação).
+// ============================================================================
+
+const REACH_MAX_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export interface ReachWindow {
+  since: string; // ISO
+  until: string; // ISO
+  days: number;
+  clamped: boolean; // true se a janela pedida era > 30d e foi reduzida
+}
+
+/**
+ * Garante uma janela de reach ≤ 30 dias. Se a janela pedida exceder, fixa o
+ * `until` e recua o `since` para until-30d (mostra-se só o último mês, com
+ * rótulo claro na UI). Puro e determinista (recebe o "agora" por parâmetro).
+ */
+export function clampReachWindow(
+  sinceISO: string | null,
+  untilISO: string | null,
+  nowISO: string,
+): ReachWindow {
+  const now = new Date(nowISO).getTime();
+  const until = untilISO ? new Date(untilISO).getTime() : now;
+  const sinceReq = sinceISO ? new Date(sinceISO).getTime() : until - REACH_MAX_DAYS * DAY_MS;
+  const maxSpan = REACH_MAX_DAYS * DAY_MS;
+  const span = until - sinceReq;
+  const clamped = span > maxSpan;
+  const since = clamped ? until - maxSpan : sinceReq;
+  return {
+    since: new Date(since).toISOString(),
+    until: new Date(until).toISOString(),
+    days: Math.max(1, Math.round((until - since) / DAY_MS)),
+    clamped,
+  };
+}
+
+interface RawIgInsights {
+  data?: Array<{ name?: string; total_value?: { value?: number }; values?: Array<{ value?: number }> }>;
+  error?: { message?: string };
+}
+
+/**
+ * Extrai o reach agregado de uma resposta de insights do IG. Prefere
+ * `total_value.value` (de-duplicado); se vier só `values[]` (modo diário),
+ * devolve null em vez de somar — somar seria sobre-contar (o erro antigo).
+ * Puro e testável.
+ */
+export function parseIgReach(json: RawIgInsights): number | null {
+  const row = (json.data ?? []).find((d) => d.name === 'reach') ?? json.data?.[0];
+  if (!row) return null;
+  const v = row.total_value?.value;
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
+/**
+ * Busca o ALCANCE único da conta Instagram no período (≤30d, total_value).
+ * Devolve o valor + a janela efectiva (para a UI rotular se foi clampada).
+ * NÃO lança: em erro devolve reach=null (o resto do orgânico continua a render).
+ */
+export async function fetchInstagramReach(
+  igUserId: string,
+  pageToken: string,
+  sinceISO: string | null,
+  untilISO: string | null,
+  nowISO: string,
+): Promise<{ reach: number | null; window: ReachWindow }> {
+  const w = clampReachWindow(sinceISO, untilISO, nowISO);
+  const params = new URLSearchParams({
+    metric: 'reach',
+    period: 'day',
+    metric_type: 'total_value',
+    since: String(Math.floor(new Date(w.since).getTime() / 1000)),
+    until: String(Math.floor(new Date(w.until).getTime() / 1000)),
+    access_token: pageToken,
+  });
+  try {
+    const res = await fetch(`${META_GRAPH_BASE}/${igUserId}/insights?${params.toString()}`, {
+      headers: { 'User-Agent': 'FocoImoCRM/1.0' },
+    });
+    const json = (await res.json().catch(() => ({}))) as RawIgInsights;
+    if (!res.ok || json.error) return { reach: null, window: w };
+    return { reach: parseIgReach(json), window: w };
+  } catch {
+    return { reach: null, window: w };
+  }
+}

@@ -9,7 +9,7 @@ export const maxDuration = 30;
 import { NextRequest } from 'next/server';
 import { resolveMetaAdminContext, metaJson } from '@/lib/integrations/meta/server';
 import { getPageAccessToken } from '@/lib/integrations/meta/leadforms';
-import { fetchPagePosts, summarizeOrganic, fetchInstagramAccountId, fetchInstagramMedia } from '@/lib/integrations/meta/organic';
+import { fetchPagePosts, summarizeOrganic, fetchInstagramAccountId, fetchInstagramMedia, fetchInstagramReach } from '@/lib/integrations/meta/organic';
 
 export async function GET(req: NextRequest) {
   const resolved = await resolveMetaAdminContext();
@@ -37,11 +37,12 @@ export async function GET(req: NextRequest) {
       }
       const media = await fetchInstagramMedia(igId, pageToken, since, until);
       const summary = summarizeOrganic(media);
-      // Alcance (Fatia 2) DESLIGADO: a soma do alcance diário sobre-conta (mesma
-      // pessoa contada vários dias) e os valores do IG vêm incoerentes — não é
-      // honesto mostrá-lo como "pessoas alcançadas". Caminho certo no TODO
-      // (metric_type=total_value, ≤30d, validado contra a app da Meta).
-      return metaJson({ summary });
+      // ORG-IG Fatia 2: Alcance único do período (metric_type=total_value, ≤30d).
+      // GATED por honestidade: calculamos e devolvemos o número, mas reach_available
+      // continua false (UI mostra "a validar") até o valor ser confirmado contra a
+      // app/Insights da Meta. reach_window deixa a UI rotular se a janela foi clampada.
+      const { reach, window } = await fetchInstagramReach(igId, pageToken, since, until, new Date().toISOString());
+      return metaJson({ summary: { ...summary, reach }, reach_window: window });
     } catch (e) {
       return metaJson({ error: e instanceof Error ? e.message : 'Não foi possível ler o orgânico do Instagram.', summary: null }, 200);
     }
