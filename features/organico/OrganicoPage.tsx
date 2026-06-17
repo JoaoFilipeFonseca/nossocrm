@@ -3,7 +3,8 @@
 /**
  * Orgânico — Página (MKT-ORGANIC-INSIGHTS). Posts não pagos da Página: melhores
  * publicações, interacção ao longo do tempo e por tipo. Leitura ao vivo da Graph
- * (reusa a ligação Meta). Alcance precisa de re-autorização (read_insights).
+ * (reusa a ligação Meta). Alcance do Instagram = reach único do período
+ * (metric_type=total_value, ≤30d), validado contra o Meta Business Suite.
  * Maqueta aprovada: docs/mockups/mkt-organic-insights.html.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -37,6 +38,7 @@ export function OrganicoPage() {
   const [cFrom, setCFrom] = useState(ymd(new Date(Date.now() - 90 * 864e5)));
   const [cTo, setCTo] = useState(ymd(new Date()));
   const [data, setData] = useState<Summary | null>(null);
+  const [reachWin, setReachWin] = useState<{ clamped: boolean; days: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -51,6 +53,7 @@ export function OrganicoPage() {
       const json = await res.json();
       if (json.summary) setData(json.summary as Summary);
       else { setData(null); }
+      setReachWin(json.reach_window ?? null);
       if (json.error) setErr(json.message || json.error);
     } catch {
       setErr('Não foi possível carregar o orgânico.');
@@ -100,8 +103,8 @@ export function OrganicoPage() {
         <Kpi label="Publicações" value={loading ? '—' : nf(k?.posts ?? 0)} sub="no período" />
         <Kpi label="Interações totais" value={loading ? '—' : nf(k?.interactions ?? 0)} sub="reações + comentários + partilhas" />
         {data?.reach_available
-          ? <Kpi label="Alcance" value={loading ? '—' : nf(data.reach ?? 0)} sub="pessoas alcançadas (período)" />
-          : <Kpi label="Alcance" value="—" sub="em breve" />}
+          ? <Kpi label="Alcance" value={loading ? '—' : nf(data.reach ?? 0)} sub={reachWin?.clamped ? 'pessoas alcançadas (últimos 30 dias)' : 'pessoas alcançadas (período)'} />
+          : <Kpi label="Alcance" value="—" sub={network === 'instagram' ? 'sem dados no período' : 'em breve'} />}
         <Kpi label="Média por post" value={loading ? '—' : nf(k?.avg ?? 0)} sub="interações/post" />
       </div>
 

@@ -38,11 +38,11 @@ export async function GET(req: NextRequest) {
       const media = await fetchInstagramMedia(igId, pageToken, since, until);
       const summary = summarizeOrganic(media);
       // ORG-IG Fatia 2: Alcance único do período (metric_type=total_value, ≤30d).
-      // GATED por honestidade: calculamos e devolvemos o número, mas reach_available
-      // continua false (UI mostra "a validar") até o valor ser confirmado contra a
-      // app/Insights da Meta. reach_window deixa a UI rotular se a janela foi clampada.
+      // VALIDADO contra o Meta Business Suite (17/06/2026: Alcance IG = 290 nos dois)
+      // → reach_available passa a true quando há número. reach_window deixa a UI
+      // rotular quando a janela pedida (>30d) foi reduzida ao último mês.
       const { reach, window } = await fetchInstagramReach(igId, pageToken, since, until, new Date().toISOString());
-      return metaJson({ summary: { ...summary, reach }, reach_window: window });
+      return metaJson({ summary: { ...summary, reach, reach_available: reach !== null }, reach_window: window });
     } catch (e) {
       return metaJson({ error: e instanceof Error ? e.message : 'Não foi possível ler o orgânico do Instagram.', summary: null }, 200);
     }
