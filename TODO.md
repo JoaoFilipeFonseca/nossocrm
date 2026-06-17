@@ -597,6 +597,9 @@ A ficha de contacto `/contacts/[id]` foi criada do zero e tornou-se a peça-núc
   Átomo `action.send_whatsapp` deployado; falta o João montar WABA/número + token permanente e dar `phoneNumberId`/`accessToken` → inserir canal `meta_cloud`.
   **(17/06, pedido do João na QA do ponto 2):** o João quer **responder a WhatsApp pela app** — envio sempre manual mas com mensagem já pensada/gerada pela IA na hora. Decidir Cloud API (MSG-2) vs número próprio (MSG-1) e ligar o input de Conversas a esse canal. Hoje: 0 canais WhatsApp, 0 conversas → o input de envio do WhatsApp não tem por onde enviar.
 
+- **SEC-GHL-PARTNER · Remover o parceiro LeadConnector (GHL) do Business Manager** `[POR FAZER — acção do João]` `P2` (descoberto 17/06 no varrimento ao BM)
+  No BM `761569255551287` → Definições → **Parceiros** há **LeadConnector (GHL, ID `153049965367635`)** com **acesso TOTAL à conta de WhatsApp** do João. O GHL está TERMINADO ([[decisao_ghl_mailgun_terminado]]) → tirar acesso: Parceiros → LeadConnector → ⋯ → Remover. É acção/cliques do João (acesso de parceiro). Os admins-pessoas da agência (Muhammad/Outlier/Maria/Pedro) já foram todos removidos a 17/06.
+
 - **MSG-5 · Responder ao Messenger DENTRO do CRM (não só rascunho)** `[POR FAZER]` `P2` (CAPTURE 17/06, pedido do João na QA do ponto 2)
   Hoje a Caixa Social só prepara rascunho IA + "Abrir no Messenger"/"Copiar" (o João envia fora). O João **vai pouco ao Facebook** e quer **enviar a resposta a partir do CRM**. Precisa de envio outbound de Messenger (Graph API `messages` na Página, janela de 24h/tags) ligado ao botão de envio da Caixa Social. Rever janela de 24h e políticas Meta. Pós-22 (âmbito congelado).
 
