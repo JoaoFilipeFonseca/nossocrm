@@ -30,8 +30,14 @@
   desktop+375, overflow 0) **+ estados VAZIOS** (Mensagens 3 painéis + /unsubscribe sem token, PT‑PT). **19/06 FEITO, 0 bugs.**
   **🆕 Adiantado também o 20/06 (automações + segurança):** /automacoes 10 crons `last_run_ok=true`; curl sem secret → 403
   (cron) / 401 (webhook HMAC); **security 0 ERROR + performance 0 ERROR**; 13/13 buckets privados; RLS on nas 15 tabelas
-  centrais; secrets no Vault; RGPD (`privacy_policy_url` + `/unsubscribe`). **0 bugs.** Próximo: **22/06 fecho** (copy PT‑PT
-  pré‑AO + vitest verde + stress dos forms + relatório final).
+  centrais; secrets no Vault; RGPD (`privacy_policy_url` + `/unsubscribe`). **0 bugs.**
+  **🆕 Adiantado também o 22/06 (copy PT‑PT pré‑AO):** varrimento whole‑word features/+app/ → corrigida toda a copy
+  visível (27 strings em ~19 componentes: Acção/Acções, Interacção/Interacções, Selecção, Objectivo, activo,
+  reacções, Objecção; Tap→Toque, "Por que estou sugerindo isso?"→"Porque é que sugiro isto?", Acesse→Aceda,
+  "Ana Souza"→"Ana Sousa", sobrenome→apelido, Você→Eu, Fechamento→Fecho, essa→esta, seu→o seu). commits
+  `4415164`+`e9f4d33`; **typecheck 0 · lint 0 · vitest 558/5** (teste US‑AI‑008 actualizado). Verificado em produção
+  (build `260618_1108`: /organico mostra "Interacções totais"/"reacções"). **Falta do 22/06: stress final dos forms
+  + relatório final.** (Prompts de IA internos / comentários de código / "Estágio"→"Etapa" lexical = pós‑22.)
 - **Data (anterior):** 17/06/2026 · **HEAD origin/main:** `a37f3d7` · **build em produção:** `260616_1639`+. **Núcleo: QA de
   Definições escritas (Produtos/Metas/Unidades/Checklists/Equipa) + Visão de Gestor — TODAS FEITAS a clicar, escrita
   na BD confirmada, dados QA limpos, 0 erros de consola.** **Automações — activar REAL + disparar + CONTAR FEITO**
@@ -206,7 +212,7 @@
 - ✅ **Percurso da lead com dados REAIS:** feito 15/06 com as 127 leads de anúncio existentes (source=Facebook). **E lead de anúncio NOVA AO VIVO FEITA 18/06** (webhook Meta assinado, não forjável): entra → `lead`+`contacto`+atribuição → board Compradores/Oportunidade → tag `meta_ads`+chip DASH‑2 frio → evento `lead.meta_ads` processado → Telegram → follow‑up em scope → **GANHO** → **CAPI** (`capi-test` `events_received:1`, modo teste) → funil/cérebro 0→1. 0 bugs; dados QA limpos.
 - ✅ **Re‑passagem páginas × estados (19/06) — FEITA (adiantada 18/06):** (a) responsiva+consola+escuro (375 nas 22 rotas overflow 0 / 0 erros; 768 spot; escuro limpo; /admin/saude verde; client_errors 0); (b) **estados de ERRO** — 404 + IDs inválidos (contacto/imóvel/negócio) → not‑found gracioso PT‑PT, overflow 0, desktop+375; (c) **estados VAZIOS** — Mensagens (3 painéis) + /unsubscribe sem token, PT‑PT, overflow 0; vazios já cobertos antes (contactos Clientes=0, board Ganhos=0, Sino, IG, matches). Os **estados cheios/forms/modais** já exercitados a fundo 15‑17/06. **0 bugs.**
 - ✅ **Re‑verificação automações + segurança (20/06) — FEITA (adiantada 18/06):** /automacoes 10 crons `last_run_ok=true`; curl sem secret → 403 (cron) / 401 (webhook HMAC); **security 0 ERROR + performance 0 ERROR**; 13/13 buckets privados; RLS on nas 15 tabelas centrais; secrets no Vault; RGPD (`privacy_policy_url` + `/unsubscribe`). **0 bugs.**
-- ⬜ **Fecho (22/06):** copy PT‑PT pré‑AO (varrer brasileirismos/traços/encoding nos emails); vitest verde; stress final dos forms principais; **relatório final**.
+- ✅ **Fecho (22/06) — FEITO (adiantado 18/06):** copy PT‑PT pré‑AO (commits `4415164`+`e9f4d33`, verificado em produção `260618_1113`); vitest verde (558/5); **stress final dos forms** — Novo Contacto (validação bloqueia vazio; input sujo `<b>`/emoji/acentos/aspas → XSS escapado, telefone normalizado, gravado; QA limpo) + pesquisa patológica (`%_\() ,* <script> '; drop --` → 0 crash, 0 overflow); **relatório final escrito** (`docs/RELATORIO-FINAL-22JUN.md`). **CRM TERMINADO, VERIFICADO E TESTADO.**
 
 ### 🔎 Fluxos funcionais do NÚCLEO ainda por exercitar a fundo (destapado 15/06 — só smoke até agora)
 > As 4 áreas da lista original ("Imóveis, Import, Marketing, Exportações") estão feitas, mas o CRM tem mais
