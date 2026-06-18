@@ -344,7 +344,7 @@ const DashboardPage: React.FC = () => {
               </span>
               <span className="text-xs text-green-500 font-bold mb-1">Médio</span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">Valor médio vitalício por cliente ativo.</p>
+            <p className="text-xs text-slate-500 mt-2">Valor médio vitalício por cliente activo.</p>
           </div>
         </div>
       </div>

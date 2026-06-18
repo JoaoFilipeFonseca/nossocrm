@@ -459,7 +459,7 @@ export const InboxFocusView: React.FC<InboxFocusViewProps> = ({
       )}
 
       {/* Ações */}
-      <div className="flex items-center gap-4 mt-8" role="group" aria-label="Ações">
+      <div className="flex items-center gap-4 mt-8" role="group" aria-label="Acções">
         <button
           onClick={onSnooze}
           className="group flex items-center gap-3 px-6 py-3 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-all font-medium border border-transparent hover:border-slate-300 dark:hover:border-white/10"

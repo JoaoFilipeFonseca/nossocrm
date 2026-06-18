@@ -209,7 +209,7 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
                 {/* LEFT: GOAL (All Goal fields) */}
                 <div className="space-y-4 border-r border-slate-100 dark:border-white/5 pr-8">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 border-b border-slate-100 dark:border-white/5 pb-2">
-                    <Target size={12} /> Objetivo (O Alvo)
+                    <Target size={12} /> Objectivo (O Alvo)
                   </label>
 
                   {/* KPI Inputs */}
@@ -273,7 +273,7 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
                   {/* Goal Context */}
                   <textarea
                     className="w-full h-24 bg-transparent border border-slate-200 dark:border-white/10 rounded-lg p-3 text-xs text-slate-600 dark:text-slate-300 focus:outline-none focus:border-blue-500/50 resize-none transition-all"
-                    placeholder="Por que essa meta existe? Qual o contexto estratégico?"
+                    placeholder="Porque é que esta meta existe? Qual o contexto estratégico?"
                     value={editedBoard.goal?.description || ''}
                     onChange={e =>
                       setEditedBoard({
@@ -347,7 +347,7 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
                 <div className="flex items-center gap-2 mb-1">
                   <span className="flex h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                   <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                    Objetivo
+                    Objectivo
                   </span>
                 </div>
 

@@ -47,7 +47,7 @@ const LF_TYPE_OPTIONS: { value: string; label: string }[] = [
 const OBJECTIVES: { key: Objective; label: string; icon: typeof Target; hint: string }[] = [
   { key: 'leads', label: 'Leads', icon: Target, hint: 'Recolher contactos (formulário ou site).' },
   { key: 'trafego', label: 'Tráfego', icon: MousePointerClick, hint: 'Levar pessoas a um site ou página.' },
-  { key: 'interacao', label: 'Interação', icon: MessageCircle, hint: 'Mensagens, comentários e interesse.' },
+  { key: 'interacao', label: 'Interacção', icon: MessageCircle, hint: 'Mensagens, comentários e interesse.' },
 ];
 
 const CONVERSIONS: { key: Conversion; label: string; icon: typeof FileText; hint: string }[] = [

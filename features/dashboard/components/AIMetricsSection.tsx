@@ -245,7 +245,7 @@ export function AIMetricsSection() {
       {/* Action Distribution */}
       <div className="glass p-5 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
         <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">
-          Distribuição de Ações (Este Mês)
+          Distribuição de Acções (Este Mês)
         </h3>
         <ActionDistributionBar
           responded={monthStats.responded}
@@ -256,7 +256,7 @@ export function AIMetricsSection() {
         />
         <div className="mt-3 flex justify-between items-center">
           <p className="text-xs text-slate-400">
-            Total: {monthStats.total} interações
+            Total: {monthStats.total} interacções
           </p>
           <p className="text-xs text-slate-400">
             Tokens: {tokensUsed.thisMonth.toLocaleString()}

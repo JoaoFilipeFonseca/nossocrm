@@ -64,7 +64,7 @@ export function CerebroPage() {
         <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">🔁 Percurso completo <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">do euro investido ao negócio</span></h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
           <Step label="Investido" value={loading ? '—' : eur(f?.spend ?? 0)} sub="Meta Ads" tag="ads" />
-          <Step label="Interações (orgânico)" value={loading ? '—' : nf(f?.interactions ?? 0)} sub="posts da Página" tag="org" />
+          <Step label="Interacções (orgânico)" value={loading ? '—' : nf(f?.interactions ?? 0)} sub="posts da Página" tag="org" />
           <Step label="Leads → no funil" value={loading ? '—' : `${nf(f?.leads_total ?? 0)} → ${nf(f?.open ?? 0)}`} sub="entraram → abertos" tag="crm" />
           <Step label="Ganhos" value={loading ? '—' : `${f?.won ?? 0} · ${eur(f?.won_value ?? 0)}`} sub="comissão líquida" tag="capi" />
           <Step label="ROAS" value={loading ? '—' : f?.roas == null ? 's/ dados' : `${f.roas}×`} sub="valor / investido" tag="capi" />

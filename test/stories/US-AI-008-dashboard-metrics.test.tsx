@@ -272,7 +272,7 @@ describe('US-AI-008: AIMetricsSection', () => {
     expect(screen.getByText(/Handoff \(5\)/)).toBeTruthy();
 
     // Total text
-    expect(screen.getByText(/Total: 42 interações/)).toBeTruthy();
+    expect(screen.getByText(/Total: 42 interacções/)).toBeTruthy();
   });
 
   it('nao renderiza sem orgId', async () => {

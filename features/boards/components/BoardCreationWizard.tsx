@@ -1587,7 +1587,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
           {step === 'ai-preview' && (
             <div className="flex gap-3 justify-between items-center">
               {isChatMode ? (
-                <div className="text-sm text-slate-500">Modo de refinamento ativo</div>
+                <div className="text-sm text-slate-500">Modo de refinamento activo</div>
               ) : (
                 <button
                   onClick={() => {

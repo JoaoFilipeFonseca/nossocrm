@@ -139,7 +139,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({
           className="flex items-center gap-1 mt-3 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
         >
           <Lightbulb size={14} />
-          <span>Por que estou sugerindo isso?</span>
+          <span>Porque é que sugiro isto?</span>
           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
 
@@ -157,7 +157,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({
       <div className="px-4 pb-3">
         <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
           <Target size={12} />
-          Ação sugerida:
+          Acção sugerida:
         </div>
 
         <div className="p-3 rounded-lg bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/30">

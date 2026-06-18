@@ -102,7 +102,7 @@ export const ActivityStatusIcon: React.FC<ActivityStatusIconProps> = ({
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="p-2 border-b border-slate-100 dark:border-white/5">
-                        <p className="text-xs font-bold text-slate-500 uppercase px-2" id={`quick-add-heading-${dealId}`}>Ações Rápidas</p>
+                        <p className="text-xs font-bold text-slate-500 uppercase px-2" id={`quick-add-heading-${dealId}`}>Acções Rápidas</p>
                     </div>
                     
                     {/* Keyboard-accessible move to stage option */}

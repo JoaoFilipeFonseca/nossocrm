@@ -114,7 +114,7 @@ const APINotConfigured: React.FC = () => {
           <ol className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
             <li className="flex gap-2">
               <span className="font-bold text-purple-500">1.</span>
-              Acesse as Configurações
+              Aceda às Configurações
             </li>
             <li className="flex gap-2">
               <span className="font-bold text-purple-500">2.</span>

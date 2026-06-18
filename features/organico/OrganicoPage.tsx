@@ -101,11 +101,11 @@ export function OrganicoPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Kpi label="Publicações" value={loading ? '—' : nf(k?.posts ?? 0)} sub="no período" />
-        <Kpi label="Interações totais" value={loading ? '—' : nf(k?.interactions ?? 0)} sub="reações + comentários + partilhas" />
+        <Kpi label="Interacções totais" value={loading ? '—' : nf(k?.interactions ?? 0)} sub="reacções + comentários + partilhas" />
         {data?.reach_available
           ? <Kpi label="Alcance" value={loading ? '—' : nf(data.reach ?? 0)} sub={reachWin?.clamped ? 'pessoas alcançadas (últimos 30 dias)' : 'pessoas alcançadas (período)'} />
           : <Kpi label="Alcance" value="—" sub={network === 'instagram' ? 'sem dados no período' : 'em breve'} />}
-        <Kpi label="Média por post" value={loading ? '—' : nf(k?.avg ?? 0)} sub="interações/post" />
+        <Kpi label="Média por post" value={loading ? '—' : nf(k?.avg ?? 0)} sub="interacções/post" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.4fr_.8fr]">

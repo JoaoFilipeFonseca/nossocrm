@@ -90,7 +90,7 @@ export const ContactFormModalV2: React.FC<ContactFormModalProps> = ({
       <ModalForm onSubmit={handleSubmit(handleFormSubmit)}>
         <InputField
           label="Nome Completo"
-          placeholder="Ex: Ana Souza"
+          placeholder="Ex.: Ana Sousa"
           error={errors.name}
           registration={register('name')}
         />

@@ -95,7 +95,7 @@ export const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({
               { value: 'text', label: 'Texto' },
               { value: 'number', label: 'Número' },
               { value: 'date', label: 'Data' },
-              { value: 'select', label: 'Seleção' },
+              { value: 'select', label: 'Selecção' },
             ]}
             value={newFieldType}
             onChange={(e) => setNewFieldType(e.target.value as CustomFieldType)}

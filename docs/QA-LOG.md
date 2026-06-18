@@ -11,7 +11,28 @@
 ---
 
 ## 📍 Posição actual
-- **Data:** 17/06/2026 · **HEAD origin/main:** `a37f3d7` · **build em produção:** `260616_1639`+. **Núcleo: QA de
+- **Data:** 18/06/2026 · **HEAD origin/main:** `f2aa081` · **build em produção:** `260617_1315`. **PONTO 1 (18/06)
+  FECHADO — percurso da lead de anúncio NOVA AO VIVO, ponta‑a‑ponta, com webhook Meta assinado (não forjável).** O João
+  disparou uma lead pela Ferramenta de Teste de Lead Ads (app **Foco Imo CRM**, Form Lead Retrieval). Traçado: webhook
+  `automation-meta-leads` (defesas verdes: GET token inválido→403, sem mode→400, POST sem/má assinatura→401) → `lead` +
+  `contacto` com **atribuição** (leadgen_id `1811819100193635`, Form `3362110277299215`) → **negócio no board Compradores /
+  etapa Oportunidade** (via fallback do board por omissão, campanha nula no teste) → **tag de proveniência** `meta_ads` +
+  chip DASH‑2 **"❄ 0 · frio"** (lead nova começa baixo, honesto) → evento `lead.meta_ads` **publicado e processado** (~1 min)
+  → alerta **Telegram** recebido pelo João → follow‑up: em scope (`due_agora=0`, ainda não "parada", correcto) → **GANHO**
+  a clicar no cockpit (`is_won=true`+`closed_at`) → **CAPI** `capi-test` modo teste (`ok:true`, `events_received:1`,
+  fbtrace `A3_c8ze…`, sem poluir produção) → **funil/cérebro** reflectem (ganhos 0→1; €0 mantém comissões honestas).
+  **0 bugs novos.** Dados QA 100% limpos (lead+contacto+negócio+evento+audit removidos; baseline 484/0/484, 0 ganhos
+  restaurado) antes do tick do cron `meta-capi-forward` (*/30).
+  **🆕 Adiantado o 19/06 na mesma sessão — re‑passagem responsiva+consola+escuro:** 375 nas 22 rotas principais
+  (overflow 0, 0 erros de consola, só warnings Recharts conhecidos); 768 nas de layout pesado (boards/dashboard/
+  contacts/anuncios, overflow 0); escuro render limpo (`qa19jun-dashboard-escuro.png`); `/admin/saude` verde;
+  `client_errors`=0/24h. **+ estados de ERRO** (404 + IDs inválidos contacto/imóvel/negócio → not‑found gracioso PT‑PT,
+  desktop+375, overflow 0) **+ estados VAZIOS** (Mensagens 3 painéis + /unsubscribe sem token, PT‑PT). **19/06 FEITO, 0 bugs.**
+  **🆕 Adiantado também o 20/06 (automações + segurança):** /automacoes 10 crons `last_run_ok=true`; curl sem secret → 403
+  (cron) / 401 (webhook HMAC); **security 0 ERROR + performance 0 ERROR**; 13/13 buckets privados; RLS on nas 15 tabelas
+  centrais; secrets no Vault; RGPD (`privacy_policy_url` + `/unsubscribe`). **0 bugs.** Próximo: **22/06 fecho** (copy PT‑PT
+  pré‑AO + vitest verde + stress dos forms + relatório final).
+- **Data (anterior):** 17/06/2026 · **HEAD origin/main:** `a37f3d7` · **build em produção:** `260616_1639`+. **Núcleo: QA de
   Definições escritas (Produtos/Metas/Unidades/Checklists/Equipa) + Visão de Gestor — TODAS FEITAS a clicar, escrita
   na BD confirmada, dados QA limpos, 0 erros de consola.** **Automações — activar REAL + disparar + CONTAR FEITO**
   (automação QA segura trigger→criar tarefa interna, sem envio): activar→executar→**bug real #17 (contadores nunca
@@ -39,6 +60,7 @@
 | Área | Nível de teste feito | Resultado | Última sessão |
 |---|---|---|---|
 | **Percurso da lead E2E** (entra→board→tag→follow‑up→caixa social→funil/cérebro→CAPI) | Mapeado + verificado ao vivo | ✅ honesto (0 ganhos = real) | 10/13 Jun |
+| **Percurso da lead de anúncio NOVA AO VIVO** (webhook Meta assinado não forjável → … → GANHO → CAPI → funil/cérebro) | E2E a clicar + traço na BD (lead de teste criada/exercitada/limpa) | ✅ webhook defesas (403/400/401); `lead`+`contacto`+atribuição; board Compradores/Oportunidade (fallback omissão); tag `meta_ads`+chip DASH‑2 frio; evento `lead.meta_ads` processado; Telegram ✓; follow‑up em scope (não‑due, correcto); GANHO `is_won`; **CAPI `capi-test` `events_received:1`**; funil/cérebro 0→1. 0 bugs. Dados QA limpos | **18 Jun** |
 | **Percurso da lead de ANÚNCIO com dados REAIS** (127 leads source=Facebook) | DB agregado + trace de 1 na UI | ✅ 127/127 com negócio, routing certo (Compradores/Oport.); cockpit com HEALTH AI + Próxima Acção; ⚠️ origem não visível na ficha do contacto; gargalo conhecido (6/127 trabalhadas) | 15 Jun |
 | **Varrimento das 56 rotas** (smoke HTTP, consola, overflow, escuro) | Desktop 1280 + mobile 375 + tablet 768 | ✅ 0 erros, 0 overflow | 13 Jun |
 | **Contactos — filtros** (Leads/MQL/Prospects/Clientes/Outros; Pessoas/Empresas) | Funcional a clicar | ✅ filtram, estado vazio ok | 15 Jun |
@@ -102,11 +124,14 @@
 | **Importação UI (wizard CSV/XLSX)** — upload→preview→mapear→confirmar→importar | Funcional a clicar (CSV com origem/dup/acento/sem‑email) | ✅ preview detecta "CSV·vírgula·utf‑8·4 linhas"; auto‑mapeia name/email/phone/company + extra origem; 1.ª import 3 criados+1 dedup intra‑ficheiro; **2.ª import 0 criados+3 actualizados** (dedup por email+phone entre imports); empresa auto‑criada+ligada (`crm_companies`); telefone normalizado +351 | 15 Jun |
 | **Exportação contactos (CSV)** | Clicar Exportar CSV + inspeccionar blob | ✅ 10 campos (name…updated_at), respeita lista, UTF‑8, download `contactos-YYYY-MM-DD.csv` | 15 Jun |
 | **Merge de contactos** | Juntar par duplicado | ✅ 200, move registos, soft-delete do source | 15 Jun |
-| **Automações / crons (10)** | /automacoes conta corridas; curl→403 (verify_jwt) | ✅ | 13 Jun |
-| **Segurança** (advisors, RLS, buckets, secrets) | Advisors 0 ERROR; 13 buckets privados; RLS | ✅ | 13 Jun |
-| **RGPD** (/unsubscribe, rodapé, privacy_policy_url) | Verificado | ✅ | 13 Jun |
+| **Automações / crons (10)** | /automacoes conta corridas; curl→403 (verify_jwt) | ✅ reconfirmado 18/06: 10 keys todas `last_run_ok=true` e recentes; `lead-followups`/`cmi-watch`/`backup-export` curl sem secret→**403**, `automation-meta-leads`→**401** (HMAC); `meta-capi-forward` correu 09:30 sem falha | 13 / **18** Jun |
+| **Segurança** (advisors, RLS, buckets, secrets) | Advisors 0 ERROR; 13 buckets privados; RLS | ✅ reconfirmado 18/06: **security 0 ERROR** (92 WARN conhecidas: 88 security_definer_executable das RPCs, 3 extension_in_public, 1 leaked_password_protection); **performance 0 ERROR** (INFO unindexed_fk/unused_index + WARN rls_initplan/multiple_permissive); **13/13 buckets privados**; **RLS on nas 15 tabelas centrais**; secrets no Vault (token Meta `token_secret_name` + `get_meta_app_credentials`) | 13 / **18** Jun |
+| **RGPD** (/unsubscribe, rodapé, privacy_policy_url) | Verificado | ✅ reconfirmado 18/06: `privacy_policy_url`=https://joaofilipefonseca.pt/privacidade; `/unsubscribe` sem token → "Ligação incompleta" gracioso + link privacidade | 13 / **18** Jun |
 | **Copy PT‑PT pré‑AO + UTF‑8** | Varrido código visível; emails sem mojibake | ✅ (IA runtime escreveu "diretamente" ⚠️) | 13/15 Jun |
 | **Mobile 375 / tablet 768 / escuro** | Em todas as rotas varridas | ✅ 0 overflow | 13/15 Jun |
+| **Re‑passagem responsiva + consola + escuro (19/06)** | 375 nas 22 rotas principais + 768 nas de layout pesado + escuro | ✅ **375: 22/22 rotas overflow 0, 0 erros de consola** (só warnings Recharts conhecidos em /dashboard+/reports); **768** boards/dashboard/contacts/anuncios overflow 0; **escuro** render limpo (captura `qa19jun-dashboard-escuro.png`), tema repõe; `/admin/saude` verde (backup há 4d, erros 24h=0, IA on, 12 crons); `client_errors`=0/24h | **18 Jun** (adiantado do 19) |
+| **Estados de ERRO (19/06)** | 404 + IDs inválidos (contacto/imóvel/negócio) × desktop+375 | ✅ rota inexistente → **"Página não encontrada / Voltar ao início"** (PT‑PT, overflow 0; o único erro de consola é o HTTP 404 esperado do recurso); `/contacts/<uuid inexistente>`, `/imoveis/<uuid inexistente>` → mesmo not‑found gracioso dentro do shell; `/deals/<id>/cockpit` inexistente → "Negócio não encontrado". Todos overflow 0 | **18 Jun** |
+| **Estados VAZIOS (19/06)** | Mensagens (lista+painel) + /unsubscribe sem token | ✅ Mensagens: **"Nenhuma conversa aberta"** + **"Selecione uma conversa… Escolha uma conversa da lista"** (3 painéis), PT‑PT, overflow 0; **/unsubscribe sem token** → "Ligação incompleta… Use o link que recebeu no email" + link de privacidade (RGPD), overflow 0 desktop+375. (Vazios já cobertos antes: contactos Clientes=0, board Ganhos=0, Sino, IG orgânico, matches) | **18 Jun** |
 
 ---
 
@@ -177,9 +202,9 @@
 - ✅ **Meta Ads / Marketing** (15 Jun): Biblioteca **gerar criativo + guardar** (Post orgânico FB/IG: copy IA + render PNG + biblioteca 2→3 + apagar=archive) ✅; **/anuncios a fundo** (período/Tabela/Árvore/drill-down/analista/encaminhamento, dados vitalícios reais) ✅; **/organico a fundo** (FB posts reais, IG estado vazio gracioso, períodos) ✅. Falta menor: criar/editar anúncio pago e publicar criativo (gated Meta + **custo real** → só no percurso real, fora do QA).
 - ✅ **Automações — builder** (15 Jun): criar rascunho (201) + builder carrega + activação sem gatilho → 400 gracioso. Falta: montar nós + activar uma real com trigger (cuidado: pode disparar envios).
 - ✅ **Importação bulk + merge + UI wizard** (15 Jun): bulk com linhas sujas → 200; merge → soft‑delete do source; **UI import CSV** exercitada ponta‑a‑ponta (preview→auto‑mapping→confirm→import; dedup intra‑ficheiro e entre imports; empresa auto‑criada; export CSV). Falta menor: XLSX (.xlsx) pela UI (só testei CSV; o parser aceita ambos).
-- 🟡 **Percurso da lead com dados REAIS:** ✅ feito 15/06 com as 127 leads de anúncio existentes (source=Facebook): entrada c/ proveniência → negócio → board certo → cockpit (HEALTH AI + Próxima Acção). **Falta (18/06):** uma lead de anúncio NOVA a entrar ao vivo (webhook Meta assinado — não forjável) + negócio ganho → CAPI envia → funil/cérebro reflectem.
-- ⬜ **Re‑passagem páginas × estados (19/06):** vazio/erro/cheio/modais/forms/thank‑you × 375/768/desktop × escuro, em TODAS.
-- ⬜ **Re‑verificação automações + segurança (20/06):** todas em /automacoes contam certo; advisors 0 ERROR; buckets privados; secrets no Vault.
+- ✅ **Percurso da lead com dados REAIS:** feito 15/06 com as 127 leads de anúncio existentes (source=Facebook). **E lead de anúncio NOVA AO VIVO FEITA 18/06** (webhook Meta assinado, não forjável): entra → `lead`+`contacto`+atribuição → board Compradores/Oportunidade → tag `meta_ads`+chip DASH‑2 frio → evento `lead.meta_ads` processado → Telegram → follow‑up em scope → **GANHO** → **CAPI** (`capi-test` `events_received:1`, modo teste) → funil/cérebro 0→1. 0 bugs; dados QA limpos.
+- ✅ **Re‑passagem páginas × estados (19/06) — FEITA (adiantada 18/06):** (a) responsiva+consola+escuro (375 nas 22 rotas overflow 0 / 0 erros; 768 spot; escuro limpo; /admin/saude verde; client_errors 0); (b) **estados de ERRO** — 404 + IDs inválidos (contacto/imóvel/negócio) → not‑found gracioso PT‑PT, overflow 0, desktop+375; (c) **estados VAZIOS** — Mensagens (3 painéis) + /unsubscribe sem token, PT‑PT, overflow 0; vazios já cobertos antes (contactos Clientes=0, board Ganhos=0, Sino, IG, matches). Os **estados cheios/forms/modais** já exercitados a fundo 15‑17/06. **0 bugs.**
+- ✅ **Re‑verificação automações + segurança (20/06) — FEITA (adiantada 18/06):** /automacoes 10 crons `last_run_ok=true`; curl sem secret → 403 (cron) / 401 (webhook HMAC); **security 0 ERROR + performance 0 ERROR**; 13/13 buckets privados; RLS on nas 15 tabelas centrais; secrets no Vault; RGPD (`privacy_policy_url` + `/unsubscribe`). **0 bugs.**
 - ⬜ **Fecho (22/06):** copy PT‑PT pré‑AO (varrer brasileirismos/traços/encoding nos emails); vitest verde; stress final dos forms principais; **relatório final**.
 
 ### 🔎 Fluxos funcionais do NÚCLEO ainda por exercitar a fundo (destapado 15/06 — só smoke até agora)

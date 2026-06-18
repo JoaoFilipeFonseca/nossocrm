@@ -844,7 +844,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                     <Zap size={14} className={`${nextBestAction.urgency === 'high' ? 'text-red-400' : nextBestAction.urgency === 'medium' ? 'text-yellow-400' : 'text-primary-400'}`} />
-                                    <span className="text-xs uppercase tracking-wider text-slate-400 font-bold">Próxima Ação</span>
+                                    <span className="text-xs uppercase tracking-wider text-slate-400 font-bold">Próxima Acção</span>
                                     {nextBestAction.isAI && (
                                         <span className="text-[10px] bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded flex items-center gap-1">
                                             <Sparkles size={9} /> AI

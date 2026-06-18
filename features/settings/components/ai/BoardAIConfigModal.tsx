@@ -61,7 +61,7 @@ type GoalCategory = 'qualificacao' | 'agendamento' | 'vendas' | 'suporte' | 'fil
 
 const STEPS: { id: Step; label: string; icon: typeof Bot }[] = [
   { id: 'context',  label: 'Contexto',  icon: Bot },
-  { id: 'goal',     label: 'Objetivo',  icon: Target },
+  { id: 'goal',     label: 'Objectivo',  icon: Target },
   { id: 'stages',   label: 'Estágios',  icon: LayoutList },
   { id: 'activate', label: 'Activar',    icon: Zap },
 ];
@@ -532,7 +532,7 @@ function StagesStep({
                 </span>
                 {isEnabled && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 border-0">
-                    AI Ativo
+                    AI Activo
                   </Badge>
                 )}
                 {isEnabled && prompt && (
@@ -556,7 +556,7 @@ function StagesStep({
                   </p>
                   {prompt.stageGoal && (
                     <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">
-                      <strong>Objetivo:</strong> {prompt.stageGoal}
+                      <strong>Objectivo:</strong> {prompt.stageGoal}
                     </p>
                   )}
                 </div>

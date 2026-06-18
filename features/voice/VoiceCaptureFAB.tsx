@@ -248,7 +248,7 @@ export const VoiceCaptureFAB: React.FC = () => {
                   >
                     <Mic className="h-10 w-10" />
                   </button>
-                  <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Tap para começar a gravar</p>
+                  <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Toque para começar a gravar</p>
                 </div>
               )}
 

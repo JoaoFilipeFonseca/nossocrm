@@ -340,7 +340,7 @@ export const AuditLogDashboard: React.FC = () => {
             onChange={(e) => setActionFilter(e.target.value)}
             className="px-3 py-1.5 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="all">Todas Ações</option>
+            <option value="all">Todas as Acções</option>
             <option value="CROSS_TENANT_ATTEMPT">Cross-Tenant</option>
             <option value="DATA_EXPORT">Exportação</option>
             <option value="DATA_DELETION">Eliminação</option>

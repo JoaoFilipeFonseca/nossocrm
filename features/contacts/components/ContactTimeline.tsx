@@ -108,7 +108,7 @@ export function ContactTimeline({ contactId, initialEntries }: ContactTimelinePr
     <div className="bg-white dark:bg-dark-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm">
       <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100 dark:border-white/5">
         <div className="flex items-center gap-2 min-w-0">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Histórico de interações</h2>
+          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Histórico de interacções</h2>
           <span className="text-[11px] text-slate-400 hidden sm:inline">tudo ligado a esta pessoa</span>
         </div>
         {!open && (
@@ -141,7 +141,7 @@ export function ContactTimeline({ contactId, initialEntries }: ContactTimelinePr
           {error && <p className="text-xs text-rose-600 mt-1">{error}</p>}
           <div className="flex items-center gap-2 mt-2">
             <button onClick={save} disabled={saving} className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-primary-600 text-white hover:bg-primary-500 disabled:opacity-60">
-              {saving ? 'A guardar...' : 'Guardar interação'}
+              {saving ? 'A guardar...' : 'Guardar interacção'}
             </button>
             <button onClick={() => setOpen(false)} disabled={saving} className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500">Cancelar</button>
             <span className="ml-auto text-[11px] text-slate-400 hidden sm:inline">A data/hora é editável para registar o passado.</span>
@@ -150,7 +150,7 @@ export function ContactTimeline({ contactId, initialEntries }: ContactTimelinePr
       )}
 
       {initialEntries.length === 0 ? (
-        <p className="px-5 py-5 text-sm text-slate-400">Sem interações registadas ainda.</p>
+        <p className="px-5 py-5 text-sm text-slate-400">Sem interacções registadas ainda.</p>
       ) : (
         <ol className="p-5 space-y-4">
           {initialEntries.map((e, i) => {
@@ -169,7 +169,7 @@ export function ContactTimeline({ contactId, initialEntries }: ContactTimelinePr
                     <span className="ml-auto text-xs text-slate-400 shrink-0 flex items-center gap-2">
                       {fmt(e.at)}
                       {e.manual && (
-                        <button onClick={() => remove(e.id)} disabled={busyDelete === e.id} aria-label="Eliminar interação" className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => remove(e.id)} disabled={busyDelete === e.id} aria-label="Eliminar interacção" className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Trash2 size={13} />
                         </button>
                       )}

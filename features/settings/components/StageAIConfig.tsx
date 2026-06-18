@@ -558,7 +558,7 @@ function StageConfigRow({
               ) : config?.enabled ? (
                 <Badge className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                   <Sparkles className="h-3 w-3 mr-1" />
-                  AI Ativo
+                  AI Activo
                 </Badge>
               ) : null}
             </div>
@@ -604,7 +604,7 @@ function StageConfigRow({
             {/* Goal */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-500 uppercase">
-                Objetivo do Estágio
+                Objectivo do Estágio
               </label>
               <input
                 type="text"

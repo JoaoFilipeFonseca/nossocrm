@@ -560,7 +560,7 @@ export const WebhooksSection: React.FC = () => {
                   disabled={loading || boardsLoading || boards.length === 0}
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                 >
-                  Ativar entrada de leads
+                  Activar entrada de leads
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>

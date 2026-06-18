@@ -427,14 +427,14 @@ export const ProfilePage: React.FC = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Sobrenome
+                                    Apelido
                                 </label>
                                 <input
                                     type="text"
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value)}
                                     className="w-full px-4 py-2.5 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-primary-500 transition-all"
-                                    placeholder="Seu sobrenome"
+                                    placeholder="O seu apelido"
                                 />
                             </div>
                         </div>
