@@ -1578,7 +1578,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
                                                     }}
                                                     className="flex-1 text-[9px] px-2 py-1.5 bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-white rounded transition-colors capitalize"
                                                 >
-                                                    {type === 'followup' ? 'Follow-up' : type === 'closing' ? 'Fechamento' : type === 'objection' ? 'Objeção' : 'Resgate'}
+                                                    {type === 'followup' ? 'Follow-up' : type === 'closing' ? 'Fecho' : type === 'objection' ? 'Objecção' : 'Resgate'}
                                                 </button>
                                             ))}
                                         </div>

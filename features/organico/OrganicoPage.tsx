@@ -157,7 +157,7 @@ export function OrganicoPage() {
       </div>
 
       <p className="text-xs text-slate-400 dark:text-slate-500 border-t border-dashed border-slate-200 dark:border-white/10 pt-3">
-        Fonte: API da Página e do Instagram (publicações + reações/comentários/partilhas, dados reais). O Alcance do Instagram é o alcance único do período (validado contra os números da própria app da Meta); no Facebook ainda não está disponível. Liga ao analista IA e, mais tarde, ao MKT-BRAIN.
+        Fonte: API da Página e do Instagram (publicações + reacções/comentários/partilhas, dados reais). O Alcance do Instagram é o alcance único do período (validado contra os números da própria app da Meta); no Facebook ainda não está disponível. Liga ao analista IA e, mais tarde, ao MKT-BRAIN.
       </p>
     </div>
   );
