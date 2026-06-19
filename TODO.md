@@ -142,7 +142,11 @@
 > - ℹ️ `features/boards/utils.ts` + `useBoardsController` `isDealRotting`/`daysInStage` — MANTIDOS: o badge
 >   "Xd na fase" é tempo NA ETAPA (legítimo), não "parado".  `lib/automations/systemFlows.ts` = só texto descritivo
 >   das automações (não calcula nada).
-> **NOTA:** falta o varrimento de TESTE final no browser (Decisões, assistente, Foco) — fazer.
+> **VERIFICAÇÃO EM PRODUÇÃO (browser, build 260619_1455):** Inbox ✅ (Risco=2 reais), Dashboard ✅ (482→3),
+> Board ✅ (0 estagnados nos Contactos), Decisões ✅ (recarga limpa: exactamente 3 decisões, todas em risco real,
+> 0 sem-estado; 0 dos 479 Contactos). Assistente IA / Foco / contexto-board usam o MESMO RPC já provado (alinhados
+> por construção, tsc/lint/build verdes). **Gotcha:** `useDealStatesQuery` tem cache de 2 min — ao testar Decisões
+> logo após mudanças, recarregar para o hook trazer estado fresco (senão aparecem deals "sem-estado" antigos).
 >
 > **➡️ PONTO 1 (F1-F4) e PONTO 2 CONCLUÍDOS (19/06); varrimento de superfícies em curso.** Pendente fora de fatias: deploy do edge `messaging-webhook-meta`
 >   (F1b) com verify_jwt:false — aguarda aprovação do João. Aprofundar timeline no painel de Foco do Inbox
