@@ -10,6 +10,57 @@
 > mobile/escuro → 20 manhã: QA automações+segurança → 22: copy PT-PT + vitest verde (incl. mock
 > rbac privacidade) + stress test + **relatório final**. Detalhe diário: `memory/plano_rumo_22junho.md`.
 
+> ## 🫀 ÉPICO PÓS‑22 (capturado 18/06, pedido do João) — "CORAÇÃO: processo automatizado por etapa"
+> **Visão (palavras do João):** "cada nova lead tem que ter uma resposta, depois o acompanhamento tem de ser
+> feito e bem feito — só isto já garante aumento de negócio; depois tudo o que montámos pode acelerar e
+> potenciar ainda mais. Este coração tem de funcionar a 100%. Cada etapa tem que ter um processo pensado,
+> construído e automatizado."
+> **Estado honesto hoje (18/06):** recepção da lead 100% sólida e testada (webhook assinado → contacto+negócio+
+> board+tag+atribuição+Telegram, anti‑órfã). MAS: **0 automações activas** (4 em rascunho); **a resposta à lead
+> nova é manual** (sem auto‑aviso/auto‑resposta na entrada); a rede de follow‑up (cron `lead-followups`) só cria
+> tarefa quando a lead está parada ≥ ~30d (cooldown), não há cadência contínua desde a entrada. O motor de
+> automações existe e funciona (verificado 17/06), faltam as "jogadas" montadas e ligadas.
+> **Recomendação minha (plan‑first), a aguardar "avança" do João:**
+> - **Fatia 0 — DESENHO do processo (pensar primeiro):** mapa por board/etapa = gatilho de entrada → resposta
+>   imediata → qualificação → cadência de follow‑up → gatilho de avanço de etapa → o que é automático vs envio
+>   do João → regras RGPD (opt‑out/rodapé/horário, sem Domingos). Aprovação do João antes de construir.
+> - **Fatia 1 (mais urgente):** resposta/aviso imediato à lead NOVA (a IA prepara; envio conforme autorizado).
+> - **Fatias seguintes:** cadências por etapa + gatilhos de avanço, tudo visível e a contar em `/automacoes`.
+> **Regras herdadas:** a IA prepara, o humano envia onde tocar fora (decisão do João por canal); RGPD sempre;
+> nunca enviar para dados de teste; cada automação aparece em /automacoes; medição vitalícia do que resulta.
+> **NÃO executar build sem o "avança" + aprovação da Fatia 0.** (Os testes periféricos que faltam — XLSX,
+> drag de etapas, "Comentar", pesquisa de conversas — ficam abaixo deste épico na ordem de dor real.)
+>
+> ### 🟢 MODELO APROVADO PELO JOÃO (18/06) — "contacto ≠ lead" — A EXECUTAR ASSIM QUE A BD VOLTAR
+> **Princípio do João:** "uma lead é apenas um contacto; só passa a lead quando existe um pedido de algo e se
+> mantém (resposta / pediu algo / interação)." 1.ª etapa do funil = **Contactos**; depois **Oportunidade**
+> (onde nasce a lead). É nesta fase que se montam os processos — "fazer já bem as bases".
+> **Execução decidida (REVISTA pelo João 18/06 — a fazer TUDO de uma vez para não ficar meio partido):**
+> 1. Acrescentar **1.ª etapa "Contactos"** nos boards (Compradores, Vendedores, Arrendamento — confirmar quais existem; "Oportunidade" passa a 2.ª).
+> 2. **MOVER TODOS os negócios actualmente em "Oportunidade" → "Contactos"** (com snapshot antes/depois p/ reverter).
+>    ⟵ **mudança:** o João quer os existentes em Contactos para os trabalhar mais tarde (já não é "não mexer").
+> 3. Actualizar a **entrada das leads novas → "Oportunidade"** (preencher formulário = pediu algo = já é lead;
+>    NÃO cair em "Contactos"). Hoje o webhook usa `firstStageId` (order asc)/`default_lead_stage_id` → apontar explicitamente "Oportunidade".
+> 4. **Regra futura (a desenhar, NÃO agora):** lead que a meio do funil deixa de responder → volta a **"Contactos"**,
+>    onde se pensará numa forma de a alimentar/trabalhar (nurture). É processo/automação da Fatia seguinte.
+> **✅✅ EXECUTADO E VERIFICADO (19/06)** — conector Supabase voltou; feito por SQL com snapshots:
+> 1. ✅ etapa **"Contactos"** criada como 1.ª nos 3 funis: Compradores (`c18868bf`), **Proprietários=Vendedores** (`7887c70d`),
+>    Arrendamento (`6429d468`); `is_default` mantém-se em "Oportunidade" (novas leads continuam a entrar lá).
+> 2. ✅ **481 negócios movidos** Oportunidade → Contactos no MESMO funil (Compradores 240, Proprietários 124, Arrendamento 117;
+>    Oportunidades a 0). Feito com os triggers `deals_publish_events`+`trg_notify_deal_stage_changed` desligados durante o move
+>    (sem ~960 eventos de ruído) e **religados** no fim (confirmado ON). 0 colisões de dup-check, 0 endpoints outbound, 0 fechados.
+> 3. ✅ **routing das leads novas → "Oportunidade"** (campanha `120241452332930323` alterada de "Lead Comprador" → Oportunidade;
+>    `default_lead_stage_id` já era Oportunidade). Verificado na UI: board Compradores mostra "Contactos: 240" 1.º, "Oportunidade: 0", 0 erros.
+> **NÃO mexi nos estados/lifecycle dos contactos** (só movi os negócios de etapa).
+> 4. ✅ **CLEAN SLATE / "a partir do zero" (19/06, pedido do João):** os negócios em "Contactos" **não contam para nada**
+>    (sem follow-up, sem atrasos) **até haver um toque humano registado**; aí o relógio conta a partir dessa data (zero).
+>    Implementado: migração `20260619110000_followup_exclude_holding_stages` (coluna `board_stages.excludes_followup` +
+>    `deal_followups_due` ignora etapas de espera sem toque). Flag ligada nas 3 etapas Contactos. **Limpei 98 tarefas
+>    "Retomar contacto" atrasadas** + **repus marcadores `followupQueuedOn`/`snoozedUntil` a zero** nos negócios de Contactos.
+>    Verificado: por-retomar 379→0, atrasadas 98→0, marcadores 100→0. Leads em Oportunidade continuam a ser acompanhadas.
+> **FALTA (próxima fatia, a desenhar — só DEPOIS de 22, quando o João começar a trabalhar o CRM):** processo de
+> nurture para os "Contactos" + regra "sem-resposta a meio do funil → volta a Contactos" + cadências/resposta automática por etapa.
+
 > ## ▶️ ORDEM DE EXECUÇÃO DECIDIDA PELO JOÃO (08/06/2026) — seguir sem saltar
 > O épico **MKT-MEASURE** está fechado na parte construível (CAPI + Funil + Orgânico + Cérebro).
 > O Cérebro expôs o gargalo: **centenas de leads, 0 fecham → o problema está DENTRO do CRM**
