@@ -58,8 +58,31 @@
 >    `deal_followups_due` ignora etapas de espera sem toque). Flag ligada nas 3 etapas Contactos. **Limpei 98 tarefas
 >    "Retomar contacto" atrasadas** + **repus marcadores `followupQueuedOn`/`snoozedUntil` a zero** nos negócios de Contactos.
 >    Verificado: por-retomar 379→0, atrasadas 98→0, marcadores 100→0. Leads em Oportunidade continuam a ser acompanhadas.
+> 5. ✅ **Visão Geral da Inbox deixa de contar Contactos como "parados/risco" (19/06, commit `737000a`):** o dashboard
+>    era client-side e via os 481 de Contactos como `stalledDeals` (updated_at>7d) → SUGESTÕES/Risco/Pendências inchadas
+>    (PENDÊNCIAS 482). `useInboxController.stalledDeals` passa a excluir negócios em etapas `excludes_followup` (via query
+>    `board-stages/holding`). + Apagadas 3 TASKs "Follow-up: Ivone/Armanda/Francisco" atrasadas (de deals agora em Contactos)
+>    → ATRASADOS 3→0. typecheck0/lint0. **Deploy feito; verificar no browser após reload (build novo).**
 > **FALTA (próxima fatia, a desenhar — só DEPOIS de 22, quando o João começar a trabalhar o CRM):** processo de
 > nurture para os "Contactos" + regra "sem-resposta a meio do funil → volta a Contactos" + cadências/resposta automática por etapa.
+> ⚠️ Verificar pós-deploy se OUTRAS superfícies ainda contam Contactos (Decisões/Central, Cérebro "leads paradas") — Decisões usa overdue/stalled; rever.
+>
+> ## 🎯🎯 PRÓXIMA CONVERSA — 2 PONTOS CRÍTICOS DO JOÃO (19/06, decididos; construir na próxima sessão, NÃO agora — contexto a 58%)
+> ### PONTO 1 — "VERDADE ÚNICA" do estado, mapeada ao detalhe no Inbox (o painel TEM de ser a realidade on-time)
+> **Diagnóstico (honesto, aceite pelo João):** a Visão Geral da Inbox mostra "parado/risco" por `updated_at` (heurística que
+> mente), enquanto o motor de follow-up e o score (DASH-2) usam **último toque humano**. Não concordam → o painel parece
+> desligado da realidade. Atrasados/Hoje/Aprovações JÁ são reais; Sugestões/Risco/Pendências são derivados e enganam.
+> **O que o João quer construir:**
+> 1. Estado real = **etapa + recência do último TOQUE + actividades reais**, UMA só definição usada em Inbox, follow-up, score e Cérebro (interligação).
+> 2. **Distinguir e mostrar AMBOS os toques:** humano (liguei/mandei msg) **E** automação (email/WhatsApp automático). Ex.: "ligaste há 5 dias; automação enviou email há 2 dias". A IA das sugestões deve **olhar para TUDO** (humano + automático) ao analisar.
+> 3. **Timeline mapeada ao detalhe no Inbox/ficha** para, ao ligar ao cliente, o João saber: "liguei há 5d e falámos X; há 2d recebeu email com Y".
+> 4. Separar "Pendências reais" (tarefas) de "Sugestões IA" para o número não mentir.
+> **Liga-se a:** [[plano_copy_ia_em_todo_o_lado]], DASH-2 (`lib/deals/leadScore.ts` + RPC `deal_lead_score_signals`), `deal_followups_due`, `useInboxController.stalledDeals`.
+> ### PONTO 2 — BUG de navegação no modal do negócio (DealDetailModal) — crítico no dia a dia
+> No cockpit do negócio, em "CONTACTO PRINCIPAL", **clicar no nome do contacto não faz NADA**. Deve **abrir a ficha do contacto**
+> (ex.: Sonia Rodrigo) dali mesmo, deixar editar/fazer o que quiser, e ter uma **seta "voltar"** que regressa exactamente a este
+> board/negócio. Hoje obriga a ir a /contactos, procurar e voltar = mau. Ficheiro provável: `features/deals/cockpit/DealCockpitClient.tsx`
+> ou o `DealDetailModal`/`FocusContextPanel` (secção Contacto Principal); ligar o nome a `/contacts/[id]` com retorno ao deal (ex.: `?returnTo=`).
 
 > ## ▶️ ORDEM DE EXECUÇÃO DECIDIDA PELO JOÃO (08/06/2026) — seguir sem saltar
 > O épico **MKT-MEASURE** está fechado na parte construível (CAPI + Funil + Orgânico + Cérebro).
