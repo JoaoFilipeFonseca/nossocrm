@@ -91,7 +91,28 @@
 >   (era `d.status`='open' → `stage_order` SEMPRE 0, etapa nunca pontuava) + exclui 'stage_change' dos toques.
 >   **Verificado**: negócios em etapas avançadas voltam a ter `stage_order`>0 (Sonia: 6/14). O Cérebro é económico
 >   (Meta ads/comissões), NÃO tinha lógica de "parado" por `updated_at` a alinhar. Migração `20260619150000`.
-> **➡️ PONTO 1 e PONTO 2 CONCLUÍDOS (19/06).** Pendente fora de fatias: deploy do edge `messaging-webhook-meta`
+> ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
+> O João viu o Inbox (2 deals) e logo a seguir a Análise→Visão Geral ainda com "482 em risco". Corri um agente a
+> mapear TODAS as superfícies que decidem "parado/estagnado/risco". Estado:
+> - ✅ **Inbox** (F2, `636525f`) — verdade única.
+> - ✅ **Análise→Visão Geral / Dashboard** (F2b, `4ba8187`) — banner + "Negócios Parados" + PipelineAlertsModal.
+>   **Verificado**: 482→**3** ("3 negócios parados · 1 650 000 €", exclui Contactos por trabalhar).
+> - ✅ **Cartões do board** (F2c, `55979eb`) — `isDealRotting` via `useDealStatesQuery` no KanbanBoard.
+>   **Verificado**: 140 cartões de Contactos, **0 "estagnado"** (antes apareciam todos podres).
+> - ⏳ **FALTA alinhar (mapeado, mesma receita = `dealStates`/`isAtRisk` ou `days_idle`):**
+>   1. `features/decisions/analyzers/stagnantDealsAnalyzer.ts` — Decisões/Central "deal parado há X dias" (usa
+>      tabela `activities` + fallback 30d; passar a `deal_state_signals.days_idle`).
+>   2. `features/inbox/components/FocusContextPanel.tsx` (~l.376) — sugestão "X dias sem contacto" (usa `activities[0].date`).
+>   3. `features/boards/hooks/useBoardsController.ts` (l.172 + `isDealRotting` duplicado) + `features/boards/utils.ts`
+>      `isDealRotting`/`daysInStage` — contagem `stagnantDeals` p/ contexto IA (o badge "Xd na fase" é legítimo, é tempo na etapa).
+>   4. `lib/ai/tools.ts` — ferramenta do assistente "deals parados" (usa `last_stage_change_date`).
+>   5. `supabase/functions/telegram-morning-brief/index.ts` — brief matinal conta "frios" por `last_stage_change/updated_at`
+>      (edge → precisa redeploy com verify_jwt:false).
+>   6. `lib/automations/systemFlows.ts` — confirmar relevância (apareceu no grep).
+> **NOTA:** o João sugeriu "pôr agentes a correr todo o CRM a verificar e TESTAR em todo o lado" — fazer no fim um
+> varrimento de verificação (browser) das superfícies acima depois de alinhadas.
+>
+> **➡️ PONTO 1 (F1-F4) e PONTO 2 CONCLUÍDOS (19/06); varrimento de superfícies em curso.** Pendente fora de fatias: deploy do edge `messaging-webhook-meta`
 >   (F1b) com verify_jwt:false — aguarda aprovação do João. Aprofundar timeline no painel de Foco do Inbox
 >   (FocusContextPanel) fica como melhoria opcional futura.
 >
