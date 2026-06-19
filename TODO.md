@@ -83,11 +83,17 @@
 >   (`touchSummary`); Visão Geral separa "Pendências reais" das Sugestões. **Verificado em produção** (build
 >   `260619_1314`): Risco = só 2 negócios tocados-mas-parados ("Último contacto seu há 23 dias"), 479 Contactos
 >   sem toque NÃO contam, Pendências reais=0, 0 erros consola.
-> - ⏳ **F3 (a fazer)** — Timeline ao detalhe (👤 humano / 🤖 automação) no Inbox e na ficha do contacto; IA das
->   sugestões a ler o feed completo.
-> - ⏳ **F4 (a fazer)** — ligar score DASH-2 e Cérebro à MESMA RPC (interligação total). NOTA: o
->   `deal_lead_score_signals` actual junta etapa por `d.status` (='open') → `stage_order` sempre 0 (stagePoints
->   nunca contribui); alinhar ao `stage_id` quando se unificar.
+> - ✅ **F3 (`7fc0765`)** — Timeline da ficha distingue 👤 Você (humano) / 🤖 Automação por interacção (coluna
+>   `actor`, fallback à heurística); tipos de sistema discretos. **Verificado em produção** (Sonia: 👤 nos toques,
+>   "Mudou de etapa" sem badge). O Inbox já mostra ambos os toques no resumo (F2 `touchSummary`). 🤖 só aparece
+>   quando existirem toques de automação (hoje 0 — o insert do webhook estava partido, ver F1b).
+> - ✅ **F4 (`1222104`)** — score DASH-2 alinhado à verdade: `deal_lead_score_signals` junta etapa por `stage_id`
+>   (era `d.status`='open' → `stage_order` SEMPRE 0, etapa nunca pontuava) + exclui 'stage_change' dos toques.
+>   **Verificado**: negócios em etapas avançadas voltam a ter `stage_order`>0 (Sonia: 6/14). O Cérebro é económico
+>   (Meta ads/comissões), NÃO tinha lógica de "parado" por `updated_at` a alinhar. Migração `20260619150000`.
+> **➡️ PONTO 1 e PONTO 2 CONCLUÍDOS (19/06).** Pendente fora de fatias: deploy do edge `messaging-webhook-meta`
+>   (F1b) com verify_jwt:false — aguarda aprovação do João. Aprofundar timeline no painel de Foco do Inbox
+>   (FocusContextPanel) fica como melhoria opcional futura.
 >
 > ### PONTO 1 — "VERDADE ÚNICA" do estado, mapeada ao detalhe no Inbox (o painel TEM de ser a realidade on-time)
 > **Diagnóstico (honesto, aceite pelo João):** a Visão Geral da Inbox mostra "parado/risco" por `updated_at` (heurística que
