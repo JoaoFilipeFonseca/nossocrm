@@ -94,6 +94,34 @@
 >   (era `d.status`='open' → `stage_order` SEMPRE 0, etapa nunca pontuava) + exclui 'stage_change' dos toques.
 >   **Verificado**: negócios em etapas avançadas voltam a ter `stage_order`>0 (Sonia: 6/14). O Cérebro é económico
 >   (Meta ads/comissões), NÃO tinha lógica de "parado" por `updated_at` a alinhar. Migração `20260619150000`.
+> ## 📡 ÉPICO — CANAIS SOCIAIS NAS MENSAGENS + continuidade→lead + atribuição de canal (pedido João 19/06)
+> **Pedido (palavras do João):** "Instagram e Facebook já estão ligados (os meus posts orgânicos são mostrados e
+> analisados); com essa ligação, colocar esses canais nas Mensagens para poder RESPONDER, e caso haja
+> CONTINUIDADE na conversa passarem a LEAD e ser contabilizado o CANAL por onde veio a lead." (ele reconhece "é
+> muita coisa junta".)
+> **ESTADO REAL APURADO (19/06, na BD):**
+> - **Facebook: ligado.** Posts orgânicos lidos/analisados (/organico). **Messenger capturado na Caixa Social:
+>   `social_conversations`=27, `social_messages`=71** (cron social-inbox-sync). Estrutura já tem `contact_id`,
+>   `deal_id`, `ai_draft`, `needs_response`, `is_noise`, `status`.
+> - **Instagram: só leitura.** Posts/insights lidos, mas **DMs do Instagram NÃO capturadas** (platform só 'messenger').
+> - **Responder de dentro do CRM:** Caixa Social mostra + IA faz rascunho (1 com `ai_draft`), mas **envio real
+>   (reply) não confirmado/ligado** = MSG-5.
+> - **Continuidade→lead: NÃO existe** — das 27 conversas, **0 ligadas a contacto, 0 a negócio**. Os campos existem
+>   mas nada promove a conversa a contacto/lead.
+> - **Atribuição do canal:** quando virar lead, registar `source`=messenger/instagram + tag proveniência — falta.
+> - **WhatsApp:** canal não ligado (0 conversas), MAS o webhook `messaging-webhook-meta` já está pronto (v2,
+>   verify_jwt:false, 19/06) — falta o João ligar o canal.
+> **FATIAS (plan-first, a desenhar antes de construir — NÃO executar já):**
+>   0. Desenho: unificar Caixa Social (Messenger/IG) + WhatsApp + Email numa só aba Mensagens; modelo de "promover
+>      conversa→contacto→lead quando há continuidade"; regra de atribuição de canal (respeita [[regra_lead_tag_proveniencia_obrigatoria]]).
+>   1. **Responder** (enviar) a partir da Caixa Social (Messenger) — IA prepara, o João envia (Graph API send).
+>   2. **Capturar DMs do Instagram** (platform 'instagram' em social_conversations; subscrição/permissões IG).
+>   3. **Continuidade→lead:** ligar `social_conversations.contact_id/deal_id` (criar contacto+negócio quando a
+>      conversa tem continuidade real), com canal na proveniência.
+>   4. **Medição vitalícia por canal** (quantas leads/negócios vieram de Messenger vs IG vs WhatsApp).
+> **Regras herdadas:** contacto≠lead (só vira lead com continuidade real); proveniência obrigatória; IA prepara/
+> humano envia; RGPD; tudo em /automacoes onde for automático; medição vitalícia. **Consolida MSG-5 + MSG-2.**
+>
 > ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
 > O João viu o Inbox (2 deals) e logo a seguir a Análise→Visão Geral ainda com "482 em risco". Corri um agente a
 > mapear TODAS as superfícies que decidem "parado/estagnado/risco". Estado:
