@@ -13,6 +13,7 @@
 
 import { DealView, Activity } from '@/types';
 import { Decision, AnalyzerResult, AnalyzerConfig, SuggestedAction } from '../types';
+import { isAtRisk, type DealStateSignals } from '@/lib/deals/dealState';
 
 export const stagnantDealsConfig: AnalyzerConfig = {
   id: 'stagnant_deals',
@@ -188,6 +189,9 @@ function generateAlternativeActions(deal: DealView): SuggestedAction[] {
 export function analyzeStagnantDeals(
   deals: DealView[],
   activities: Activity[],
+  // PONTO 1 — quando há sinais de estado (verdade única), usa-os: só negócios
+  // 'parado'/'arrefecer' são candidatos e os dias contam desde o último toque humano.
+  dealStates?: Record<string, DealStateSignals>,
   config: AnalyzerConfig = stagnantDealsConfig
 ): AnalyzerResult {
   const params = config.params as {
@@ -213,11 +217,18 @@ export function analyzeStagnantDeals(
 
   for (const deal of eligibleDeals) {
     analyzed++;
-    
+
     const lastActivity = latestCompletedActivityByDealId.get(deal.id);
-    
+
+    // Verdade única: se há sinais de estado, só conta os que estão mesmo em risco
+    // ('parado'/'arrefecer'); Contactos por trabalhar e adiados ficam de fora.
+    const st = dealStates?.[deal.id];
+    if (st && !isAtRisk(st.status)) continue;
+
     let daysSinceActivity: number;
-    if (lastActivity) {
+    if (st) {
+      daysSinceActivity = st.days_idle;
+    } else if (lastActivity) {
       daysSinceActivity = Math.floor(
         (nowTs - Date.parse(lastActivity.date)) / (1000 * 60 * 60 * 24)
       );

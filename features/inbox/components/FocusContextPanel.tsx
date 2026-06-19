@@ -37,6 +37,7 @@ import {
 import { Deal, Activity, Contact, Board } from '@/types';
 import { useAIDealAnalysis, deriveHealthFromProbability } from '../hooks/useAIDealAnalysis';
 import { useLeadScoresQuery } from '@/lib/query/hooks/useLeadScoresQuery';
+import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
 import { useDealNotes } from '../hooks/useDealNotes';
 import { useDealFiles } from '../hooks/useDealFiles';
 import { useQuickScripts } from '../hooks/useQuickScripts';
@@ -225,6 +226,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
     // baixa numa lead nova e sobe com visita/resposta/qualificação. NÃO usar o palpite da IA nem
     // um default de 50. Ver lib/deals/leadScore.ts. (Fase 2: a IA aprende os pesos com os resultados.)
     const { data: leadScores } = useLeadScoresQuery();
+    const { data: dealStates } = useDealStatesQuery();
     const leadScore = leadScores?.[deal.id];
     const probabilityScore = leadScore && leadScore.temperature !== 'adiado'
         ? leadScore.score
@@ -372,16 +374,21 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
             };
         }
 
-        // Fallback when AI is unavailable
+        // Fallback when AI is unavailable.
+        // PONTO 1 — dias "sem contacto" pela verdade única (último toque humano);
+        // só cai no histórico de actividades se ainda não houver sinais de estado.
+        const st = dealStates?.[deal.id];
         const lastActivity = activities[0];
-        const daysSinceActivity = lastActivity
-            ? Math.floor((Date.now() - new Date(lastActivity.date).getTime()) / (1000 * 60 * 60 * 24))
-            : 999;
+        const daysSinceActivity = st
+            ? st.days_idle
+            : (lastActivity
+                ? Math.floor((Date.now() - new Date(lastActivity.date).getTime()) / (1000 * 60 * 60 * 24))
+                : 999);
 
         if (daysSinceActivity > 7) {
             return {
                 action: 'Ligar agora',
-                reason: `${daysSinceActivity} dias sem contacto`,
+                reason: `${daysSinceActivity} dias sem contacto seu`,
                 urgency: 'high' as const,
                 actionType: 'CALL' as const,
                 icon: Phone,
@@ -397,7 +404,7 @@ export const FocusContextPanel: React.FC<FocusContextPanelProps> = ({
             icon: Calendar,
             isAI: false
         };
-    }, [aiAnalysis, activities]);
+    }, [aiAnalysis, activities, dealStates, deal.id]);
 
     // Snapshot completo do cockpit para a IA (equivalente ao “board envia tudo do board”)
     // Importante: esse snapshot é enviado via props-only para evitar herdar contexto global do board.

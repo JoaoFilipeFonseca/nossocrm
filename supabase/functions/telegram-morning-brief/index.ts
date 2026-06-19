@@ -75,15 +75,13 @@ Deno.serve(async (req: Request) => {
         goal: { year: number; annual_target_eur: number; ytd_target_eur: number; ytd_realized_eur: number; pct: number | null; semaphore: string };
       };
 
-      const cutoff = new Date(Date.now() - coldDealsDays * 86400000).toISOString();
-      const { count: coldCount } = await supabase
-        .from('deals')
-        .select('id', { count: 'exact', head: true })
-        .eq('organization_id', orgId)
-        .is('deleted_at', null)
-        .eq('is_won', false)
-        .eq('is_lost', false)
-        .or(`last_stage_change_date.lt.${cutoff},and(last_stage_change_date.is.null,updated_at.lt.${cutoff})`);
+      // PONTO 1 — "deals frios" pela verdade única (RPC deal_state_signals): só os
+      // que estão 'parado'/'arrefecer' por falta de TOQUE HUMANO há >= coldDealsDays.
+      // Contactos por trabalhar e adiados NÃO contam (antes vinha de last_stage_change/updated_at).
+      const { data: stSignals } = await supabase.rpc('deal_state_signals', { p_org: orgId });
+      const coldCount = ((stSignals ?? []) as Array<{ status: string; days_idle: number }>).filter(
+        (s) => (s.status === 'parado' || s.status === 'arrefecer') && s.days_idle >= coldDealsDays,
+      ).length;
 
       const semIcon = m.goal.semaphore === 'green' ? '🟢' : m.goal.semaphore === 'amber' ? '🟡' : m.goal.semaphore === 'red' ? '🔴' : '⚪️';
       const pctStr = m.goal.pct !== null && Number.isFinite(m.goal.pct) ? `${m.goal.pct.toFixed(1)}%` : '—';

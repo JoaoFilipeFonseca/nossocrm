@@ -15,6 +15,8 @@ import {
 } from '@/lib/query/hooks/useDealsQuery';
 import { useMoveDeal } from '@/lib/query/hooks/useMoveDeal';
 import { useCreateActivity } from '@/lib/query/hooks/useActivitiesQuery';
+import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
+import { isAtRisk } from '@/lib/deals/dealState';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { useRealtimeSyncKanban } from '@/lib/realtime/useRealtimeSync';
 import { createClient } from '@/lib/supabase/client';
@@ -123,6 +125,9 @@ export const useBoardsController = () => {
   const { data: deals = [], isLoading: dealsLoading } = useDealsByBoard(dealsBoardId);
   const moveDealMutation = useMoveDeal();
   const createActivityMutation = useCreateActivity();
+  // PONTO 1 — sinais de estado (verdade única) para a contagem de "parados" no
+  // contexto da IA não vir de updated_at/last_stage_change.
+  const { data: dealStates = {} } = useDealStatesQuery();
 
   // Filter State (declared before AI context useEffect that uses them)
   const [searchTerm, setSearchTerm] = useState('');
@@ -169,7 +174,8 @@ export const useBoardsController = () => {
 
     for (const d of deals) {
       pipelineValue += d.value ?? 0;
-      if (isDealRotting(d)) stagnantDeals += 1;
+      const st = dealStates[d.id];
+      if (st ? isAtRisk(st.status) : isDealRotting(d)) stagnantDeals += 1;
       if (d.nextActivity?.isOverdue) overdueDeals += 1;
 
       const label = stageIdToLabel.get(d.status);
@@ -258,7 +264,7 @@ export const useBoardsController = () => {
     // Note: Removed setContext from dependencies - it has internal guards to prevent loops
     // Note: Removed clearContext cleanup to prevent infinite loop with AIContext default setter
     // Dependencies: only primitives to avoid re-execution when object reference changes but content is same
-  }, [activeBoard?.id, activeBoard?.name, activeBoard?.stages?.length, deals.length, statusFilter, ownerFilter, searchTerm, dateRange.start, dateRange.end]);
+  }, [activeBoard?.id, activeBoard?.name, activeBoard?.stages?.length, deals.length, dealStates, statusFilter, ownerFilter, searchTerm, dateRange.start, dateRange.end]);
 
   // Get lifecycle stages for automations (TanStack Query)
   const { data: lifecycleStages = [] } = useLifecycleStages();

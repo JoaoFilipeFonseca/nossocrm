@@ -567,35 +567,38 @@ export function createCRMTools(context: CRMCallOptions, userId: string) {
                 const boardGuard = await ensureBoardBelongsToOrganization(targetBoardId);
                 if (!boardGuard.ok) return { error: boardGuard.error };
 
-                const cutoffDate = new Date();
-                cutoffDate.setDate(cutoffDate.getDate() - daysStagnant);
+                // PONTO 1 — verdade única: "parado" = sem TOQUE HUMANO recente (RPC
+                // deal_state_signals), não por updated_at. Negócios em "Contactos" por
+                // trabalhar e adiados NÃO entram (só 'parado'/'arrefecer').
+                const { data: signals } = await supabase.rpc('deal_state_signals', { p_org: organizationId });
+                const stateById = new Map<string, any>();
+                for (const s of (signals || []) as any[]) stateById.set(s.deal_id, s);
 
                 const { data: deals } = await supabase
                     .from('deals')
-                    .select('id, title, value, updated_at, is_won, is_lost, contact:contacts(name)')
+                    .select('id, title, value, is_won, is_lost, contact:contacts(name)')
                     .eq('board_id', targetBoardId)
                     .or(`organization_id.eq.${organizationId},organization_id.is.null`)
-                    .lt('updated_at', cutoffDate.toISOString())
-                    .order('updated_at', { ascending: true })
-                    // Busca mais e filtra client-side para tratar legacy NULL
-                    .limit(Math.max(limit * 5, 50));
+                    .eq('is_won', false)
+                    .eq('is_lost', false)
+                    .limit(500);
 
-                const openDeals = (deals || []).filter((d: any) => !d.is_won && !d.is_lost);
-                const finalDeals = openDeals.slice(0, limit);
+                const atRisk = ((deals || []) as any[])
+                    .map((d) => ({ d, st: stateById.get(d.id) }))
+                    .filter((x) => x.st && (x.st.status === 'parado' || x.st.status === 'arrefecer') && x.st.days_idle >= daysStagnant)
+                    .sort((a, b) => b.st.days_idle - a.st.days_idle)
+                    .slice(0, limit);
 
                 return {
-                    count: finalDeals.length || 0,
-                    message: `${finalDeals.length || 0} deals parados há mais de ${daysStagnant} dias`,
-                    deals: finalDeals.map((d: any) => {
-                        const days = Math.floor((Date.now() - new Date(d.updated_at).getTime()) / (1000 * 60 * 60 * 24));
-                        return {
-                            id: d.id,
-                            title: d.title,
-                            diasParado: days,
-                            value: `${(d.value || 0).toLocaleString('pt-PT')} €`,
-                            contact: d.contact?.name || 'N/A'
-                        };
-                    }) || []
+                    count: atRisk.length,
+                    message: `${atRisk.length} deals parados há mais de ${daysStagnant} dias (sem contacto humano recente)`,
+                    deals: atRisk.map(({ d, st }) => ({
+                        id: d.id,
+                        title: d.title,
+                        diasParado: st.days_idle,
+                        value: `${(d.value || 0).toLocaleString('pt-PT')} €`,
+                        contact: d.contact?.name || 'N/A',
+                    })),
                 };
             },
         }),

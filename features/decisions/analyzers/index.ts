@@ -4,6 +4,7 @@
  */
 
 import { DealView, Activity } from '@/types';
+import type { DealStateSignals } from '@/lib/deals/dealState';
 import { AnalyzerResult } from '../types';
 import { analyzeStagnantDeals, stagnantDealsConfig } from './stagnantDealsAnalyzer';
 import { analyzeOverdueActivities, overdueActivitiesConfig } from './overdueActivitiesAnalyzer';
@@ -14,7 +15,7 @@ export interface AnalyzerRegistry {
   name: string;
   description: string;
   enabled: boolean;
-  run: (deals: DealView[], activities: Activity[]) => AnalyzerResult;
+  run: (deals: DealView[], activities: Activity[], dealStates?: Record<string, DealStateSignals>) => AnalyzerResult;
 }
 
 // Registry of all available analyzers
@@ -24,7 +25,7 @@ export const analyzers: AnalyzerRegistry[] = [
     name: stagnantDealsConfig.name,
     description: stagnantDealsConfig.description,
     enabled: stagnantDealsConfig.enabled,
-    run: (deals, activities) => analyzeStagnantDeals(deals, activities),
+    run: (deals, activities, dealStates) => analyzeStagnantDeals(deals, activities, dealStates),
   },
   {
     id: overdueActivitiesConfig.id,
@@ -39,8 +40,9 @@ export const analyzers: AnalyzerRegistry[] = [
  * Run all enabled analyzers and add decisions to queue
  */
 export async function runAllAnalyzers(
-  deals: DealView[], 
-  activities: Activity[]
+  deals: DealView[],
+  activities: Activity[],
+  dealStates?: Record<string, DealStateSignals>
 ): Promise<{
   results: AnalyzerResult[];
   totalDecisions: number;
@@ -54,7 +56,7 @@ export async function runAllAnalyzers(
     if (!analyzer.enabled) continue;
 
     try {
-      const result = analyzer.run(deals, activities);
+      const result = analyzer.run(deals, activities, dealStates);
       results.push(result);
       
       // Save analyzer result for history

@@ -11,6 +11,7 @@ import {
   useCreateActivity,
   useUpdateActivity,
 } from '@/lib/query/hooks';
+import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
 import { Decision, DecisionStats, SuggestedAction, ActionPayload } from '../types';
 import decisionQueueService from '../services/decisionQueueService';
 import { runAllAnalyzers } from '../analyzers';
@@ -22,6 +23,7 @@ import { runAllAnalyzers } from '../analyzers';
 export function useDecisionQueue() {
   const { data: deals = [] } = useDealsView();
   const { data: activities = [] } = useActivities();
+  const { data: dealStates = {} } = useDealStatesQuery();
   const updateDealMutation = useUpdateDeal();
   const createActivityMutation = useCreateActivity();
   const updateActivityMutation = useUpdateActivity();
@@ -85,13 +87,13 @@ export function useDecisionQueue() {
     setIsAnalyzing(true);
 
     try {
-      const result = await runAllAnalyzers(deals, activities);
+      const result = await runAllAnalyzers(deals, activities, dealStates);
       refreshDecisions();
       return result;
     } finally {
       setIsAnalyzing(false);
     }
-  }, [deals, activities, refreshDecisions]);
+  }, [deals, activities, dealStates, refreshDecisions]);
 
   // Execute action based on type
   const executeAction = useCallback(async (
