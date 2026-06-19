@@ -87,6 +87,7 @@ const DashboardPage: React.FC = () => {
     riskyCount,
     stagnantDealsCount,
     stagnantDealsValue,
+    dealStates,
     avgLTV,
     avgSalesCycle,
     fastestDeal,
@@ -159,11 +160,7 @@ const DashboardPage: React.FC = () => {
           <AlertTriangle className="h-5 w-5 text-rose-600 dark:text-rose-400 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-rose-700 dark:text-rose-200">
-              {stagnantDealsCount > 0 && riskyCount > 0
-                ? `${stagnantDealsCount} ${stagnantDealsCount === 1 ? 'deal estagnado' : 'deals estagnados'} · ${riskyCount} em risco`
-                : stagnantDealsCount > 0
-                  ? `${stagnantDealsCount} ${stagnantDealsCount === 1 ? 'deal estagnado' : 'deals estagnados'} (>10d sem mudança)`
-                  : `${riskyCount} ${riskyCount === 1 ? 'deal em risco' : 'deals em risco'}`}
+              {`${stagnantDealsCount} ${stagnantDealsCount === 1 ? 'negócio parado' : 'negócios parados'} (sem contacto seu recente)`}
             </div>
             <div className="text-xs text-rose-600/80 dark:text-rose-300/80">
               Clica para ver a lista e agir agora. {stagnantDealsValue > 0 && `Valor: ${Math.round(stagnantDealsValue).toLocaleString('pt-PT')} €.`}
@@ -327,7 +324,7 @@ const DashboardPage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-2">
-              Sem mudança de estágio há +10 dias.
+              Parados desde o último contacto seu (exclui Contactos por trabalhar).
             </p>
             <p className="text-xs text-slate-400 mt-1">
               {stagnantDealsValue.toLocaleString('pt-PT')} € em risco
@@ -415,6 +412,7 @@ const DashboardPage: React.FC = () => {
         isOpen={showPipelineAlerts}
         onClose={() => setShowPipelineAlerts(false)}
         deals={activeSnapshotDeals}
+        dealStates={dealStates}
         activities={activities.map(a => ({ dealId: a.dealId, date: a.date, completed: a.completed }))}
         onNavigateToDeal={(dealId) => {
           setShowPipelineAlerts(false);

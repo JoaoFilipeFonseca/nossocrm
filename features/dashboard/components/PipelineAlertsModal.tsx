@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, AlertTriangle, Clock, Calendar, TrendingUp, ChevronRight } from 'lucide-react';
 import { Deal } from '@/types';
+import { isAtRisk, type DealStateSignals } from '@/lib/deals/dealState';
 
 interface PipelineAlert {
   type: 'stagnant' | 'no-activity' | 'ready-to-close';
@@ -15,6 +16,8 @@ interface PipelineAlertsModalProps {
   isOpen: boolean;
   onClose: () => void;
   deals: Deal[];
+  /** PONTO 1 — verdade única do estado por negócio (mapa deal_id → sinais). */
+  dealStates?: Record<string, DealStateSignals>;
   activities: { dealId: string; date: string; completed: boolean }[];
   onNavigateToDeal: (dealId: string) => void;
 }
@@ -41,6 +44,7 @@ export const PipelineAlertsModal: React.FC<PipelineAlertsModalProps> = ({
   isOpen,
   onClose,
   deals,
+  dealStates = {},
   activities,
   onNavigateToDeal,
 }) => {
@@ -49,17 +53,16 @@ export const PipelineAlertsModal: React.FC<PipelineAlertsModalProps> = ({
   // Performance: use timestamps for comparisons to reduce Date allocations.
   const nowTs = Date.now();
   const now = new Date(nowTs);
-  const tenDaysAgoTs = nowTs - 10 * 24 * 60 * 60 * 1000;
 
   // Deals ativos (não ganhos nem perdidos)
   const activeDeals = deals.filter(d => !d.isWon && !d.isLost);
 
-  // 1. Negócios Estagnados - sem mudança de estágio há mais de 10 dias
+  // 1. Negócios parados — PELA VERDADE ÚNICA (estado 'parado'/'arrefecer' =
+  // sem contacto humano recente), não por mudança de etapa. Os Contactos por
+  // trabalhar (sem toque) NÃO entram.
   const stagnantDeals = activeDeals.filter(deal => {
-    const lastChangeTs = deal.lastStageChangeDate
-      ? Date.parse(deal.lastStageChangeDate)
-      : Date.parse(deal.createdAt);
-    return lastChangeTs < tenDaysAgoTs;
+    const st = dealStates[deal.id];
+    return st ? isAtRisk(st.status) : false;
   });
 
   // 2. Deals sem próxima atividade agendada
@@ -85,8 +88,8 @@ export const PipelineAlertsModal: React.FC<PipelineAlertsModalProps> = ({
   const alerts: PipelineAlert[] = [
     {
       type: 'stagnant',
-      title: 'Negócios Estagnados',
-      description: 'Sem mudança de estágio há mais de 10 dias',
+      title: 'Negócios Parados',
+      description: 'Sem contacto seu recente (exclui Contactos por trabalhar)',
       deals: stagnantDeals,
       color: 'text-red-500 bg-red-500/10',
       icon: AlertTriangle,

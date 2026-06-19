@@ -2,6 +2,8 @@ import React from 'react';
 import { useDeals } from '@/lib/query/hooks/useDealsQuery';
 import { useContacts } from '@/lib/query/hooks/useContactsQuery';
 import { useBoards, useDefaultBoard } from '@/lib/query/hooks/useBoardsQuery';
+import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
+import { isAtRisk } from '@/lib/deals/dealState';
 
 export type PeriodFilter =
   | 'all'
@@ -169,6 +171,9 @@ export const useDashboardMetrics = (period: PeriodFilter = 'this_month', boardId
   const { data: allContacts = [], isLoading: contactsLoading } = useContacts();
   const { data: boards = [] } = useBoards();
   const { data: defaultBoard } = useDefaultBoard();
+  // PONTO 1 — verdade única do estado (mesma fonte do Inbox), para "estagnados/em
+  // risco" não virem de last_stage_change_date (que conta os Contactos por trabalhar).
+  const { data: dealStates = {} } = useDealStatesQuery();
 
   const isLoading = dealsLoading || contactsLoading;
 
@@ -377,22 +382,21 @@ export const useDashboardMetrics = (period: PeriodFilter = 'this_month', boardId
 
   const avgLTV = activeContacts.length > 0 ? contactsBuckets.totalLTV / activeContacts.length : 0;
 
-  // Calculate Stagnant Deals (no stage change > 10 days)
-  const tenDaysAgoTs = Date.now() - 10 * 24 * 60 * 60 * 1000;
+  // PONTO 1 — "Estagnados/em risco" pela VERDADE ÚNICA: estado 'parado'/'arrefecer'
+  // (último toque humano), não por last_stage_change_date. Assim os Contactos por
+  // trabalhar (sem toque) NÃO entram, e adiados/activos também não.
   let stagnantDealsCount = 0;
   let stagnantDealsValue = 0;
   for (const deal of allDeals) {
     if (deal.isWon || deal.isLost) continue;
-    const lastChangeTs = deal.lastStageChangeDate ? Date.parse(deal.lastStageChangeDate) : Date.parse(deal.createdAt);
-    if (lastChangeTs < tenDaysAgoTs) {
+    const st = dealStates[deal.id];
+    if (st && isAtRisk(st.status)) {
       stagnantDealsCount += 1;
       stagnantDealsValue += deal.value;
     }
   }
 
-  // Calculate Deals without scheduled activities
-  // (simplified - would need activities data for full implementation)
-  const riskyCount = stagnantDealsCount; // Using stagnant as risk indicator
+  const riskyCount = stagnantDealsCount;
 
   // Sales Cycle Metrics
   const wonDealsWithDates = wonDeals.filter(d => d.createdAt && d.updatedAt);
@@ -471,6 +475,7 @@ export const useDashboardMetrics = (period: PeriodFilter = 'this_month', boardId
     riskyCount,
     stagnantDealsCount,
     stagnantDealsValue,
+    dealStates,
     avgSalesCycle,
     fastestDeal,
     slowestDeal,
