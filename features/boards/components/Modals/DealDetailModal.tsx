@@ -859,7 +859,22 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-slate-900 dark:text-white font-medium text-sm flex items-center gap-2">
-                        {deal.contactName || 'Sem contacto'}
+                        {deal.contactId ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const returnTo = `/boards?deal=${deal.id}`;
+                              router.push(`/contacts/${deal.contactId}?returnTo=${encodeURIComponent(returnTo)}`);
+                              onClose();
+                            }}
+                            className="text-left hover:underline focus:underline focus:outline-none"
+                            title="Abrir ficha do contacto"
+                          >
+                            {deal.contactName || 'Sem contacto'}
+                          </button>
+                        ) : (
+                          deal.contactName || 'Sem contacto'
+                        )}
                         {contact?.stage &&
                           (() => {
                             const stage = lifecycleStageById.get(contact.stage);
@@ -1223,6 +1238,20 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                   <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Contacto Principal</span>
+                      {deal.contactId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const returnTo = `/boards?deal=${deal.id}`;
+                            router.push(`/contacts/${deal.contactId}?returnTo=${encodeURIComponent(returnTo)}`);
+                            onClose();
+                          }}
+                          className="ml-auto text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline focus:outline-none"
+                          title="Abrir ficha completa do contacto"
+                        >
+                          Ver ficha →
+                        </button>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <ContactInlineField icon={<User size={14} className="text-slate-400 flex-shrink-0" />} value={(deal.contactName && deal.contactName !== 'Sem contacto') ? deal.contactName : ''} placeholder="Adicionar nome" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { name: v } as any }); }} />

@@ -24,8 +24,13 @@ const DISC_META: Record<DiscProfile, { label: string; dot: string; chip: string 
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ContactDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ returnTo?: string }> }) {
   const { id } = await params;
+  const { returnTo } = await searchParams;
+  // Só aceitamos caminhos internos (evita open redirect): tem de começar por '/' e não por '//'.
+  const safeReturnTo = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : null;
+  const backHref = safeReturnTo ?? '/contacts';
+  const backLabel = safeReturnTo ? 'Voltar ao negócio' : 'Contactos';
   const contact = await getContactById(id);
   if (!contact) notFound();
 
@@ -56,8 +61,8 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
     <div className="max-w-6xl mx-auto p-4 sm:p-6">
       {/* Voltar */}
       <div className="mb-4">
-        <Link href="/contacts" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
-          <ArrowLeft size={16} /> Contactos
+        <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
+          <ArrowLeft size={16} /> {backLabel}
         </Link>
       </div>
 
