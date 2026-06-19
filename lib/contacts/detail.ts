@@ -182,6 +182,9 @@ export async function getContactDealsSummary(id: string): Promise<{ count: numbe
   return { count: rows.length, openCount };
 }
 
+/** Quem originou a interacção (PONTO 1 — verdade única dos toques). */
+export type TimelineActor = 'human' | 'automation' | 'system';
+
 /** Uma entrada da timeline de interações do contacto (CT-TIMELINE). */
 export interface TimelineEntry {
   id: string;
@@ -190,9 +193,11 @@ export interface TimelineEntry {
   at: string; // ISO (occurred_at se existir, senão created_at)
   manual: boolean;
   system: boolean;
+  /** 👤 humano / 🤖 automação / sistema — vem da coluna deal_activities.actor. */
+  actor: TimelineActor;
 }
 
-const SYSTEM_TYPES = new Set(['stage_moved', 'created', 'deal_created']);
+const SYSTEM_TYPES = new Set(['stage_moved', 'stage_change', 'created', 'deal_created', 'system']);
 
 export async function getContactTimeline(id: string, limit = 50): Promise<TimelineEntry[]> {
   const supabase = await createClient();
@@ -204,7 +209,7 @@ export async function getContactTimeline(id: string, limit = 50): Promise<Timeli
 
   let query = supabase
     .from('deal_activities')
-    .select('id, type, description, created_at, metadata')
+    .select('id, type, description, created_at, metadata, actor')
     .order('created_at', { ascending: false })
     .limit(limit);
   query = dealIds.length > 0
@@ -213,16 +218,23 @@ export async function getContactTimeline(id: string, limit = 50): Promise<Timeli
 
   const { data, error } = await query;
   if (error || !data) return [];
-  const entries = (data as Array<{ id: string; type: string; description: string | null; created_at: string; metadata: Record<string, unknown> | null }>).map((r) => {
+  const entries = (data as Array<{ id: string; type: string; description: string | null; created_at: string; metadata: Record<string, unknown> | null; actor: string | null }>).map((r) => {
     const occurred = r.metadata && typeof r.metadata['occurred_at'] === 'string' ? (r.metadata['occurred_at'] as string) : null;
     const via = r.metadata && typeof r.metadata['via'] === 'string' ? (r.metadata['via'] as string) : '';
+    const isSystem = SYSTEM_TYPES.has(r.type);
+    // actor vem da coluna (fiável); fallback para a heurística antiga se vier nulo.
+    const actor: TimelineActor =
+      r.actor === 'automation' ? 'automation'
+      : r.actor === 'system' || isSystem ? 'system'
+      : 'human';
     return {
       id: r.id,
       type: r.type,
       description: r.description,
       at: occurred || r.created_at,
       manual: via.startsWith('manual') || via === 'timeline-manual',
-      system: SYSTEM_TYPES.has(r.type),
+      system: isSystem,
+      actor,
     };
   });
   // Ordena pela data efectiva (suporta entradas com data retroactiva).

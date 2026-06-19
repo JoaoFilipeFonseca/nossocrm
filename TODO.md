@@ -68,6 +68,27 @@
 > ⚠️ Verificar pós-deploy se OUTRAS superfícies ainda contam Contactos (Decisões/Central, Cérebro "leads paradas") — Decisões usa overdue/stalled; rever.
 >
 > ## 🎯🎯 PRÓXIMA CONVERSA — 2 PONTOS CRÍTICOS DO JOÃO (19/06, decididos; construir na próxima sessão, NÃO agora — contexto a 58%)
+> ### ▶️ PROGRESSO PONTO 1 (19/06, sessão verdade única) — desenho aprovado pelo João (coluna actor + backfill)
+> - ✅ **F1 (`94f4544`)** — fundação de dados: coluna `deal_activities.actor` ('human'|'automation'|'system') +
+>   backfill + índice + RPC `deal_state_signals`/`my_deal_state_signals` (estado real por negócio: etapa via
+>   `stage_id` [NÃO `status`='open'], último toque humano E automação separados, dias parado, tarefas em
+>   aberto/atrasadas, estado adiado|por_trabalhar|activo|arrefecer|parado). Migração `20260619140000`.
+>   Verificado na BD: 479 'por_trabalhar', 3 'arrefecer', 0 falsos parados.
+> - ✅ **F1b (`53b5789`)** — corrigido na FONTE o insert partido do `autoCreateDeal` (messaging-webhook-meta:
+>   `activity_type`/`title` inexistentes + `const sourceLabel` duplicado) → agora `type`/`description`/`actor`
+>   'automation'. ⚠️ **DEPLOY do edge NÃO feito** (a v1 viva tem verify_jwt:true + mesmo defeito = webhook
+>   dormente; o caminho vivo é `automation-meta-leads`). **Falta: João aprovar deploy do edge com verify_jwt:false.**
+> - ✅ **F2 (`636525f`)** — Inbox consome a RPC (`/api/deals/state-signals` + `useDealStatesQuery`): `stalledDeals`
+>   = estado 'parado'/'arrefecer' (mata o `updated_at`); sugestão mostra "parado há Nd" real + ambos os toques
+>   (`touchSummary`); Visão Geral separa "Pendências reais" das Sugestões. **Verificado em produção** (build
+>   `260619_1314`): Risco = só 2 negócios tocados-mas-parados ("Último contacto seu há 23 dias"), 479 Contactos
+>   sem toque NÃO contam, Pendências reais=0, 0 erros consola.
+> - ⏳ **F3 (a fazer)** — Timeline ao detalhe (👤 humano / 🤖 automação) no Inbox e na ficha do contacto; IA das
+>   sugestões a ler o feed completo.
+> - ⏳ **F4 (a fazer)** — ligar score DASH-2 e Cérebro à MESMA RPC (interligação total). NOTA: o
+>   `deal_lead_score_signals` actual junta etapa por `d.status` (='open') → `stage_order` sempre 0 (stagePoints
+>   nunca contribui); alinhar ao `stage_id` quando se unificar.
+>
 > ### PONTO 1 — "VERDADE ÚNICA" do estado, mapeada ao detalhe no Inbox (o painel TEM de ser a realidade on-time)
 > **Diagnóstico (honesto, aceite pelo João):** a Visão Geral da Inbox mostra "parado/risco" por `updated_at` (heurística que
 > mente), enquanto o motor de follow-up e o score (DASH-2) usam **último toque humano**. Não concordam → o painel parece

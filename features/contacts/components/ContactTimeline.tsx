@@ -11,7 +11,14 @@ export interface TimelineEntryDTO {
   at: string;
   manual: boolean;
   system: boolean;
+  actor?: 'human' | 'automation' | 'system';
 }
+
+// PONTO 1 — distinção visível de quem originou o toque (humano vs automação).
+const ACTOR_BADGE: Record<'human' | 'automation', { label: string; icon: string; cls: string }> = {
+  human: { label: 'Você', icon: '👤', cls: 'bg-slate-100 dark:bg-white/10 text-slate-600 border-slate-200 dark:border-white/10' },
+  automation: { label: 'Automação', icon: '🤖', cls: 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/20' },
+};
 
 interface ContactTimelineProps {
   contactId: string;
@@ -165,7 +172,11 @@ export function ContactTimeline({ contactId, initialEntries }: ContactTimelinePr
                 <div className="flex-1 -mt-0.5 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-sm font-semibold ${e.system ? 'text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{m.label}</span>
-                    {e.manual && <span className="text-[11px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-500 border border-slate-200 dark:border-white/10">manual</span>}
+                    {e.actor && e.actor !== 'system' && (
+                      <span className={`text-[11px] px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${ACTOR_BADGE[e.actor].cls}`}>
+                        <span aria-hidden="true">{ACTOR_BADGE[e.actor].icon}</span> {ACTOR_BADGE[e.actor].label}
+                      </span>
+                    )}
                     <span className="ml-auto text-xs text-slate-400 shrink-0 flex items-center gap-2">
                       {fmt(e.at)}
                       {e.manual && (
