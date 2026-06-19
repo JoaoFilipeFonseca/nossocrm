@@ -233,6 +233,13 @@ export const queryKeys = {
     leadScores: {
         all: ['leadScores'] as const,
     },
+
+    /**
+     * PONTO 1 — sinais de estado (verdade única) por negócio aberto.
+     */
+    dealStates: {
+        all: ['dealStates'] as const,
+    },
 };
 
 /**

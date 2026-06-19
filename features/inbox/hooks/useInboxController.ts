@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Activity, Deal, DealView, Contact } from '@/types';
 import type { ParsedAction } from '@/types/aiActions';
 import { useToast } from '@/context/ToastContext';
@@ -23,6 +22,8 @@ import { useHiddenSuggestionIds, useRecordSuggestionInteraction } from '@/lib/qu
 import { SuggestionType } from '@/lib/supabase/aiSuggestions';
 import { isDebugMode, generateFakeContacts, fakeDeal } from '@/lib/debug';
 import { supabase } from '@/lib/supabase/client';
+import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
+import { isAtRisk, touchSummary } from '@/lib/deals/dealState';
 
 // Tipos para sugestões de IA (BIRTHDAY removido - será implementado em widget separado)
 export type AISuggestionType = 'UPSELL' | 'RESCUE' | 'STALLED';
@@ -108,12 +109,6 @@ export const useInboxController = () => {
     return d;
   }, [today]);
 
-  const sevenDaysAgo = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    return d;
-  }, []);
-
   const thirtyDaysAgo = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -177,29 +172,21 @@ export const useInboxController = () => {
     [contacts, currentMonth]
   );
 
-  // Etapas "de espera" (ex.: Contactos): negócios aqui NÃO contam como parados/risco até
-  // serem trabalhados (modelo contacto ≠ lead). Mesma regra do motor de follow-up.
-  const { data: holdingStageIds = new Set<string>() } = useQuery({
-    queryKey: ['board-stages', 'holding'],
-    queryFn: async () => {
-      if (!supabase) return new Set<string>();
-      const { data } = await supabase.from('board_stages').select('id').eq('excludes_followup', true);
-      return new Set<string>((data ?? []).map((r: { id: string }) => r.id as string));
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  // PONTO 1 — Verdade única do estado: o "parado/risco" deixa de vir de updated_at
+  // (que mente) e passa a vir da RPC my_deal_state_signals (último TOQUE humano +
+  // actividades reais). Negócios em etapa de espera sem toque ('por_trabalhar') e os
+  // adiados NÃO entram aqui — só 'parado'/'arrefecer' contam como risco.
+  const { data: dealStates = {} } = useDealStatesQuery();
 
-  // Negócios estagnados (> 7 dias sem update), excluindo etapas de espera (Contactos)
   const stalledDeals = useMemo(
     () =>
       deals.filter(d => {
-        const isClosed = d.isWon || d.isLost;
-        if (isClosed) return false;
-        if (holdingStageIds.has(d.status)) return false; // em "Contactos" → não conta
-        const lastUpdateTs = Date.parse(d.updatedAt);
-        return lastUpdateTs < sevenDaysAgo.getTime();
+        if (d.isWon || d.isLost) return false;
+        const st = dealStates[d.id];
+        if (!st) return false; // sem sinais → não arrisca dizer que está parado
+        return isAtRisk(st.status);
       }),
-    [deals, sevenDaysAgo, holdingStageIds]
+    [deals, dealStates]
   );
 
   // Oportunidades de Upsell (ganhos há > 30 dias)
@@ -245,7 +232,10 @@ export const useInboxController = () => {
   const calculateDealScore = useCallback((deal: DealView, type: 'STALLED' | 'UPSELL'): number => {
     const value = deal.value || 0;
     const probability = deal.probability || 50;
-    const daysSinceUpdate = Math.floor((Date.now() - Date.parse(deal.updatedAt)) / (1000 * 60 * 60 * 24));
+    // Tempo de decaimento pela verdade única (dias desde o último toque humano);
+    // só o upsell (negócio ganho, sem toques) cai no fallback de updated_at.
+    const daysSinceUpdate = dealStates[deal.id]?.days_idle
+      ?? Math.floor((Date.now() - Date.parse(deal.updatedAt)) / (1000 * 60 * 60 * 24));
 
     // Base score from value (log scale to handle big differences)
     const valueScore = Math.log10(Math.max(value, 1)) * 10;
@@ -257,7 +247,7 @@ export const useInboxController = () => {
     const timeFactor = Math.min(daysSinceUpdate / 30, 2); // Cap at 2x for very old deals
 
     return (valueScore * probFactor * (1 + timeFactor));
-  }, []);
+  }, [dealStates]);
 
   // Gerar sugestões de IA como objetos com scoring inteligente
   const aiSuggestions = useMemo((): AISuggestion[] => {
@@ -272,12 +262,16 @@ export const useInboxController = () => {
     scoredStalledDeals.forEach(({ deal, score }) => {
       const id = `stalled-${deal.id}`;
       if (!hiddenSuggestionIds.has(id)) {
-        const daysSinceUpdate = Math.floor((Date.now() - Date.parse(deal.updatedAt)) / (1000 * 60 * 60 * 24));
+        // Dias reais = desde o último toque humano (verdade única), não updated_at.
+        const st = dealStates[deal.id];
+        const daysIdle = st?.days_idle ?? Math.floor((Date.now() - Date.parse(deal.updatedAt)) / (1000 * 60 * 60 * 24));
+        // Mostra AMBOS os toques (humano + automação) quando há sinais.
+        const summary = st ? touchSummary(st) : `${deal.value.toLocaleString('pt-PT')} € • ${deal.probability}% probabilidade`;
         suggestions.push({
           id,
           type: 'STALLED',
-          title: `Negócio Parado (${daysSinceUpdate}d)`,
-          description: `${deal.title} - ${deal.value.toLocaleString('pt-PT')} € • ${deal.probability}% probabilidade`,
+          title: `${deal.title} — parado há ${daysIdle}d`,
+          description: summary,
           priority: score > 30 ? 'high' : score > 15 ? 'medium' : 'low',
           data: { deal },
           createdAt: nowIso,
@@ -333,7 +327,7 @@ export const useInboxController = () => {
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
-  }, [upsellDeals, stalledDeals, rescueContacts, hiddenSuggestionIds, calculateDealScore]);
+  }, [upsellDeals, stalledDeals, rescueContacts, hiddenSuggestionIds, calculateDealScore, dealStates]);
 
   // --- Gerar Briefing via Edge Function (sem necessidade de API key no localStorage) ---
   useEffect(() => {

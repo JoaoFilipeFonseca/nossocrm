@@ -154,7 +154,6 @@ export const InboxOverviewView: React.FC<InboxOverviewViewProps> = ({
   overdueActivities,
   todayMeetings,
   todayTasks,
-  upcomingActivities,
   aiSuggestions,
   onGoToList,
   onStartFocus,
@@ -166,7 +165,9 @@ export const InboxOverviewView: React.FC<InboxOverviewViewProps> = ({
 }) => {
   const { data: pendingAdvanceCount = 0 } = usePendingAdvanceCountQuery();
   const todayTotal = todayMeetings.length + todayTasks.length;
-  const totalPending = overdueActivities.length + todayTotal + aiSuggestions.length + pendingAdvanceCount;
+  // PONTO 1 — "Pendências reais" = só tarefas suas (atrasadas + hoje), para o número
+  // não mentir. As sugestões da IA têm o seu próprio cartão e NÃO entram aqui.
+  const realPendencias = overdueActivities.length + todayTotal;
 
   const highPrioritySuggestions = useMemo(
     () => aiSuggestions.filter(s => s.priority === 'high'),
@@ -183,7 +184,7 @@ export const InboxOverviewView: React.FC<InboxOverviewViewProps> = ({
     [aiSuggestions]
   );
 
-  const canStartFocus = totalPending > 0;
+  const canStartFocus = realPendencias > 0 || aiSuggestions.length > 0;
 
   return (
     <div className="space-y-6">
@@ -240,10 +241,10 @@ export const InboxOverviewView: React.FC<InboxOverviewViewProps> = ({
         />
         <PendingAdvancesStatCard count={pendingAdvanceCount} />
         <StatCard
-          label="Pendências"
-          value={totalPending}
-          tone={totalPending > 0 ? 'neutral' : 'success'}
-          hint={upcomingActivities.length > 0 ? `${upcomingActivities.length} próximos` : 'Backlog leve'}
+          label="Pendências reais"
+          value={realPendencias}
+          tone={realPendencias > 0 ? 'neutral' : 'success'}
+          hint={realPendencias > 0 ? 'Só tarefas suas (sem sugestões)' : 'Sem tarefas pendentes'}
           onClick={onOpenPending}
         />
       </div>
