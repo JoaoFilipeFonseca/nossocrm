@@ -74,10 +74,13 @@
 >   `stage_id` [NÃO `status`='open'], último toque humano E automação separados, dias parado, tarefas em
 >   aberto/atrasadas, estado adiado|por_trabalhar|activo|arrefecer|parado). Migração `20260619140000`.
 >   Verificado na BD: 479 'por_trabalhar', 3 'arrefecer', 0 falsos parados.
-> - ✅ **F1b (`53b5789`)** — corrigido na FONTE o insert partido do `autoCreateDeal` (messaging-webhook-meta:
->   `activity_type`/`title` inexistentes + `const sourceLabel` duplicado) → agora `type`/`description`/`actor`
->   'automation'. ⚠️ **DEPLOY do edge NÃO feito** (a v1 viva tem verify_jwt:true + mesmo defeito = webhook
->   dormente; o caminho vivo é `automation-meta-leads`). **Falta: João aprovar deploy do edge com verify_jwt:false.**
+> - ✅ **F1b (`53b5789` + deploy 19/06)** — corrigido na FONTE o insert partido do `autoCreateDeal`
+>   (messaging-webhook-meta: `activity_type`/`title` inexistentes + `const sourceLabel` duplicado) → agora
+>   `type`/`description`/`actor` 'automation'. **✅ DEPLOY FEITO (João disse "avança" 19/06):** edge
+>   `messaging-webhook-meta` **versão 2, ACTIVE, verify_jwt:false** (via MCP deploy_edge_function). **Verificado
+>   por curl:** GET/POST com UUID → 404 "Canal não encontrado" limpo SEM exigir JWT (gateway não bloqueia) e a
+>   função corre sem erro de sintaxe. ⚠️ **PARA AS LEADS ENTRAREM DE FACTO, falta o João LIGAR um canal WhatsApp
+>   Business / Instagram** no CRM (hoje só há canal Email; 0 conversas). O deploy só prepara — não liga o canal.
 > - ✅ **F2 (`636525f`)** — Inbox consome a RPC (`/api/deals/state-signals` + `useDealStatesQuery`): `stalledDeals`
 >   = estado 'parado'/'arrefecer' (mata o `updated_at`); sugestão mostra "parado há Nd" real + ambos os toques
 >   (`touchSummary`); Visão Geral separa "Pendências reais" das Sugestões. **Verificado em produção** (build
