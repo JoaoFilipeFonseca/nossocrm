@@ -1010,14 +1010,17 @@ async function autoCreateDeal(
 
     console.log(`[Webhook] Auto-created deal: ${newDeal.id} for contact ${params.contactId}`);
 
-    // Registrar activity para o usuário entender que o lead veio do canal de mensagens
-    const sourceLabel = (params.source || "whatsapp") === "instagram" ? "Instagram" : "WhatsApp";
+    // Registrar activity para o utilizador perceber que o lead veio do canal de mensagens.
+    // (sourceLabel já está em scope, definido acima — não redeclarar.)
+    // NOTA: as colunas reais são `type`/`description`/`actor` (não activity_type/title).
+    // O insert antigo usava colunas inexistentes → falhava em silêncio (o webhook
+    // devolve 200 mesmo em erro) e o toque de automação nunca ficava registado.
     await supabase.from("deal_activities").insert({
       deal_id: newDeal.id,
       organization_id: params.organizationId,
-      activity_type: "note",
-      title: `Lead criado automaticamente via ${sourceLabel}`,
-      description: `Este negócio foi criado automaticamente quando ${params.contactName} enviou uma mensagem pelo ${sourceLabel}. Nenhuma ação manual foi necessária.`,
+      type: "note",
+      actor: "automation",
+      description: `Lead criado automaticamente via ${sourceLabel}: ${params.contactName} enviou uma mensagem pelo ${sourceLabel}. Nenhuma acção manual foi necessária.`,
       metadata: {
         auto_created: true,
         source: params.source || "whatsapp",
