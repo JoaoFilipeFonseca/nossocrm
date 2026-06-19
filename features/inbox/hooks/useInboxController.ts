@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Activity, Deal, DealView, Contact } from '@/types';
 import type { ParsedAction } from '@/types/aiActions';
 import { useToast } from '@/context/ToastContext';
@@ -176,15 +177,29 @@ export const useInboxController = () => {
     [contacts, currentMonth]
   );
 
-  // Negócios estagnados (> 7 dias sem update)
+  // Etapas "de espera" (ex.: Contactos): negócios aqui NÃO contam como parados/risco até
+  // serem trabalhados (modelo contacto ≠ lead). Mesma regra do motor de follow-up.
+  const { data: holdingStageIds = new Set<string>() } = useQuery({
+    queryKey: ['board-stages', 'holding'],
+    queryFn: async () => {
+      if (!supabase) return new Set<string>();
+      const { data } = await supabase.from('board_stages').select('id').eq('excludes_followup', true);
+      return new Set<string>((data ?? []).map((r: { id: string }) => r.id as string));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Negócios estagnados (> 7 dias sem update), excluindo etapas de espera (Contactos)
   const stalledDeals = useMemo(
     () =>
       deals.filter(d => {
         const isClosed = d.isWon || d.isLost;
+        if (isClosed) return false;
+        if (holdingStageIds.has(d.status)) return false; // em "Contactos" → não conta
         const lastUpdateTs = Date.parse(d.updatedAt);
-        return !isClosed && lastUpdateTs < sevenDaysAgo.getTime();
+        return lastUpdateTs < sevenDaysAgo.getTime();
       }),
-    [deals, sevenDaysAgo]
+    [deals, sevenDaysAgo, holdingStageIds]
   );
 
   // Oportunidades de Upsell (ganhos há > 30 dias)
