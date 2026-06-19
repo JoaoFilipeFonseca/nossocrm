@@ -215,18 +215,20 @@ export function analyzeStagnantDeals(
 
   const latestCompletedActivityByDealId = buildLatestCompletedActivityByDealId(activities);
 
+  // Modo-verdade: se temos o mapa de estado (verdade única) preenchido, ele cobre
+  // TODOS os negócios abertos — só os 'parado'/'arrefecer' são candidatos e os que
+  // não estão no mapa (etapa de espera/órfãos) ficam de fora. Sem mapa, regra antiga.
+  const hasTruth = !!dealStates && Object.keys(dealStates).length > 0;
+
   for (const deal of eligibleDeals) {
     analyzed++;
 
     const lastActivity = latestCompletedActivityByDealId.get(deal.id);
-
-    // Verdade única: se há sinais de estado, só conta os que estão mesmo em risco
-    // ('parado'/'arrefecer'); Contactos por trabalhar e adiados ficam de fora.
     const st = dealStates?.[deal.id];
-    if (st && !isAtRisk(st.status)) continue;
 
     let daysSinceActivity: number;
-    if (st) {
+    if (hasTruth) {
+      if (!st || !isAtRisk(st.status)) continue;
       daysSinceActivity = st.days_idle;
     } else if (lastActivity) {
       daysSinceActivity = Math.floor(
