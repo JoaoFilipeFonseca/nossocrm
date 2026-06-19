@@ -78,11 +78,11 @@
 > 3. **Timeline mapeada ao detalhe no Inbox/ficha** para, ao ligar ao cliente, o João saber: "liguei há 5d e falámos X; há 2d recebeu email com Y".
 > 4. Separar "Pendências reais" (tarefas) de "Sugestões IA" para o número não mentir.
 > **Liga-se a:** [[plano_copy_ia_em_todo_o_lado]], DASH-2 (`lib/deals/leadScore.ts` + RPC `deal_lead_score_signals`), `deal_followups_due`, `useInboxController.stalledDeals`.
-> ### PONTO 2 — BUG de navegação no modal do negócio (DealDetailModal) — crítico no dia a dia
-> No cockpit do negócio, em "CONTACTO PRINCIPAL", **clicar no nome do contacto não faz NADA**. Deve **abrir a ficha do contacto**
-> (ex.: Sonia Rodrigo) dali mesmo, deixar editar/fazer o que quiser, e ter uma **seta "voltar"** que regressa exactamente a este
-> board/negócio. Hoje obriga a ir a /contactos, procurar e voltar = mau. Ficheiro provável: `features/deals/cockpit/DealCockpitClient.tsx`
-> ou o `DealDetailModal`/`FocusContextPanel` (secção Contacto Principal); ligar o nome a `/contacts/[id]` com retorno ao deal (ex.: `?returnTo=`).
+> ### PONTO 2 — ✅ FEITO E VERIFICADO (19/06, commit `5998508`, build `260619_1235`)
+> No `DealDetailModal` o nome do "Contacto Principal" era texto inerte. Agora: nome (sidebar) + link "Ver ficha →" (cartão
+> editável) navegam para `/contacts/[id]?returnTo=/boards?deal=<id>` e fecham o modal; a ficha honra `?returnTo` (caminho
+> interno validado, sem open redirect) com botão **"Voltar ao negócio"** que reabre o MESMO negócio (o board já lê `?deal=<id>`).
+> Verificado em produção com a Sonia Rodrigo: round-trip completo (modal→nome→ficha→voltar→modal reaberto), 0 erros consola.
 
 > ## ▶️ ORDEM DE EXECUÇÃO DECIDIDA PELO JOÃO (08/06/2026) — seguir sem saltar
 > O épico **MKT-MEASURE** está fechado na parte construível (CAPI + Funil + Orgânico + Cérebro).

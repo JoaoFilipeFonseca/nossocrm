@@ -306,6 +306,7 @@ export async function resolvePendingAdvance(
     deal_id: pending.deal_id,
     organization_id: pending.organization_id,
     type: 'stage_change',
+    actor: 'system',
     description: wasEdited
       ? `Estágio avançado (aprovado com edições): ${finalReason}`
       : `Estágio avançado (aprovado): ${finalReason}`,

@@ -1053,6 +1053,7 @@ async function handleHandoff(
       deal_id: context.deal.id,
       organization_id: organizationId,
       type: 'ai_handoff',
+      actor: 'automation',
       description: `AI encaminhou conversa para operador humano: ${reason}`,
       metadata: {
         ai_handoff: true,
