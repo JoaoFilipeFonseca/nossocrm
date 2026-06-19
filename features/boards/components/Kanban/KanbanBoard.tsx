@@ -6,6 +6,8 @@ import { MoveToStageModal } from '../Modals/MoveToStageModal';
 import { SkeletonDealCard } from '@/components/ui/Skeleton';
 import { useLifecycleStages } from '@/lib/query/hooks/useLifecycleStagesQuery';
 import { useLeadScoresQuery } from '@/lib/query/hooks/useLeadScoresQuery';
+import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
+import { isAtRisk } from '@/lib/deals/dealState';
 
 /**
  * UI: Drop highlight should follow the stage color.
@@ -120,6 +122,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const { data: lifecycleStages = [] } = useLifecycleStages();
   // DASH-2: mapa deal_id → probabilidade (score/temperatura) para o chip da DealCard.
   const { data: leadScores } = useLeadScoresQuery();
+  // PONTO 1 — "estagnado" do cartão pela verdade única (último toque humano),
+  // não por lastStageChangeDate/updatedAt (que marcava todos os Contactos).
+  const { data: dealStates } = useDealStatesQuery();
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   
   // State for move-to-stage modal (keyboard accessibility alternative to drag-and-drop)
@@ -300,11 +305,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   <DealCard
                     deal={deal}
                     leadScore={leadScores?.[deal.id]}
-                    isRotting={
-                      isDealRotting(deal) &&
-                      !deal.isWon &&
-                      !deal.isLost
-                    }
+                    isRotting={(() => {
+                      const st = dealStates?.[deal.id];
+                      // Com sinais de estado: só 'parado'/'arrefecer' apodrece (Contactos
+                      // por trabalhar e adiados NÃO). Sem sinais: fallback à regra antiga.
+                      if (st) return isAtRisk(st.status);
+                      return isDealRotting(deal) && !deal.isWon && !deal.isLost;
+                    })()}
                     activityStatus={getActivityStatus(deal)}
                     isDragging={draggingId === deal.id}
                     onDragStart={handleDragStart}
