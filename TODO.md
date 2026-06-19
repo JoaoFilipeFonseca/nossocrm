@@ -130,18 +130,19 @@
 >   **Verificado**: 482→**3** ("3 negócios parados · 1 650 000 €", exclui Contactos por trabalhar).
 > - ✅ **Cartões do board** (F2c, `55979eb`) — `isDealRotting` via `useDealStatesQuery` no KanbanBoard.
 >   **Verificado**: 140 cartões de Contactos, **0 "estagnado"** (antes apareciam todos podres).
-> - ⏳ **FALTA alinhar (mapeado, mesma receita = `dealStates`/`isAtRisk` ou `days_idle`):**
->   1. `features/decisions/analyzers/stagnantDealsAnalyzer.ts` — Decisões/Central "deal parado há X dias" (usa
->      tabela `activities` + fallback 30d; passar a `deal_state_signals.days_idle`).
->   2. `features/inbox/components/FocusContextPanel.tsx` (~l.376) — sugestão "X dias sem contacto" (usa `activities[0].date`).
->   3. `features/boards/hooks/useBoardsController.ts` (l.172 + `isDealRotting` duplicado) + `features/boards/utils.ts`
->      `isDealRotting`/`daysInStage` — contagem `stagnantDeals` p/ contexto IA (o badge "Xd na fase" é legítimo, é tempo na etapa).
->   4. `lib/ai/tools.ts` — ferramenta do assistente "deals parados" (usa `last_stage_change_date`).
->   5. `supabase/functions/telegram-morning-brief/index.ts` — brief matinal conta "frios" por `last_stage_change/updated_at`
->      (edge → precisa redeploy com verify_jwt:false).
->   6. `lib/automations/systemFlows.ts` — confirmar relevância (apareceu no grep).
-> **NOTA:** o João sugeriu "pôr agentes a correr todo o CRM a verificar e TESTAR em todo o lado" — fazer no fim um
-> varrimento de verificação (browser) das superfícies acima depois de alinhadas.
+> - ✅ **Decisões/Central** (`4bb04c1`) — stagnantDealsAnalyzer + index + useDecisionQueue: só 'parado'/'arrefecer'
+>   geram decisão; dias = `days_idle` (último toque humano), não activities+fallback 30d.
+> - ✅ **Assistente IA** (`4bb04c1`) — `lib/ai/tools.ts listStagnantDeals` via RPC `deal_state_signals` (exclui
+>   Contactos por trabalhar/adiados), não `updated_at`.
+> - ✅ **Painel de Foco** (`4bb04c1`) — fallback "X dias sem contacto seu" usa `days_idle` quando há sinais.
+> - ✅ **Contexto IA do board** (`4bb04c1`) — `useBoardsController` conta "parados" pelo estado real, não `isDealRotting`.
+> - ⏳ **telegram-morning-brief** — FONTE corrigida (`4bb04c1`, deals frios via `deal_state_signals`); **falta só o
+>   REDEPLOY do edge** (importa `_shared/*` → fazer por tooling próprio com verify_jwt:false, ou MCP a incluir os
+>   3 ficheiros; não arrisquei partir o cron diário por 1 linha). Até lá o brief conta frios pela regra antiga.
+> - ℹ️ `features/boards/utils.ts` + `useBoardsController` `isDealRotting`/`daysInStage` — MANTIDOS: o badge
+>   "Xd na fase" é tempo NA ETAPA (legítimo), não "parado".  `lib/automations/systemFlows.ts` = só texto descritivo
+>   das automações (não calcula nada).
+> **NOTA:** falta o varrimento de TESTE final no browser (Decisões, assistente, Foco) — fazer.
 >
 > **➡️ PONTO 1 (F1-F4) e PONTO 2 CONCLUÍDOS (19/06); varrimento de superfícies em curso.** Pendente fora de fatias: deploy do edge `messaging-webhook-meta`
 >   (F1b) com verify_jwt:false — aguarda aprovação do João. Aprofundar timeline no painel de Foco do Inbox
