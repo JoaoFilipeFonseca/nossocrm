@@ -663,38 +663,6 @@ function determineEventType(value: MetaWebhookValue): string {
   return "unknown";
 }
 
-/**
- * Fetch lead routing rule for a channel.
- * Returns null if no rule exists or rule is disabled.
- */
-async function getLeadRoutingRule(
-  supabase: ReturnType<typeof createClient>,
-  channelId: string
-): Promise<{
-  boardId: string;
-  stageId: string | null;
-} | null> {
-  const { data, error } = await supabase
-    .from("lead_routing_rules")
-    .select("board_id, stage_id, enabled")
-    .eq("channel_id", channelId)
-    .maybeSingle();
-
-  if (error) {
-    console.error("[Webhook] Error fetching lead routing rule:", error);
-    return null;
-  }
-
-  if (!data || !data.enabled || !data.board_id) {
-    return null;
-  }
-
-  return {
-    boardId: data.board_id,
-    stageId: data.stage_id,
-  };
-}
-
 async function handleInboundMessage(
   supabase: ReturnType<typeof createClient>,
   channel: {
@@ -868,21 +836,9 @@ async function handleInboundMessage(
     if (convCreateErr) throw convCreateErr;
     conversationId = newConv.id;
 
-    // AUTO-CREATE DEAL if lead routing rule exists for this channel
-    if (contactId) {
-      const routingRule = await getLeadRoutingRule(supabase, channel.id);
-      if (routingRule) {
-        await autoCreateDeal(supabase, {
-          organizationId: channel.organization_id,
-          contactId,
-          boardId: routingRule.boardId,
-          stageId: routingRule.stageId,
-          conversationId,
-          contactName: senderName || externalContactId,
-          businessUnitName: channel.business_unit?.name || "Sem unidade",
-        });
-      }
-    }
+    // NOTA (contacto≠lead): a 1.ª mensagem cria SÓ contacto+conversa.
+    // O negócio (lead) nasce por clique humano na conversa (WA-4a, rota
+    // /api/messaging/conversations/[id]/classify) — nunca automaticamente aqui.
   }
 
   // Insert message
@@ -937,117 +893,6 @@ async function handleInboundMessage(
       // Log but don't fail the webhook
       console.error("[Webhook] AI processing trigger error:", err);
     });
-  }
-}
-
-/**
- * Auto-create a deal when a new conversation starts.
- * Uses stageId from lead_routing_rules, or falls back to first stage of board.
- */
-async function autoCreateDeal(
-  supabase: ReturnType<typeof createClient>,
-  params: {
-    organizationId: string;
-    contactId: string;
-    boardId: string;
-    stageId?: string | null;
-    conversationId: string;
-    contactName: string;
-    businessUnitName: string;
-    source?: string;
-  }
-) {
-  try {
-    let stageId = params.stageId;
-
-    // If no stageId provided, get the first stage of the board
-    if (!stageId) {
-      const { data: firstStage, error: stageErr } = await supabase
-        .from("board_stages")
-        .select("id")
-        .eq("board_id", params.boardId)
-        .order("order", { ascending: true })
-        .limit(1)
-        .single();
-
-      if (stageErr || !firstStage) {
-        console.error("[Webhook] Could not find first stage for auto-create deal:", stageErr);
-        return;
-      }
-      stageId = firstStage.id;
-    }
-
-    // Create the deal
-    const source = params.source || "whatsapp";
-    const sourceLabel = source === "instagram" ? "Instagram" : "WhatsApp";
-    const dealTitle = `${params.contactName} - ${sourceLabel}`;
-
-    const { data: newDeal, error: dealErr } = await supabase
-      .from("deals")
-      .insert({
-        organization_id: params.organizationId,
-        board_id: params.boardId,
-        stage_id: stageId,
-        status: stageId, // CRM uses both stage_id and status - must be equal
-        contact_id: params.contactId,
-        title: dealTitle,
-        value: 0,
-        source: source,
-        metadata: {
-          auto_created: true,
-          created_from: "messaging_webhook",
-          conversation_id: params.conversationId,
-          business_unit: params.businessUnitName,
-        },
-      })
-      .select("id")
-      .single();
-
-    if (dealErr) {
-      console.error("[Webhook] Error auto-creating deal:", dealErr);
-      return;
-    }
-
-    console.log(`[Webhook] Auto-created deal: ${newDeal.id} for contact ${params.contactId}`);
-
-    // Registrar activity para o utilizador perceber que o lead veio do canal de mensagens.
-    // (sourceLabel já está em scope, definido acima — não redeclarar.)
-    // NOTA: as colunas reais são `type`/`description`/`actor` (não activity_type/title).
-    // O insert antigo usava colunas inexistentes → falhava em silêncio (o webhook
-    // devolve 200 mesmo em erro) e o toque de automação nunca ficava registado.
-    await supabase.from("deal_activities").insert({
-      deal_id: newDeal.id,
-      organization_id: params.organizationId,
-      type: "note",
-      actor: "automation",
-      description: `Lead criado automaticamente via ${sourceLabel}: ${params.contactName} enviou uma mensagem pelo ${sourceLabel}. Nenhuma acção manual foi necessária.`,
-      metadata: {
-        auto_created: true,
-        source: params.source || "whatsapp",
-        conversation_id: params.conversationId,
-      },
-    });
-
-    // Update conversation with deal reference - merge with existing metadata
-    const { data: conv } = await supabase
-      .from("messaging_conversations")
-      .select("metadata")
-      .eq("id", params.conversationId)
-      .maybeSingle();
-
-    await supabase
-      .from("messaging_conversations")
-      .update({
-        metadata: {
-          ...((conv?.metadata as Record<string, unknown>) || {}),
-          deal_id: newDeal.id,
-          auto_created_deal: true,
-        },
-      })
-      .eq("id", params.conversationId);
-
-  } catch (error) {
-    console.error("[Webhook] Unexpected error in autoCreateDeal:", error);
   }
 }
 
@@ -1401,22 +1246,8 @@ async function handleInstagramInboundMessage(
     if (convCreateErr) throw convCreateErr;
     conversationId = newConv.id;
 
-    // Auto-create deal if lead routing rule exists for this channel
-    if (contactId) {
-      const routingRule = await getLeadRoutingRule(supabase, channel.id);
-      if (routingRule) {
-        await autoCreateDeal(supabase, {
-          organizationId: channel.organization_id,
-          contactId,
-          boardId: routingRule.boardId,
-          stageId: routingRule.stageId,
-          conversationId,
-          contactName: `Instagram ${senderId.slice(-6)}`,
-          businessUnitName: channel.business_unit?.name || "Sem unidade",
-          source: "instagram",
-        });
-      }
-    }
+    // NOTA (contacto≠lead): cria SÓ contacto+conversa; o negócio nasce por
+    // clique humano na conversa (WA-4a) — nunca automaticamente aqui.
   }
 
   // Insert message
