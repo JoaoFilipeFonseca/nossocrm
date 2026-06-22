@@ -204,10 +204,20 @@
 >
 >   **▶️ ORDEM ACORDADA 22/06 (depois dos 2 bugs acima, todos FEITOS):** seguir a lista de ataque por esta ordem,
 >   e só no fim construir os Ativos Digitais:
->   1. 🔐 **Fraude no Business Manager** — ver JUNTOS no browser (extensão Claude-in-Chrome ligada; o João aponta o que
->      vê, eu inspecciono/oriento; NÃO bloquear/denunciar nada às cegas — acções de segurança Meta = mão do João).
+>   1. ✅ **Fraude no Business Manager — FECHADO 22/06.** Não era parceiro no BM; eram **mensagens de phishing a fingir
+>      ser Meta**. Varrimento completo da Caixa de entrada (via Claude-in-Chrome): único impostor = DM "Meta Advertisement"
+>      (Messenger 19/05), **conteúdo já indisponível / conta removida pela Meta**; Instagram e Facebook limpos. **O João
+>      confirmou que NÃO clicou no link nem meteu a palavra-passe** → conta segura, nada comprometido. (Reforça a
+>      necessidade do MSG-5: poder apagar/denunciar estas burlas dentro do CRM.)
 >   2. 🤖 **IA aprender o estilo do João + responder na Caixa Social (Messenger, MSG-5)** + esclarecer "pagar"/impulsionar.
->   3. 🔑 **Token PERMANENTE + número definitivo** (dedicado vs coexistência) — mão do João, eu guio.
+>      → **Absorvido pelo MSG-5 ampliado** (Caixa Social = espelho total da Meta). Sessão dedicada.
+>   3. 🔑 **Token PERMANENTE + número definitivo — DECIDIDO 22/06: opção B (COEXISTÊNCIA).** O João quer ligar à Cloud API
+>      o **número que usa há ANOS** (tem muito no Meta E no WhatsApp Business) — **NÃO mudar de número**, **NADA pode ficar
+>      bloqueado**, "extremo cuidado para não errar". **ADIADO de propósito** (decisão minha, com acordo do João 22/06): é a
+>      operação de MAIOR risco e quase irreversível; guiar no browser gasta contexto depressa e arrancámos a 35% → não se
+>      começa uma migração do número principal contra um limite de contexto. **Fazer em SESSÃO LIMPA dedicada**, com checklist
+>      pré-voo e **confirmar primeiro o fluxo de COEXISTÊNCIA actual da Meta** (regras mudam) + criar System User + token
+>      permanente (whatsapp_business_messaging + whatsapp_business_management). O João cola o token (eu não meto credenciais).
 >   4. ✅ **Item 6 (22/06):** brief Telegram REDEPLOYADO+verificado (curl 403). `autoCreateDeal` morto REMOVIDO do
      `messaging-webhook-meta` (repo, commit) — função+`getLeadRoutingRule`+2 chamadas; webhook passa a só contacto+conversa.
      ⚠️ **Deploy do webhook em prod ADIADO**: ficheiro 43KB, sem CLI/token nesta sessão → reproduzi-lo à mão p/ o MCP
