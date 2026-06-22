@@ -122,6 +122,29 @@
 > **Regras herdadas:** contacto≠lead (só vira lead com continuidade real); proveniência obrigatória; IA prepara/
 > humano envia; RGPD; tudo em /automacoes onde for automático; medição vitalícia. **Consolida MSG-5 + MSG-2.**
 >
+> ### 📲 SUB-ÉPICO WHATSAPP CLOUD API — DESENHO APROVADO (22/06, João: "1.ª msg só cria contacto")
+> **Estado apurado 22/06:** infra MUITO mais completa do que parecia. Já existe: provider de envio
+> (`meta-cloud.provider.ts`), webhook inbound `messaging-webhook-meta` (v2, assinatura HMAC real, dedup,
+> auto-cria contacto+conversa, auto-cria negócio SÓ se houver `lead_routing_rules`), wizard com opção
+> `whatsapp:meta-cloud`, rotas de envio/template/sync/retry/conversas, hook+tipos+migração de routing.
+> **BD: 0 canais WhatsApp, 0 conversas, 0 routing rules** (só canal email/resend ligado).
+> **3 lacunas reais encontradas:** (1) "Testar conexão" do wizard é FALSO (setTimeout, não chama a Meta);
+> (2) `appSecret` é opcional no wizard mas OBRIGATÓRIO no webhook (POST 401 sem ele → nenhuma msg entra);
+> (3) wizard guarda `businessAccountId` mas o provider lê `credentials.wabaId` → templates partidos.
+> **Decisão de desenho (João aprovou):** 1.ª mensagem WhatsApp cria SÓ contacto+conversa (NÃO criar regra
+> de routing no arranque); o negócio (lead) só nasce na Fatia 4 com continuidade real (source='whatsapp').
+> **FATIAS (1 commit cada + tsc0/lint0 + verificação real):**
+>   - ✅/▶️ **WA-1 — Teste de ligação REAL no wizard:** rota `POST /api/messaging/channels/test` usa
+>     `getStatus()` do provider (GET /{phoneNumberId} na Meta); tornar `appSecret` obrigatório p/ meta-cloud;
+>     alinhar `businessAccountId`→`wabaId`. *Verif: criar canal com credenciais reais → teste mostra nº verificado.*
+>   - **WA-2 — Receber:** João aponta webhook na Meta (mão dele) + envia msg real → entra em
+>     `messaging_conversations`/`messaging_messages` e aparece na aba Mensagens.
+>   - **WA-3 — Responder:** responder de dentro do CRM (rota `messages` já existe) na janela 24h → status sent/delivered.
+>   - **WA-4 — Continuidade→lead + atribuição:** conversa vira negócio só com continuidade real, source='whatsapp'
+>     + tag proveniência, etapa "Contactos" do funil. (Liga ao MSG-5 do Messenger.)
+> **Mão do João (Meta, fora do código):** WABA + número no Meta App; token permanente; apontar webhook + Verify
+> Token + subscrever campos messages/message_deliveries/message_reads. Eu preparo e guio no browser.
+>
 > ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
 > O João viu o Inbox (2 deals) e logo a seguir a Análise→Visão Geral ainda com "482 em risco". Corri um agente a
 > mapear TODAS as superfícies que decidem "parado/estagnado/risco". Estado:

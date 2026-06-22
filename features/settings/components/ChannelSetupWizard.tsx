@@ -168,12 +168,12 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         helpText: 'ID do número de telefone no Meta Business.',
       },
       {
-        key: 'businessAccountId',
+        key: 'wabaId',
         label: 'WhatsApp Business Account ID',
         type: 'text',
         placeholder: 'Ex: 123456789012345',
         required: true,
-        helpText: 'ID da conta comercial do WhatsApp.',
+        helpText: 'ID da conta comercial do WhatsApp (WABA). Necessário para sincronizar templates.',
       },
       {
         key: 'accessToken',
@@ -188,8 +188,8 @@ const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         label: 'App Secret',
         type: 'password',
         placeholder: 'O seu App Secret do Meta',
-        required: false,
-        helpText: 'Encontrado em Configurações > Básico no Meta for Developers. Necessário para verificar assinaturas de webhook.',
+        required: true,
+        helpText: 'Encontrado em Configurações > Básico no Meta for Developers. Obrigatório: o webhook recusa mensagens sem verificação de assinatura.',
       },
       {
         key: 'verifyToken',
@@ -1094,30 +1094,51 @@ export function ChannelSetupWizard({
   };
 
   const handleTestConnection = async () => {
+    if (!channelType || !provider) return;
+
     setIsTestingConnection(true);
     setTestResult(null);
 
     try {
-      // Simulate API call - in production, this would call the provider's test endpoint
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // verifyToken não é credencial secreta — fica em settings, não vai para o teste.
+      const { verifyToken: _verifyToken, ...testCredentials } = credentials;
 
-      // For now, just check if credentials are filled
-      if (isCredentialsValid) {
+      const response = await fetch('/api/messaging/channels/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelType,
+          provider,
+          credentials: testCredentials,
+          externalIdentifier: externalIdentifier.trim() || undefined,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        success: boolean;
+        message?: string;
+        details?: { phoneNumber?: string; businessName?: string; qualityRating?: string } | null;
+      };
+
+      if (data.success) {
+        const parts: string[] = [];
+        if (data.details?.phoneNumber) parts.push(`Número: ${data.details.phoneNumber}`);
+        if (data.details?.businessName) parts.push(`Conta: ${data.details.businessName}`);
         setTestResult({
           success: true,
-          message: 'Credenciais validadas. Pronto para guardar.',
+          message: parts.length > 0 ? parts.join(' · ') : data.message || 'Ligação confirmada.',
         });
       } else {
         setTestResult({
           success: false,
-          message: 'Credenciais inválidas ou incompletas.',
+          message: data.message || 'Não foi possível ligar com estas credenciais.',
         });
       }
     } catch (error) {
       setTestResult({
         success: false,
         message:
-          error instanceof Error ? error.message : 'Erro ao testar conexão.',
+          error instanceof Error ? error.message : 'Erro ao testar a ligação.',
       });
     } finally {
       setIsTestingConnection(false);
