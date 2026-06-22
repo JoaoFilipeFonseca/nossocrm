@@ -185,18 +185,20 @@
 >     IA (`ai_draft`); o João quer o MESMO no WhatsApp (sugerir resposta na conversa) E que a IA **aprenda com as
 >     respostas dele** (o tom/forma como ele responde) e melhore com o tempo. → Fatia futura, liga a
 >     [[plano_whatsapp_inbox_ia]] (IA Sugerir Resposta) + [[plano_copy_ia_em_todo_o_lado]]. NÃO executar já.
->   - **🐞 BUG (reportado 22/06, por corrigir) — abas Mensagens não clicáveis com conversa aberta:** em
->     `/messaging`, com uma conversa ABERTA (tanto em "Conversas" como em "Caixa Social"), os botões de aba
->     **"Conversas" / "Caixa Social"** deixam de responder ao clique. Sem conversa aberta clicam bem. Componentes:
->     `features/messaging/MessagingTabs.tsx` (barra de abas, sem z-index/relative) + `MessagingPage.tsx` (3 colunas
->     h-full) dentro de `components/Layout.tsx` `<main p-0 overflow-y-auto>`. Análise estática NÃO achou
->     sobreposição óbvia → **precisa de repro logado + inspecção do elemento que apanha o clique** (provável overlay
->     invisível/pointer-events ou stacking). Desvio actual: navegar por URL (`/messaging` vs `/messaging?tab=social`).
->     Hipótese a testar primeiro: dar `relative z-10` à barra de abas; confirmar com inspecção, não às cegas.
->   - **🐞 BUG/UX (reportado 22/06) — aba Mensagens MUITO má no telemóvel:** no telemóvel, a aba Mensagens
->     (`/messaging` → `MessagingPage`, layout de 3 colunas fixas w-80) não dá para mexer como no PC (lista+thread+
->     painel lado a lado não cabem em ecrã estreito; sem navegação responsiva entre lista↔conversa↔ficha). Precisa
->     de layout responsivo mobile (mostrar 1 painel de cada vez + voltar). João: "tem de ser corrigida".
+>   - ✅ **BUG RESOLVIDO E VERIFICADO NO BROWSER (22/06, commit `ed392cc`) — abas Mensagens não clicáveis com conversa
+>     aberta:** CAUSA RAIZ (reproduzida no browser do João via Claude-in-Chrome): com conversa aberta (`?id=...`),
+>     clicar numa aba chamava `router.push('?tab=social')` mas o **Next revertia logo a navegação** com um
+>     `replaceState` de volta para `?id=...` durante o commit do React (a vista das abas dependia do round-trip do
+>     URL e o `MessagingPage` montado "fixava" o `?id`). Sem conversa aberta o push passava — daí só falhar com
+>     conversa aberta. As hipóteses overlay/`z-10`/Radix `modal={false}` estavam ERRADAS (revertidas). **Fix:** a aba
+>     activa passa a viver em **estado local** em `MessagingTabs.tsx` (init pelo URL + `popstate`); o clique muda a
+>     vista de imediato sem depender do URL. Verificado em produção (build 260622_1409): clique real nas 2 abas com
+>     conversa aberta troca a vista. (O URL pode ficar em `?id=` por reversão do Next, mas é cosmético — a vista é a certa.)
+>   - ✅ **BUG/UX RESOLVIDO (22/06, commit `2c30f16`) — aba Mensagens má no telemóvel:** `MessagingPage` passou a ter
+>     layout responsivo abaixo de `lg`: mostra 1 painel de cada vez — lista → fio (seta ◀ Voltar no header) → ficha
+>     do contacto (botão ⓘ abre; ◀ Voltar à conversa volta). 3 colunas mantêm-se em ecrã grande. Estrutura
+>     verificada no build no ar (botões `lg:hidden` + classes condicionais das colunas presentes). Flip visual `lg`
+>     (1024px) a confirmar pelo João no telemóvel real (a janela do Chrome de teste não encolhe abaixo de ~1536px).
 >
 > ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
 > O João viu o Inbox (2 deals) e logo a seguir a Análise→Visão Geral ainda com "482 em risco". Corri um agente a
