@@ -504,6 +504,12 @@ nunca era substituído no prompt (sem override na BD → produção usava o cat�
   e ficarem **coerentes com a comunicação dele**. Logo o épico tem 2 frentes: (1) o catálogo/CRUD na Biblioteca; (2)
   **rebranding** dessas landing pages com a identidade/foto do João. Esclarecer com ele onde vivem essas páginas (Portal F&R?
   outro projecto? sob `joaofilipefonseca.pt`) e qual o "rastreio" usado (UTM? píxel? ID próprio) antes de desenhar.
+  **🆕 PRIMEIRO ATIVO JÁ COM FICHEIROS GUARDADOS 22/06 — landing "Análise de Mercado":** o João criou-a num chat de IA
+  (só existia lá) e pediu para guardar/preparar. Cópia de segurança + plano em **`docs/ativos-digitais/analise-mercado/`**
+  (`analise-mercado.html` on-brand reutilizável; `route.reference.ts` e `leads_captura.reference.sql` = REFERÊNCIA, NÃO
+  usar tal como estão). **Decisão (opção A):** na sessão dedicada, a rota alimenta o FUNIL REAL (contacto+negócio em
+  Proprietários→Contactos, proveniência `landing-analise-mercado`, como o Meta Ads), **não** a tabela isolada. Ver
+  `PREP.md` lá dentro (retoques do HTML: link da política, endpoint absoluto+CORS, foto do João; + perguntas em aberto).
 
 - 🎯🆕 **ÉPICO PEDIDO PELO JOÃO (15/06, capturar — NÃO executar já, âmbito congelado): % de fecho por SINAIS REAIS + IA que aprende sozinha.**
   **Problema (palavras do João):** "nenhuma lead ao entrar pode ter 50% de fecho; só depois — se avançar com visita, se continuar a atender e responder, se permitir qualificação — é que a % aumenta. Depois corrigir e ir melhorando com aprendizagem; pôr no código a IA a aprender com ela própria a atribuir a %."

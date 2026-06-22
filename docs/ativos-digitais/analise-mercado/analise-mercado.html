@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Análise de Mercado · João Fonseca</title>
+<meta name="description" content="Saiba quanto vale a sua casa hoje. Análise de Mercado gratuita e sem compromisso, com método profissional. Estou do seu lado.">
+
+<!-- Open Graph para partilha -->
+<meta property="og:title" content="Quanto vale a sua casa hoje?">
+<meta property="og:description" content="Análise de Mercado gratuita e sem compromisso. Estou do seu lado.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_PT">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ====================================================================
+   JOÃO FONSECA · ANÁLISE DE MERCADO · PÁGINA DE CAPTURA
+   Paleta e tipografia da marca (skill joao-fonseca-brand)
+   ==================================================================== */
+
+:root{
+  --verde-fonseca:#1B3A2F;
+  --preto-carvao:#0F0F0F;
+  --branco-linho:#F7F5F0;
+  --cinza-granito:#5C5C58;
+  --verde-salva:#7BAE92;
+  --cinza-areia:#E8E5DD;
+  --cinza-pedra:#B8B8B0;
+
+  --display:'Fraunces',Georgia,serif;
+  --body:'Manrope',system-ui,sans-serif;
+
+  --pad:clamp(20px,6vw,64px);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;color-scheme:light}
+body{
+  font-family:var(--body);
+  background:var(--branco-linho);
+  color:var(--preto-carvao);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit}
+
+/* ---------- TOPO / WORDMARK ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px var(--pad);
+  background:var(--branco-linho);
+  border-bottom:1px solid var(--cinza-areia);
+}
+.wordmark{
+  font-family:var(--display);
+  font-weight:300;
+  font-size:22px;
+  letter-spacing:-0.02em;
+  color:var(--verde-fonseca);
+}
+.wordmark .jf-italic{font-style:italic}
+.topbar .role{
+  font-family:var(--body);
+  font-weight:500;
+  font-size:10px;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  color:var(--cinza-granito);
+}
+
+/* ---------- HERO ---------- */
+.hero{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:0;
+  min-height:calc(100vh - 64px);
+}
+@media(min-width:900px){
+  .hero{grid-template-columns:1fr 1fr;align-items:stretch}
+}
+
+/* coluna esquerda: copy */
+.hero-copy{
+  background:var(--branco-linho);
+  color:var(--preto-carvao);
+  padding:clamp(36px,8vw,72px) var(--pad);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.hero-copy h1{color:var(--preto-carvao)}
+.hero-copy .lede{color:var(--cinza-granito)}
+.hero-copy .assurance strong{color:var(--preto-carvao)}
+.eyebrow{
+  font-weight:500;font-size:11px;letter-spacing:0.25em;
+  text-transform:uppercase;color:var(--verde-fonseca);
+  margin-bottom:24px;
+}
+.hero h1{
+  font-family:var(--display);
+  font-weight:300;
+  font-size:clamp(40px,7vw,72px);
+  line-height:1.02;
+  letter-spacing:-0.03em;
+  margin-bottom:28px;
+}
+.hero h1 em{font-style:italic;color:var(--verde-fonseca)}
+.hero .lede{
+  font-size:clamp(16px,2vw,18px);
+  color:var(--cinza-granito);
+  max-width:46ch;
+  margin-bottom:36px;
+}
+.assurances{
+  display:flex;flex-direction:column;gap:14px;
+  border-top:1px solid var(--cinza-areia);
+  padding-top:28px;
+}
+.assurance{
+  display:flex;gap:14px;align-items:baseline;
+  font-size:15px;
+}
+.assurance .n{
+  font-family:var(--display);font-style:italic;
+  font-size:15px;color:var(--verde-fonseca);
+  min-width:28px;
+}
+.assurance strong{font-weight:600}
+.assurance span{color:var(--cinza-granito)}
+
+/* coluna direita: cartão de formulário */
+.hero-form{
+  background:var(--preto-carvao);
+  padding:clamp(28px,6vw,56px) var(--pad);
+  display:flex;flex-direction:column;justify-content:center;
+  position:relative;
+}
+/* placeholder de fotografia — degradé subtil dentro da paleta, trocável por foto */
+.hero-form::before{
+  content:"";
+  position:absolute;inset:0;
+  background:
+    radial-gradient(120% 80% at 80% 0%, rgba(123,174,146,.10), transparent 60%),
+    linear-gradient(160deg, #14271f 0%, var(--preto-carvao) 55%);
+  z-index:0;
+}
+.form-shell{position:relative;z-index:1}
+
+.form-kicker{
+  font-weight:500;font-size:11px;letter-spacing:0.25em;
+  text-transform:uppercase;color:var(--verde-salva);
+  margin-bottom:14px;
+}
+.form-title{
+  font-family:var(--display);font-weight:300;
+  font-size:clamp(26px,4vw,34px);letter-spacing:-0.02em;
+  color:var(--branco-linho);line-height:1.1;
+  margin-bottom:8px;
+}
+.form-sub{
+  color:var(--cinza-pedra);font-size:14px;margin-bottom:28px;
+}
+
+/* progresso */
+.progress{
+  display:flex;gap:6px;margin-bottom:26px;
+}
+.progress .seg{
+  flex:1;height:3px;border-radius:2px;
+  background:rgba(247,245,240,.16);
+  transition:background .35s ease;
+}
+.progress .seg.on{background:var(--verde-salva)}
+
+/* passos */
+.step{display:none;animation:fade .4s ease}
+.step.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.q{
+  font-family:var(--display);font-weight:400;
+  font-size:20px;letter-spacing:-0.01em;
+  color:var(--branco-linho);margin-bottom:6px;
+}
+.q .opt-mark{color:var(--cinza-pedra);font-size:13px;font-family:var(--body)}
+.q-help{color:var(--cinza-pedra);font-size:13px;margin-bottom:18px}
+
+label.field{display:block;margin-bottom:18px}
+label.field .lbl{
+  display:block;font-weight:600;font-size:13px;
+  color:var(--branco-linho);margin-bottom:8px;
+}
+input[type=text],input[type=tel],input[type=email],select,textarea{
+  width:100%;
+  font-family:var(--body);font-size:16px;
+  color:var(--branco-linho);
+  background:rgba(247,245,240,.05);
+  border:1px solid rgba(247,245,240,.18);
+  border-radius:12px;
+  padding:15px 16px;
+  transition:border-color .2s,background .2s;
+}
+input::placeholder,textarea::placeholder{color:rgba(184,184,176,.6)}
+input:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--verde-salva);
+  background:rgba(247,245,240,.08);
+}
+select{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23B8B8B0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center;padding-right:42px;
+}
+select option{color:#0F0F0F}
+textarea{resize:vertical;min-height:84px}
+
+/* botões de opção (cartões selecionáveis) */
+.choices{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+.choice{
+  display:flex;align-items:center;gap:14px;
+  border:1px solid rgba(247,245,240,.18);
+  border-radius:12px;padding:14px 16px;cursor:pointer;
+  transition:border-color .2s,background .2s;
+  color:var(--branco-linho);font-size:15px;
+}
+.choice:hover{border-color:var(--verde-salva)}
+.choice .key{
+  font-family:var(--display);font-style:italic;
+  font-size:14px;color:var(--cinza-pedra);
+  width:22px;text-align:center;flex:none;
+}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice.sel{
+  border-color:var(--verde-salva);
+  background:rgba(123,174,146,.12);
+}
+.choice.sel .key{color:var(--verde-salva)}
+
+/* chips multi-seleção */
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+.chip{
+  border:1px solid rgba(247,245,240,.18);
+  border-radius:999px;padding:10px 16px;cursor:pointer;
+  color:var(--branco-linho);font-size:14px;
+  transition:border-color .2s,background .2s;
+}
+.chip:hover{border-color:var(--verde-salva)}
+.chip.sel{border-color:var(--verde-salva);background:rgba(123,174,146,.12)}
+.chip input{display:none}
+
+/* navegação do form */
+.nav{display:flex;gap:12px;margin-top:26px;align-items:center}
+.btn{
+  font-family:var(--body);font-weight:600;font-size:15px;
+  border:none;border-radius:12px;padding:16px 24px;cursor:pointer;
+  transition:transform .12s,opacity .2s,background .2s;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{
+  background:var(--verde-salva);color:var(--preto-carvao);flex:1;
+}
+.btn-primary:hover{background:#8cbfa3}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{
+  background:transparent;color:var(--cinza-pedra);
+  border:1px solid rgba(247,245,240,.18);
+}
+.btn-ghost:hover{color:var(--branco-linho)}
+
+.err{
+  color:#e8a598;font-size:13px;margin-top:-6px;margin-bottom:14px;
+  display:none;
+}
+.err.show{display:block}
+
+.consent{
+  display:flex;gap:12px;align-items:flex-start;margin:6px 0 4px;
+  font-size:13px;color:var(--cinza-pedra);cursor:pointer;
+}
+.consent input{margin-top:3px;accent-color:var(--verde-salva);flex:none}
+.consent a{color:var(--verde-salva);text-decoration:underline}
+
+/* ecrã final */
+.done{display:none;text-align:left}
+.done.show{display:block;animation:fade .5s ease}
+.done .check{
+  width:48px;height:48px;border-radius:50%;
+  border:1.5px solid var(--verde-salva);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:24px;
+}
+.done h2{
+  font-family:var(--display);font-weight:300;
+  font-size:30px;letter-spacing:-0.02em;
+  color:var(--branco-linho);margin-bottom:14px;line-height:1.1;
+}
+.done h2 em{font-style:italic;color:var(--verde-salva)}
+.done p{color:var(--cinza-pedra);font-size:15px;margin-bottom:10px;max-width:42ch}
+
+/* rodapé */
+.foot{
+  padding:36px var(--pad);
+  background:var(--branco-linho);
+  border-top:1px solid var(--cinza-areia);
+  display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;
+  justify-content:space-between;
+}
+.foot .foot-mark{
+  font-family:var(--display);font-weight:300;
+  font-size:26px;letter-spacing:-0.02em;
+  color:var(--verde-fonseca);
+}
+.foot .foot-mark .jf-italic{font-style:italic}
+.foot .slogan{
+  font-family:var(--display);font-style:italic;font-weight:300;
+  font-size:17px;
+  color:var(--verde-fonseca);
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wordmark"><span class="jf-italic">João</span> Fonseca</div>
+</header>
+
+<main class="hero">
+
+  <!-- ESQUERDA: copy -->
+  <section class="hero-copy">
+    <div class="eyebrow">Análise de Mercado</div>
+    <h1>Saber quanto vale a sua casa <em>hoje</em> muda tudo o que decide a seguir.</h1>
+    <p class="lede">O valor de uma casa não nasce do que se pede por ela. Nasce do que o mercado está disposto a pagar. Mostro-lhe esse número, com método e sem compromisso, antes de pôr o primeiro valor no anúncio.</p>
+
+    <div class="assurances">
+      <div class="assurance"><span class="n">01</span><div><strong>Gratuito e sem compromisso.</strong> <span>Recebe a análise primeiro, decide depois.</span></div></div>
+      <div class="assurance"><span class="n">02</span><div><strong>Método, não palpite.</strong> <span>Comparáveis reais da sua zona, procura atual e o que mudou nos últimos meses.</span></div></div>
+      <div class="assurance"><span class="n">03</span><div><strong>O preço certo de mercado.</strong> <span>Nem abaixo, a perder dinheiro, nem acima, a ficar parado. O valor que vende.</span></div></div>
+    </div>
+  </section>
+
+  <!-- DIREITA: formulário -->
+  <section class="hero-form">
+    <div class="form-shell">
+      <div class="form-kicker">Características do seu imóvel</div>
+      <div class="form-title">Comece por aqui.</div>
+      <div class="form-sub">Quatro passos rápidos. Depois entro em contacto consigo.</div>
+
+      <div class="progress" id="progress">
+        <div class="seg on"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div>
+      </div>
+
+      <form id="amcForm" novalidate>
+
+        <!-- PASSO 1: imóvel -->
+        <div class="step active" data-step="1">
+          <div class="q">O seu imóvel</div>
+          <div class="q-help">Para enquadrar a análise na zona certa.</div>
+
+          <label class="field">
+            <span class="lbl">Localização (zona ou concelho)</span>
+            <input type="text" name="localizacao" placeholder="Ex.: Foz, Maia, centro de Matosinhos" autocomplete="off">
+          </label>
+          <div class="err" data-err="localizacao">Indique a zona do imóvel.</div>
+
+          <label class="field">
+            <span class="lbl">Tipo de imóvel</span>
+            <select name="tipo">
+              <option value="" disabled selected>Selecione</option>
+              <option>Apartamento</option>
+              <option>Moradia</option>
+              <option>Terreno</option>
+              <option>Loja / Espaço comercial</option>
+              <option>Outro</option>
+            </select>
+          </label>
+          <div class="err" data-err="tipo">Selecione o tipo de imóvel.</div>
+
+          <label class="field">
+            <span class="lbl">Tipologia</span>
+            <select name="tipologia">
+              <option value="" disabled selected>Selecione</option>
+              <option>T0</option><option>T1</option><option>T2</option>
+              <option>T3</option><option>T4</option><option>T5 ou superior</option>
+              <option>Não aplicável</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- PASSO 2: características -->
+        <div class="step" data-step="2">
+          <div class="q">Características</div>
+          <div class="q-help">Quanto mais souber, mais precisa fica a análise.</div>
+
+          <label class="field">
+            <span class="lbl">Estado de conservação</span>
+            <select name="estado">
+              <option value="" disabled selected>Selecione</option>
+              <option>Novo</option>
+              <option>Usado, em bom estado</option>
+              <option>Usado, a precisar de obras</option>
+              <option>Para recuperação total</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="lbl">Área aproximada</span>
+            <select name="area">
+              <option value="" disabled selected>Selecione</option>
+              <option>Até 75 m²</option>
+              <option>75 a 100 m²</option>
+              <option>100 a 150 m²</option>
+              <option>150 a 250 m²</option>
+              <option>Mais de 250 m²</option>
+            </select>
+          </label>
+
+          <div class="q" style="font-size:16px;margin-bottom:12px">Extras <span class="opt-mark">(opcional)</span></div>
+          <div class="chips" id="chips">
+            <label class="chip"><input type="checkbox" name="extras" value="Varanda">Varanda</label>
+            <label class="chip"><input type="checkbox" name="extras" value="Elevador">Elevador</label>
+            <label class="chip"><input type="checkbox" name="extras" value="Garagem">Garagem</label>
+            <label class="chip"><input type="checkbox" name="extras" value="Jardim">Jardim</label>
+            <label class="chip"><input type="checkbox" name="extras" value="Estacionamento">Estacionamento</label>
+            <label class="chip"><input type="checkbox" name="extras" value="Arrecadação">Arrecadação</label>
+            <label class="chip"><input type="checkbox" name="extras" value="Piscina">Piscina</label>
+            <label class="chip"><input type="checkbox" name="extras" value="Terraço">Terraço</label>
+            <label class="chip"><input type="checkbox" name="extras" value="Licença turística">Licença turística</label>
+          </div>
+        </div>
+
+        <!-- PASSO 3: intenção -->
+        <div class="step" data-step="3">
+          <div class="q">A sua intenção</div>
+          <div class="q-help">Ajuda-me a preparar a conversa certa para si.</div>
+
+          <div class="q" style="font-size:16px;margin-bottom:12px">Quando pensa vender?</div>
+          <div class="choices" data-choice="prazo">
+            <label class="choice"><span class="key">A</span><input type="radio" name="prazo" value="O mais rápido possível">O mais rápido possível</label>
+            <label class="choice"><span class="key">B</span><input type="radio" name="prazo" value="Nos próximos 3 meses">Nos próximos 3 meses</label>
+            <label class="choice"><span class="key">C</span><input type="radio" name="prazo" value="Entre 3 a 6 meses">Entre 3 a 6 meses</label>
+            <label class="choice"><span class="key">D</span><input type="radio" name="prazo" value="Mais de 6 meses">Mais de 6 meses</label>
+            <label class="choice"><span class="key">E</span><input type="radio" name="prazo" value="Só quero saber o valor">Só quero saber o valor, por agora</label>
+          </div>
+          <div class="err" data-err="prazo">Escolha uma opção.</div>
+
+          <label class="field" style="margin-top:18px">
+            <span class="lbl">Há alguma razão para vender? <span class="opt-mark" style="font-weight:400">(opcional)</span></span>
+            <textarea name="motivo" placeholder="Mudança, herança, investimento, mais espaço… o que quiser partilhar."></textarea>
+          </label>
+        </div>
+
+        <!-- PASSO 4: contacto -->
+        <div class="step" data-step="4">
+          <div class="q">Os seus dados</div>
+          <div class="q-help">Para lhe entregar a análise e combinar a visita.</div>
+
+          <label class="field">
+            <span class="lbl">Nome</span>
+            <input type="text" name="nome" placeholder="O seu nome" autocomplete="name">
+          </label>
+          <div class="err" data-err="nome">Indique o seu nome.</div>
+
+          <label class="field">
+            <span class="lbl">Telemóvel</span>
+            <input type="tel" name="telefone" placeholder="9XX XXX XXX" autocomplete="tel" inputmode="tel">
+          </label>
+          <div class="err" data-err="telefone">Indique um telemóvel válido.</div>
+
+          <label class="field">
+            <span class="lbl">Email</span>
+            <input type="email" name="email" placeholder="email@exemplo.pt" autocomplete="email" inputmode="email">
+          </label>
+          <div class="err" data-err="email">Indique um email válido.</div>
+
+          <div class="q" style="font-size:16px;margin:8px 0 12px">Melhor horário para falar?</div>
+          <div class="choices" data-choice="horario">
+            <label class="choice"><span class="key">A</span><input type="radio" name="horario" value="Antes das 10h">Antes das 10h</label>
+            <label class="choice"><span class="key">B</span><input type="radio" name="horario" value="10h-12h">10h às 12h</label>
+            <label class="choice"><span class="key">C</span><input type="radio" name="horario" value="12h-15h">12h às 15h</label>
+            <label class="choice"><span class="key">D</span><input type="radio" name="horario" value="15h-18h">15h às 18h</label>
+            <label class="choice"><span class="key">E</span><input type="radio" name="horario" value="Após as 18h">Após as 18h</label>
+          </div>
+
+          <label class="consent">
+            <input type="checkbox" name="consentimento" id="consentimento">
+            <span>Autorizo o João Fonseca a contactar-me sobre esta análise e a tratar os meus dados para esse fim. Posso retirar este consentimento a qualquer momento. <a href="#" target="_blank" rel="noopener">Política de Privacidade.</a></span>
+          </label>
+          <div class="err" data-err="consentimento" style="margin-top:8px">É necessário autorizar o contacto.</div>
+        </div>
+
+        <!-- NAV -->
+        <div class="nav">
+          <button type="button" class="btn btn-ghost" id="btnBack" style="display:none">Voltar</button>
+          <button type="button" class="btn btn-primary" id="btnNext">Continuar</button>
+        </div>
+      </form>
+
+      <!-- FINAL -->
+      <div class="done" id="done">
+        <div class="check">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7BAE92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <h2>Recebido. <em>Estou do seu lado.</em></h2>
+        <p id="doneName">Obrigado. Vou preparar a análise da sua casa e entro em contacto consigo no horário que indicou.</p>
+        <p style="color:var(--verde-salva);font-family:var(--display);font-style:italic;font-size:18px;margin-top:18px">Para a vida que vai viver.</p>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wordmark foot-mark"><span class="jf-italic">João</span> Fonseca</div>
+  <span class="slogan">Para a vida que vai viver.</span>
+</footer>
+
+<script>
+/* ====================================================================
+   LÓGICA · multi-passo, validação, captura UTM, envio ao CRM
+   ==================================================================== */
+
+/* >>> CONFIGURAÇÃO: endpoint do CRM Foco Imo <<<
+   Aponta para a tua rota Next.js (handler entregue à parte).
+   Em produção: https://crm-joao.vercel.app/api/leads/captura-amc      */
+const CRM_ENDPOINT = "/api/leads/captura-amc";
+
+const form    = document.getElementById('amcForm');
+const steps   = [...document.querySelectorAll('.step')];
+const segs    = [...document.querySelectorAll('#progress .seg')];
+const btnNext = document.getElementById('btnNext');
+const btnBack = document.getElementById('btnBack');
+const doneBox = document.getElementById('done');
+let current = 0;
+
+/* --- captura de UTMs e referência (para tracking do link na bio) --- */
+function captureTracking(){
+  const p = new URLSearchParams(window.location.search);
+  return {
+    utm_source:   p.get('utm_source')   || '',
+    utm_medium:   p.get('utm_medium')   || '',
+    utm_campaign: p.get('utm_campaign') || '',
+    utm_content:  p.get('utm_content')  || '',
+    utm_term:     p.get('utm_term')     || '',
+    referrer:     document.referrer      || '',
+    landing_url:  window.location.href,
+  };
+}
+const tracking = captureTracking();
+
+/* --- seleção visual de choices (radio) --- */
+document.querySelectorAll('[data-choice]').forEach(group=>{
+  group.querySelectorAll('.choice').forEach(c=>{
+    c.addEventListener('click',()=>{
+      group.querySelectorAll('.choice').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');
+      c.querySelector('input').checked = true;
+      clearErr(group.dataset.choice);
+    });
+  });
+});
+/* --- chips (multi-seleção) --- */
+document.querySelectorAll('#chips .chip').forEach(ch=>{
+  const input=ch.querySelector('input');
+  // o clicar no label já alterna o checkbox nativamente;
+  // basta refletir o estado real no visual, sem alternar de novo.
+  input.addEventListener('change',()=>{
+    ch.classList.toggle('sel', input.checked);
+  });
+});
+
+/* --- validação de telemóvel PT, anti-números falsos --- */
+function isTelefoneValido(raw){
+  // normaliza: tira espaços, traços, parênteses e indicativo +351 / 00351
+  let n = raw.replace(/[\s\-().]/g,'');
+  n = n.replace(/^(\+351|00351)/,'');
+  // tem de ter 9 dígitos e começar por 9 (telemóvel PT) ou 2 (fixo)
+  if(!/^[29]\d{8}$/.test(n)) return false;
+
+  // rejeitar todos os dígitos iguais: 911111111, 222222222...
+  if(/^(\d)\1{8}$/.test(n)) return false;
+
+  // rejeitar sequências crescentes/decrescentes: 912345678, 987654321, 123456789
+  const asc  = '0123456789';
+  const desc = '9876543210';
+  if(asc.includes(n) || desc.includes(n)) return false;
+  // tolera sequência só nos últimos 8 após o 9 inicial: 9 + 12345678 / 9 + 87654321
+  const corpo = n.slice(1);
+  if(asc.includes(corpo) || desc.includes(corpo)) return false;
+
+  // rejeitar padrão de par repetido: 919191919, 121212121
+  if(/^(\d\d)\1{3}\d?$/.test(n)) return false;
+
+  // exigir variedade mínima: pelo menos 4 dígitos distintos
+  if(new Set(n).size < 4) return false;
+
+  return true;
+}
+
+/* --- validação de email --- */
+function isEmailValido(v){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+}
+
+/* --- validação por passo --- */
+function validateStep(n){
+  let ok=true;
+  if(n===0){
+    if(!val('localizacao')){showErr('localizacao');ok=false}
+    if(!val('tipo')){showErr('tipo');ok=false}
+  }
+  if(n===2){
+    if(!checked('prazo')){showErr('prazo');ok=false}
+  }
+  if(n===3){
+    if(!val('nome')){showErr('nome');ok=false}
+    if(!isTelefoneValido(val('telefone'))){showErr('telefone');ok=false}
+    if(!isEmailValido(val('email'))){showErr('email');ok=false}
+    if(!document.getElementById('consentimento').checked){showErr('consentimento');ok=false}
+  }
+  return ok;
+}
+function val(name){const el=form.elements[name];return el?el.value.trim():''}
+function checked(name){return [...form.elements[name]].some(r=>r.checked)}
+function showErr(k){const e=document.querySelector(`[data-err="${k}"]`);if(e)e.classList.add('show')}
+function clearErr(k){const e=document.querySelector(`[data-err="${k}"]`);if(e)e.classList.remove('show')}
+form.querySelectorAll('input,select,textarea').forEach(el=>{
+  el.addEventListener('input',()=>clearErr(el.name));
+  el.addEventListener('change',()=>clearErr(el.name));
+});
+
+/* --- navegação --- */
+function render(){
+  steps.forEach((s,i)=>s.classList.toggle('active',i===current));
+  segs.forEach((s,i)=>s.classList.toggle('on',i<=current));
+  btnBack.style.display = current===0 ? 'none':'inline-flex';
+  btnNext.textContent = current===steps.length-1 ? 'Quero a minha análise' : 'Continuar';
+  document.querySelector('.hero-form').scrollIntoView({behavior:'smooth',block:'start'});
+}
+btnBack.addEventListener('click',()=>{if(current>0){current--;render()}});
+btnNext.addEventListener('click',async()=>{
+  if(!validateStep(current))return;
+  if(current<steps.length-1){current++;render();return}
+  await submit();
+});
+
+/* --- submissão ao CRM --- */
+async function submit(){
+  btnNext.disabled=true; btnNext.textContent='A enviar…';
+
+  const extras=[...form.querySelectorAll('input[name="extras"]:checked')].map(i=>i.value);
+  const payload={
+    // imóvel
+    localizacao: val('localizacao'),
+    tipo:        val('tipo'),
+    tipologia:   val('tipologia'),
+    estado:      val('estado'),
+    area:        val('area'),
+    extras,
+    // intenção
+    prazo:  (form.elements['prazo'].value)||'',
+    motivo: val('motivo'),
+    // contacto
+    nome:     val('nome'),
+    telefone: val('telefone'),
+    email:    val('email'),
+    horario:  (form.elements['horario']?.value)||'',
+    consentimento:true,
+    // tracking
+    origem:'landing-analise-mercado',
+    ...tracking,
+    submitted_at:new Date().toISOString(),
+  };
+
+  try{
+    const r=await fetch(CRM_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    showDone(payload.nome);
+  }catch(err){
+    console.error('Erro ao enviar lead:',err);
+    btnNext.disabled=false;
+    btnNext.textContent='Tentar novamente';
+    alert('Não foi possível enviar agora. Verifique a ligação e tente novamente.');
+  }
+}
+function showDone(nome){
+  document.getElementById('progress').style.display='none';
+  steps.forEach(s=>s.classList.remove('active'));
+  document.querySelector('.nav').style.display='none';
+  if(nome){document.getElementById('doneName').textContent=
+    `Obrigado, ${nome.split(' ')[0]}. Vou preparar a análise da sua casa e entro em contacto consigo no horário que indicou.`}
+  doneBox.classList.add('show');
+}
+
+render();
+</script>
+</body>
+</html>
