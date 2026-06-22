@@ -202,6 +202,15 @@
 >     browser e empurrava a caixa de escrever (`MessageInput`) para baixo do ecrã; com `100dvh` a caixa fica visível
 >     no fundo. Builds: layout `2c30f16`, caixa de escrever `a38df49` (no ar `260622_1424`).
 >
+>   **▶️ ORDEM ACORDADA 22/06 (depois dos 2 bugs acima, todos FEITOS):** seguir a lista de ataque por esta ordem,
+>   e só no fim construir os Ativos Digitais:
+>   1. 🔐 **Fraude no Business Manager** — ver JUNTOS no browser (extensão Claude-in-Chrome ligada; o João aponta o que
+>      vê, eu inspecciono/oriento; NÃO bloquear/denunciar nada às cegas — acções de segurança Meta = mão do João).
+>   2. 🤖 **IA aprender o estilo do João + responder na Caixa Social (Messenger, MSG-5)** + esclarecer "pagar"/impulsionar.
+>   3. 🔑 **Token PERMANENTE + número definitivo** (dedicado vs coexistência) — mão do João, eu guio.
+>   4. 🧹 **Limpeza do `autoCreateDeal` morto** + redeploy do brief Telegram (dívida técnica, edge functions).
+>   5. 🆕 **Ativos Digitais** (aba+CRUD na Biblioteca + mover Política de privacidade) — capturado acima; CONSTRUIR SÓ
+>      quando 1-4 estiverem fechados.
 > ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
 > O João viu o Inbox (2 deals) e logo a seguir a Análise→Visão Geral ainda com "482 em risco". Corri um agente a
 > mapear TODAS as superfícies que decidem "parado/estagnado/risco". Estado:
