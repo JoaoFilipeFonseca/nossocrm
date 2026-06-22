@@ -18,6 +18,7 @@ import {
   GitMerge,
   BotOff,
   Bot,
+  ArrowLeft,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -40,6 +41,8 @@ interface ContactPanelProps {
   hasDuplicate?: boolean;
   onResolveDuplicate?: () => void;
   className?: string;
+  /** Telemóvel: voltar ao fio da conversa (escondido em ecrãs grandes). */
+  onBack?: () => void;
 }
 
 interface InfoRowProps {
@@ -102,6 +105,7 @@ export const ContactPanel = memo(function ContactPanel({
   hasDuplicate,
   onResolveDuplicate,
   className,
+  onBack,
 }: ContactPanelProps) {
   // Hooks must be called unconditionally before any early returns
   const updateContact = useUpdateContact();
@@ -165,6 +169,16 @@ export const ContactPanel = memo(function ContactPanel({
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
+      {/* Voltar ao fio da conversa (telemóvel) */}
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="lg:hidden flex items-center gap-2 px-4 h-12 shrink-0 border-b border-slate-200 dark:border-white/10 text-sm font-medium text-slate-600 dark:text-slate-300"
+        >
+          <ArrowLeft className="w-4 h-4" /> Voltar à conversa
+        </button>
+      )}
       {/* Header */}
       <div className="p-4 border-b border-slate-200 dark:border-white/10">
         {/* Avatar & Name */}

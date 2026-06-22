@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { MessageSquare, User, CheckCircle, MoreVertical, LinkIcon, Trash2, RotateCcw, Search } from 'lucide-react';
+import { MessageSquare, User, CheckCircle, MoreVertical, LinkIcon, Trash2, RotateCcw, Search, ArrowLeft, Info } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { sanitizeUrl } from '@/lib/utils/sanitize';
@@ -57,6 +57,9 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  // Navegação responsiva (telemóvel): mostra 1 painel de cada vez.
+  // false = vê-se o fio da conversa; true = vê-se a ficha do contacto.
+  const [showContactMobile, setShowContactMobile] = useState(false);
   const [replyToMessage, setReplyToMessage] = useState<import('@/lib/messaging/types').MessagingMessage | null>(null);
 
   // Subscribe to realtime updates
@@ -125,7 +128,15 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
   const handleSelectConversation = useCallback((id: string) => {
     setSelectedConversationId(id);
     setShowSearch(false);
+    setShowContactMobile(false);
     router.push(`/messaging?id=${id}`, { scroll: false });
+  }, [router]);
+
+  // Voltar à lista de conversas (telemóvel)
+  const handleBackToList = useCallback(() => {
+    setSelectedConversationId(undefined);
+    setShowContactMobile(false);
+    router.push('/messaging', { scroll: false });
   }, [router]);
 
   // Link conversation to contact
@@ -175,8 +186,13 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
 
   return (
     <div className="h-full flex">
-      {/* Conversation List */}
-      <div className="w-80 flex-shrink-0">
+      {/* Conversation List — em telemóvel esconde-se quando há conversa aberta */}
+      <div
+        className={cn(
+          'w-full lg:w-80 flex-shrink-0',
+          selectedConversationId ? 'hidden lg:block' : 'block'
+        )}
+      >
         <ConversationList
           selectedId={selectedConversationId}
           onSelect={handleSelectConversation}
@@ -184,12 +200,27 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
         />
       </div>
 
-      {/* Message Thread */}
-      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900/50">
+      {/* Message Thread — em telemóvel só aparece com conversa aberta e sem a ficha à frente */}
+      <div
+        className={cn(
+          'flex-1 flex-col bg-slate-50 dark:bg-slate-900/50',
+          selectedConversationId && !showContactMobile ? 'flex' : 'hidden lg:flex'
+        )}
+      >
         {selectedConversation ? (
           <>
             {/* Header */}
             <div className="h-16 px-4 flex items-center gap-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10">
+              {/* Voltar à lista (telemóvel) */}
+              <button
+                type="button"
+                onClick={handleBackToList}
+                className="lg:hidden -ml-1 p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white rounded-lg transition-colors"
+                title="Voltar à lista"
+                aria-label="Voltar à lista de conversas"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
               <div className="relative">
                 {sanitizeUrl(selectedConversation.externalContactAvatar) ? (
                   <img
@@ -221,6 +252,16 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {/* Ver ficha do contacto (telemóvel) */}
+                <button
+                  type="button"
+                  onClick={() => setShowContactMobile(true)}
+                  className="lg:hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                  title="Ver ficha do contacto"
+                  aria-label="Ver ficha do contacto"
+                >
+                  <Info className="w-5 h-5" />
+                </button>
                 <AssignmentDropdown
                   conversationId={selectedConversation.id}
                   assignedUserId={selectedConversation.assignedUserId}
@@ -329,14 +370,20 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
         )}
       </div>
 
-      {/* Contact Panel */}
-      <div className="w-80 border-l border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 flex-shrink-0">
+      {/* Contact Panel — em telemóvel só aparece quando se pede a ficha */}
+      <div
+        className={cn(
+          'w-full lg:w-80 border-l border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 flex-shrink-0',
+          selectedConversationId && showContactMobile ? 'block' : 'hidden lg:block'
+        )}
+      >
         <ContactPanel
           conversation={selectedConversation}
           isLoading={isConversationLoading && !!selectedConversationId}
           onLinkContact={() => setIsLinkModalOpen(true)}
           onViewContact={handleViewContact}
           onViewDeals={handleViewDeals}
+          onBack={() => setShowContactMobile(false)}
         />
       </div>
 
