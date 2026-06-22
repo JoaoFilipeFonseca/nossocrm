@@ -33,6 +33,44 @@ export function useConversationClassification(conversationId: string | undefined
   });
 }
 
+export interface FunnelSuggestion {
+  funnel: FunnelKey | 'indefinido';
+  reason: string;
+}
+
+/**
+ * WA-4b — Sugestão de funil por IA (automática ao abrir a conversa).
+ * Cache agressiva: a IA só corre uma vez por conversa enquanto estiver fresca.
+ */
+export function useConversationFunnelSuggestion(
+  conversationId: string | undefined,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: ['messaging', 'funnelSuggestion', conversationId ?? 'none'],
+    enabled: !!conversationId && enabled,
+    staleTime: 10 * 60_000,
+    gcTime: 30 * 60_000,
+    retry: false,
+    queryFn: async (): Promise<FunnelSuggestion> => {
+      const res = await fetch('/api/ai/tasks/messaging/classify-funnel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId }),
+      });
+      if (!res.ok) {
+        // Falha graciosa (IA desligada, etc.) → sem sugestão.
+        return { funnel: 'indefinido', reason: '' };
+      }
+      const data = await res.json();
+      if (!data || typeof data.funnel !== 'string') {
+        return { funnel: 'indefinido', reason: '' };
+      }
+      return { funnel: data.funnel, reason: data.reason ?? '' };
+    },
+  });
+}
+
 /** Classifica/promove a conversa num funil (cria ou move o negócio). */
 export function useClassifyConversation(conversationId: string) {
   const queryClient = useQueryClient();
