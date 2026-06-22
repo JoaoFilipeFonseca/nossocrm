@@ -28,7 +28,7 @@ export function MessagingTabs({ initialConversationId }: { initialConversationId
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      <div className="flex gap-1 px-3 pt-1.5 border-b border-slate-200 dark:border-white/10 shrink-0">
+      <div className="relative z-10 flex gap-1 px-3 pt-1.5 border-b border-slate-200 dark:border-white/10 shrink-0 bg-white dark:bg-slate-900">
         <button type="button" onClick={() => go('conversas')} className={tabCls(tab === 'conversas')}>
           <MessageSquare className="w-4 h-4" /> Conversas
         </button>

@@ -307,7 +307,7 @@ export function MessagingPage({ initialConversationId }: MessagingPageProps = {}
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
