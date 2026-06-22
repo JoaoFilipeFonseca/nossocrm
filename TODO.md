@@ -155,8 +155,13 @@
 >     nesse funil/Oportunidade com `source='whatsapp'` (atribuição do canal) + nota automação; se já tem negócio
 >     aberto → MOVE/associa a esse funil (sem duplicar). Mostrar em que funil o contacto está agora. Continuidade
 >     (2.ª mensagem inbound) só faz aparecer o aviso "classificar" — NÃO cria nada sozinho (humano decide).
->     **WA-4b (a seguir, capturado):** IA lê a conversa e **sugere/destaca** o botão provável (intenção: "ver imóvel"
->     =comprador; "quanto vale a minha casa"=proprietário); o João confirma com 1 clique. Liga a [[plano_copy_ia_em_todo_o_lado]].
+>     **✅ WA-4b (FEITO E VERIFICADO 22/06, commit fe29f70):** sugestão automática ao abrir. Verificado ao vivo:
+>     o João mandou "quanto vale o meu apartamento, a pensar vender" → a IA destacou **Proprietário** com razão
+>     correcta em PT-PT, botão com ring; funil actual (Compradores) cheio. Rota `/api/ai/tasks/messaging/classify-funnel`
+>     (requireAITaskContext + runWithAIFallback). Cache 10min (1 chamada IA/conversa). NÃO classifica sozinha.
+>     **🎯 SUB-ÉPICO WHATSAPP COMPLETO E VERIFICADO (WA-1..WA-4b).** Pendente só do João (produção): **TOKEN PERMANENTE**
+>     (o de teste expira em horas — confirmado: expirou ao meio-dia 22/06, "Authentication Error" no envio; receber
+>     não precisa de token) + número definitivo (dedicado vs coexistência, decidir com calma).
 >     Regras: contacto≠lead até clique; proveniência/canal obrigatório; sem duplicar negócios; multi-tenant/RLS.
 >   - **WA-4 — Continuidade→lead + atribuição:** conversa vira negócio só com continuidade real, source='whatsapp'
 >     + tag proveniência, etapa "Contactos" do funil. (Liga ao MSG-5 do Messenger.)
@@ -188,6 +193,10 @@
 >     sobreposição óbvia → **precisa de repro logado + inspecção do elemento que apanha o clique** (provável overlay
 >     invisível/pointer-events ou stacking). Desvio actual: navegar por URL (`/messaging` vs `/messaging?tab=social`).
 >     Hipótese a testar primeiro: dar `relative z-10` à barra de abas; confirmar com inspecção, não às cegas.
+>   - **🐞 BUG/UX (reportado 22/06) — aba Mensagens MUITO má no telemóvel:** no telemóvel, a aba Mensagens
+>     (`/messaging` → `MessagingPage`, layout de 3 colunas fixas w-80) não dá para mexer como no PC (lista+thread+
+>     painel lado a lado não cabem em ecrã estreito; sem navegação responsiva entre lista↔conversa↔ficha). Precisa
+>     de layout responsivo mobile (mostrar 1 painel de cada vez + voltar). João: "tem de ser corrigida".
 >
 > ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
 > O João viu o Inbox (2 deals) e logo a seguir a Análise→Visão Geral ainda com "482 em risco". Corri um agente a
