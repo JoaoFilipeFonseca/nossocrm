@@ -120,79 +120,83 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fire-and-forget: send to provider without blocking the response.
-    // Uses createStaticAdminClient (service role, no request context needed)
-    // because the standard createClient depends on next/headers which is
-    // unavailable after the response has been sent.
+    // Dispatch to the provider and WAIT for it before responding.
+    // IMPORTANT: this used to be fire-and-forget (`void (async () => {…})()`) after
+    // the response, but on Vercel the serverless function is frozen the moment the
+    // response is returned — the dispatch never completed and the message stayed
+    // forever in 'queued'. Awaiting guarantees the provider call runs to completion.
+    // Uses createStaticAdminClient (service role) for the status updates.
     const router = getChannelRouter();
     const messageId = dbMessage.id;
     const channelId = channel.id;
 
-    void (async () => {
-      const supabaseAdmin = createStaticAdminClient();
-      try {
+    const supabaseAdmin = createStaticAdminClient();
+    try {
+      await supabaseAdmin
+        .from('messaging_messages')
+        .update({ status: 'queued' })
+        .eq('id', messageId);
+
+      // Resolve internal replyToMessageId → provider's external_id (e.g. WhatsApp wamid).
+      // Providers expect the platform message ID for threaded replies, not our DB UUID.
+      // Z-API requires its own internal zapiMessageId (stored in metadata.zapi_message_id),
+      // NOT the WhatsApp messageId stored in external_id.
+      let replyToExternalId: string | undefined;
+      if (replyToMessageId) {
+        const { data: replyMsg } = await supabaseAdmin
+          .from('messaging_messages')
+          .select('external_id, metadata')
+          .eq('id', replyToMessageId)
+          .maybeSingle();
+
+        if (replyMsg) {
+          const zapiId = (replyMsg.metadata as Record<string, unknown> | null)?.zapi_message_id as string | undefined;
+          // Z-API needs its internal zapiMessageId; other providers use external_id (WhatsApp ID)
+          replyToExternalId = (channel.provider === 'z-api' ? zapiId : undefined) ?? replyMsg.external_id ?? undefined;
+        }
+      }
+
+      console.log('[messaging/messages] sending to provider:', { messageId, channelId, provider: channel.provider, contentType: (content as MessageContent).type, to: externalContactId, replyToExternalId });
+
+      const result = await router.sendMessage(channelId, {
+        conversationId,
+        to: externalContactId,
+        content: content as MessageContent,
+        replyToExternalId,
+      });
+
+      console.log('[messaging/messages] provider result:', JSON.stringify(result));
+
+      if (result.success) {
         await supabaseAdmin
           .from('messaging_messages')
-          .update({ status: 'queued' })
+          .update({
+            status: 'sent',
+            external_id: result.externalMessageId,
+            sent_at: new Date().toISOString(),
+          })
           .eq('id', messageId);
-
-        // Resolve internal replyToMessageId → provider's external_id (e.g. WhatsApp wamid).
-        // Providers expect the platform message ID for threaded replies, not our DB UUID.
-        // Z-API requires its own internal zapiMessageId (stored in metadata.zapi_message_id),
-        // NOT the WhatsApp messageId stored in external_id.
-        let replyToExternalId: string | undefined;
-        if (replyToMessageId) {
-          const { data: replyMsg } = await supabaseAdmin
-            .from('messaging_messages')
-            .select('external_id, metadata')
-            .eq('id', replyToMessageId)
-            .maybeSingle();
-
-          if (replyMsg) {
-            const zapiId = (replyMsg.metadata as Record<string, unknown> | null)?.zapi_message_id as string | undefined;
-            // Z-API needs its internal zapiMessageId; other providers use external_id (WhatsApp ID)
-            replyToExternalId = (channel.provider === 'z-api' ? zapiId : undefined) ?? replyMsg.external_id ?? undefined;
-          }
-        }
-
-        console.log('[messaging/messages] sending to provider:', { messageId, channelId, provider: channel.provider, contentType: (content as MessageContent).type, to: externalContactId, replyToExternalId });
-
-        const result = await router.sendMessage(channelId, {
-          conversationId,
-          to: externalContactId,
-          content: content as MessageContent,
-          replyToExternalId,
-        });
-
-        console.log('[messaging/messages] provider result:', JSON.stringify(result));
-
-        if (result.success) {
-          await supabaseAdmin
-            .from('messaging_messages')
-            .update({
-              status: 'sent',
-              external_id: result.externalMessageId,
-              sent_at: new Date().toISOString(),
-            })
-            .eq('id', messageId);
-        } else {
-          console.error('[messaging/messages] provider failure:', result.error);
-          await supabaseAdmin
-            .from('messaging_messages')
-            .update({
-              status: 'failed',
-              error_code: result.error?.code,
-              error_message: result.error?.message,
-              failed_at: new Date().toISOString(),
-            })
-            .eq('id', messageId);
-        }
-      } catch (err: unknown) {
-        console.error('[messaging/messages] background send failed:', err instanceof Error ? err.message : err, err instanceof Error ? err.stack : '');
+        // Reflect final state in the response so the UI shows it immediately.
+        (dbMessage as DbMessagingMessage).status = 'sent';
+        (dbMessage as DbMessagingMessage).external_id = result.externalMessageId ?? null;
+      } else {
+        console.error('[messaging/messages] provider failure:', result.error);
+        await supabaseAdmin
+          .from('messaging_messages')
+          .update({
+            status: 'failed',
+            error_code: result.error?.code,
+            error_message: result.error?.message,
+            failed_at: new Date().toISOString(),
+          })
+          .eq('id', messageId);
+        (dbMessage as DbMessagingMessage).status = 'failed';
       }
-    })();
+    } catch (err: unknown) {
+      console.error('[messaging/messages] send failed:', err instanceof Error ? err.message : err, err instanceof Error ? err.stack : '');
+    }
 
-    // Respond immediately with pending message — UI updates via realtime
+    // Respond with the message in its final state — UI also reconciles via realtime
     return NextResponse.json(transformMessage(dbMessage as DbMessagingMessage));
   } catch (error) {
     console.error('[messaging/messages]', error instanceof Error ? error.message : 'Unknown error');
