@@ -196,9 +196,11 @@
 >     conversa aberta troca a vista. (O URL pode ficar em `?id=` por reversão do Next, mas é cosmético — a vista é a certa.)
 >   - ✅ **BUG/UX RESOLVIDO (22/06, commit `2c30f16`) — aba Mensagens má no telemóvel:** `MessagingPage` passou a ter
 >     layout responsivo abaixo de `lg`: mostra 1 painel de cada vez — lista → fio (seta ◀ Voltar no header) → ficha
->     do contacto (botão ⓘ abre; ◀ Voltar à conversa volta). 3 colunas mantêm-se em ecrã grande. Estrutura
->     verificada no build no ar (botões `lg:hidden` + classes condicionais das colunas presentes). Flip visual `lg`
->     (1024px) a confirmar pelo João no telemóvel real (a janela do Chrome de teste não encolhe abaixo de ~1536px).
+>     do contacto (botão ⓘ abre; ◀ Voltar à conversa volta). 3 colunas mantêm-se em ecrã grande. **VERIFICADO PELO
+>     JOÃO NO TELEMÓVEL REAL (22/06): consegue navegar e ENVIAR mensagem.** Afinação final (commit `a38df49`): o
+>     contentor passou de `100vh` para **`100dvh`** (`lg:` mantém `100vh`) — no telemóvel o `100vh` conta a barra do
+>     browser e empurrava a caixa de escrever (`MessageInput`) para baixo do ecrã; com `100dvh` a caixa fica visível
+>     no fundo. Builds: layout `2c30f16`, caixa de escrever `a38df49` (no ar `260622_1424`).
 >
 > ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
 > O João viu o Inbox (2 deals) e logo a seguir a Análise→Visão Geral ainda com "482 em risco". Corri um agente a
