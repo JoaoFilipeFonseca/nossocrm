@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MessageSquare, MessageCircle } from 'lucide-react';
 import { MessagingPage } from './MessagingPage';
@@ -13,9 +13,28 @@ import { SocialInboxPage } from '@/features/social-inbox/SocialInboxPage';
 export function MessagingTabs({ initialConversationId }: { initialConversationId?: string } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tab = searchParams.get('tab') === 'social' ? 'social' : 'conversas';
+
+  // A aba activa vive em ESTADO LOCAL (inicializado pelo URL). Não pode depender só do
+  // round-trip do URL: com uma conversa aberta (?id=...), o Next reverte o push de
+  // `?tab=social` de volta para `?id=...` durante o commit do React (o MessagingPage
+  // montado "fixa" o ?id), deixando as abas presas ao clique. O estado muda a vista de
+  // imediato; o URL continua a ser actualizado à mesma para deep-link/refresh.
+  const [tab, setTab] = useState<'conversas' | 'social'>(
+    () => (searchParams.get('tab') === 'social' ? 'social' : 'conversas')
+  );
+
+  // Voltar/avançar do browser muda o URL "por fora" → re-sincroniza a vista.
+  useEffect(() => {
+    const sync = () => {
+      const sp = new URLSearchParams(window.location.search);
+      setTab(sp.get('tab') === 'social' ? 'social' : 'conversas');
+    };
+    window.addEventListener('popstate', sync);
+    return () => window.removeEventListener('popstate', sync);
+  }, []);
 
   const go = (t: 'conversas' | 'social') => {
+    setTab(t);
     router.push(t === 'social' ? '/messaging?tab=social' : '/messaging', { scroll: false });
   };
 
@@ -28,7 +47,7 @@ export function MessagingTabs({ initialConversationId }: { initialConversationId
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      <div className="relative z-10 flex gap-1 px-3 pt-1.5 border-b border-slate-200 dark:border-white/10 shrink-0 bg-white dark:bg-slate-900">
+      <div className="flex gap-1 px-3 pt-1.5 border-b border-slate-200 dark:border-white/10 shrink-0">
         <button type="button" onClick={() => go('conversas')} className={tabCls(tab === 'conversas')}>
           <MessageSquare className="w-4 h-4" /> Conversas
         </button>

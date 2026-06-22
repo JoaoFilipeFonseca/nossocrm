@@ -41,9 +41,7 @@ export function AssignmentDropdown({
   };
 
   return (
-    // modal={false}: evita que o Radix deixe pointer-events:none preso no <body>
-    // ao fechar (bug das abas de Mensagens não-clicáveis com conversa aberta).
-    <DropdownMenu modal={false}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
