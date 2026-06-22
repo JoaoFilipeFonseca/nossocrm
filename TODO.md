@@ -134,16 +134,38 @@
 > **Decisão de desenho (João aprovou):** 1.ª mensagem WhatsApp cria SÓ contacto+conversa (NÃO criar regra
 > de routing no arranque); o negócio (lead) só nasce na Fatia 4 com continuidade real (source='whatsapp').
 > **FATIAS (1 commit cada + tsc0/lint0 + verificação real):**
->   - ✅/▶️ **WA-1 — Teste de ligação REAL no wizard:** rota `POST /api/messaging/channels/test` usa
->     `getStatus()` do provider (GET /{phoneNumberId} na Meta); tornar `appSecret` obrigatório p/ meta-cloud;
->     alinhar `businessAccountId`→`wabaId`. *Verif: criar canal com credenciais reais → teste mostra nº verificado.*
->   - **WA-2 — Receber:** João aponta webhook na Meta (mão dele) + envia msg real → entra em
->     `messaging_conversations`/`messaging_messages` e aparece na aba Mensagens.
->   - **WA-3 — Responder:** responder de dentro do CRM (rota `messages` já existe) na janela 24h → status sent/delivered.
+>   - ✅ **WA-1 — Teste de ligação REAL no wizard (FEITO, commit 79da8e8):** rota `POST /api/messaging/channels/test`
+>     usa `getStatus()` do provider; `appSecret` obrigatório p/ meta-cloud; `businessAccountId`→`wabaId`. Verificado prod.
+>   - ✅ **WA-2 — Receber (FEITO E VERIFICADO 22/06):** canal de teste criado (channel_id `6732ce22…`, número de teste
+>     Meta +1 555-673-0293, Phone Number ID `1127593193780328`, WABA `1345611560826124`). Webhook apontado + WABA
+>     subscrita à app. Mensagem real do telemóvel do João entrou → `messaging_conversations`+`messaging_messages`,
+>     associada a contacto existente (dedup por telefone), SEM criar negócio (contacto≠lead, como desenhado). Aparece na aba Mensagens.
+>   - ✅ **WA-3 — Responder (FEITO E VERIFICADO 22/06, commit e3aad82):** corrigido o fire-and-forget; resposta escrita
+>     no CRM saiu outbound → Meta (wamid) → status delivered. Bug do envio resolvido.
+>   - ▶️ **WA-4 — Continuidade→lead + atribuição (PRÓXIMA):** conversa vira negócio só com continuidade real,
+>     source='whatsapp' + tag proveniência, etapa "Contactos" do funil. (Liga ao MSG-5 do Messenger.)
 >   - **WA-4 — Continuidade→lead + atribuição:** conversa vira negócio só com continuidade real, source='whatsapp'
 >     + tag proveniência, etapa "Contactos" do funil. (Liga ao MSG-5 do Messenger.)
 > **Mão do João (Meta, fora do código):** WABA + número no Meta App; token permanente; apontar webhook + Verify
 > Token + subscrever campos messages/message_deliveries/message_reads. Eu preparo e guio no browser.
+> **🧠 GOTCHAS apurados ao montar (22/06, canal de teste ao vivo):**
+>   - Configurar a Callback URL na app **NÃO chega** — é preciso a **WABA subscrever a app** via
+>     `POST /{waba-id}/subscribed_apps` (com o access token). Sem isto a Meta nunca entrega mensagens (0 POSTs).
+>   - O número de teste da Meta (+1 555…) é **fictício** (prefixo 555) — não se lhe pode enviar do telemóvel;
+>     o fluxo é: app envia template ao destinatário verificado → ele responde → entra o inbound.
+>   - Envio do CRM era **fire-and-forget pós-resposta** → Vercel congela → mensagem ficava 'queued'. Corrigido (WA-3).
+> **🆕 CAPTURADO 22/06 (ideias do João a meio — NÃO executar já, fora do âmbito WhatsApp):**
+>   - **Caixa Social (Messenger) responder + "pagar":** hoje a Caixa Social só MOSTRA mensagens, não deixa
+>     responder de dentro do CRM (é o MSG-5 do épico). O João quer poder **responder** ali, e mencionou "pagar"
+>     (rever o que quis dizer — talvez impulsionar/anúncio a partir da conversa?). → Fatia WA/MSG futura.
+>   - **🔐 Meta Business — possível fraude a denunciar/bloquear:** o João viu algo na administração de Negócios
+>     (Business Manager → "Administrar"/Businesses) que considera **fraudulento** e quer **denunciar e bloquear**.
+>     Acção de segurança da conta dele (mão do João; eu guio no browser). Esclarecer O QUÊ exactamente vê e tratar
+>     **depois** de fechar a verificação do WhatsApp. (Liga a [[regra_privacidade_dados_indecifraveis]].)
+>   - **🤖 IA a sugerir respostas no WhatsApp + aprender o estilo do João:** a Caixa Social já mostra sugestões de
+>     IA (`ai_draft`); o João quer o MESMO no WhatsApp (sugerir resposta na conversa) E que a IA **aprenda com as
+>     respostas dele** (o tom/forma como ele responde) e melhore com o tempo. → Fatia futura, liga a
+>     [[plano_whatsapp_inbox_ia]] (IA Sugerir Resposta) + [[plano_copy_ia_em_todo_o_lado]]. NÃO executar já.
 >
 > ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
 > O João viu o Inbox (2 deals) e logo a seguir a Análise→Visão Geral ainda com "482 em risco". Corri um agente a
