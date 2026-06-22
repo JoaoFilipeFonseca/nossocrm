@@ -208,7 +208,11 @@
 >      vê, eu inspecciono/oriento; NÃO bloquear/denunciar nada às cegas — acções de segurança Meta = mão do João).
 >   2. 🤖 **IA aprender o estilo do João + responder na Caixa Social (Messenger, MSG-5)** + esclarecer "pagar"/impulsionar.
 >   3. 🔑 **Token PERMANENTE + número definitivo** (dedicado vs coexistência) — mão do João, eu guio.
->   4. 🧹 **Limpeza do `autoCreateDeal` morto** + redeploy do brief Telegram (dívida técnica, edge functions).
+>   4. ✅ **Item 6 (22/06):** brief Telegram REDEPLOYADO+verificado (curl 403). `autoCreateDeal` morto REMOVIDO do
+     `messaging-webhook-meta` (repo, commit) — função+`getLeadRoutingRule`+2 chamadas; webhook passa a só contacto+conversa.
+     ⚠️ **Deploy do webhook em prod ADIADO**: ficheiro 43KB, sem CLI/token nesta sessão → reproduzi-lo à mão p/ o MCP
+     arriscava partir o webhook de entrada AO VIVO por zero ganho (código morto, 0 routing rules). Fazer por **Supabase
+     CLI** (`supabase functions deploy messaging-webhook-meta`, lê o ficheiro directo) numa próxima oportunidade.
 >   5. 🆕 **Ativos Digitais** (aba+CRUD na Biblioteca + mover Política de privacidade) — capturado acima; CONSTRUIR SÓ
 >      quando 1-4 estiverem fechados.
 > ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
@@ -225,9 +229,10 @@
 >   Contactos por trabalhar/adiados), não `updated_at`.
 > - ✅ **Painel de Foco** (`4bb04c1`) — fallback "X dias sem contacto seu" usa `days_idle` quando há sinais.
 > - ✅ **Contexto IA do board** (`4bb04c1`) — `useBoardsController` conta "parados" pelo estado real, não `isDealRotting`.
-> - ⏳ **telegram-morning-brief** — FONTE corrigida (`4bb04c1`, deals frios via `deal_state_signals`); **falta só o
->   REDEPLOY do edge** (importa `_shared/*` → fazer por tooling próprio com verify_jwt:false, ou MCP a incluir os
->   3 ficheiros; não arrisquei partir o cron diário por 1 linha). Até lá o brief conta frios pela regra antiga.
+> - ✅ **telegram-morning-brief — REDEPLOYADO 22/06** (item 6) via MCP `deploy_edge_function` (versão 4, `verify_jwt:false`,
+>   incluídos `_shared/automation-params.ts`+`_shared/record-run.ts` com a estrutura `../_shared`). Verificado: curl com
+>   `X-Cron-Secret` errado → **HTTP 403** (arranca, imports resolvidos, cron protegido). O brief já conta frios pela
+>   verdade única (`deal_state_signals`).
 > - ℹ️ `features/boards/utils.ts` + `useBoardsController` `isDealRotting`/`daysInStage` — MANTIDOS: o badge
 >   "Xd na fase" é tempo NA ETAPA (legítimo), não "parado".  `lib/automations/systemFlows.ts` = só texto descritivo
 >   das automações (não calcula nada).
