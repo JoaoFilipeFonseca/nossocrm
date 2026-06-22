@@ -142,8 +142,18 @@
 >     associada a contacto existente (dedup por telefone), SEM criar negócio (contacto≠lead, como desenhado). Aparece na aba Mensagens.
 >   - ✅ **WA-3 — Responder (FEITO E VERIFICADO 22/06, commit e3aad82):** corrigido o fire-and-forget; resposta escrita
 >     no CRM saiu outbound → Meta (wamid) → status delivered. Bug do envio resolvido.
->   - ▶️ **WA-4 — Continuidade→lead + atribuição (PRÓXIMA):** conversa vira negócio só com continuidade real,
->     source='whatsapp' + tag proveniência, etapa "Contactos" do funil. (Liga ao MSG-5 do Messenger.)
+>   - ▶️ **WA-4 — Continuidade→lead + atribuição (EM CURSO, redesenhada pela visão do João 22/06):**
+>     O João NÃO quer promoção automática silenciosa nem funil adivinhado-e-fixo. Quer **botões directos na
+>     conversa** que ele carrega para classificar/promover, porque o mesmo contacto pode ser comprador hoje e
+>     proprietário daqui a anos (a classificação muda no tempo). A IA **sugere** o botão pelo contexto.
+>     **WA-4a (construir já):** botões na conversa do WhatsApp — **Comprador / Proprietário / Arrendamento**
+>     (etapa "Oportunidade" do funil escolhido). Ao carregar: se o contacto NÃO tem negócio aberto → cria negócio
+>     nesse funil/Oportunidade com `source='whatsapp'` (atribuição do canal) + nota automação; se já tem negócio
+>     aberto → MOVE/associa a esse funil (sem duplicar). Mostrar em que funil o contacto está agora. Continuidade
+>     (2.ª mensagem inbound) só faz aparecer o aviso "classificar" — NÃO cria nada sozinho (humano decide).
+>     **WA-4b (a seguir, capturado):** IA lê a conversa e **sugere/destaca** o botão provável (intenção: "ver imóvel"
+>     =comprador; "quanto vale a minha casa"=proprietário); o João confirma com 1 clique. Liga a [[plano_copy_ia_em_todo_o_lado]].
+>     Regras: contacto≠lead até clique; proveniência/canal obrigatório; sem duplicar negócios; multi-tenant/RLS.
 >   - **WA-4 — Continuidade→lead + atribuição:** conversa vira negócio só com continuidade real, source='whatsapp'
 >     + tag proveniência, etapa "Contactos" do funil. (Liga ao MSG-5 do Messenger.)
 > **Mão do João (Meta, fora do código):** WABA + número no Meta App; token permanente; apontar webhook + Verify
@@ -166,6 +176,14 @@
 >     IA (`ai_draft`); o João quer o MESMO no WhatsApp (sugerir resposta na conversa) E que a IA **aprenda com as
 >     respostas dele** (o tom/forma como ele responde) e melhore com o tempo. → Fatia futura, liga a
 >     [[plano_whatsapp_inbox_ia]] (IA Sugerir Resposta) + [[plano_copy_ia_em_todo_o_lado]]. NÃO executar já.
+>   - **🐞 BUG (reportado 22/06, por corrigir) — abas Mensagens não clicáveis com conversa aberta:** em
+>     `/messaging`, com uma conversa ABERTA (tanto em "Conversas" como em "Caixa Social"), os botões de aba
+>     **"Conversas" / "Caixa Social"** deixam de responder ao clique. Sem conversa aberta clicam bem. Componentes:
+>     `features/messaging/MessagingTabs.tsx` (barra de abas, sem z-index/relative) + `MessagingPage.tsx` (3 colunas
+>     h-full) dentro de `components/Layout.tsx` `<main p-0 overflow-y-auto>`. Análise estática NÃO achou
+>     sobreposição óbvia → **precisa de repro logado + inspecção do elemento que apanha o clique** (provável overlay
+>     invisível/pointer-events ou stacking). Desvio actual: navegar por URL (`/messaging` vs `/messaging?tab=social`).
+>     Hipótese a testar primeiro: dar `relative z-10` à barra de abas; confirmar com inspecção, não às cegas.
 >
 > ### 🔁 VARRIMENTO "verdade única em TODO o lado" (19/06, pedido do João — ele apanhou 2 superfícies a mentir)
 > O João viu o Inbox (2 deals) e logo a seguir a Análise→Visão Geral ainda com "482 em risco". Corri um agente a

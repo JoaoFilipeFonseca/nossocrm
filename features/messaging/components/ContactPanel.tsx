@@ -26,6 +26,7 @@ import { sanitizeUrl } from '@/lib/utils/sanitize';
 import type { ConversationView } from '@/lib/messaging/types';
 import { ChannelIndicator } from './ChannelIndicator';
 import { WindowExpiryBadge } from './WindowExpiryBadge';
+import { ConversationClassifier } from './ConversationClassifier';
 import { ContactPanelSkeleton } from './skeletons/ContactPanelSkeleton';
 import { useUpdateContact } from '@/lib/query/hooks/useContactsQuery';
 import { useToggleConversationAiPause } from '@/lib/query/hooks/useMessagingConversationsQuery';
@@ -279,6 +280,11 @@ export const ContactPanel = memo(function ContactPanel({
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-4">
+        {/* Classificar (WA-4a) — só WhatsApp, para a atribuição do canal ficar correcta */}
+        {channelType === 'whatsapp' && (
+          <ConversationClassifier conversationId={conversation.id} />
+        )}
+
         {/* Contact Info */}
         <Section title="Informações">
           {contactPhone && (
