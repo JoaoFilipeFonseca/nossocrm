@@ -146,7 +146,11 @@
 >     O João NÃO quer promoção automática silenciosa nem funil adivinhado-e-fixo. Quer **botões directos na
 >     conversa** que ele carrega para classificar/promover, porque o mesmo contacto pode ser comprador hoje e
 >     proprietário daqui a anos (a classificação muda no tempo). A IA **sugere** o botão pelo contexto.
->     **WA-4a (construir já):** botões na conversa do WhatsApp — **Comprador / Proprietário / Arrendamento**
+>     **✅ WA-4a (FEITO E VERIFICADO 22/06, commit 68e50cb):** botão "Comprador" criou negócio em Compradores→
+>     Oportunidade (status open), atribuição source=whatsapp na deal_activity, ligado ao contacto existente sem
+>     duplicar; aviso de continuidade apareceu (2+ inbound). Modelo: deals SEM source/metadata → atribuição via
+>     deal_activities; funil por nome normalizado; Oportunidade=order 1. Rota `/api/messaging/conversations/[id]/classify`.
+>     **WA-4a (desenho original):** botões na conversa do WhatsApp — **Comprador / Proprietário / Arrendamento**
 >     (etapa "Oportunidade" do funil escolhido). Ao carregar: se o contacto NÃO tem negócio aberto → cria negócio
 >     nesse funil/Oportunidade com `source='whatsapp'` (atribuição do canal) + nota automação; se já tem negócio
 >     aberto → MOVE/associa a esse funil (sem duplicar). Mostrar em que funil o contacto está agora. Continuidade
