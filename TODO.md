@@ -1267,3 +1267,10 @@ B-001, B-003, B-004, B-005, B-006, B-008, B-010, B-011, T-001 — todos resolvid
 > **Próximo passo combinado com o João (31/05):** catálogo completo ✅. A seguir,
 > passagem de priorização (mais importante → menos), atribuir P1/P2/P3 a cada ID,
 > e seguir o plano 1 objectivo de cada vez.
+
+## 📌 CAPTURA (09/07/2026) — Brief 2 Power List: refinamento DST do cron
+O cron `power-list` corre a `45 7 * * 1-5` (07:45 UTC) = **08:45 Lisboa no horário de verão** (correcto agora).
+No horário de INVERNO (WET, UTC+0, fim Out→fim Mar) fica **07:45 Lisboa** (1h mais cedo).
+Mesma limitação do `telegram-morning-brief` (`0 7`). Refinar quando entrarmos no inverno:
+duas entradas de cron com guarda de fuso, ou um guard na rota que verifica a hora local de Lisboa.
+Não urgente (âmbito congelado). Idem para o número do dia: meta 25 conversas está em `system_automations.params.weekly_goal` (editável em /automacoes).

@@ -188,7 +188,9 @@ select cron.schedule(
         'Content-Type', 'application/json',
         'X-Cron-Secret', (select decrypted_secret from vault.decrypted_secrets where name = 'backup_cron_secret' limit 1)
       ),
-      body := '{}'::jsonb
+      body := '{}'::jsonb,
+      -- A rota gera as frases por IA (pode passar dos 5s por omissão do pg_net).
+      timeout_milliseconds := 55000
     );
   $cmd$
 );
