@@ -234,7 +234,10 @@ const ATOMS: Record<string, AtomExecFn> = {
     }
     const creds = (channel.credentials || {}) as { apiKey?: string; fromName?: string; fromEmail?: string; replyTo?: string };
     if (!creds.apiKey || !creds.fromEmail) throw new Error("Credenciais Resend incompletas (apiKey e fromEmail obrigatórios)");
-    const fromHeader = creds.fromName ? `${creds.fromName} <${creds.fromEmail}>` : creds.fromEmail;
+    // from_name opcional sobrepõe o nome do canal (ex: marca pessoal sem agência).
+    const fromNameOverride = (ctx.config.from_name as string | undefined)?.trim() || null;
+    const effectiveFromName = fromNameOverride ?? creds.fromName;
+    const fromHeader = effectiveFromName ? `${effectiveFromName} <${creds.fromEmail}>` : creds.fromEmail;
     const replyTo = replyToOverride || creds.replyTo;
 
     // RGPD: rodapé com anular subscrição (HMAC do Vault) + política de privacidade.
@@ -441,6 +444,54 @@ const ATOMS: Record<string, AtomExecFn> = {
     const { data, error } = await ctx.supabase.from("activities").insert(payload).select("id").single();
     if (error) throw new Error(`supabase: ${error.message}`);
     return { activity_id: data.id, date };
+  },
+
+  // action.record_activity — regista um toque em deal_activities (a "verdade única"
+  // dos toques, que alimenta a timeline unificada e o deal_state_signals). Com
+  // actor='automation' a timeline mostra o badge 🤖. Idempotente: se já existe uma
+  // actividade deste tipo para o negócio, devolve _halt (não repete a automação).
+  "action.record_activity": async (ctx) => {
+    const dealId = String(ctx.config.deal_id ?? "").trim();
+    const contactId = String(ctx.config.contact_id ?? "").trim();
+    const type = String(ctx.config.type ?? "note").trim() || "note";
+    const actor = String(ctx.config.actor ?? "automation").trim() || "automation";
+    const description = ctx.config.description != null ? String(ctx.config.description) : null;
+    const dedupe = ctx.config.idempotency === true || ctx.config.idempotency === "true";
+    if (!dealId && !contactId) throw new Error("record_activity precisa de deal_id ou contact_id");
+
+    // Idempotência (pré-verificação): já respondemos a este negócio?
+    if (dedupe && dealId) {
+      const { data: existing } = await ctx.supabase
+        .from("deal_activities")
+        .select("id")
+        .eq("organization_id", ctx.organizationId)
+        .eq("deal_id", dealId)
+        .eq("type", type)
+        .limit(1)
+        .maybeSingle();
+      if (existing) return { _halt: true, skipped: "already_recorded", deal_id: dealId };
+    }
+
+    const { data, error } = await ctx.supabase
+      .from("deal_activities")
+      .insert({
+        organization_id: ctx.organizationId,
+        deal_id: dealId || null,
+        contact_id: contactId || null,
+        type,
+        actor,
+        description,
+        metadata: { via: "automation-coracao" },
+      })
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      // Corrida: o índice único disparou → outra execução já registou. Não repete.
+      if ((error as { code?: string }).code === "23505") return { _halt: true, skipped: "unique_conflict", deal_id: dealId };
+      throw new Error(`record_activity: ${error.message}`);
+    }
+    return { activity_id: data?.id ?? null, recorded_at: new Date().toISOString(), deal_id: dealId || null, contact_id: contactId || null };
   },
 
   "action.run_ai": async (ctx) => {
@@ -654,6 +705,49 @@ async function loadContactDealImovel(
 }
 
 // ----------------------------------------------------------------------------
+// now — contexto temporal em Europa/Lisboa para os templates ({{ now.* }}).
+// call_phrase = quando o João pode ligar, em linguagem natural, respeitando a
+// janela de chamadas (seg-sex 09h-20h, sáb 09h-13h) e NUNCA prometendo Domingo.
+// ----------------------------------------------------------------------------
+function computeNow(): Record<string, unknown> {
+  const d = new Date();
+  const fmt = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Lisbon", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+  const parts = fmt.formatToParts(d);
+  const wdShort = parts.find((p) => p.type === "weekday")?.value ?? "Mon";
+  const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+  const minute = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+  const wdMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const wd = wdMap[wdShort] ?? 1;
+  // Janela de chamadas: domingo nunca; sábado 09-13; seg-sex 09-20.
+  const windowFor = (day: number): { start: number; end: number } | null =>
+    day === 0 ? null : day === 6 ? { start: 9, end: 13 } : { start: 9, end: 20 };
+  const nowMinutes = hour * 60 + minute;
+  const todayWin = windowFor(wd);
+  const inWindow = !!todayWin && nowMinutes >= todayWin.start * 60 && nowMinutes < todayWin.end * 60;
+  const namesPt = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
+  let callPhrase = "ainda hoje";
+  if (!inWindow) {
+    let found = false;
+    for (let i = 0; i < 8 && !found; i += 1) {
+      const day = (wd + i) % 7;
+      const win = windowFor(day);
+      if (!win) continue;
+      if (i === 0) {
+        if (nowMinutes < win.start * 60) { callPhrase = "hoje de manhã"; found = true; }
+        // janela de hoje já passou: continua para o próximo dia com janela
+      } else {
+        callPhrase = i === 1 ? "amanhã de manhã" : `na ${namesPt[day]} de manhã`;
+        found = true;
+      }
+    }
+    if (!found) callPhrase = "assim que possível";
+  }
+  return { iso: d.toISOString(), hour, weekday: wd, is_call_window: inWindow, call_phrase: callPhrase };
+}
+
+// ----------------------------------------------------------------------------
 // Handler
 // ----------------------------------------------------------------------------
 Deno.serve(async (req) => {
@@ -743,6 +837,11 @@ Deno.serve(async (req) => {
       else if (evtType.startsWith("deal.")) dealId = payload.id;
       else if (evtType.startsWith("imovel.")) imovelId = payload.id;
     }
+    // Eventos sintéticos (ex: lead.captured) trazem os ids explícitos no payload.
+    // Preenche o que a heurística de prefixo não apanhou, para carregar contact/deal
+    // no template context ({{ contact.email }}, {{ deal.title }}, etc.).
+    if (!contactId && typeof payload.contact_id === "string") contactId = payload.contact_id;
+    if (!dealId && typeof payload.deal_id === "string") dealId = payload.deal_id;
 
     const startNode = findStartNode(automation.definition);
     if (!startNode) return new Response(JSON.stringify({ error: "no trigger node" }), { status: 400, headers: { "Content-Type": "application/json" } });
@@ -776,6 +875,7 @@ Deno.serve(async (req) => {
     deal: baseRefs.deal ?? {},
     imovel: baseRefs.imovel ?? {},
     trigger: triggerEvent ?? {},
+    now: computeNow(),
   };
 
   // Estado do runner. Resume multi-frame usa o estado já reidratado; senão cria

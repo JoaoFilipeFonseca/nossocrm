@@ -94,6 +94,7 @@ export const actionSendEmail: AtomDefinition = {
     const text = String(context.config.text ?? '').trim();
     const html = context.config.html ? String(context.config.html) : undefined;
     const replyToOverride = (context.config.reply_to as string | undefined) || null;
+    const fromNameOverride = (context.config.from_name as string | undefined)?.trim() || null;
     const overrideChannelId = (context.config.channel_id as string | undefined) || null;
 
     if (!to || !EMAIL_REGEX.test(to)) throw new Error(`to (email) inválido: ${to}`);
@@ -146,7 +147,8 @@ export const actionSendEmail: AtomDefinition = {
       throw new Error('Credenciais Resend incompletas (apiKey + fromEmail obrigatórios)');
     }
 
-    const fromHeader = creds.fromName ? `${creds.fromName} <${creds.fromEmail}>` : creds.fromEmail;
+    const effectiveFromName = fromNameOverride ?? creds.fromName;
+    const fromHeader = effectiveFromName ? `${effectiveFromName} <${creds.fromEmail}>` : creds.fromEmail;
     const replyTo = replyToOverride || creds.replyTo;
 
     // RGPD: rodapé com anular subscrição (token HMAC) + política de privacidade.

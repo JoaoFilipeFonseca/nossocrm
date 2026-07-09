@@ -331,8 +331,9 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
       .maybeSingle();
     return (data?.id as string) ?? null;
   }
-  async function createDeal(boardId: string, stageId: string): Promise<boolean> {
-    const { error: dealErr } = await supabase.from("deals").insert({
+  let createdDealId: string | null = null;
+  async function createDeal(boardId: string, stageId: string): Promise<string | null> {
+    const { data: newDeal, error: dealErr } = await supabase.from("deals").insert({
       organization_id: orgId,
       board_id: boardId,
       stage_id: stageId,
@@ -341,12 +342,12 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
       title: `${leadName} - Meta Ads`,
       value: 0,
       attribution,
-    });
+    }).select("id").single();
     if (dealErr) {
       console.error("[meta-leads] Erro ao criar negócio:", dealErr.message);
-      return false;
+      return null;
     }
-    return true;
+    return (newDeal?.id as string) ?? null;
   }
 
   const campaignId = attribution.campaign_id;
@@ -359,9 +360,11 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
       .maybeSingle();
     if (routing?.board_id) {
       const stageId = (routing.stage_id as string | null) ?? (await firstStageId(routing.board_id as string));
-      if (stageId && (await createDeal(routing.board_id as string, stageId))) {
+      const dealId = stageId ? await createDeal(routing.board_id as string, stageId) : null;
+      if (dealId) {
         routed = true;
         routedVia = "campanha";
+        createdDealId = dealId;
         boardName = (routing.boards as { name?: string } | null)?.name ?? null;
       }
     }
@@ -377,9 +380,11 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
     const boardId = (defaults?.default_lead_board_id as string | null) ?? null;
     if (boardId) {
       const stageId = (defaults?.default_lead_stage_id as string | null) ?? (await firstStageId(boardId));
-      if (stageId && (await createDeal(boardId, stageId))) {
+      const dealId = stageId ? await createDeal(boardId, stageId) : null;
+      if (dealId) {
         routed = true;
         routedVia = "omissao";
+        createdDealId = dealId;
         const { data: b } = await supabase.from("boards").select("name").eq("id", boardId).maybeSingle();
         boardName = (b?.name as string) ?? null;
       }
@@ -428,6 +433,24 @@ async function processLead(supabase: Db, appSecret: string, change: LeadgenChang
     p_source: "meta_leadgen_webhook",
     p_idempotency_key: `lead.meta_ads:${leadgenId}`,
   });
+
+  // 4b) Épico Coração (Brief 3): resposta imediata a lead nova. Publica
+  // lead.captured para a automação enviar email de acolhimento + push "LIGA
+  // AGORA". Idempotente por leadgen_id. O tick do listener (cada minuto) apanha.
+  if (contactId) {
+    await supabase.rpc("publish_event", {
+      p_event_type: "lead.captured",
+      p_payload: {
+        deal_id: createdDealId,
+        contact_id: contactId,
+        source: "meta_ads",
+        is_test: false,
+      },
+      p_organization_id: orgId,
+      p_source: "meta_leadgen_webhook",
+      p_idempotency_key: `lead.captured:${leadgenId}`,
+    });
+  }
 
   console.log(`[meta-leads] Lead ${leadgenId} processada (lead ${newLead.id}, contacto ${contactId}).`);
 }

@@ -15,6 +15,7 @@ export { actionSendEmail } from './actions/send-email';
 export { actionModifyContact } from './actions/modify-contact';
 export { actionModifyDeal } from './actions/modify-deal';
 export { actionCreateTask } from './actions/create-task';
+export { actionRecordActivity } from './actions/record-activity';
 export { actionRunAi } from './actions/run-ai';
 
 export { logicWaitFixed } from './logic/wait-fixed';

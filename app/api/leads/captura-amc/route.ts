@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createStaticAdminClient } from '@/lib/supabase/server';
 import { normalizePhoneE164 } from '@/lib/phone';
-import { sendTelegramMessage } from '@/lib/notifications/telegram';
 
 export const runtime = 'nodejs';
 
@@ -77,13 +76,6 @@ function isTelefoneValido(raw: string): boolean {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-function esc(s: unknown): string {
-  return String(s ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
 
 function str(v: unknown): string {
   return v == null ? '' : String(v).trim();
@@ -295,6 +287,7 @@ export async function POST(req: Request) {
 
     // -------- 4) Criar negócio (não duplica se já houver um aberto) --------
     let dealCreated = false;
+    let newDealId: string | null = null;
     if (stageId) {
       const { data: aberto } = await sb
         .from('deals')
@@ -310,51 +303,67 @@ export async function POST(req: Request) {
         const tituloImovel = [imovel.tipo, imovel.tipologia, imovel.localizacao]
           .filter(Boolean)
           .join(' ');
-        const { error: dealErr } = await sb.from('deals').insert({
-          organization_id: ORG_ID,
-          board_id: BOARD_PROPRIETARIOS,
-          stage_id: stageId,
-          contact_id: contactId,
-          title: tituloImovel ? `${nome} — ${tituloImovel}` : `${nome} — ${source}`,
-          status: 'open',
-          value: 0,
-          attribution,
-        });
+        const { data: novoDeal, error: dealErr } = await sb
+          .from('deals')
+          .insert({
+            organization_id: ORG_ID,
+            board_id: BOARD_PROPRIETARIOS,
+            stage_id: stageId,
+            contact_id: contactId,
+            title: tituloImovel ? `${nome} — ${tituloImovel}` : `${nome} — ${source}`,
+            status: 'open',
+            value: 0,
+            attribution,
+          })
+          .select('id')
+          .single();
         dealCreated = !dealErr;
+        newDealId = novoDeal?.id ?? null;
       }
     }
 
-    // -------- 5) Alerta Telegram de lead nova (nunca para is_test) --------
-    if (!isTest) {
+    // -------- 5) Épico Coração: resposta imediata a lead nova --------
+    // Publica o evento lead.captured (só para leads reais e negócios novos) e
+    // acorda o listener na hora, para o email de acolhimento + push "LIGA AGORA"
+    // saírem em menos de 60s. A automação (visível em /automacoes) trata do
+    // email, do Telegram e do registo na timeline (actor='automation').
+    if (!isTest && dealCreated && newDealId) {
       try {
-        const { data: settings } = await sb
-          .from('organization_settings')
-          .select('telegram_crm_bot_token, telegram_crm_chat_id')
-          .eq('organization_id', ORG_ID)
-          .maybeSingle();
-        const tgToken = settings?.telegram_crm_bot_token as string | undefined;
-        const tgChat = settings?.telegram_crm_chat_id as string | undefined;
-        if (tgToken && tgChat) {
-          const contacto = [
-            phone ? `📞 ${esc(phone)}` : null,
-            email ? `✉️ ${esc(email)}` : null,
-          ]
-            .filter(Boolean)
-            .join('  ');
-          const imovelLinha = [imovel.tipo, imovel.tipologia, imovel.localizacao]
-            .filter(Boolean)
-            .join(' · ');
-          const texto =
-            `🟢 <b>Lead nova — captação</b>\n` +
-            `👤 <b>${esc(nome)}</b>\n` +
-            (contacto ? `${contacto}\n` : '') +
-            `📣 Origem: <b>${esc(source)}</b>\n` +
-            (imovelLinha ? `🏠 ${esc(imovelLinha)}\n` : '') +
-            `\nAbrir: https://crm.joaofilipefonseca.pt/boards`;
-          await sendTelegramMessage(tgToken, tgChat, texto);
+        await sb.rpc('publish_event', {
+          p_event_type: 'lead.captured',
+          p_payload: {
+            deal_id: newDealId,
+            contact_id: contactId,
+            source,
+            is_test: false,
+          },
+          p_organization_id: ORG_ID,
+          p_source: 'captura-amc',
+          p_idempotency_key: `lead.captured:${newDealId}`,
+        });
+      } catch {
+        /* publish best-effort: o tick do cron apanha o evento se isto falhar. */
+      }
+      // Nudge imediato ao listener (fire-and-forget com timeout curto).
+      try {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+        const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (url && key) {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 20000);
+          try {
+            await fetch(`${url}/functions/v1/automation-event-listener`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+              body: '{}',
+              signal: controller.signal,
+            });
+          } finally {
+            clearTimeout(timer);
+          }
         }
       } catch {
-        /* Telegram best-effort: nunca bloqueia a recepção da lead. */
+        /* nudge best-effort: o cron corre a cada minuto como rede de segurança. */
       }
     }
 

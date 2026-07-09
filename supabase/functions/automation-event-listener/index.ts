@@ -141,15 +141,15 @@ Deno.serve(async (req) => {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { data: events, error: evErr } = await supabase
-    .from("automation_events")
-    .select("id, organization_id, event_type, payload")
-    .eq("processed", false)
-    .order("occurred_at", { ascending: true })
-    .limit(BATCH_SIZE);
+  // Claim atómico: marca um lote como processado (FOR UPDATE SKIP LOCKED) e
+  // devolve-o. Assim, invocações concorrentes (nudge imediato da captura + tick
+  // do cron) recebem lotes disjuntos e cada evento dispara exactamente 1 execução.
+  const { data: events, error: evErr } = await supabase.rpc("claim_automation_events", {
+    p_limit: BATCH_SIZE,
+  });
 
   if (evErr) {
-    return new Response(JSON.stringify({ error: "failed to fetch events", details: evErr }), {
+    return new Response(JSON.stringify({ error: "failed to claim events", details: evErr }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
@@ -184,11 +184,7 @@ Deno.serve(async (req) => {
 
   await runInChunks(invocationPromises, PARALLEL_LIMIT, (p) => p);
 
-  const eventIds = eventRows.map((e) => e.id);
-  await supabase
-    .from("automation_events")
-    .update({ processed: true, processed_at: new Date().toISOString() })
-    .in("id", eventIds);
+  // Os eventos já foram marcados processados no claim atómico (claim_automation_events).
 
   return new Response(
     JSON.stringify({

@@ -142,6 +142,24 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
     },
   },
   {
+    id: 'action.record_activity',
+    category: 'action',
+    name: 'Registar toque',
+    icon: '🕓',
+    description: 'Regista um toque na timeline do negócio (deal_activities). Com actor "automation" mostra o robô. Pode ser idempotente por negócio.',
+    configSchema: {
+      type: 'object',
+      properties: {
+        deal_id: { type: 'string', description: 'ID do negócio. Usa "{{ deal.id }}".' },
+        contact_id: { type: 'string', description: 'ID do contacto. Usa "{{ contact.id }}".' },
+        type: { type: 'string', description: 'Tipo do toque (ex: lead_first_response). Default "note".' },
+        actor: { type: 'string', enum: ['automation', 'human', 'system'], enumLabels: ['Automação', 'Humano', 'Sistema'] },
+        description: { type: 'string' },
+        idempotency: { type: 'boolean', description: 'Não repete o mesmo type no mesmo negócio.' },
+      },
+    },
+  },
+  {
     id: 'action.run_ai',
     category: 'action',
     name: 'Correr IA',
@@ -250,6 +268,7 @@ export const ATOM_CATALOG: readonly AtomMetadata[] = [
         subject: { type: 'string', description: 'Assunto do email.' },
         text: { type: 'string', description: 'Versão texto. Suporta {{...}}.' },
         html: { type: 'string', description: 'Corpo HTML opcional. Suporta {{...}}.' },
+        from_name: { type: 'string', description: 'Nome do remetente opcional, sobrepõe o do canal (ex: marca pessoal sem agência).' },
         reply_to: { type: 'string', description: 'Reply-To opcional, sobrepõe o default do canal.' },
         channel_id: { type: 'string', description: 'Opcional. UUID do canal. Default = 1º canal Resend connected.' },
       },
