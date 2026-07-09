@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Phone, ArrowRight } from 'lucide-react';
 import { useInboxController } from './hooks/useInboxController';
 import { ViewModeToggle } from './components/ViewModeToggle';
 import { InboxOverviewView } from './components/InboxOverviewView';
@@ -80,6 +82,25 @@ export const InboxPage: React.FC = () => {
 
         <ViewModeToggle mode={viewMode} onChange={setViewMode} />
       </div>
+
+      {/* Power List do dia — atalho para /hoje (sem inchar a barra lateral) */}
+      <Link
+        href="/hoje"
+        className="group mb-6 flex items-center justify-between gap-3 rounded-xl border border-primary-200 dark:border-primary-500/30 bg-primary-50 dark:bg-primary-500/10 px-4 py-3 transition-colors hover:bg-primary-100 dark:hover:bg-primary-500/15"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white">
+            <Phone size={17} />
+          </span>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-slate-900 dark:text-white">A sua Power List de hoje</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+              Os contactos a ligar agora, por prioridade, com a primeira frase pronta.
+            </div>
+          </div>
+        </div>
+        <ArrowRight size={18} className="flex-shrink-0 text-primary-600 dark:text-primary-300 transition-transform group-hover:translate-x-0.5" />
+      </Link>
 
       {/* Views */}
       {viewMode === 'overview' ? (
