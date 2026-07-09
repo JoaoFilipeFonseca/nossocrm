@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Phone, RefreshCw, Copy, Check, PhoneOff, CalendarCheck, PhoneCall } from 'lucide-react';
+import { Phone, RefreshCw, Copy, Check, PhoneOff, Clock, PhoneCall } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import type { PowerListItem, PowerListPayload, PowerListBucket, Semaphore } from '@/lib/power-list/types';
 
@@ -17,12 +17,18 @@ const SEM: Record<Semaphore, { dot: string; bar: string; label: string; text: st
   red: { dot: 'bg-red-500', bar: 'bg-red-500', label: 'Abaixo do ritmo', text: 'text-red-600 dark:text-red-400' },
 };
 
-type CallResult = { type: 'call' | 'meeting'; result: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }> };
-const RESULTS: CallResult[] = [
-  { type: 'call', result: 'answered', label: 'Atendeu', icon: PhoneCall },
-  { type: 'call', result: 'no_answer', label: 'Não atendeu', icon: PhoneOff },
-  { type: 'meeting', result: 'meeting', label: 'Marcou reunião', icon: CalendarCheck },
+type PowerAction = 'answered' | 'no_answer' | 'snooze';
+type ActionBtn = { action: PowerAction; label: string; icon: React.ComponentType<{ size?: number; className?: string }> };
+const RESULTS: ActionBtn[] = [
+  { action: 'answered', label: 'Atendeu', icon: PhoneCall },
+  { action: 'no_answer', label: 'Não atendeu', icon: PhoneOff },
+  { action: 'snooze', label: 'Adiar', icon: Clock },
 ];
+const ACTION_TOAST: Record<PowerAction, string> = {
+  answered: 'Atendeu',
+  no_answer: 'Não atendeu',
+  snooze: 'Adiado',
+};
 
 function telHref(phone: string | null): string {
   if (!phone) return '';
@@ -58,35 +64,56 @@ export const HojePage: React.FC = () => {
     void load();
   }, [load]);
 
-  const logCall = async (item: PowerListItem, r: CallResult) => {
+  // Repor a fila (dá-me outro): pede 1 item novo que ainda não está à vista.
+  const replenish = async (visibleIds: string[]) => {
+    try {
+      const excl = encodeURIComponent(visibleIds.join(','));
+      const res = await fetch(`/api/power-list?exclude=${excl}&n=1`, { cache: 'no-store' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(data.items) || data.items.length === 0) return;
+      setPayload((prev) => {
+        if (!prev) return prev;
+        const seen = new Set(prev.items.map((i) => i.dealId));
+        const toAdd = (data.items as PowerListItem[]).filter((i) => !seen.has(i.dealId));
+        return toAdd.length ? { ...prev, items: [...prev.items, ...toAdd] } : prev;
+      });
+    } catch {
+      /* repor é best-effort */
+    }
+  };
+
+  const doAction = async (item: PowerListItem, action: PowerAction) => {
     setBusy(item.dealId);
     try {
-      const res = await fetch(`/api/deals/${encodeURIComponent(item.dealId)}/activities`, {
+      const res = await fetch('/api/power-list/action', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          type: r.type,
-          description: r.result === 'meeting' ? 'Reunião marcada a partir da Power List' : null,
-          metadata: { via: 'power-list', result: r.result },
-        }),
+        body: JSON.stringify({ dealId: item.dealId, action }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         addToast(data.error || 'Erro a registar', 'error');
         return;
       }
-      addToast(`✓ ${r.label} — ${item.contactName}`, 'success');
-      // Tira o item da lista e sobe o número do dia (call/meeting = conversa).
+      const extra = action === 'answered' && data.movedToOportunidade ? ' · movido para Oportunidade' : '';
+      addToast(`✓ ${ACTION_TOAST[action]} — ${item.contactName}${extra}`, 'success');
+
+      // Tira o item; só "Atendeu" (conversa real) sobe o número do dia.
+      const remaining = (payload?.items ?? []).filter((it) => it.dealId !== item.dealId);
       setPayload((prev) =>
         prev
           ? {
               ...prev,
-              items: prev.items.filter((it) => it.dealId !== item.dealId),
-              numeroDoDia: { ...prev.numeroDoDia, conversasSemana: prev.numeroDoDia.conversasSemana + 1 },
+              items: remaining,
+              numeroDoDia:
+                action === 'answered'
+                  ? { ...prev.numeroDoDia, conversasSemana: prev.numeroDoDia.conversasSemana + 1 }
+                  : prev.numeroDoDia,
             }
           : prev,
       );
       setExpanded(null);
+      void replenish(remaining.map((it) => it.dealId));
     } catch (e) {
       addToast((e as Error).message || 'Erro de rede', 'error');
     } finally {
@@ -105,8 +132,10 @@ export const HojePage: React.FC = () => {
   };
 
   const nd = payload?.numeroDoDia;
-  const pct = nd ? Math.min(100, Math.round((nd.conversasSemana / Math.max(1, nd.meta)) * 100)) : 0;
-  const sem = nd ? SEM[nd.semaphore] : SEM.red;
+  const ratio = nd ? nd.conversasSemana / Math.max(1, nd.meta) : 0;
+  const pct = Math.min(100, Math.round(ratio * 100));
+  const semKey: Semaphore = ratio >= 1 ? 'green' : ratio >= 0.5 ? 'amber' : 'red';
+  const sem = SEM[semKey];
 
   return (
     <div className="max-w-3xl mx-auto py-6 px-4 sm:py-8 sm:px-6">
@@ -230,8 +259,8 @@ export const HojePage: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-2">
                       {RESULTS.map((r) => (
                         <button
-                          key={r.result}
-                          onClick={() => void logCall(item, r)}
+                          key={r.action}
+                          onClick={() => void doAction(item, r.action)}
                           disabled={isBusy}
                           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 text-sm text-slate-700 dark:text-slate-200 hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 disabled:opacity-50"
                         >

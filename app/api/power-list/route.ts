@@ -21,7 +21,7 @@ function json<T>(body: T, status = 200): Response {
   });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -46,7 +46,27 @@ export async function GET() {
   const listSize = Math.max(1, Math.floor(Number(params.list_size) || 15));
   const weeklyGoal = Math.max(1, Math.floor(Number(params.weekly_goal) || 25));
 
-  // Lista via wrapper RLS-safe.
+  // Modo repor (dá-me outro): ?exclude=id1,id2&n=1 → devolve só itens NOVOS que
+  // ainda não estão à vista, mantendo a fila cheia sem regenerar as frases das
+  // linhas já mostradas.
+  const url = new URL(request.url);
+  const excludeRaw = (url.searchParams.get('exclude') || '').trim();
+  const excludeIds = excludeRaw ? excludeRaw.split(',').map((s) => s.trim()).filter(Boolean) : [];
+  const wantN = Math.max(0, Math.min(listSize, Math.floor(Number(url.searchParams.get('n')) || 0)));
+
+  if (excludeIds.length > 0 || wantN > 0) {
+    const fetchN = Math.min(listSize, excludeIds.length + Math.max(1, wantN));
+    const { data: rowsData, error: rowsErr } = await supabase.rpc('my_power_list', { p_n: fetchN });
+    if (rowsErr) return json({ error: rowsErr.message }, 500);
+    const excludeSet = new Set(excludeIds);
+    const fresh = ((rowsData ?? []) as RawPowerListRow[])
+      .filter((r) => !excludeSet.has(r.deal_id))
+      .slice(0, Math.max(1, wantN));
+    const items = await assembleItems(admin, orgId, fresh);
+    return json({ items, generatedAt: new Date().toISOString() });
+  }
+
+  // Lista completa via wrapper RLS-safe.
   const { data: rowsData, error: rowsErr } = await supabase.rpc('my_power_list', { p_n: listSize });
   if (rowsErr) return json({ error: rowsErr.message }, 500);
   const rows = (rowsData ?? []) as RawPowerListRow[];
