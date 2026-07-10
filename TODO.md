@@ -1356,3 +1356,15 @@ Radar Maia LIVE (market_listings, FSBO, digest 08:30, cron, /automacoes). Penden
   histórico entre corridas) — normal; validar depois de alguns dias de recolha.
 - **Digest pré-token**: se incomodar receber digest com 0 novas antes do token, adicionar guarda
   "não enviar se não houve recolha e nada novo".
+
+## 🔎 RADAR MAIA — rever classificação FSBO (colegas ≠ proprietários) — João 10/07
+João, ao ver os FSBO criados, notou que **alguns são colegas/agentes** (publicaram no Idealista
+como particular, mas são profissionais). A flag `contactInfo.professional=false` do Idealista NÃO é
+100% fiável. **REVER BEM antes de trabalhar a lista, para não enganar** (ligar a um "proprietário"
+que afinal é agente). Ideias para a revisão (a decidir com o João, NÃO executar já):
+- Cruzar telefone/nome dos FSBO contra os anunciantes de agência já vistos em market_listings
+  (mesmo número a aparecer em várias angariações = provável profissional).
+- Sinais: `contactInfo.totalAds` alto, nome com padrão de marca/empresa, mesmo telefone em N anúncios.
+- Passo de aprovação humana: João marca "é colega" e o registo sai da lista FSBO (tag `nao-fsbo`).
+- Reclassificar os 46 FSBO actuais nessa revisão.
+Regra-mãe: [[regra-lead-tag-proveniencia-obrigatoria]] (nome+telefone obrigatórios; agências nunca).
