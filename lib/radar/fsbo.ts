@@ -49,7 +49,12 @@ export async function createFsboFromListings(
   orgId: string,
   listings: StoredListing[],
 ): Promise<CreatedFsbo[]> {
-  const particulars = listings.filter((l) => l.advertiser_type === 'particular');
+  // Regra do João (INEGOCIÁVEL): FSBO = proprietário com nome E TELEFONE. Sem telefone
+  // não é lead (ver o anúncio não gera negócio) — fica só como dado de mercado em
+  // market_listings, não vira contacto/negócio. Agências nunca (advertiser_type != particular).
+  const particulars = listings.filter(
+    (l) => l.advertiser_type === 'particular' && !!l.advertiser_phone && l.advertiser_phone.replace(/\D/g, '').length >= 9,
+  );
   const created: CreatedFsbo[] = [];
   const nowIso = new Date().toISOString();
 
