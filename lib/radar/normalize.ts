@@ -189,15 +189,17 @@ function olxPropertyType(raw: OlxRaw): string | null {
   return 'apartamento';
 }
 
-/** Classificação conservadora do OLX: agência se o nome bate na blocklist. */
+/**
+ * Classificação do OLX. O OLX NÃO expõe tipo de anunciante de forma fiável
+ * (sellerType vem nulo) nem telefone, e mistura agências/promotores com nomes
+ * pessoais. Por isso NUNCA devolvemos 'particular' — o OLX alimenta só o mercado
+ * (medianas/sinais) e NÃO cria FSBO automático (o pipeline FSBO só age sobre
+ * 'particular', que vem do Idealista, esse sim fiável). Agência se o nome bate na
+ * blocklist; caso contrário 'desconhecido'. (Refinar classificador = TODO.)
+ */
 export function classifyOlxSeller(sellerName: string | null | undefined): AdvertiserType {
   if (!sellerName) return 'desconhecido';
   if (AGENCY_NAME_RE.test(sellerName)) return 'agencia';
-  // Nome pessoal simples (2+ palavras, sem dígitos) → provável particular.
-  const clean = sellerName.trim();
-  if (/\d/.test(clean)) return 'particular'; // ex.: "Paulo 964..." (telefone no nome) — é particular
-  const words = clean.split(/\s+/);
-  if (words.length >= 1 && words.length <= 4) return 'particular';
   return 'desconhecido';
 }
 

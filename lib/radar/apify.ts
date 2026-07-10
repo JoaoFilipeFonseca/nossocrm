@@ -23,9 +23,9 @@ export const PORTALS: Record<string, PortalConfig> = {
     portal: 'idealista',
     actor: 'memo23~idealista-scraper',
     buildInput: ({ maxItems }) => ({
-      // Maia, ordenado pelas mais recentes. O radar deduplica por hash, por isso
-      // basta varrer o topo das novidades todos os dias.
-      startUrls: ['https://www.idealista.pt/comprar-casas/maia/?ordem=data-desc'],
+      // Maia, só as publicadas na última semana (filtro de novidades do Idealista).
+      // O radar deduplica por hash, por isso re-ver as mesmas não cria duplicados.
+      startUrls: ['https://www.idealista.pt/comprar-casas/maia/com-publicado_ultima-semana/'],
       maxItems,
       splitByPrice: false,
       monitoringMode: false,
