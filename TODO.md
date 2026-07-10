@@ -1274,3 +1274,85 @@ No horário de INVERNO (WET, UTC+0, fim Out→fim Mar) fica **07:45 Lisboa** (1h
 Mesma limitação do `telegram-morning-brief` (`0 7`). Refinar quando entrarmos no inverno:
 duas entradas de cron com guarda de fuso, ou um guard na rota que verifica a hora local de Lisboa.
 Não urgente (âmbito congelado). Idem para o número do dia: meta 25 conversas está em `system_automations.params.weekly_goal` (editável em /automacoes).
+
+## Brief 3 (Coração) — captado 09/07, não executar já
+- **Consolidar notificação Meta Ads**: a lead do Meta recebe agora o push "🔥 LIGA AGORA"
+  (via evento `lead.captured` publicado por `automation-meta-leads`) E o "🟢 Lead nova — Meta Ads"
+  antigo do próprio `automation-meta-leads`. Redundância. Decidir: ou remover o Telegram inline do
+  meta-leads (deixar a automação Coração ser o notificador único, como em captura-amc), ou manter
+  o "Lead nova" só como resumo. Não urgente.
+- **Gancho WhatsApp (semana 3)**: quando a coexistência WhatsApp ligar, acrescentar variante
+  WhatsApp ao grafo da automação Coração (send_whatsapp já existe como átomo). Deixado por
+  implementar de propósito (o brief pede só o gancho).
+
+## Brief 4 (calculadora → mini-análise) — captado 09/07, não executar já
+- **Meta CAPI server-side na calculadora**: ao passar a `/avaliar` a chamar directamente
+  `captura-amc` (em vez da edge `submit` do portal), o evento CAPI server-side (pixel do João
+  `226877513589288`) deixa de sair para estas leads. O pixel client-side (fbq `SubmitApplication`)
+  continua a disparar. Consolidar depois: ou `captura-amc` emite o CAPI server-side, ou aceitar só
+  o client-side. Não urgente.
+- **Edge `avaliar-preco` (portal `mwchbdersfwgqlcvwssr`)**: já NÃO é chamada por nenhuma página.
+  Fica deployada mas órfã. Desactivar/remover quando houver acesso ao portal; sem pressa.
+- **CSS morto** em `calculadora-portugal.html`: regras `.result-hero`/`.r-price*`/`.cta-box`/
+  `.disclaimer` ficaram sem markup (removi o bloco de resultado). Limpar num polish futuro; inofensivas.
+
+## 🚫⚖️ SWEEP "avaliação" — banir em todo o lado (ordem do João 09/07, LEGAL) — ver [[regra-nunca-dizer-avaliacao]]
+João é AMI, NÃO perito CMVM → proibido por lei dizer "avaliação"/"avaliar" como serviço. Usar ACM /
+Análise Comparativa de Mercado / Análise de Mercado / Estudo de Mercado.
+- ✅ FEITO 09/07: `/avaliar` (calculadora-portugal.html) + LPs live do funil (quiz-diagnostico,
+  vender-premium, index) — 0 "avaliação" visível.
+- ⏳ FALTA (tarefa focada, verificar cada + deploy próprio):
+  1. **LPs órfãs** `_deploy_fr/calculadora-avaliacao.html` (23) e `landing-avaliacao.html` (15):
+     não estão ligadas a nenhum short-path do `_redirects` (órfãs). Confirmar se algum anúncio Meta
+     antigo ainda lhes aponta; se sim, corrigir copy; se não, decomissionar. NÃO tocar sem confirmar liveness.
+  2. **CRM app (Vercel)** ~54 ocorrências: distinguir **copy de cliente** (emails, labels visíveis →
+     trocar "avaliação"→"análise") de **identificadores de código/enum** (`em_avaliacao`, evento
+     `kind='avaliacao'`, `avaliar-preco`) → o VALOR fica (mudar parte a BD/migrações), só o LABEL muda
+     ("Em avaliação"→"Em análise", evento "Avaliação"→"Análise"). Verificar em produção + precheck.
+  3. **Skills/estratégia** (acm-imobiliaria-SKILL, biblia, etc.): rever menções; a skill ACM já evita.
+  4. **Emails/PDFs/posts**: garantir que nenhum template diz "avaliação".
+
+## 🎨 MIGRAÇÃO DE MARCA — LPs Fonseca & Rodrigues → João Fonseca (fase 3 do doc 05) — ordem do João 10/07
+> 📄 ORDEM DE SERVIÇO COMPLETA (LPs + email): `estrategia/v2-empresa/15-ORDEM-MARCA-LPS-E-EMAIL.md` — colar numa sessão nova.
+**Problema (João):** a lead vem da marca pessoal (anúncios João Fonseca) e aterra numa LP com marca **Fonseca & Rodrigues** — incoerência. Passar TODAS as LPs (`_deploy_fr/*.html`) para a marca pessoal **João Fonseca**.
+- Sessão focada própria (é grande: visual + copy + legais). Usar a skill `joao-fonseca-brand`.
+- Inclui: logo (F&R → João Fonseca), footer/rodapé, cores/tipografia da marca, `equipa.png` (foto João+Helena → decidir), copy "Fonseca & Rodrigues" → "João Fonseca". **Cuidado legal no rodapé:** a identificação da mediadora/AMI só é obrigatória em anúncios de imóveis; as LPs são lead-magnets — confirmar o que fica.
+- **NÃO toca nos fluxos de leads** (captura-amc → CRM → automação Coração → email/Telegram). Esses são canalização de dados, agnósticos à marca: continuam a correr, não é preciso fazer novos. Só muda o front-end das páginas.
+- Fazer no `_deploy_fr`, republicar com `wrangler pages deploy` (já autenticado). Verificar cada LP live + 375px.
+- Remover também o "Portugal"/"F&R" residual do rodapé da `/avaliar` (já tirei do badge/título a 10/07).
+- **Link público NÃO pode dizer "avaliação/avaliar"** (ordem João 10/07): mudar o path público
+  `/avaliar` → algo profissional tipo **`/estudo-de-mercado`** (no `_deploy_fr/_redirects`), e MANTER
+  `/avaliar` como alias a funcionar (os anúncios Meta apontam lá). Os **nomes de ficheiro**
+  (`calculadora-portugal.html`, `calculadora-avaliacao.html`) FICAM — são só referência interna do João.
+  Os outros paths (`/diagnostico`, `/bolso`, `/estrategia`) não dizem avaliação, ficam. Avisar Outlier do novo URL.
+
+## ✉️ MARCA DO EMAIL — limpar resíduo RE/MAX (pode ficar p/ depois, mas registado) — João 10/07
+Email sai por **Resend**, domínio **joaofilipefonseca.pt** (remetente joao@joaofilipefonseca.pt). O email de acolhimento (automação Coração) JÁ sai como **"João Fonseca"** (from_name no nó, Brief 3). MAS o canal `messaging_channels` (resend) ainda tem:
+- `fromName` por omissão = **"João Fonseca · RE/MAX MAJESTIC"** (afecta Power List, nurture, etc.)
+- `replyTo` = **jfsfonseca@remax.pt**
+Decidir a marca do email (João Fonseca puro vs manter RE/MAX legal) e limpar em `messaging_channels.credentials` + assinaturas.
+**Estratégia decidida com o João 10/07 (coerência total da marca no funil):** identidade única
+virada ao cliente = **`joao@joaofilipefonseca.pt`** (domínio dele) do princípio ao fim — anúncio →
+LP → email → resposta, tudo João Fonseca, RE/MAX nunca aparece ao cliente.
+- **Enviar:** já sai por Resend nesse domínio como "João Fonseca". Tirar "· RE/MAX MAJESTIC" do fromName.
+- **Receber:** **Cloudflare Email Routing (grátis; DNS já está na Cloudflare)** encaminha
+  `joao@joaofilipefonseca.pt` → a caixa que o João LÊ (ele vive no email RE/MAX → encaminhar para lá).
+- **Responder:** no cliente de email dele, "Enviar como `joao@joaofilipefonseca.pt`" → responde da marca
+  dele sem sair do sítio onde já trabalha. `replyTo` dos emails = `joao@joaofilipefonseca.pt`.
+- RE/MAX fica só onde é contratual/legal (anúncios de imóveis), nunca na relação com a lead/cliente.
+- Config técnica (Cloudflare routing + replyTo no canal) é minha; "enviar como" no email dele é acção dele.
+
+## 🛰️ RADAR MAIA (Brief 6) — pendentes capturados — 10/07
+Radar Maia LIVE (market_listings, FSBO, digest 08:30, cron, /automacoes). Pendentes:
+- **[AÇÃO DO JOÃO] Token da API Apify** → colar em `organization_settings.apify_token` para o cron
+  raspar sozinho todos os dias. Sem ele, o digest das 08:30 corre na mesma mas com 0 entradas novas
+  (só medianas/sinais da base já recolhida). Obter em apify.com → Settings → Integrations → API token.
+- **Imovirtual**: actor escolhido (`automation-lab/imovirtual-scraper`) mas normalizador ainda não
+  escrito → só Idealista+OLX ligados. Adicionar `normalizeImovirtual` + entrada em `PORTALS`.
+- **OLX FSBO**: OLX não expõe tipo de anunciante fiável (sellerType nulo) nem telefone → hoje OLX
+  alimenta só o mercado (medianas/sinais), não cria FSBO automático. Refinar classificador
+  (detalhe do anúncio / heurística de promotor) antes de criar FSBO a partir do OLX.
+- **Reduções de preço / dias-no-mercado**: os sinais de redução só activam ao 2.º dia (precisam de
+  histórico entre corridas) — normal; validar depois de alguns dias de recolha.
+- **Digest pré-token**: se incomodar receber digest com 0 novas antes do token, adicionar guarda
+  "não enviar se não houve recolha e nada novo".
