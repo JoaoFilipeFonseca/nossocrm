@@ -119,7 +119,19 @@ export function normalizeIdealista(raw: IdealistaRaw): CanonListing | null {
   const propertyType = idealistaPropertyType(raw);
   const isLand = propertyType === 'terreno';
   const professional = raw.contactInfo?.professional;
-  const advertiserType: AdvertiserType = professional === false ? 'particular' : professional === true ? 'agencia' : 'desconhecido';
+  let advertiserType: AdvertiserType = professional === false ? 'particular' : professional === true ? 'agencia' : 'desconhecido';
+  // Agente disfarçado de particular: se a descrição denuncia mediação/AMI/marca, é agência
+  // (regra do João: FSBO só proprietários; agentes nunca viram lead).
+  if (advertiserType === 'particular') {
+    const descText = [
+      (raw.basicInfo as { description?: string } | undefined)?.description,
+      (raw as { propertyComment?: string }).propertyComment,
+      raw.contactInfo?.commercialName,
+    ]
+      .filter(Boolean)
+      .join(' ');
+    if (looksLikeAgentText(descText)) advertiserType = 'agencia';
+  }
 
   return {
     portal: 'idealista',
@@ -176,6 +188,21 @@ interface OlxRaw {
 }
 
 const AGENCY_NAME_RE = /\b(imobili|medi[aã]|imo[-\s]?|predial|invicta|remax|re\/max|keller|kw\b|century|era\b|iad\b|zome|domus|leilo|realt|realty|real\s|casas?\b|habita|properties|group|lda\.?|sociedade|invest|consult|home|houses?\b|boutique)/i;
+
+/**
+ * Detector de AGENTE DISFARÇADO DE PARTICULAR. Em Portugal a lei obriga o agente a
+ * identificar AMI/mediação no anúncio; assim, mesmo quando o portal marca "particular",
+ * a descrição denuncia o profissional. Sinais FORTES (poucos falsos positivos): AMI,
+ * mediação imobiliária, marcas (RE/MAX, KW, Century21, iad, Zome…), "consultor imobiliário",
+ * "nossa carteira/equipa". Regra do João: FSBO só proprietários, agências nunca.
+ */
+const AGENT_TEXT_RE = /\bAMI\b|licen[çc]a\s*ami|media[çc][aã]o\s+imobili|mediadora|sociedade\s+de\s+media|re\s*\/?\s*max|remax|keller\s*williams|century\s*21|\bc21\b|\biad\b|zome|predimed|comprarcasa|imobili[áa]ri|consultor[a]?\s+imobili|nossa\s+carteira|nossa\s+equipa|minha\s+carteira/i;
+
+/** true se o texto do anúncio denuncia um agente/mediador (mesmo marcado "particular"). */
+export function looksLikeAgentText(text: string | null | undefined): boolean {
+  if (!text) return false;
+  return AGENT_TEXT_RE.test(text);
+}
 
 function olxPropertyType(raw: OlxRaw): string | null {
   const t = (raw.params?.type || raw.title || '').toLowerCase();
