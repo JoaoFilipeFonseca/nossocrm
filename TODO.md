@@ -1368,3 +1368,11 @@ que afinal é agente). Ideias para a revisão (a decidir com o João, NÃO execu
 - Passo de aprovação humana: João marca "é colega" e o registo sai da lista FSBO (tag `nao-fsbo`).
 - Reclassificar os 46 FSBO actuais nessa revisão.
 Regra-mãe: [[regra-lead-tag-proveniencia-obrigatoria]] (nome+telefone obrigatórios; agências nunca).
+
+### ↑ Atualização 10/07 (feito no mesmo dia): detector de agente disfarçado LIVE
+Executado já (o João mandou fazer agora, não deixar para depois): detector `looksLikeAgentText`
+no `normalizeIdealista` (AMI/mediação/marca/consultor na descrição → agência, não vira FSBO).
+Provado nos 1300 reais: 22 dos 46 FSBO eram agentes disfarçados → apagados. Ficam **24 FSBO reais**.
+RESIDUAL (rever depois): os 140 da base InfoCasa NÃO têm descrição → o detector não corre neles;
+podem conter agentes de portais não-Idealista (SuperCasa/Imovirtual/CustoJusto). Rever com
+descrições desses portais ou confirmação manual do João.
