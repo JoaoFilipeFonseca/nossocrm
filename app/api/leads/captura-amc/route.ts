@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createStaticAdminClient } from '@/lib/supabase/server';
 import { normalizePhoneE164 } from '@/lib/phone';
+import { metaTokenSecretName } from '@/lib/integrations/meta/config';
+import { buildCapiEvent, sendCapiEvents } from '@/lib/integrations/meta/capi';
 
 export const runtime = 'nodejs';
 
@@ -30,10 +32,59 @@ export const runtime = 'nodejs';
 
 const ORG_ID =
   process.env.CAPTURA_LEAD_ORG_ID || '29455d22-ebbf-4996-ac46-a071cb4363bf';
-// Funil Proprietários. Etapa "Oportunidade" resolvida em runtime (nome, fallback order 1).
+// Funil Proprietários (vendedores) — destino por defeito. Etapa "Oportunidade"
+// resolvida em runtime (nome, fallback order 1).
 const BOARD_PROPRIETARIOS = 'd08c7329-9e3e-43d1-ba42-6437a8363ae8';
 const STAGE_OPORTUNIDADE_ID = '7de3274e-e873-4926-9a3e-ce16a9a81140';
+// Funil Compradores — destino das LPs de imóvel (o visitante quer VER a casa,
+// não vender a dele). As duas boards têm uma etapa "Oportunidade".
+const BOARD_COMPRADORES = 'a70c40c7-5f9f-499b-9f39-f74cd9c596cf';
+const STAGE_COMPRADORES_OPORTUNIDADE_ID = '6bd91fc8-a4f5-4235-831b-e65ac9dc5154';
 const STAGE_OPORTUNIDADE_NOME = 'Oportunidade';
+
+/**
+ * CAPI Lead server-side (best-effort). Espelha o Pixel do browser com o MESMO
+ * event_id para a Meta deduplicar. Só para leads de LP de imóvel (compradores).
+ * Nunca atira: lê o token do Vault, e se algo falhar segue sem CAPI (o Pixel do
+ * browser já cobre o essencial). O cano de leads nunca pode partir por causa disto.
+ */
+async function dispararCapiLead(
+  sb: ReturnType<typeof createStaticAdminClient>,
+  opts: { eventId: string; email: string | null; phone: string | null; sourceUrl: string | null; contentIds: string[] },
+): Promise<void> {
+  try {
+    const { data: integ } = await sb
+      .from('automation_integrations')
+      .select('id, metadata')
+      .eq('provider', 'meta')
+      .eq('organization_id', ORG_ID)
+      .eq('status', 'active')
+      .maybeSingle();
+    if (!integ) return;
+    const integration = integ as { id: string; metadata: Record<string, unknown> | null };
+    const tokenName =
+      (integration.metadata?.token_secret_name as string) ?? metaTokenSecretName(integration.id);
+    const { data: token } = await sb.rpc('meta_oauth_read_token', { p_name: tokenName });
+    if (!token || typeof token !== 'string') return;
+
+    const event = buildCapiEvent({
+      eventName: 'Lead',
+      eventId: opts.eventId,
+      actionSource: 'website',
+      eventSourceUrl: opts.sourceUrl ?? undefined,
+      email: opts.email,
+      phone: opts.phone,
+      customData: {
+        content_ids: opts.contentIds.join(','),
+        content_type: 'product',
+        lead_event_source: 'lp-imovel',
+      },
+    });
+    await sendCapiEvents({ token, events: [event] });
+  } catch {
+    /* best-effort: o Pixel do browser é a via primária. */
+  }
+}
 
 // ---------------------------------------------------------------------------
 // CORS — reflecte a origem quando pertence aos domínios do João.
@@ -119,6 +170,19 @@ export async function POST(req: Request) {
       str(body.ferramenta) ||
       'landing-analise-mercado';
 
+    // LPs de imóvel captam COMPRADORES (querem VER a casa) → funil Compradores,
+    // nunca o de Proprietários. Detecta por flag explícita ou pelo source.
+    const isComprador =
+      str(body.funil).toLowerCase() === 'compradores' || source.startsWith('lp-imovel');
+    const boardId = isComprador ? BOARD_COMPRADORES : BOARD_PROPRIETARIOS;
+    const stageDefaultId = isComprador ? STAGE_COMPRADORES_OPORTUNIDADE_ID : STAGE_OPORTUNIDADE_ID;
+
+    // event_id partilhado com o Pixel do browser, para o CAPI deduplicar.
+    const eventId = str(body.event_id) || null;
+    const contentIds = Array.isArray(body.content_ids)
+      ? (body.content_ids as unknown[]).map(String)
+      : [];
+
     const isTest =
       trusted && (body.is_test === true || body.is_test === 'true');
 
@@ -183,10 +247,13 @@ export async function POST(req: Request) {
 
     const attribution = {
       source,
+      funil: isComprador ? 'compradores' : 'proprietarios',
       channel: dadosInput ? 'ferramenta' : 'landing',
       ferramenta: str(body.ferramenta) || null,
       utm,
       imovel,
+      imovel_slug: str(body.imovel_slug) || null,
+      event_id: eventId,
       referrer,
       landing_url: landingUrl,
       is_test: isTest,
@@ -272,13 +339,13 @@ export async function POST(req: Request) {
         .is('attribution', null);
     }
 
-    // -------- 3) Resolver etapa "Oportunidade" do funil Proprietários --------
-    let stageId: string | null = STAGE_OPORTUNIDADE_ID;
+    // -------- 3) Resolver etapa "Oportunidade" do funil escolhido --------
+    let stageId: string | null = stageDefaultId;
     {
       const { data: stage } = await sb
         .from('board_stages')
         .select('id')
-        .eq('board_id', BOARD_PROPRIETARIOS)
+        .eq('board_id', boardId)
         .eq('name', STAGE_OPORTUNIDADE_NOME)
         .limit(1)
         .maybeSingle();
@@ -307,7 +374,7 @@ export async function POST(req: Request) {
           .from('deals')
           .insert({
             organization_id: ORG_ID,
-            board_id: BOARD_PROPRIETARIOS,
+            board_id: boardId,
             stage_id: stageId,
             contact_id: contactId,
             title: tituloImovel ? `${nome} — ${tituloImovel}` : `${nome} — ${source}`,
@@ -365,6 +432,19 @@ export async function POST(req: Request) {
       } catch {
         /* nudge best-effort: o cron corre a cada minuto como rede de segurança. */
       }
+    }
+
+    // -------- 6) CAPI Lead (só LPs de imóvel): espelha o Pixel do browser --------
+    // Mesmo event_id → a Meta deduplica browser + servidor. Best-effort: se não
+    // houver token/integração, segue sem CAPI (o Pixel já disparou no browser).
+    if (!isTest && isComprador && eventId) {
+      await dispararCapiLead(sb, {
+        eventId,
+        email,
+        phone,
+        sourceUrl: landingUrl,
+        contentIds: contentIds.length ? contentIds : [source],
+      });
     }
 
     return json(
