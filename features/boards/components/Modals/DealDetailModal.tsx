@@ -1279,6 +1279,11 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     />
                   </div>
 
+                  {/* LINHAGEM em mobile — a coluna esquerda (onde vive no desktop) é hidden md:flex */}
+                  <div className="md:hidden bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-5 pb-4 pt-2">
+                    <DealLineagePanel deal={deal} />
+                  </div>
+
                   {/* DASH-2 — Probabilidade da lead (score derivado do histórico) com razões */}
                   {leadScore && (
                     <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
