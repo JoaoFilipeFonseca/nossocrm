@@ -36,13 +36,17 @@ export default function LoginPage() {
             if (error) throw error
 
             // PREFS-1: abrir na página de arranque preferida do utilizador (fallback /dashboard).
+            // A preferência vive em user_settings.default_route — é o campo que a página
+            // de Configurações grava (profiles.landing_page era legado e nunca era escrito).
             let dest = '/dashboard'
             try {
                 const { data: { user } } = await supabase.auth.getUser()
                 if (user) {
-                    const { data: prof } = await supabase
-                        .from('profiles').select('landing_page').eq('id', user.id).maybeSingle()
-                    if (prof?.landing_page) dest = prof.landing_page as string
+                    const { data: prefs } = await supabase
+                        .from('user_settings').select('default_route').eq('user_id', user.id).maybeSingle()
+                    const route = prefs?.default_route as string | undefined
+                    // Só caminhos internos ("/x"), nunca URLs externas.
+                    if (route && route.startsWith('/') && !route.startsWith('//')) dest = route
                 }
             } catch { /* mantém /dashboard */ }
             router.push(dest)

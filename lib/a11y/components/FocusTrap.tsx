@@ -33,6 +33,22 @@ export interface FocusTrapProps {
  * </FocusTrap>
  * ```
  */
+/**
+ * Conteúdo Radix (AlertDialog, Select, DropdownMenu, popovers) e toasts montam
+ * em portals directamente no <body>, FORA do DOM do trap. Sem esta excepção o
+ * focus-trap fazia preventDefault+stopImmediatePropagation em todos os cliques
+ * nesses elementos — botões "Eliminar/Cancelar" de diálogos de confirmação
+ * ficavam mortos (bug real: impossível eliminar negócio no DealDetailModal).
+ */
+const isInsideOverlayPortal = (target: EventTarget | null): boolean => {
+  if (!(target instanceof Element)) return false;
+  return Boolean(
+    target.closest(
+      '[role="alertdialog"], [role="dialog"], [data-radix-popper-content-wrapper], [data-radix-portal], [data-sonner-toaster], [role="listbox"], [role="menu"]'
+    )
+  );
+};
+
 export const FocusTrap: React.FC<FocusTrapProps> = ({
   active,
   children,
@@ -65,7 +81,8 @@ export const FocusTrap: React.FC<FocusTrapProps> = ({
           return false; // Don't deactivate, let parent handle it
         } : true,
         clickOutsideDeactivates,
-        allowOutsideClick: clickOutsideDeactivates,
+        allowOutsideClick: (event: MouseEvent | TouchEvent) =>
+          clickOutsideDeactivates || isInsideOverlayPortal(event.target),
         // Fallback to container if no focusable elements found
         fallbackFocus: () => {
           const container = document.querySelector('[data-focus-trap-fallback]');

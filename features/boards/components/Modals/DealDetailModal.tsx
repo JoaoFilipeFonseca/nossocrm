@@ -559,12 +559,16 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
     setShowCustomItem(false);
   };
 
-  const confirmDeleteDeal = () => {
-    if (deleteId) {
-      deleteDeal(deleteId);
+  const confirmDeleteDeal = async () => {
+    if (!deleteId) return;
+    try {
+      await deleteDeal(deleteId);
       addToast('Negócio eliminado com sucesso', 'success');
       setDeleteId(null);
       onClose();
+    } catch (e) {
+      addToast(`Erro ao eliminar negócio: ${e instanceof Error ? e.message : 'tente novamente'}`, 'error');
+      setDeleteId(null);
     }
   };
 
@@ -1750,7 +1754,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   }
 
   return (
-    <FocusTrap active={isOpen} onEscape={onClose}>
+    // Trap suspenso enquanto o ConfirmDialog (portal Radix fora do trap) está
+    // aberto — senão o focus-trap engole os cliques em Eliminar/Cancelar.
+    <FocusTrap active={isOpen && !deleteId} onEscape={onClose}>
       <div
         // Backdrop + positioning wrapper. Clicking outside the panel should close the modal.
         // No desktop, este modal não deve cobrir a sidebar de navegação.

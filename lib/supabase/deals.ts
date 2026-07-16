@@ -278,12 +278,15 @@ export const dealsService = {
       // Elimina N+1: antes carregava TODOS items e filtrava no cliente
       // Agora o Postgres já retorna os items aninhados por deal
       // Safety limit: cap at 1000 deals for non-paginated access
+      // Soft-deleted deals (deleted_at) nunca aparecem no Boards — o resto das
+      // superfícies (Telegram, dashboard, RPCs) já filtra; esta era a única fuga.
       let dealsQuery = supabase
         .from('deals')
         .select(`
           *,
           deal_items (*)
-        `);
+        `)
+        .is('deleted_at', null);
       if (options?.signal) dealsQuery = dealsQuery.abortSignal(options.signal);
       const { data, error } = await dealsQuery
         .order('created_at', { ascending: false })

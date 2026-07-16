@@ -435,6 +435,13 @@
 
 > 🧪 **HISTÓRICO DE TESTES vive em `docs/QA-LOG.md`** (matriz de cobertura + bugs + o que falta). Ler/actualizar lá em cada sessão de QA.
 
+## 🗓️ Registo da sessão 16 Jul 2026 — 3 bugs graves corrigidos (negócio fantasma, cliques mortos, Página Inicial)
+1. **Boards mostravam negócios soft-deleted** (`deleted_at`): `dealsService.getAll` não filtrava — era a única superfície com a fuga. Corrigido (`.is('deleted_at', null)`). Origem do fantasma "TESTE LP t2 apagar": limpeza de teste da sessão de 15/07 fez soft-delete por SQL directo em vez de delete real; dados de teste purgados da BD (0 soft-deleted restantes).
+2. **Cliques mortos no ConfirmDialog** (Eliminar/Cancelar não faziam NADA): o `focus-trap` do `DealDetailModal` fazia `preventDefault+stopImmediatePropagation` em qualquer clique fora do seu DOM — e o AlertDialog do Radix monta em portal no `body`, fora do trap. Corrigido em 2 camadas: `FocusTrap.tsx` agora permite cliques em portals de overlay (alertdialog/dialog/popper/toasts/menus) e o `DealDetailModal` suspende o trap enquanto o ConfirmDialog está aberto. Bónus: Escape com o diálogo aberto já não fecha o modal do negócio por baixo; toast "eliminado com sucesso" agora só após o DELETE real (antes mentia em erro).
+3. **Página Inicial das Configurações ignorada:** as Configurações gravam `user_settings.default_route`, mas o login lia `profiles.landing_page` (sempre null, nunca escrito) e a rota raiz `/` redirigia sempre para `/dashboard` hardcoded. Ambos corrigidos para ler `user_settings.default_route` (só caminhos internos, fallback /dashboard).
+- **CAPTURE (não feito agora):** advisors Supabase = 101 WARNs (0 ERROR): 44 `anon_security_definer_function_executable` + 53 `authenticated_...` + `unaccent` no schema public + leaked-password-protection desligada. Passagem dedicada de hardening quando o João mandar.
+- **CAPTURE:** Brief 7b acrescentado a `estrategia/v2-empresa/12-BRIEFS-OPUS.md` (estava só no doc 11): segmentação + 1.ª onda da base parada; import do xlsx já feito no Brief 6.
+
 ## 🗓️ Registo da sessão 15 Jun 2026 — QA funcional a clicar (cont.) — HEAD `31857a3`
 Continuação dos TESTES FUNCIONAIS a clicar (Playwright autenticado + Supabase MCP), pela ordem do
 handover 13 Jun. Os 5 passos do "PRÓXIMO" corridos.
@@ -1302,7 +1309,7 @@ Análise Comparativa de Mercado / Análise de Mercado / Estudo de Mercado.
 - ✅ FEITO 09/07: `/avaliar` (calculadora-portugal.html) + LPs live do funil (quiz-diagnostico,
   vender-premium, index) — 0 "avaliação" visível.
 - ⏳ FALTA (tarefa focada, verificar cada + deploy próprio):
-  1. **LPs órfãs** `_deploy_fr/calculadora-avaliacao.html` (23) e `landing-avaliacao.html` (15):
+  1. **LPs órfãs** `_deploy_joaofilipefonseca/calculadora-avaliacao.html` (23) e `landing-avaliacao.html` (15):
      não estão ligadas a nenhum short-path do `_redirects` (órfãs). Confirmar se algum anúncio Meta
      antigo ainda lhes aponta; se sim, corrigir copy; se não, decomissionar. NÃO tocar sem confirmar liveness.
   2. **CRM app (Vercel)** ~54 ocorrências: distinguir **copy de cliente** (emails, labels visíveis →
@@ -1314,14 +1321,14 @@ Análise Comparativa de Mercado / Análise de Mercado / Estudo de Mercado.
 
 ## 🎨 MIGRAÇÃO DE MARCA — LPs Fonseca & Rodrigues → João Fonseca (fase 3 do doc 05) — ordem do João 10/07
 > 📄 ORDEM DE SERVIÇO COMPLETA (LPs + email): `estrategia/v2-empresa/15-ORDEM-MARCA-LPS-E-EMAIL.md` — colar numa sessão nova.
-**Problema (João):** a lead vem da marca pessoal (anúncios João Fonseca) e aterra numa LP com marca **Fonseca & Rodrigues** — incoerência. Passar TODAS as LPs (`_deploy_fr/*.html`) para a marca pessoal **João Fonseca**.
+**Problema (João):** a lead vem da marca pessoal (anúncios João Fonseca) e aterra numa LP com marca **Fonseca & Rodrigues** — incoerência. Passar TODAS as LPs (`_deploy_joaofilipefonseca/*.html`) para a marca pessoal **João Fonseca**.
 - Sessão focada própria (é grande: visual + copy + legais). Usar a skill `joao-fonseca-brand`.
 - Inclui: logo (F&R → João Fonseca), footer/rodapé, cores/tipografia da marca, `equipa.png` (foto João+Helena → decidir), copy "Fonseca & Rodrigues" → "João Fonseca". **Cuidado legal no rodapé:** a identificação da mediadora/AMI só é obrigatória em anúncios de imóveis; as LPs são lead-magnets — confirmar o que fica.
 - **NÃO toca nos fluxos de leads** (captura-amc → CRM → automação Coração → email/Telegram). Esses são canalização de dados, agnósticos à marca: continuam a correr, não é preciso fazer novos. Só muda o front-end das páginas.
-- Fazer no `_deploy_fr`, republicar com `wrangler pages deploy` (já autenticado). Verificar cada LP live + 375px.
+- Fazer no `_deploy_joaofilipefonseca`, republicar com `wrangler pages deploy` (já autenticado). Verificar cada LP live + 375px.
 - Remover também o "Portugal"/"F&R" residual do rodapé da `/avaliar` (já tirei do badge/título a 10/07).
 - **Link público NÃO pode dizer "avaliação/avaliar"** (ordem João 10/07): mudar o path público
-  `/avaliar` → algo profissional tipo **`/estudo-de-mercado`** (no `_deploy_fr/_redirects`), e MANTER
+  `/avaliar` → algo profissional tipo **`/estudo-de-mercado`** (no `_deploy_joaofilipefonseca/_redirects`), e MANTER
   `/avaliar` como alias a funcionar (os anúncios Meta apontam lá). Os **nomes de ficheiro**
   (`calculadora-portugal.html`, `calculadora-avaliacao.html`) FICAM — são só referência interna do João.
   Os outros paths (`/diagnostico`, `/bolso`, `/estrategia`) não dizem avaliação, ficam. Avisar Outlier do novo URL.

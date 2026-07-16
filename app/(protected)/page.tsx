@@ -5,13 +5,34 @@ import { createClient } from '@/lib/supabase/server'
 export const dynamic = 'force-dynamic'
 
 /**
+ * Página de arranque preferida do utilizador (Configurações → Página Inicial).
+ * Vive em user_settings.default_route; fallback /dashboard.
+ */
+async function resolveHomeRoute(): Promise<string> {
+    try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return '/dashboard'
+        const { data: prefs } = await supabase
+            .from('user_settings')
+            .select('default_route')
+            .eq('user_id', user.id)
+            .maybeSingle()
+        const route = prefs?.default_route as string | undefined
+        // Só caminhos internos ("/x"), nunca URLs externas.
+        if (route && route.startsWith('/') && !route.startsWith('//')) return route
+    } catch { /* fallback */ }
+    return '/dashboard'
+}
+
+/**
  * Componente React `Home`.
  * @returns {Promise<void>} Retorna uma Promise resolvida sem valor.
  */
 export default async function Home() {
-    // Bypass em desenvolvimento local: sempre vai para o dashboard
+    // Bypass em desenvolvimento local: respeita a preferência na mesma
     if (process.env.NODE_ENV === 'development') {
-        redirect('/dashboard')
+        redirect(await resolveHomeRoute())
     }
 
     const installerEnabled = process.env.INSTALLER_ENABLED !== 'false'
@@ -35,7 +56,7 @@ export default async function Home() {
     // - Se já está inicializada, não força /install (vai pro app).
     if (installerEnabled) {
         if (isInitialized === true) {
-            redirect('/dashboard')
+            redirect(await resolveHomeRoute())
         }
         redirect('/install')
     }
@@ -45,5 +66,5 @@ export default async function Home() {
         redirect('/setup')
     }
 
-    redirect('/dashboard')
+    redirect(await resolveHomeRoute())
 }
