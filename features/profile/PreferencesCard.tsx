@@ -10,9 +10,17 @@ import { useTheme } from '@/context/ThemeContext';
 import { settingsService } from '@/lib/supabase';
 import { Settings, Check, Loader2, Sun, Moon } from 'lucide-react';
 
+// Mesmo universo de opções que Configurações → Página Inicial (+ extras do Perfil).
+// Tem de conter TODOS os valores possíveis de default_route, senão o select
+// mostra o primeiro item e engana (ex.: '/boards' escolhido lá fora não aparecia).
 const PAGES = [
   { v: '/dashboard', l: 'Dashboard' },
+  { v: '/inbox-list', l: 'Inbox (Lista)' },
+  { v: '/inbox-focus', l: 'Inbox (Foco)' },
+  { v: '/boards', l: 'Boards (Kanban)' },
   { v: '/contacts', l: 'Contactos' },
+  { v: '/activities', l: 'Actividades' },
+  { v: '/reports', l: 'Relatórios' },
   { v: '/imoveis', l: 'Imóveis' },
   { v: '/anuncios', l: 'Anúncios' },
   { v: '/financeiro', l: 'Financeiro' },
