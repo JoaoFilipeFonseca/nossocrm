@@ -1,10 +1,13 @@
 'use client';
 
 // PREFS-1: preferências guardadas na conta (página de arranque + tema).
-// Sincroniza desktop+mobile (grava em profiles via /api/profile/preferences).
+// Página de arranque: fonte única = user_settings.default_route (o MESMO campo
+// que Configurações → Página Inicial grava e que o login/raiz lêem). O campo
+// legado profiles.landing_page deixou de ser usado. Tema continua em profiles.
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { settingsService } from '@/lib/supabase';
 import { Settings, Check, Loader2, Sun, Moon } from 'lucide-react';
 
 const PAGES = [
@@ -17,13 +20,19 @@ const PAGES = [
 ];
 
 export default function PreferencesCard() {
-  const { profile, refreshProfile } = useAuth();
+  const { refreshProfile } = useAuth();
   const { darkMode, setDarkMode } = useTheme();
   const [landing, setLanding] = useState<string>('/dashboard');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => { setLanding(profile?.landing_page ?? '/dashboard'); }, [profile?.landing_page]);
+  useEffect(() => {
+    let cancelled = false;
+    void settingsService.get().then(({ data }) => {
+      if (!cancelled && data?.defaultRoute) setLanding(data.defaultRoute);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   async function save(patch: Record<string, unknown>) {
     setSaving(true);
@@ -46,9 +55,17 @@ export default function PreferencesCard() {
     setDarkMode(dark); // aplica já em todo o app
     void save({ dark_mode: dark });
   }
-  function chooseLanding(v: string) {
+  async function chooseLanding(v: string) {
     setLanding(v);
-    void save({ landing_page: v });
+    setSaving(true);
+    setSaved(false);
+    try {
+      await settingsService.update({ defaultRoute: v });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
