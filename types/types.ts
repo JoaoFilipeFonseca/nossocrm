@@ -297,6 +297,8 @@ export interface Deal {
   aiExtracted?: Record<string, any>; // AI-extracted BANT fields (zero config)
   /** Imóvel associado a este negócio (AUD-A1). NULL = não ligado. */
   imovelId?: string | null;
+  /** Negócio do qual este derivou (linhagem MA-LTV). NULL = negócio raiz. */
+  originDealId?: string | null;
   /** Linhagem do anúncio (Meta Ads). Propagada da lead/contacto. */
   attribution?: MetaAdAttribution | null;
   /** Quando o humano interveio e pausou as automações deste deal. NULL = activas. (#124 pause-on-touch) */

@@ -110,6 +110,8 @@ export interface DbDeal {
   attribution?: Record<string, any> | null;
   /** Imóvel associado ao negócio (AUD-A1). */
   imovel_id?: string | null;
+  /** Negócio do qual este derivou (linhagem MA-LTV). Ver migração 20260716120000. */
+  origin_deal_id?: string | null;
 }
 
 /**
@@ -187,6 +189,7 @@ const transformDeal = (db: DbDeal | DbDealWithItems, items?: DbDealItem[]): Deal
     automationsPausedReason: db.automations_paused_reason || null,
     attribution: (db.attribution as import('@/types').MetaAdAttribution) || null,
     imovelId: db.imovel_id || null,
+    originDealId: db.origin_deal_id || null,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
     items: filteredItems.map(i => ({
@@ -240,6 +243,7 @@ const transformDealToDb = (deal: Partial<Deal>): Partial<DbDeal> => {
   if (deal.automationsPausedAt !== undefined) db.automations_paused_at = deal.automationsPausedAt;
   if (deal.automationsPausedReason !== undefined) db.automations_paused_reason = deal.automationsPausedReason;
   if (deal.imovelId !== undefined) db.imovel_id = sanitizeUUID(deal.imovelId); // AUD-A1 (null desliga)
+  if (deal.originDealId !== undefined) db.origin_deal_id = sanitizeUUID(deal.originDealId); // linhagem (null desliga)
 
   return db;
 };

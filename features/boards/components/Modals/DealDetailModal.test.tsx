@@ -73,6 +73,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 
 vi.mock('@/lib/query/hooks', () => ({
   useMoveDealSimple: () => ({ moveDeal: vi.fn() }),
+  useDealsView: () => ({ data: [], isLoading: false }),
   useContacts: () => ({ data: [], isLoading: false }),
   useActivities: () => ({ data: [], isLoading: false }),
   useBoards: () => ({ data: [], isLoading: false }),

@@ -34,6 +34,7 @@ import { Activity, DealView } from '@/types';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { useResponsiveMode } from '@/hooks/useResponsiveMode';
 import { DealSheet } from '../DealSheet';
+import { DealLineagePanel } from './DealLineagePanel';
 import {
   analyzeLead,
   generateEmailDraft,
@@ -1014,6 +1015,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     )}
                   </div>
                 </div>
+
+                {/* LINHAGEM — negócios derivados deste / que o originaram (MA-LTV) */}
+                <DealLineagePanel deal={deal} />
 
                 {/* AI EXTRACTED FIELDS (Zero Config BANT) */}
                 <div className="pt-4 border-t border-slate-100 dark:border-white/5">
