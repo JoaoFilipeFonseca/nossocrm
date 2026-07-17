@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Phone, RefreshCw, Copy, Check, PhoneOff, Clock, PhoneCall } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import type { PowerListItem, PowerListPayload, PowerListBucket, Semaphore } from '@/lib/power-list/types';
+import { telHref, interceptCallClick } from '@/lib/calls';
 
 const BUCKET_META: Record<PowerListBucket, { label: string; cls: string }> = {
   lead_nova: { label: 'Lead nova', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' },
@@ -30,11 +31,8 @@ const ACTION_TOAST: Record<PowerAction, string> = {
   snooze: 'Adiado',
 };
 
-function telHref(phone: string | null): string {
-  if (!phone) return '';
-  const c = phone.replace(/[^\d+]/g, '');
-  return c ? `tel:${c}` : '';
-}
+// telHref/interceptCallClick: em iOS o clique dispara o Atalho "Ligar CRM"
+// (gravação Notta + chamada); no resto segue o tel: normal.
 
 export const HojePage: React.FC = () => {
   const { addToast } = useToast();
@@ -223,6 +221,7 @@ export const HojePage: React.FC = () => {
                   {item.phone && (
                     <a
                       href={tel || undefined}
+                      onClick={(e) => interceptCallClick(e, item.phone)}
                       className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white text-sm font-medium"
                     >
                       <Phone size={15} /> <span className="hidden sm:inline">{item.phone}</span>

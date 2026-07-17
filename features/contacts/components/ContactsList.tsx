@@ -6,6 +6,7 @@ import { StageBadge } from './ContactsStageTabs';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LogCHQQuick } from '@/features/boards/components/Kanban/LogCHQQuick';
 import { toWhatsAppPhone } from '@/lib/phone';
+import { interceptCallClick } from '@/lib/calls';
 
 // Performance: reuse Intl formatters (they are relatively expensive to instantiate).
 const PT_BR_DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT');
@@ -314,12 +315,13 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                                                 <div className="flex items-center gap-2 text-xs">
                                                     <a
                                                         href={`tel:${contact.phone}`}
-                                                        onClick={() => {
+                                                        onClick={(e) => {
                                                             fetch(`/api/contacts/${contact.id}/activities`, {
                                                                 method: 'POST',
                                                                 headers: { 'content-type': 'application/json' },
                                                                 body: JSON.stringify({ type: 'call', metadata: { via: 'contacts-list-shortcut' } }),
                                                             }).catch(() => {});
+                                                            interceptCallClick(e, contact.phone);
                                                         }}
                                                         className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary-500 transition-colors flex-1 min-w-0"
                                                         title="Ligar + registar CHQ"

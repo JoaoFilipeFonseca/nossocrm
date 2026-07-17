@@ -10,6 +10,7 @@ import { ContactComments } from '@/features/contacts/components/ContactComments'
 import { Contact360Panel } from '@/features/contacts/components/Contact360Panel';
 import { ContactTimeline } from '@/features/contacts/components/ContactTimeline';
 import { toWhatsAppPhone } from '@/lib/phone';
+import { CallLink } from '@/components/ui/CallLink';
 import type { ContactCustomFields, DiscProfile } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -109,10 +110,10 @@ export default async function ContactDetailPage({ params, searchParams }: { para
               </a>
             )}
             {contact.phone && (
-              <a href={`tel:${contact.phone}`}
+              <CallLink phone={contact.phone}
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200">
                 <Phone size={15} /> Ligar
-              </a>
+              </CallLink>
             )}
           </div>
         </div>
@@ -162,7 +163,7 @@ export default async function ContactDetailPage({ params, searchParams }: { para
           <div className="bg-white dark:bg-dark-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-5">
             <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-3">Contacto</h2>
             <div className="space-y-2 text-sm">
-              {contact.phone && <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300"><Phone size={14} className="text-slate-400" /> <a href={`tel:${contact.phone}`} className="hover:underline">{contact.phone}</a></div>}
+              {contact.phone && <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300"><Phone size={14} className="text-slate-400" /> <CallLink phone={contact.phone} className="hover:underline">{contact.phone}</CallLink></div>}
               {contact.email && <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300"><Mail size={14} className="text-slate-400" /> <a href={`mailto:${contact.email}`} className="hover:underline break-all">{contact.email}</a></div>}
               {!contact.phone && !contact.email && <p className="text-slate-400 text-sm">Sem contactos registados.</p>}
             </div>

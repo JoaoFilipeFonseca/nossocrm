@@ -30,6 +30,7 @@ import { useMoveDealSimple } from '@/lib/query/hooks';
 import { DEALS_VIEW_KEY } from '@/lib/query';
 import { MetaAttribution } from '@/components/MetaAttribution';
 import { FocusTrap, useFocusReturn } from '@/lib/a11y';
+import { interceptCallClick } from '@/lib/calls';
 import { Activity, DealView } from '@/types';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { useResponsiveMode } from '@/hooks/useResponsiveMode';
@@ -1208,9 +1209,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       <button type="button" onClick={() => { logCHQ('whatsapp'); execActionWhatsApp(); }} disabled={execLoading === 'wa'} title="WhatsApp (mensagem preparada com IA)" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-green-500/15 hover:bg-green-500/25 border border-green-500/30 text-green-600 dark:text-green-400 transition" aria-label="Abrir WhatsApp">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                         </button>
-                      {/* Regista 1 toque CHQ (com debounce), apagável no histórico. Sem tarefa
-                          "Chamada iniciada" duplicada — era duplo registo por clique. */}
-                      <a href={`tel:${(deal as any).contactPhone}`} onClick={logCallOnce} title="Chamada telefónica" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 transition" aria-label="Telefonar">
+                      {/* Regista 1 toque CHQ (com debounce), apagável no histórico. Em iOS
+                          desvia para o Atalho "Ligar CRM" (gravação Notta + chamada). */}
+                      <a href={`tel:${(deal as any).contactPhone}`} onClick={(e) => { logCallOnce(); interceptCallClick(e, (deal as any).contactPhone); }} title="Chamada telefónica" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 transition" aria-label="Telefonar">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                         </a>
                       <button type="button" onClick={() => { logCHQ('email'); execActionEmail(); }} disabled={execLoading === 'email'} title={`Email com IA: ${deal.contactEmail}`} className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-blue-400 transition" aria-label="Enviar email">
