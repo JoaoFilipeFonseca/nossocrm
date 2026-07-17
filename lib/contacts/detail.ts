@@ -232,7 +232,9 @@ export async function getContactTimeline(id: string, limit = 50): Promise<Timeli
       type: r.type,
       description: r.description,
       at: occurred || r.created_at,
-      manual: via.startsWith('manual') || via === 'timeline-manual',
+      // "manual" = apagável na UI: qualquer toque registado por HUMANO (manual ou
+      // clique nos botões de contacto). Automação/sistema nunca se apagam.
+      manual: actor === 'human' && !isSystem,
       system: isSystem,
       actor,
     };

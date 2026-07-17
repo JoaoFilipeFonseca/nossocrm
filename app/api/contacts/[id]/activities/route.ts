@@ -105,7 +105,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
 /**
  * DELETE /api/contacts/[id]/activities?activityId=...
- * Apaga uma entrada MANUAL da timeline (via=timeline-manual). RLS confina à org.
+ * Apaga uma entrada HUMANA da timeline (registo manual OU toque via botões de
+ * contacto, ex. clique em Telefonar no modal do negócio). Entradas de
+ * automação/sistema nunca se apagam. RLS confina à org.
  */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isAllowedOrigin(request)) {
@@ -120,13 +122,36 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const activityId = request.nextUrl.searchParams.get('activityId');
     if (!activityId) return NextResponse.json({ error: 'activityId em falta' }, { status: 400 });
 
-    // Só apaga entradas manuais deste contacto (não toca em actividade automática/sistema).
+    // A entrada tem de pertencer ao âmbito deste contacto: ligada directamente
+    // (contact_id) OU a um negócio deste contacto (a timeline agrega ambos).
+    const { data: row, error: rowError } = await supabase
+      .from('deal_activities')
+      .select('id, contact_id, deal_id, actor, type')
+      .eq('id', activityId)
+      .maybeSingle();
+    if (rowError) return NextResponse.json({ error: rowError.message }, { status: 500 });
+    if (!row) return NextResponse.json({ error: 'Registo não encontrado' }, { status: 404 });
+
+    if (row.actor !== 'human') {
+      return NextResponse.json({ error: 'Só registos humanos podem ser apagados' }, { status: 403 });
+    }
+
+    let inScope = row.contact_id === contactId;
+    if (!inScope && row.deal_id) {
+      const { data: deal } = await supabase
+        .from('deals')
+        .select('id')
+        .eq('id', row.deal_id)
+        .eq('contact_id', contactId)
+        .maybeSingle();
+      inScope = Boolean(deal);
+    }
+    if (!inScope) return NextResponse.json({ error: 'Registo não pertence a este contacto' }, { status: 404 });
+
     const { error: delError } = await supabase
       .from('deal_activities')
       .delete()
-      .eq('id', activityId)
-      .eq('contact_id', contactId)
-      .eq('metadata->>via', 'timeline-manual');
+      .eq('id', activityId);
     if (delError) return NextResponse.json({ error: delError.message }, { status: 500 });
 
     return NextResponse.json({ ok: true });

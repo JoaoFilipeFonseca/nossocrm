@@ -180,8 +180,9 @@ export function ContactTimeline({ contactId, initialEntries }: ContactTimelinePr
                     <span className="ml-auto text-xs text-slate-400 shrink-0 flex items-center gap-2">
                       {fmt(e.at)}
                       {e.manual && (
-                        <button onClick={() => remove(e.id)} disabled={busyDelete === e.id} aria-label="Eliminar interacção" className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Trash2 size={13} />
+                        // Sempre visível (mobile não tem hover); alvo de toque >=32px.
+                        <button onClick={() => remove(e.id)} disabled={busyDelete === e.id} aria-label="Eliminar interacção" title="Eliminar registo" className="p-2 -m-2 text-slate-300 hover:text-rose-500 sm:opacity-40 sm:group-hover:opacity-100 transition-opacity disabled:opacity-30">
+                          <Trash2 size={14} />
                         </button>
                       )}
                     </span>
