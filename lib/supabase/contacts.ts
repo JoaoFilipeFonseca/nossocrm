@@ -272,15 +272,28 @@ export const contactsService = {
         return { data: [], error: null };
       }
 
-      let contactsQuery = supabase
-        .from('contacts')
-        .select('*')
-        .is('deleted_at', null);
-      if (options?.signal) contactsQuery = contactsQuery.abortSignal(options.signal);
-      const { data, error } = await contactsQuery.in('id', uniqueIds);
+      // PostgREST usa GET: um `in()` com centenas de UUIDs rebenta o limite de
+      // tamanho do URL (666 ids ≈ 26KB → HTTP 400) e a resposta falha inteira —
+      // foi assim que os Boards ficaram todos "Sem contacto" a 18/07. Dividimos
+      // em lotes seguros e juntamos.
+      const CHUNK = 100;
+      const chunks: string[][] = [];
+      for (let i = 0; i < uniqueIds.length; i += CHUNK) chunks.push(uniqueIds.slice(i, i + CHUNK));
 
-      if (error) return { data: null, error };
-      return { data: (data || []).map(c => transformContact(c as DbContact)), error: null };
+      const results = await Promise.all(chunks.map(chunk => {
+        let q = supabase!
+          .from('contacts')
+          .select('*')
+          .is('deleted_at', null);
+        if (options?.signal) q = q.abortSignal(options.signal);
+        return q.in('id', chunk);
+      }));
+
+      const firstError = results.find(r => r.error)?.error;
+      if (firstError) return { data: null, error: firstError };
+
+      const rows = results.flatMap(r => r.data || []);
+      return { data: rows.map(c => transformContact(c as DbContact)), error: null };
     } catch (e) {
       return { data: null, error: e as Error };
     }
@@ -622,14 +635,24 @@ export const companiesService = {
         return { data: [], error: null };
       }
 
-      let companiesQuery = supabase
-        .from('crm_companies')
-        .select('*');
-      if (options?.signal) companiesQuery = companiesQuery.abortSignal(options.signal);
-      const { data, error } = await companiesQuery.in('id', uniqueIds);
+      // Mesmo padrão do contacts.getByIds: lotes para não rebentar o URL do GET.
+      const CHUNK = 100;
+      const chunks: string[][] = [];
+      for (let i = 0; i < uniqueIds.length; i += CHUNK) chunks.push(uniqueIds.slice(i, i + CHUNK));
 
-      if (error) return { data: null, error };
-      return { data: (data || []).map(c => transformCRMCompany(c as DbCRMCompany)), error: null };
+      const results = await Promise.all(chunks.map(chunk => {
+        let q = supabase!
+          .from('crm_companies')
+          .select('*');
+        if (options?.signal) q = q.abortSignal(options.signal);
+        return q.in('id', chunk);
+      }));
+
+      const firstError = results.find(r => r.error)?.error;
+      if (firstError) return { data: null, error: firstError };
+
+      const rows = results.flatMap(r => r.data || []);
+      return { data: rows.map(c => transformCRMCompany(c as DbCRMCompany)), error: null };
     } catch (e) {
       return { data: null, error: e as Error };
     }
