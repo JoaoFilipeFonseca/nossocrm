@@ -2,13 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MessageSquare, MessageCircle } from 'lucide-react';
+import { MessageSquare, MessageCircle, Sprout } from 'lucide-react';
 import { MessagingPage } from './MessagingPage';
 import { SocialInboxPage } from '@/features/social-inbox/SocialInboxPage';
+import { NurturePage } from '@/features/nurture/NurturePage';
+
+type MsgTab = 'conversas' | 'social' | 'nurture';
 
 /**
- * Mensagens com duas abas: "Conversas" (inbox actual) e "Caixa Social" (DMs do Messenger).
- * Evita mais um item na barra lateral — a Caixa Social vive aqui dentro. Aba por `?tab=social`.
+ * Mensagens com abas: "Conversas" (inbox actual), "Caixa Social" (DMs do Messenger)
+ * e "Nurture" (fila de aprovação de emails + segmentos). Evita mais itens na barra
+ * lateral. Aba por `?tab=social` / `?tab=nurture`.
  */
 export function MessagingTabs({ initialConversationId }: { initialConversationId?: string } = {}) {
   const router = useRouter();
@@ -19,23 +23,22 @@ export function MessagingTabs({ initialConversationId }: { initialConversationId
   // `?tab=social` de volta para `?id=...` durante o commit do React (o MessagingPage
   // montado "fixa" o ?id), deixando as abas presas ao clique. O estado muda a vista de
   // imediato; o URL continua a ser actualizado à mesma para deep-link/refresh.
-  const [tab, setTab] = useState<'conversas' | 'social'>(
-    () => (searchParams.get('tab') === 'social' ? 'social' : 'conversas')
-  );
+  const readTab = (v: string | null): MsgTab => (v === 'social' ? 'social' : v === 'nurture' ? 'nurture' : 'conversas');
+  const [tab, setTab] = useState<MsgTab>(() => readTab(searchParams.get('tab')));
 
   // Voltar/avançar do browser muda o URL "por fora" → re-sincroniza a vista.
   useEffect(() => {
     const sync = () => {
       const sp = new URLSearchParams(window.location.search);
-      setTab(sp.get('tab') === 'social' ? 'social' : 'conversas');
+      setTab(readTab(sp.get('tab')));
     };
     window.addEventListener('popstate', sync);
     return () => window.removeEventListener('popstate', sync);
   }, []);
 
-  const go = (t: 'conversas' | 'social') => {
+  const go = (t: MsgTab) => {
     setTab(t);
-    router.push(t === 'social' ? '/messaging?tab=social' : '/messaging', { scroll: false });
+    router.push(t === 'conversas' ? '/messaging' : `/messaging?tab=${t}`, { scroll: false });
   };
 
   const tabCls = (active: boolean) =>
@@ -54,9 +57,18 @@ export function MessagingTabs({ initialConversationId }: { initialConversationId
         <button type="button" onClick={() => go('social')} className={tabCls(tab === 'social')}>
           <MessageCircle className="w-4 h-4" /> Caixa Social
         </button>
+        <button type="button" onClick={() => go('nurture')} className={tabCls(tab === 'nurture')}>
+          <Sprout className="w-4 h-4" /> Nurture
+        </button>
       </div>
       <div className="flex-1 min-h-0 overflow-auto">
-        {tab === 'social' ? <SocialInboxPage /> : <MessagingPage initialConversationId={initialConversationId} />}
+        {tab === 'social' ? (
+          <SocialInboxPage />
+        ) : tab === 'nurture' ? (
+          <NurturePage />
+        ) : (
+          <MessagingPage initialConversationId={initialConversationId} />
+        )}
       </div>
     </div>
   );

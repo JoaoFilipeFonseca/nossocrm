@@ -366,6 +366,29 @@ Deno.serve(async (req) => {
       console.log(`[Webhook/Resend] Link clicked: ${payload.data.click.link}`);
     }
 
+    // BRIEF 7 — movimento de nurture: quem abriu/clicou um email de nurture sobe
+    // ao topo da Power List do dia seguinte. Casa pelo external_message_id (o id
+    // devolvido pelo Resend, guardado na linha da fila). Idempotente (só grava
+    // quando ainda está a null). Um clique implica também abertura.
+    if (payload.type === "email.opened" || payload.type === "email.clicked") {
+      try {
+        await supabase
+          .from("nurture_emails")
+          .update({ opened_at: timestamp })
+          .eq("external_message_id", emailId)
+          .is("opened_at", null);
+        if (payload.type === "email.clicked") {
+          await supabase
+            .from("nurture_emails")
+            .update({ clicked_at: timestamp })
+            .eq("external_message_id", emailId)
+            .is("clicked_at", null);
+        }
+      } catch (e) {
+        console.error("[Webhook/Resend] nurture movement update falhou:", e);
+      }
+    }
+
     // Mark event as processed
     await supabase
       .from("messaging_webhook_events")
