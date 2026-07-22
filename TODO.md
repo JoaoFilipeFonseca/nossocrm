@@ -1,5 +1,17 @@
 # TODO — Foco Imo (CRM) — CATÁLOGO ÚNICO
 
+> ## 🌱 BRIEF 7 + 7b — Nurture email (FIM 22/07/2026, LIVE, commit `bc27cc8`)
+> Aba `Mensagens › Nurture` (fila de aprovação + segmentos). Base 685 segmentada; gerador de ondas por IA;
+> envio Resend só dos aprovados (nunca Domingo, opt-out); movimento aberto/clicado → Power List (bucket
+> `reagiu_email`). Registado em /automacoes (`nurture-email` + cron 10h 2ª-Sáb). Verificado em produção.
+> **PENDENTE (mão do João):** configurar o webhook do Resend (eventos open/click) no painel Resend a apontar
+> para `…/functions/v1/messaging-webhook-resend/<channel_id>` com o secret Svix em
+> `messaging_channels.credentials.webhookSecret` — sem isto o movimento só sobe se `opened_at` for gravado.
+> **Capturado:** os 20 rascunhos comprador pendentes na fila são sugestão da IA (mais antigos) — o João
+> pode rejeitar/regenerar o "seu" piloto de 20 antes de aprovar. Passos 2-3 das sequências: template existe,
+> só o passo 1 foi gerado (gerar quando quiser a cadência completa).
+
+
 > ## 🎯🎯 RUMO A 22 JUN (decidido e confirmado pelo João a 12/06/2026) — ORDEM TRAVADA
 > **Objectivo: CRM terminado, todo verificado e testado a 22/06; depois melhora-se com o uso.**
 > **ÂMBITO CONGELADO: não entra nada de novo até 22/06 — ideias capturam-se aqui e ficam para depois.**
