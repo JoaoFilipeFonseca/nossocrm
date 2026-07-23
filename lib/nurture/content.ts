@@ -1,13 +1,16 @@
 // BRIEF 7 / 7b — Gerador de conteúdo das ondas de nurture.
 //
 // Por segmento, uma sequência de toques (2-3 passos). Cada email é personalizado
-// (primeiro nome + contexto do histórico) e escrito no tom da marca João Fonseca:
-// PT-PT pré-Acordo Ortográfico de 1990, calmo e directo, sem travessões nem
-// pontos de exclamação, sem preços nem promessas, marca pessoal (sem agência).
+// (primeiro nome + contexto do histórico, incluindo o imóvel que gerou a lead) e
+// escrito no tom da marca João Fonseca: PT-PT pré-Acordo Ortográfico de 1990,
+// calmo e directo, sem travessões nem pontos de exclamação, sem preços nem
+// promessas, marca pessoal (sem agência). Com certeza (nada de "penso que").
 //
 // A IA escreve; se falhar ou não estiver configurada, cai num template
-// determinístico por segmento (a fila nunca fica vazia). O rodapé RGPD
-// (anular subscrição + política) é acrescentado no ENVIO, não aqui.
+// determinístico por segmento (a fila nunca fica vazia). O email sai na marca
+// (Verde Fonseca) com o slogan "Para a vida que vais viver." em destaque e o
+// cartão de visita. O rodapé RGPD (anular subscrição + política) é acrescentado
+// no ENVIO, não aqui.
 
 import { generateText, Output } from 'ai';
 import { z } from 'zod';
@@ -18,6 +21,22 @@ import { sanitizeCopy } from '@/lib/ai/sanitize';
 import { SEGMENT_LABELS, type Segment } from './segments';
 
 export const NURTURE_SIGNATURE = 'João Fonseca\nConsultor Imobiliário · Maia';
+export const NURTURE_TAGLINE = 'Para a vida que vais viver.';
+export const CARTAO_URL = 'https://joaofilipefonseca.pt/cartao';
+
+// Marca Verde Fonseca (cores retiradas do cartão /cartao).
+const FOREST = '#1B3A2F';
+const SAGE = '#7BAE92';
+const CREAM = '#F7F5F0';
+const BORDER = '#E8E5DD';
+const INK = '#22221f';
+const MUTED = '#5C5C58';
+
+export interface NurtureImovel {
+  tipologia?: string | null;
+  freguesia?: string | null;
+  area?: number | null;
+}
 
 export interface NurtureContext {
   contactId: string;
@@ -28,6 +47,7 @@ export interface NurtureContext {
   boardName: string | null;
   segment: Segment;
   daysSinceCreated: number | null;
+  imovel?: NurtureImovel | null;
 }
 
 export interface NurtureDraft {
@@ -66,7 +86,7 @@ const WAVE_STEPS: Record<Segment, StepBrief[]> = {
     {
       subjectHint: 'Continua à procura de casa na Maia',
       angle:
-        'Reaproximação a quem procura casa. Pergunta se ainda anda à procura e oferece ajuda para não deixar escapar a casa certa (novidades, apoio ao processo). Convida a dizer o que procura.',
+        'Reaproximação a quem procura casa. Recorda concretamente o que ele procurava (tipologia e zona, se souberes) e pergunta se mantém essa procura. Oferece ajuda para não deixar escapar a casa certa. Convida a dizer o que procura hoje.',
     },
     {
       subjectHint: 'O que entrou de novo',
@@ -82,7 +102,7 @@ const WAVE_STEPS: Record<Segment, StepBrief[]> = {
     {
       subjectHint: 'Um olá da minha parte',
       angle:
-        'Reaproximação a um ex-cliente. Um olá simples, agradece a confiança e deixa a porta aberta para o que precisar ou para quem conheça que pense em comprar ou vender na Maia.',
+        'Reaproximação a um ex-cliente. Um olá simples, agradece a confiança e deixa a porta aberta para o que precisar ou para quem conheça.',
     },
     {
       subjectHint: 'Se precisar, é só dizer',
@@ -128,37 +148,109 @@ function firstName(name: string): string {
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
-/** Envolve o corpo em texto HTML simples com a marca (teal). Sem rodapé RGPD. */
+/** Descreve o imóvel que gerou a lead, de forma legível (ou vazio). */
+export function imovelPhrase(imovel: NurtureImovel | null | undefined): string {
+  if (!imovel) return '';
+  const tip = (imovel.tipologia || '').trim();
+  const fre = (imovel.freguesia || '').trim();
+  if (tip && fre) return `${tip} em ${fre}`;
+  if (tip) return tip;
+  if (fre) return `imóvel em ${fre}`;
+  return '';
+}
+
+function esc(s: string): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Email da marca (Verde Fonseca): cabeçalho, slogan em destaque, corpo, cartão
+ * de visita e assinatura. Recebe o corpo em texto (que pode terminar com a
+ * assinatura padrão, que é removida para não duplicar). Fragmento auto-contido;
+ * o rodapé RGPD é acrescentado depois, no envio.
+ */
 export function renderNurtureHtml(bodyText: string): string {
-  const paragraphs = bodyText
+  // Retira a assinatura padrão do fim do corpo (a marca já a apresenta em baixo).
+  let main = (bodyText || '').trim();
+  const sigIdx = main.lastIndexOf('João Fonseca');
+  if (sigIdx > 0 && main.slice(sigIdx).replace(/\s+/g, ' ').trim().length < 60) {
+    main = main.slice(0, sigIdx).trim();
+  }
+
+  const paragraphs = main
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean)
-    .map((p) => `<p style="margin:0 0 16px;">${p.replace(/\n/g, '<br/>')}</p>`)
+    .map(
+      (p) =>
+        `<p style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.7;color:${INK};">${esc(
+          p,
+        ).replace(/\n/g, '<br/>')}</p>`,
+    )
     .join('');
-  return (
-    `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#0f172a;max-width:560px;margin:0 auto;">` +
-    `<div style="border-top:3px solid #0f766e;padding-top:18px;">` +
-    paragraphs +
-    `</div>` +
-    `</div>`
-  );
+
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${CREAM};padding:24px 12px;">
+  <tr><td align="center">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid ${BORDER};border-radius:14px;overflow:hidden;">
+      <tr>
+        <td style="background:${FOREST};padding:26px 30px;">
+          <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.3px;">João Fonseca</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:${SAGE};text-transform:uppercase;letter-spacing:2px;margin-top:3px;">Consultor Imobiliário · Maia</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="background:${CREAM};padding:16px 30px;border-bottom:1px solid ${BORDER};">
+          <div style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:18px;color:${FOREST};letter-spacing:0.2px;">${esc(NURTURE_TAGLINE)}</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:28px 30px 8px;">
+          ${paragraphs}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 30px 4px;">
+          <div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;color:${INK};">João Fonseca</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${MUTED};margin-top:2px;">Consultor Imobiliário · Maia</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px 30px 30px;">
+          <a href="${CARTAO_URL}" style="display:inline-block;background:${FOREST};color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;text-decoration:none;padding:11px 22px;border-radius:8px;">O meu cartão de visita</a>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>`;
 }
 
-/** Template determinístico (fallback) por segmento — personalizado por nome. */
+/** Template determinístico (fallback) por segmento, personalizado por nome e imóvel. */
 export function fallbackDraft(ctx: NurtureContext, step: number): { subject: string; bodyText: string } {
   const nome = firstName(ctx.name);
-  const saud = nome ? `Bom dia, ${nome}.` : 'Bom dia.';
+  const saud = nome ? `Olá ${nome}.` : 'Olá.';
   const brief = stepBrief(ctx.segment, step);
+  const imv = imovelPhrase(ctx.imovel);
   let corpo: string;
   switch (ctx.segment) {
     case 'proprietario_vendedor':
       corpo =
-        'Fala o João Fonseca, consultor imobiliário na Maia. O mercado da sua zona tem mexido e lembrei-me de si. Se anda a pensar no valor da sua casa, posso preparar-lhe uma Análise de Mercado a sério, com dados reais da Maia e da sua freguesia. É gratuita e sem compromisso. Quando lhe for oportuno, diga-me e trato disso.';
+        `Fala o João Fonseca, consultor imobiliário na Maia. ` +
+        (imv
+          ? `Da última vez que falámos, o tema era o seu ${imv}. `
+          : 'O mercado da sua zona tem mexido e lembrei-me de si. ') +
+        'Se anda a pensar no valor da sua casa, posso preparar-lhe uma Análise de Mercado a sério, com dados reais da Maia e da sua freguesia. É gratuita e sem compromisso. Quando lhe for oportuno, diga-me e trato disso.';
       break;
     case 'comprador':
       corpo =
-        'Fala o João Fonseca, consultor imobiliário na Maia. Queria saber se ainda anda à procura de casa. Se sim, posso ajudar a não deixar escapar a certa, com as novidades da zona e apoio no processo. Diga-me o que procura e vejo o que consigo fazer por si.';
+        `Fala o João Fonseca, consultor imobiliário na Maia. ` +
+        (imv
+          ? `Da última vez que falámos, procurava um ${imv}. Queria saber se mantém essa procura. `
+          : 'Queria saber se ainda anda à procura de casa. ') +
+        'Se sim, posso ajudar a não deixar escapar a certa, com as novidades da zona e apoio no processo. Diga-me o que procura hoje e vejo o que consigo fazer por si.';
       break;
     case 'ex_cliente':
       corpo =
@@ -196,8 +288,12 @@ function systemPrompt(): string {
     'Voz: português de Portugal pré-Acordo Ortográfico de 1990; calmo, directo, próximo e seguro;',
     'nada de clichés de vendedor; NUNCA travessões nem pontos de exclamação; sem preços, sem promessas,',
     'sem inventar factos. Marca pessoal: assinas como João Fonseca, não menciones agência nem AMI.',
+    'ESCREVE COM CERTEZA. Se te derem o imóvel ou a zona que gerou o contacto, refere-o de forma',
+    'concreta ("Da última vez que falámos, o tema era um T2 na Cidade da Maia"). NÃO uses palavras de',
+    'incerteza como "penso", "julgo", "acho" ou "se não me engano". Se não houver dados do imóvel, fala',
+    'da procura ou da zona em geral, sem inventar.',
     'Cada email começa por cumprimentar pelo primeiro nome. Dois a quatro parágrafos curtos.',
-    'NÃO incluas assinatura nem rodapé (são acrescentados depois). Personaliza ao contexto de cada',
+    'NÃO incluas assinatura, slogan nem rodapé (a marca acrescenta-os depois). Personaliza a cada',
     'contacto. A oferta central para proprietários é a Análise de Mercado (nunca a palavra "avaliação").',
   ].join(' ');
 }
@@ -242,14 +338,16 @@ export async function generateNurtureDrafts(
       const list = group
         .map((ctx, gi) => {
           const brief = stepBrief(ctx.segment, step);
+          const imv = imovelPhrase(ctx.imovel);
           const parts = [
             `#${start + gi}`,
             `nome: ${ctx.name || 'sem nome'}`,
             `segmento: ${SEGMENT_LABELS[ctx.segment]}`,
             `origem: ${ctx.source || 'desconhecida'}`,
             `funil: ${ctx.boardName || 'n/d'}`,
-            `angulo deste email: ${brief.angle}`,
           ];
+          if (imv) parts.push(`imovel que gerou o contacto: ${imv}`);
+          parts.push(`angulo deste email: ${brief.angle}`);
           if (ctx.daysSinceCreated != null) parts.push(`dias na base: ${ctx.daysSinceCreated}`);
           return parts.join(' · ');
         })

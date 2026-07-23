@@ -23,6 +23,7 @@ interface QueueItem {
   to_email: string;
   subject: string;
   body_text: string;
+  body_html: string | null;
   status: Status;
   generated_by: string;
   opened_at: string | null;
@@ -105,6 +106,7 @@ function QueueView({ addToast }: { addToast: (m: string, t?: 'success' | 'error'
   const [busy, setBusy] = useState(false);
   const [editSubject, setEditSubject] = useState('');
   const [editBody, setEditBody] = useState('');
+  const [editing, setEditing] = useState(false);
   const [showGen, setShowGen] = useState(false);
 
   const load = useCallback(async () => {
@@ -132,6 +134,7 @@ function QueueView({ addToast }: { addToast: (m: string, t?: 'success' | 'error'
     if (active) {
       setEditSubject(active.subject);
       setEditBody(active.body_text);
+      setEditing(false);
     }
   }, [active]);
 
@@ -160,6 +163,7 @@ function QueueView({ addToast }: { addToast: (m: string, t?: 'success' | 'error'
     setBusy(false);
     if (!ok) return addToast((data.error as string) || 'Erro', 'error');
     addToast('Alterações guardadas', 'success');
+    setEditing(false);
     await load();
   };
 
@@ -279,32 +283,60 @@ function QueueView({ addToast }: { addToast: (m: string, t?: 'success' | 'error'
         </div>
 
         {/* Preview / edição */}
-        <div className="overflow-auto p-4 hidden lg:block">
+        <div className="overflow-auto p-4 hidden lg:block bg-slate-50/60 dark:bg-black/20">
           {!active ? (
             <div className="text-sm text-slate-400">Escolha um email para pré-visualizar e editar.</div>
           ) : (
-            <div className="max-w-xl">
-              <div className="text-[11px] uppercase tracking-wide text-slate-400 mb-1">Para: {active.contact_name || ''} · {active.to_email}</div>
-              <input
-                value={editSubject}
-                onChange={(e) => setEditSubject(e.target.value)}
-                disabled={active.status === 'sent'}
-                className="w-full mb-3 px-3 py-2 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-sm font-semibold"
-                placeholder="Assunto"
-              />
-              <textarea
-                value={editBody}
-                onChange={(e) => setEditBody(e.target.value)}
-                disabled={active.status === 'sent'}
-                rows={14}
-                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-sm leading-relaxed whitespace-pre-wrap"
-              />
-              <p className="text-[11px] text-slate-400 mt-1">O rodapé de anular subscrição e a política de privacidade são acrescentados no envio.</p>
-              {active.status !== 'sent' && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <button type="button" onClick={saveEdit} disabled={busy} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-slate-800 text-white dark:bg-white dark:text-slate-900"><Pencil className="w-4 h-4" /> Guardar</button>
-                  <button type="button" onClick={() => act('approve', [active.id])} disabled={busy} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-emerald-600 text-white"><Check className="w-4 h-4" /> Aprovar</button>
-                  <button type="button" onClick={() => act('reject', [active.id])} disabled={busy} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm bg-slate-500 text-white"><X className="w-4 h-4" /> Rejeitar</button>
+            <div className="max-w-xl mx-auto">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="text-[11px] uppercase tracking-wide text-slate-400 truncate">Para: {active.contact_name || ''} · {active.to_email}</div>
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_META[active.status].cls}`}>{STATUS_META[active.status].label}</span>
+              </div>
+
+              {editing ? (
+                // ---- MODO EDIÇÃO (mudar só uma palavra ou o que quiser) ----
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-500">Assunto</label>
+                  <input
+                    value={editSubject}
+                    onChange={(e) => setEditSubject(e.target.value)}
+                    className="w-full mt-1 mb-3 px-3 py-2 rounded-md border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 text-sm font-semibold"
+                    placeholder="Assunto"
+                  />
+                  <label className="text-[11px] font-semibold text-slate-500">Texto do email</label>
+                  <textarea
+                    value={editBody}
+                    onChange={(e) => setEditBody(e.target.value)}
+                    rows={16}
+                    className="w-full mt-1 px-3 py-2 rounded-md border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-900 text-sm leading-relaxed"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">A marca (cabeçalho, slogan e cartão) e o rodapé de anular subscrição são acrescentados automaticamente. Escreva só o texto.</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button type="button" onClick={saveEdit} disabled={busy} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-40"><Check className="w-4 h-4" /> Guardar alterações</button>
+                    <button type="button" onClick={() => { setEditSubject(active.subject); setEditBody(active.body_text); setEditing(false); }} disabled={busy} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-white/10 dark:text-slate-200"><X className="w-4 h-4" /> Cancelar</button>
+                  </div>
+                </div>
+              ) : (
+                // ---- MODO LEITURA (pré-visualização do email real) ----
+                <div>
+                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2 px-1">{active.subject}</div>
+                  <div className="rounded-lg border border-slate-200 dark:border-white/10 overflow-hidden bg-white">
+                    <iframe
+                      title="Pré-visualização do email"
+                      sandbox=""
+                      srcDoc={active.body_html || `<pre style="font-family:sans-serif;padding:16px;white-space:pre-wrap">${active.body_text}</pre>`}
+                      className="w-full"
+                      style={{ height: 460, border: '0' }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">Assim é como o email sai (o rodapé de anular subscrição é acrescentado no envio).</p>
+                  {active.status !== 'sent' && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <button type="button" onClick={() => setEditing(true)} disabled={busy} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-slate-800 text-white dark:bg-white dark:text-slate-900 hover:opacity-90"><Pencil className="w-4 h-4" /> Editar</button>
+                      <button type="button" onClick={() => act('approve', [active.id])} disabled={busy} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700"><Check className="w-4 h-4" /> Aprovar</button>
+                      <button type="button" onClick={() => act('reject', [active.id])} disabled={busy} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-slate-300"><X className="w-4 h-4" /> Rejeitar</button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

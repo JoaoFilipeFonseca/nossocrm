@@ -12,7 +12,7 @@ import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createStaticAdminClient } from '@/lib/supabase/staticAdminClient';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
-import { generateNurtureDrafts, type NurtureContext } from '@/lib/nurture/content';
+import { generateNurtureDrafts, type NurtureContext, type NurtureImovel } from '@/lib/nurture/content';
 import { isSegment, type Segment } from '@/lib/nurture/segments';
 
 export const dynamic = 'force-dynamic';
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     email: string;
     source: string | null;
     segment: string;
-    attribution: { is_test?: boolean } | null;
+    attribution: { is_test?: boolean; imovel?: NurtureImovel | null } | null;
   }>;
 
   const skipped = { no_segment: 0, is_test: 0, already_queued: 0 };
@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
 
   const contexts: NurtureContext[] = targets.map((c) => {
     const td = topDeal.get(c.id);
+    const imv = c.attribution?.imovel ?? null;
     return {
       contactId: c.id,
       dealId: td?.dealId ?? null,
@@ -145,6 +146,10 @@ export async function POST(req: NextRequest) {
       boardName: td?.boardName ?? null,
       segment: c.segment as Segment,
       daysSinceCreated: null,
+      imovel:
+        imv && (imv.tipologia || imv.freguesia || imv.area)
+          ? { tipologia: imv.tipologia ?? null, freguesia: imv.freguesia ?? null, area: imv.area ?? null }
+          : null,
     };
   });
 
