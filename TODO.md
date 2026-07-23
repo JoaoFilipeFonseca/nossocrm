@@ -7,6 +7,11 @@
 > **PENDENTE (mão do João):** configurar o webhook do Resend (eventos open/click) no painel Resend a apontar
 > para `…/functions/v1/messaging-webhook-resend/<channel_id>` com o secret Svix em
 > `messaging_channels.credentials.webhookSecret` — sem isto o movimento só sobe se `opened_at` for gravado.
+> **🗓️ PRÓXIMA FASE (capturada 23/07, construir noutra conversa):** cadência de nurture a 1 ANO — pipeline
+> Contactos (proprietários+compradores): correr todos os dias, 30-40 emails/dia, ~1/mês com temas sempre
+> diferentes, chamada aos 3-4 meses, objectivo Contacto→Oportunidade; Oportunidades: cadência mais curta
+> (15/15 dias ou 3/3 semanas) para Oportunidade→Lead. **INTERROMPER a automação** se o contacto responder ou
+> se houver chamada/SMS humano (inegociável). Spec completa em `estrategia/v2-empresa/13-NURTURE-CADENCIA-1-ANO.md`.
 > **Refinamentos 23/07 (`16c4835`):** email na marca Verde Fonseca (slogan "Para a vida que vais viver." em
 > destaque + botão cartão `/cartao`); conteúdo refere o imóvel que gerou a lead (attribution.imovel) com certeza;
 > UI com pré-visualização HTML + modo Editar explícito (mudar 1 palavra). **Ideia capturada (NÃO executar):**
