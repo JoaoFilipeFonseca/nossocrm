@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import DashboardPage from '@/features/dashboard/DashboardPage'
+import PainelPage from '@/features/painel/PainelPage'
 
-export const metadata: Metadata = { title: 'Dashboard | Foco Imo' };
+export const metadata: Metadata = { title: 'Painel Diário | Foco Imo' };
 
 export default function Dashboard() {
-    return <DashboardPage />
+    return <PainelPage />
 }
