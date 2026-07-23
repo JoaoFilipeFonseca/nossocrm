@@ -64,7 +64,9 @@ export const SYSTEM_FLOWS: Record<string, SystemFlow> = {
       { icon: '📅', title: 'Confirma o dia', detail: 'Salta fins de semana se assim estiver configurado (hora de Lisboa).', params: ['skip_weekends'] },
       { icon: '📈', title: 'Calcula os teus números', detail: 'Usa as métricas honestas (CHQ de hoje e da semana, reuniões + visitas, propostas abertas, receita ponderada, % da meta do ano).' },
       { icon: '🥶', title: 'Conta os negócios frios', detail: 'Negócios abertos parados há demasiados dias sem mexer.', params: ['cold_deals_days'] },
-      { icon: '📨', title: 'Manda o briefing', detail: 'Mensagem no Telegram com semáforo da meta, negócios frios e atalhos (/numeros, /chq, /menu).' },
+      { icon: '🗓️', title: 'Conta as tarefas do dia', detail: 'Tarefas por fazer: quantas são para hoje e quantas estão atrasadas (data de Lisboa).' },
+      { icon: '📨', title: 'Manda o briefing', detail: 'Mensagem no Telegram com semáforo da meta, tarefas do dia, negócios frios e atalhos (/numeros, /chq, /menu).' },
+      { icon: '🔔', title: 'Toca o sino no CRM', detail: 'Deixa o alerta das tarefas nas notificações do CRM (uma por dia, com link para o Painel), para veres ao abrir mesmo sem ler o Telegram.' },
     ],
   },
   'social-inbox-sync': {

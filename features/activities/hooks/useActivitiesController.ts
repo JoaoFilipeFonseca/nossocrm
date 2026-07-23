@@ -12,6 +12,7 @@ import {
 import { useDeals } from '@/lib/query/hooks/useDealsQuery';
 import { useContacts, useCompanies } from '@/lib/query/hooks/useContactsQuery';
 import { useRealtimeSync } from '@/lib/realtime/useRealtimeSync';
+import { adiarParaAmanha } from '@/lib/activities/adiar';
 
 /**
  * Hook React `useActivitiesController` que encapsula uma lógica reutilizável.
@@ -40,7 +41,9 @@ export const useActivitiesController = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<Activity['type'] | 'ALL'>('ALL');
-  const [dateFilter, setDateFilter] = useState<'ALL' | 'overdue' | 'today' | 'upcoming'>('ALL');
+  // 'agenda' = o que há a fazer (atrasadas + hoje). É o arranque por defeito:
+  // ao abrir Actividades o João vê o que tem de fazer, não o histórico todo.
+  const [dateFilter, setDateFilter] = useState<'ALL' | 'agenda' | 'overdue' | 'today' | 'upcoming'>('agenda');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -49,14 +52,18 @@ export const useActivitiesController = () => {
   useEffect(() => {
     const filter = (searchParams.get('filter') || '').toLowerCase();
 
-    if (filter === 'overdue' || filter === 'today' || filter === 'upcoming') {
+    if (filter === 'overdue' || filter === 'today' || filter === 'upcoming' || filter === 'agenda') {
       setDateFilter(filter);
       setViewMode('list');
       return;
     }
+    if (filter === 'all') {
+      setDateFilter('ALL');
+      return;
+    }
 
-    // Qualquer outro valor (inclui vazio) cai no padrão.
-    setDateFilter('ALL');
+    // Sem parâmetro: arranca no que há a fazer (atrasadas + hoje).
+    setDateFilter('agenda');
   }, [searchParams]);
 
   const [formData, setFormData] = useState({
@@ -98,11 +105,13 @@ export const useActivitiesController = () => {
         const matchesDateFilter =
           dateFilter === 'ALL'
             ? true
-            : dateFilter === 'overdue'
-              ? isPending && ts < todayTs
-              : dateFilter === 'today'
-                ? isPending && ts >= todayTs && ts < tomorrowTs
-                : isPending && ts >= tomorrowTs;
+            : dateFilter === 'agenda'
+              ? isPending && ts < tomorrowTs // atrasadas + hoje
+              : dateFilter === 'overdue'
+                ? isPending && ts < todayTs
+                : dateFilter === 'today'
+                  ? isPending && ts >= todayTs && ts < tomorrowTs
+                  : isPending && ts >= tomorrowTs;
 
         return matchesSearch && matchesType && matchesDateFilter;
       })
@@ -162,6 +171,22 @@ export const useActivitiesController = () => {
           onSuccess: () => {
             showToast(activity.completed ? 'Actividade reaberta' : 'Actividade concluída', 'success');
           },
+        }
+      );
+    },
+    [activitiesById, showToast, updateActivityMutation]
+  );
+
+  const handleSnooze = useCallback(
+    (id: string) => {
+      const activity = activitiesById.get(id);
+      if (!activity) return;
+      const nova = adiarParaAmanha(activity.date).toISOString();
+      updateActivityMutation.mutate(
+        { id, updates: { date: nova } },
+        {
+          onSuccess: () => showToast('Adiada para amanhã', 'success'),
+          onError: () => showToast('Não foi possível adiar a tarefa', 'error'),
         }
       );
     },
@@ -254,6 +279,7 @@ export const useActivitiesController = () => {
     handleEditActivity,
     handleDeleteActivity,
     handleToggleComplete,
+    handleSnooze,
     handleSubmit,
   };
 };

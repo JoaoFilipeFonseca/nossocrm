@@ -5,7 +5,7 @@ interface ActivitiesHeaderProps {
   viewMode: 'list' | 'calendar';
   setViewMode: (mode: 'list' | 'calendar') => void;
   onNewActivity: () => void;
-  dateFilter?: 'ALL' | 'overdue' | 'today' | 'upcoming';
+  dateFilter?: 'ALL' | 'agenda' | 'overdue' | 'today' | 'upcoming';
 }
 
 /**

@@ -4,9 +4,26 @@
 // snapshot de /api/painel. Copy PT-PT pré-AO 1990.
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Phone, PhoneOff, Home, TrendingUp, Layers, Target, CheckCircle2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  Phone,
+  PhoneOff,
+  Home,
+  TrendingUp,
+  Layers,
+  Target,
+  CheckCircle2,
+  Check,
+  CalendarClock,
+  ListChecks,
+  CalendarDays,
+  Users,
+  Mail,
+  StickyNote,
+} from 'lucide-react';
 import {
   eur,
+  type AgendaItem,
   type Carteira,
   type CoracaoDia,
   type PainelFunnel,
@@ -15,6 +32,9 @@ import {
   type ReceitaLinha,
   type TopCanais,
 } from '@/lib/painel/shared';
+import { useUpdateActivity } from '@/lib/query/hooks/useActivitiesQuery';
+import { useToast } from '@/context/ToastContext';
+import { adiarParaAmanha } from '@/lib/activities/adiar';
 
 const card =
   'rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-dark-card shadow-sm';
@@ -201,6 +221,185 @@ export function PipelineEtapaCard({ etapas }: { etapas: PipelineEtapa[] }) {
               <b className="text-slate-500 dark:text-slate-400 tabular-nums w-20 text-right">{eur(e.valueCents)}</b>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Agenda accionável do dia ────────────────────────────────────────────────
+const TIPO_ICON: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  CALL: Phone,
+  MEETING: Users,
+  EMAIL: Mail,
+  TASK: ListChecks,
+  NOTE: StickyNote,
+};
+
+function horaLabel(iso: string): string {
+  const d = new Date(iso);
+  const h = d.getHours();
+  const m = d.getMinutes();
+  if (h === 0 && m === 0) return ''; // sem hora definida
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function AgendaLinha({
+  item,
+  onFeito,
+  onAdiar,
+  onAbrir,
+  ocupado,
+}: {
+  item: AgendaItem;
+  onFeito: (i: AgendaItem) => void;
+  onAdiar: (i: AgendaItem) => void;
+  onAbrir: (i: AgendaItem) => void;
+  ocupado: boolean;
+}) {
+  const Icon = TIPO_ICON[item.tipo] ?? ListChecks;
+  const hora = horaLabel(item.quando);
+  const sub = [item.dealTitulo || item.contactoNome, hora].filter(Boolean).join(' · ');
+  return (
+    <div className="flex items-center gap-2 py-2 border-b border-slate-100 dark:border-white/5 last:border-0">
+      {/* Concluir */}
+      <button
+        type="button"
+        onClick={() => onFeito(item)}
+        disabled={ocupado}
+        title="Marcar como feito"
+        className="shrink-0 h-5 w-5 rounded-full border-2 border-slate-300 dark:border-white/25 grid place-items-center text-transparent hover:border-emerald-500 hover:text-emerald-500 transition-colors disabled:opacity-40"
+      >
+        <Check size={12} strokeWidth={3} />
+      </button>
+
+      {/* Corpo (abre o negócio/tarefa) */}
+      <button type="button" onClick={() => onAbrir(item)} className="min-w-0 flex-1 text-left group">
+        <div className="flex items-center gap-1.5">
+          <Icon size={12} className={item.atrasada ? 'text-rose-500 shrink-0' : 'text-slate-400 dark:text-slate-500 shrink-0'} />
+          <span className="truncate text-[13px] text-slate-800 dark:text-slate-100 group-hover:underline">{item.titulo}</span>
+        </div>
+        {sub && <div className="truncate text-[11px] text-slate-400 dark:text-slate-500 pl-[18px]">{sub}</div>}
+      </button>
+
+      {/* Acções */}
+      <div className="flex items-center gap-1 shrink-0">
+        {item.telefone && (
+          <a
+            href={`tel:${item.telefone}`}
+            title={`Ligar ${item.telefone}`}
+            className="h-7 w-7 grid place-items-center rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+          >
+            <Phone size={14} />
+          </a>
+        )}
+        <button
+          type="button"
+          onClick={() => onAdiar(item)}
+          disabled={ocupado}
+          title="Adiar para amanhã"
+          className="h-7 px-2 grid place-items-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 disabled:opacity-40"
+        >
+          <CalendarClock size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function AgendaHojeCard({ itens }: { itens: AgendaItem[] }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+  const updateActivity = useUpdateActivity();
+  const [resolvidas, setResolvidas] = React.useState<Set<string>>(new Set());
+  const [emCurso, setEmCurso] = React.useState<Set<string>>(new Set());
+
+  const visiveis = itens.filter((i) => !resolvidas.has(i.id));
+  const atrasadas = visiveis.filter((i) => i.atrasada);
+  const hoje = visiveis.filter((i) => !i.atrasada);
+
+  const marcar = (id: string, on: boolean, set: React.Dispatch<React.SetStateAction<Set<string>>>) =>
+    set((prev) => {
+      const n = new Set(prev);
+      if (on) n.add(id);
+      else n.delete(id);
+      return n;
+    });
+
+  const agir = (item: AgendaItem, updates: Record<string, unknown>, ok: string) => {
+    marcar(item.id, true, setEmCurso);
+    marcar(item.id, true, setResolvidas); // some optimista
+    updateActivity.mutate(
+      { id: item.id, updates },
+      {
+        onSuccess: () => {
+          showToast(ok, 'success');
+          queryClient.invalidateQueries({ queryKey: ['painel'] });
+        },
+        onError: () => {
+          marcar(item.id, false, setResolvidas); // volta à lista
+          showToast('Não foi possível actualizar a tarefa', 'error');
+        },
+        onSettled: () => marcar(item.id, false, setEmCurso),
+      },
+    );
+  };
+
+  const onFeito = (item: AgendaItem) => agir(item, { completed: true }, 'Tarefa concluída');
+  const onAdiar = (item: AgendaItem) =>
+    agir(item, { date: adiarParaAmanha(item.quando).toISOString() }, 'Adiada para amanhã');
+  const onAbrir = (item: AgendaItem) =>
+    router.push(item.dealId ? `/deals/${item.dealId}/cockpit` : '/activities');
+
+  const total = visiveis.length;
+
+  return (
+    <div className={`${card} p-4`} style={{ borderColor: atrasadas.length > 0 ? 'rgba(244,63,94,0.4)' : undefined }}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <CalendarDays size={15} className="text-primary-600 dark:text-primary-400" />
+          <span className="text-sm font-bold text-slate-900 dark:text-white">A fazer hoje</span>
+          {atrasadas.length > 0 && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400">
+              {atrasadas.length} {atrasadas.length === 1 ? 'atrasada' : 'atrasadas'}
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => router.push('/activities?filter=today')}
+          className="text-[11px] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+        >
+          Ver todas
+        </button>
+      </div>
+
+      {total === 0 ? (
+        <div className="py-8 text-center">
+          <CheckCircle2 size={26} className="mx-auto mb-2 text-emerald-500" />
+          <p className="text-sm text-slate-500 dark:text-slate-400">Tudo em dia. Sem tarefas por fazer.</p>
+        </div>
+      ) : (
+        <div className="max-h-[340px] overflow-y-auto -mr-1 pr-1">
+          {atrasadas.length > 0 && (
+            <>
+              <div className="text-[10.5px] font-bold uppercase tracking-wide text-rose-500 mt-1 mb-0.5">
+                Atrasadas
+              </div>
+              {atrasadas.map((i) => (
+                <AgendaLinha key={i.id} item={i} onFeito={onFeito} onAdiar={onAdiar} onAbrir={onAbrir} ocupado={emCurso.has(i.id)} />
+              ))}
+            </>
+          )}
+          {hoje.length > 0 && (
+            <>
+              <div className="text-[10.5px] font-bold uppercase tracking-wide text-amber-500 mt-3 mb-0.5">Hoje</div>
+              {hoje.map((i) => (
+                <AgendaLinha key={i.id} item={i} onFeito={onFeito} onAdiar={onAdiar} onAbrir={onAbrir} ocupado={emCurso.has(i.id)} />
+              ))}
+            </>
+          )}
         </div>
       )}
     </div>

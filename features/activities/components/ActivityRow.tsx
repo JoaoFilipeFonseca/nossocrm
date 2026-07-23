@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Phone, Users, Mail, CheckSquare, Clock, Trash2, Edit2, CheckCircle2, Circle, Building2, MessageSquarePlus } from 'lucide-react';
+import { Phone, Users, Mail, CheckSquare, Clock, Trash2, Edit2, CheckCircle2, Circle, Building2, MessageSquarePlus, CalendarClock } from 'lucide-react';
 import { useBoards } from '@/lib/query/hooks/useBoardsQuery';
 import { Activity, Deal, Contact, Company } from '@/types';
 import { DealQuickBadges } from '@/components/activity/DealQuickBadges';
@@ -14,6 +14,8 @@ interface ActivityRowProps {
     onToggleComplete: (id: string) => void;
     onEdit: (activity: Activity) => void;
     onDelete: (id: string) => void;
+    /** Adiar a tarefa para o dia seguinte (nunca Domingo). */
+    onSnooze?: (id: string) => void;
     isSelected?: boolean;
     onSelect?: (id: string, selected: boolean) => void;
     /** Contadores rápidos do negócio (manuais · automáticos · tarefas). */
@@ -34,6 +36,7 @@ const ActivityRowComponent: React.FC<ActivityRowProps> = ({
     onToggleComplete,
     onEdit,
     onDelete,
+    onSnooze,
     isSelected = false,
     onSelect,
     quickStats,
@@ -219,6 +222,16 @@ const ActivityRowComponent: React.FC<ActivityRowProps> = ({
                         aria-label="Registar contacto / nota"
                     >
                         <MessageSquarePlus size={16} />
+                    </button>
+                )}
+                {onSnooze && !activity.completed && (
+                    <button
+                        onClick={() => onSnooze(activity.id)}
+                        className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg transition-colors"
+                        title="Adiar para amanhã"
+                        aria-label="Adiar para amanhã"
+                    >
+                        <CalendarClock size={16} />
                     </button>
                 )}
                 <button

@@ -65,6 +65,19 @@ export interface CoracaoDia {
   realizadasHoje: number; // chamadas em que falou mesmo
 }
 
+/** Uma tarefa accionável do dia (atrasada ou de hoje, por fazer). */
+export interface AgendaItem {
+  id: string;
+  titulo: string;
+  tipo: string; // CALL | MEETING | EMAIL | TASK | NOTE
+  quando: string; // ISO da data/hora agendada
+  atrasada: boolean; // date anterior a hoje
+  dealId: string | null;
+  dealTitulo: string | null;
+  contactoNome: string | null;
+  telefone: string | null; // para o botão "Ligar" (tel:)
+}
+
 export interface CarteiraImovel {
   id: string;
   titulo: string;
@@ -101,6 +114,7 @@ export interface PainelSnapshot {
   receitaLinhas: ReceitaLinha[];
   pipelinePorEtapa: PipelineEtapa[];
   coracao: CoracaoDia;
+  agendaHoje: AgendaItem[]; // tarefas atrasadas + de hoje, por fazer (accionáveis)
   carteira: Carteira;
   topCanais: TopCanais;
 }

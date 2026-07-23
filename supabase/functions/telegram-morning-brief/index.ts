@@ -83,6 +83,29 @@ Deno.serve(async (req: Request) => {
         (s) => (s.status === 'parado' || s.status === 'arrefecer') && s.days_idle >= coldDealsDays,
       ).length;
 
+      // TAREFAS — o que o João tem de fazer hoje (activities por fazer).
+      // Conta atrasadas (data anterior a hoje) e as de hoje, na data de Lisboa.
+      const lisbonDate = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Lisbon',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(now);
+      const { data: pendingTasks } = await supabase
+        .from('activities')
+        .select('date')
+        .eq('organization_id', orgId)
+        .eq('completed', false)
+        .is('deleted_at', null);
+      let tarefasHoje = 0;
+      let tarefasAtrasadas = 0;
+      for (const t of pendingTasks ?? []) {
+        const d = String(t.date ?? '').slice(0, 10);
+        if (!d) continue;
+        if (d === lisbonDate) tarefasHoje += 1;
+        else if (d < lisbonDate) tarefasAtrasadas += 1;
+      }
+
       const semIcon = m.goal.semaphore === 'green' ? '🟢' : m.goal.semaphore === 'amber' ? '🟡' : m.goal.semaphore === 'red' ? '🔴' : '⚪️';
       const pctStr = m.goal.pct !== null && Number.isFinite(m.goal.pct) ? `${m.goal.pct.toFixed(1)}%` : '—';
 
@@ -98,12 +121,51 @@ Deno.serve(async (req: Request) => {
         ``,
         `${semIcon} <b>Meta ${m.goal.year}:</b> ${fmt(m.goal.ytd_realized_eur)} / ${fmt(m.goal.ytd_target_eur)} € YTD · ${pctStr}`,
       ];
+      if (tarefasHoje + tarefasAtrasadas > 0) {
+        lines.push('');
+        const atrasoStr = tarefasAtrasadas > 0 ? ` · <b>${tarefasAtrasadas} atrasada${tarefasAtrasadas === 1 ? '' : 's'}</b>` : '';
+        lines.push(`🗓️ <b>Tarefas:</b> ${tarefasHoje} para hoje${atrasoStr}`);
+      }
       if ((coldCount ?? 0) > 0) {
         lines.push('');
         lines.push(`🥶 <b>${coldCount} ${coldCount === 1 ? 'deal frio' : 'deals frios'}</b> > ${coldDealsDays} dias sem mexer. Liga, escreve, ou aceita perda.`);
       }
       lines.push('');
       lines.push(`Atalhos: /numeros · /chq · /menu`);
+
+      // SINO — deixa o alerta das tarefas no CRM (system_notifications), para o
+      // João ver ao abrir mesmo que não leia o Telegram. Um por dia por org.
+      if (tarefasHoje + tarefasAtrasadas > 0) {
+        try {
+          const atrasoMsg = tarefasAtrasadas > 0 ? ` e ${tarefasAtrasadas} atrasada${tarefasAtrasadas === 1 ? '' : 's'}` : '';
+          const payload = {
+            organization_id: orgId,
+            type: 'TASKS_DUE',
+            title: 'Tarefas de hoje',
+            message: `Tens ${tarefasHoje} tarefa${tarefasHoje === 1 ? '' : 's'} para hoje${atrasoMsg}.`,
+            link: '/dashboard',
+            severity: tarefasAtrasadas > 0 ? 'high' : 'medium',
+          };
+          const { data: jaExiste } = await supabase
+            .from('system_notifications')
+            .select('id')
+            .eq('organization_id', orgId)
+            .eq('type', 'TASKS_DUE')
+            .gte('created_at', `${lisbonDate}T00:00:00Z`)
+            .limit(1);
+          if (jaExiste && jaExiste.length > 0) {
+            // "Disparar agora" no mesmo dia: actualiza em vez de duplicar.
+            await supabase
+              .from('system_notifications')
+              .update({ message: payload.message, severity: payload.severity, read_at: null })
+              .eq('id', (jaExiste[0] as { id: string }).id);
+          } else {
+            await supabase.from('system_notifications').insert(payload);
+          }
+        } catch {
+          /* best-effort: o sino nunca pode partir o briefing */
+        }
+      }
 
       const tgRes = await fetch(`${TELEGRAM_API}/bot${botToken}/sendMessage`, {
         method: 'POST',

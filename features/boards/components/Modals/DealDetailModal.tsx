@@ -69,6 +69,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { StageProgressBar } from '../StageProgressBar';
 import { ActivityRow } from '@/features/activities/components/ActivityRow';
+import { adiarParaAmanha } from '@/lib/activities/adiar';
 import { formatPriorityPtBr } from '@/lib/utils/priority';
 import { BriefingDrawer } from '@/features/deals/components/BriefingDrawer';
 import { AIExtractedFields } from '@/features/deals/components/AIExtractedFields';
@@ -1395,6 +1396,10 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                           }}
                           onEdit={() => { }} // Edit not implemented in modal yet
                           onDelete={id => deleteActivity(id)}
+                          onSnooze={id => {
+                            const act = activitiesById.get(id);
+                            if (act) updateActivity(id, { date: adiarParaAmanha(act.date).toISOString() });
+                          }}
                         />
                       ))}
                     </div>

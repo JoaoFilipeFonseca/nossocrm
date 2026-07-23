@@ -2,11 +2,23 @@ import React from 'react';
 import { Search, Filter } from 'lucide-react';
 import { Activity } from '@/types';
 
+export type DateFilter = 'ALL' | 'agenda' | 'overdue' | 'today' | 'upcoming';
+
+const DATE_FILTERS: { key: DateFilter; label: string }[] = [
+  { key: 'agenda', label: 'A fazer' },
+  { key: 'overdue', label: 'Atrasadas' },
+  { key: 'today', label: 'Hoje' },
+  { key: 'upcoming', label: 'Próximas' },
+  { key: 'ALL', label: 'Todas' },
+];
+
 interface ActivitiesFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   filterType: Activity['type'] | 'ALL';
   setFilterType: (type: Activity['type'] | 'ALL') => void;
+  dateFilter?: DateFilter;
+  setDateFilter?: (f: DateFilter) => void;
 }
 
 /**
@@ -30,9 +42,30 @@ export const ActivitiesFilters: React.FC<ActivitiesFiltersProps> = ({
   setSearchTerm,
   filterType,
   setFilterType,
+  dateFilter,
+  setDateFilter,
 }) => {
   return (
-    <div className="flex gap-4 mb-6">
+    <div className="space-y-3 mb-6">
+      {setDateFilter && (
+        <div className="inline-flex flex-wrap gap-0.5 p-0.5 rounded-lg bg-slate-100 dark:bg-white/5">
+          {DATE_FILTERS.map(f => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setDateFilter(f.key)}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                dateFilter === f.key
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-4">
       <div className="flex-1 relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
         <input
@@ -56,6 +89,7 @@ export const ActivitiesFilters: React.FC<ActivitiesFiltersProps> = ({
           <option value="EMAIL">Emails</option>
           <option value="TASK">Tarefas</option>
         </select>
+      </div>
       </div>
     </div>
   );

@@ -254,6 +254,60 @@ export async function GET(request: NextRequest) {
   }
   const tentativasHoje = totalChamadas - realizadasHoje;
 
+  // ── Agenda accionável do dia: tarefas atrasadas + de hoje, por fazer ───────
+  const tomorrowStart = new Date(todayStart.getTime() + 86_400_000);
+  const { data: agendaRows } = await supabase
+    .from('activities')
+    .select('id, title, type, date, deal_id, contact_id')
+    .eq('organization_id', orgId)
+    .eq('completed', false)
+    .is('deleted_at', null)
+    .lt('date', tomorrowStart.toISOString())
+    .order('date', { ascending: true })
+    .limit(30);
+  const agendaList = agendaRows ?? [];
+
+  // Deals e contactos das tarefas (para título do negócio + telefone p/ ligar).
+  const agDealIds = Array.from(new Set(agendaList.map((a) => a.deal_id as string | null).filter(Boolean) as string[]));
+  const dealById = new Map<string, { title: string; contact_id: string | null }>();
+  if (agDealIds.length > 0) {
+    const { data: agDeals } = await supabase.from('deals').select('id, title, contact_id').in('id', agDealIds);
+    for (const d of agDeals ?? [])
+      dealById.set(d.id as string, { title: d.title as string, contact_id: (d.contact_id as string | null) ?? null });
+  }
+  const agContactIds = Array.from(
+    new Set(
+      agendaList
+        .flatMap((a) => [a.contact_id as string | null, dealById.get(a.deal_id as string)?.contact_id ?? null])
+        .filter(Boolean) as string[],
+    ),
+  );
+  const contactById = new Map<string, { name: string; phone: string | null }>();
+  if (agContactIds.length > 0) {
+    const { data: agContacts } = await supabase.from('contacts').select('id, name, phone').in('id', agContactIds);
+    for (const c of agContacts ?? [])
+      contactById.set(c.id as string, { name: c.name as string, phone: (c.phone as string | null) ?? null });
+  }
+
+  const agendaHoje = agendaList.map((a) => {
+    const dealId = (a.deal_id as string | null) ?? null;
+    const deal = dealId ? dealById.get(dealId) : undefined;
+    const contactId = (a.contact_id as string | null) ?? deal?.contact_id ?? null;
+    const contact = contactId ? contactById.get(contactId) : undefined;
+    const dISO = (a.date as string).slice(0, 10);
+    return {
+      id: a.id as string,
+      titulo: (a.title as string) || 'Tarefa',
+      tipo: (a.type as string) || 'TASK',
+      quando: a.date as string,
+      atrasada: dISO < todayISO,
+      dealId,
+      dealTitulo: deal?.title ?? null,
+      contactoNome: contact?.name ?? null,
+      telefone: contact?.phone ?? null,
+    };
+  });
+
   // ── Carteira de imóveis ──────────────────────────────────────────────────
   const { data: imoveis } = await supabase
     .from('imoveis')
@@ -330,6 +384,7 @@ export async function GET(request: NextRequest) {
       tentativasHoje,
       realizadasHoje,
     },
+    agendaHoje,
     carteira: {
       activos: carteiraImoveis.length,
       imoveis: carteiraImoveis,

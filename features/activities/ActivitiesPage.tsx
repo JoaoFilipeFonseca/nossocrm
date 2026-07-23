@@ -23,6 +23,7 @@ export const ActivitiesPage: React.FC = () => {
         filterType,
         setFilterType,
         dateFilter,
+        setDateFilter,
         currentDate,
         setCurrentDate,
         isModalOpen,
@@ -38,6 +39,7 @@ export const ActivitiesPage: React.FC = () => {
         handleEditActivity,
         handleDeleteActivity,
         handleToggleComplete,
+        handleSnooze,
         handleSubmit
     } = useActivitiesController();
 
@@ -69,8 +71,11 @@ export const ActivitiesPage: React.FC = () => {
     };
 
     const handleSnoozeAll = () => {
-        // In a real app, this would update the date of each activity
-        addToast(`${selectedActivities.size} actividades adiadas para amanhã!`, 'success');
+        const count = selectedActivities.size;
+        selectedActivities.forEach(id => {
+            handleSnooze(id);
+        });
+        addToast(`${count} ${count === 1 ? 'actividade adiada' : 'actividades adiadas'} para amanhã!`, 'success');
         handleClearSelection();
     };
 
@@ -90,6 +95,8 @@ export const ActivitiesPage: React.FC = () => {
                         setSearchTerm={setSearchTerm}
                         filterType={filterType}
                         setFilterType={setFilterType}
+                        dateFilter={dateFilter}
+                        setDateFilter={setDateFilter}
                     />
                     <ActivitiesList
                         activities={filteredActivities}
@@ -99,6 +106,7 @@ export const ActivitiesPage: React.FC = () => {
                         onToggleComplete={handleToggleComplete}
                         onEdit={handleEditActivity}
                         onDelete={handleDeleteActivity}
+                        onSnooze={handleSnooze}
                         selectedActivities={selectedActivities}
                         onSelectActivity={handleSelectActivity}
                         onAddActivity={handleNewActivity}

@@ -14,6 +14,7 @@ interface ActivitiesListProps {
     onToggleComplete: (id: string) => void;
     onEdit: (activity: Activity) => void;
     onDelete: (id: string) => void;
+    onSnooze?: (id: string) => void;
     selectedActivities?: Set<string>;
     onSelectActivity?: (id: string, selected: boolean) => void;
     onAddActivity?: () => void;
@@ -49,6 +50,7 @@ export const ActivitiesList: React.FC<ActivitiesListProps> = ({
     onToggleComplete,
     onEdit,
     onDelete,
+    onSnooze,
     selectedActivities = new Set(),
     onSelectActivity,
     onAddActivity,
@@ -110,6 +112,7 @@ export const ActivitiesList: React.FC<ActivitiesListProps> = ({
                         onToggleComplete={onToggleComplete}
                         onEdit={onEdit}
                         onDelete={onDelete}
+                        onSnooze={onSnooze}
                         isSelected={selectedActivities.has(activity.id)}
                         onSelect={onSelectActivity}
                         quickStats={rowDeal ? quickStatsMap?.[rowDeal.id] : undefined}
