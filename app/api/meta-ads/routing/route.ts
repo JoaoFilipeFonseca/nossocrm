@@ -8,34 +8,72 @@ import { z } from 'zod';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
 import { resolveMetaAdminContext, metaJson } from '@/lib/integrations/meta/server';
 
+// Janela (dias) para considerar uma campanha "activa": gasto/entrega recente.
+const ACTIVE_WINDOW_DAYS = 7;
+
+interface OverviewRow {
+  campaign_id: string;
+  campaign_name: string | null;
+  board_id: string | null;
+  stage_id: string | null;
+  last_active_date: string | null;
+  active: boolean;
+  last_lead_at: string | null;
+  archived_at: string | null;
+}
+
 export async function GET() {
   const resolved = await resolveMetaAdminContext();
   if (resolved.error) return resolved.error;
   const c = resolved.ctx;
 
-  // Campanhas vistas nos insights (distinct), com o destino guardado (se houver).
-  const { data: insights } = await c.admin
-    .from('ad_insights')
-    .select('campaign_id, campaign_name')
-    .eq('organization_id', c.orgId)
-    .not('campaign_id', 'is', null);
+  // Visão agregada por campanha (destino + sinal de activa + última lead + arquivo).
+  const { data: rows, error: rpcErr } = await c.admin.rpc('meta_campaign_routing_overview', {
+    p_org: c.orgId,
+    p_window_days: ACTIVE_WINDOW_DAYS,
+  });
+  if (rpcErr) return metaJson({ ok: true, campaigns: [], boards: [], error: rpcErr.message });
 
-  const campMap = new Map<string, string | null>();
-  for (const r of insights ?? []) {
-    const id = String((r as { campaign_id: string }).campaign_id);
-    if (!campMap.has(id)) campMap.set(id, (r as { campaign_name: string | null }).campaign_name ?? null);
+  // Auto-reaparecimento: campanha arquivada que voltou a ficar activa OU recebeu
+  // lead nova depois do arquivo → limpa o flag (volta a "por definir"). É a regra
+  // de segurança: nunca perder o encaminhamento de uma campanha viva.
+  const toUnarchive: string[] = [];
+  const campaigns = ((rows ?? []) as OverviewRow[]).map((r) => {
+    let archived = !!r.archived_at;
+    if (archived) {
+      const newLead = !!(r.last_lead_at && r.archived_at && new Date(r.last_lead_at) > new Date(r.archived_at));
+      if (r.active || newLead) {
+        archived = false;
+        toUnarchive.push(r.campaign_id);
+      }
+    }
+    return {
+      campaign_id: r.campaign_id,
+      campaign_name: r.campaign_name,
+      board_id: r.board_id ?? null,
+      stage_id: r.stage_id ?? null,
+      active: !!r.active,
+      archived,
+      last_active_date: r.last_active_date,
+      last_lead_at: r.last_lead_at,
+    };
+  });
+
+  if (toUnarchive.length > 0) {
+    await c.admin
+      .from('meta_campaign_archive')
+      .delete()
+      .eq('organization_id', c.orgId)
+      .in('campaign_id', toUnarchive);
   }
 
-  const { data: routes } = await c.admin
-    .from('meta_lead_routing')
-    .select('campaign_id, board_id, stage_id')
-    .eq('organization_id', c.orgId);
-  const routeMap = new Map((routes ?? []).map((r: { campaign_id: string; board_id: string; stage_id: string | null }) => [r.campaign_id, r]));
-
-  const campaigns = [...campMap.entries()].map(([campaign_id, campaign_name]) => {
-    const r = routeMap.get(campaign_id);
-    return { campaign_id, campaign_name, board_id: r?.board_id ?? null, stage_id: r?.stage_id ?? null };
-  }).sort((a, b) => (a.campaign_name ?? '').localeCompare(b.campaign_name ?? ''));
+  // Ordenar: activas primeiro, depois as por definir, depois por nome.
+  campaigns.sort((a, b) => {
+    if (a.active !== b.active) return a.active ? -1 : 1;
+    const aUndef = !a.board_id, bUndef = !b.board_id;
+    if (aUndef !== bUndef) return aUndef ? -1 : 1;
+    return (a.campaign_name ?? '').localeCompare(b.campaign_name ?? '');
+  });
 
   // Boards + etapas da org para os selectores.
   const { data: boards } = await c.admin

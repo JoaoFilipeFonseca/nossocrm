@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2, ChevronDown, ChevronRight, Route as RouteIcon, BarChart3, History } from 'lucide-react';
+import { TrendingUp, RefreshCw, Megaphone, Play, X, Brain, Pencil, Pause, PlayCircle, Loader2, ChevronDown, ChevronRight, Route as RouteIcon, BarChart3, History, Archive, ArchiveRestore } from 'lucide-react';
 import { AdDrilldownDrawer } from './AdDrilldownDrawer';
 import { CreateAdWizard } from './CreateAdWizard';
 
@@ -1093,12 +1093,17 @@ interface RoutingCampaign {
   campaign_name: string | null;
   board_id: string | null;
   stage_id: string | null;
+  active?: boolean;
+  archived?: boolean;
+  last_active_date?: string | null;
 }
 interface RoutingBoard {
   id: string;
   name: string;
   stages: { id: string; name: string }[];
 }
+
+type RoutingFilters = { active: boolean; toDefine: boolean; archived: boolean };
 
 const LeadRoutingPanel: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -1107,6 +1112,9 @@ const LeadRoutingPanel: React.FC = () => {
   const [campaigns, setCampaigns] = useState<RoutingCampaign[]>([]);
   const [boards, setBoards] = useState<RoutingBoard[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
+  // Vista por defeito: só as que precisam de atenção (activas + por definir).
+  const [filters, setFilters] = useState<RoutingFilters>({ active: true, toDefine: true, archived: false });
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1136,7 +1144,48 @@ const LeadRoutingPanel: React.FC = () => {
       .finally(() => setSavingId(null));
   }, [load]);
 
-  const pendentes = campaigns.filter((c) => !c.board_id).length;
+  const setArchived = useCallback((camp: RoutingCampaign, archived: boolean) => {
+    setArchivingId(camp.campaign_id);
+    // optimismo local (sai/volta à vista conforme os filtros activos)
+    setCampaigns((prev) => prev.map((c) => c.campaign_id === camp.campaign_id ? { ...c, archived } : c));
+    fetch('/api/meta-ads/routing/archive', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ campaign_id: camp.campaign_id, campaign_name: camp.campaign_name, archived }),
+    })
+      .catch(() => { load(); })
+      .finally(() => setArchivingId(null));
+  }, [load]);
+
+  // Contadores por segmento (podem sobrepor-se: activa+por-definir conta nos dois).
+  const counts = useMemo(() => ({
+    active: campaigns.filter((c) => c.active && !c.archived).length,
+    toDefine: campaigns.filter((c) => !c.board_id && !c.archived).length,
+    archived: campaigns.filter((c) => c.archived).length,
+  }), [campaigns]);
+
+  const visible = useMemo(() => campaigns.filter((c) => {
+    if (filters.active && c.active && !c.archived) return true;
+    if (filters.toDefine && !c.board_id && !c.archived) return true;
+    if (filters.archived && c.archived) return true;
+    return false;
+  }), [campaigns, filters]);
+
+  const toggleFilter = (k: keyof RoutingFilters) => setFilters((f) => ({ ...f, [k]: !f[k] }));
+
+  const chip = (k: keyof RoutingFilters, label: string, count: number, activeCls: string) => (
+    <button
+      type="button"
+      onClick={() => toggleFilter(k)}
+      aria-pressed={filters[k]}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
+        filters[k] ? activeCls : 'border-slate-200 bg-white text-slate-400 hover:text-slate-600'
+      }`}
+    >
+      {label}
+      <span className={`rounded-full px-1.5 ${filters[k] ? 'bg-white/70' : 'bg-slate-100'}`}>{count}</span>
+    </button>
+  );
 
   return (
     <div className="mb-6 rounded-lg border border-slate-200">
@@ -1147,9 +1196,9 @@ const LeadRoutingPanel: React.FC = () => {
         <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
           <RouteIcon className="h-4 w-4 text-violet-600" />
           Encaminhamento de leads (por campanha)
-          {loaded && pendentes > 0 && (
+          {loaded && counts.toDefine > 0 && (
             <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-              {pendentes} por definir
+              {counts.toDefine} por definir
             </span>
           )}
         </span>
@@ -1160,52 +1209,102 @@ const LeadRoutingPanel: React.FC = () => {
         <div className="border-t border-slate-100 p-4">
           <p className="text-xs text-slate-500 mb-3">
             Cada campanha define o intuito (comprador, proprietário, arrendamento). A lead nova cai logo no board escolhido.
-            Sem destino, fica como contacto e o Telegram avisa para atribuíres.
+            Sem destino, fica como contacto e o Telegram avisa para atribuíres. Arquiva as que já não usas — se voltarem a
+            ficar activas ou receberem lead nova, reaparecem sozinhas.
           </p>
+
+          {loaded && campaigns.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              {chip('active', 'Activas', counts.active, 'border-emerald-300 bg-emerald-50 text-emerald-700')}
+              {chip('toDefine', 'Por definir', counts.toDefine, 'border-amber-300 bg-amber-50 text-amber-700')}
+              {chip('archived', 'Arquivadas', counts.archived, 'border-slate-300 bg-slate-100 text-slate-600')}
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-slate-500 py-4 justify-center">
               <Loader2 className="w-4 h-4 animate-spin" /> A carregar campanhas...
             </div>
           ) : campaigns.length === 0 ? (
             <p className="text-sm text-slate-400">Sem campanhas com dados ainda.</p>
+          ) : visible.length === 0 ? (
+            <p className="text-sm text-slate-400 py-2">Nada a mostrar nos segmentos escolhidos. Usa os filtros acima.</p>
           ) : (
             <div className="space-y-2">
-              {campaigns.map((c) => {
+              {visible.map((c) => {
                 const board = boards.find((b) => b.id === c.board_id);
                 return (
-                  <div key={c.campaign_id} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg border border-slate-100 p-2.5">
+                  <div key={c.campaign_id} className={`flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg border p-2.5 ${c.archived ? 'border-slate-100 bg-slate-50/60' : 'border-slate-100'}`}>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-slate-800 truncate">{c.campaign_name || c.campaign_id}</div>
-                      {!c.board_id && <div className="text-xs text-amber-600">Por definir</div>}
+                      <div className="flex items-center gap-1.5">
+                        {c.active && !c.archived && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5" title="Com gasto/entrega recente">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> activa
+                          </span>
+                        )}
+                        <div className={`text-sm font-medium truncate ${c.archived ? 'text-slate-500' : 'text-slate-800'}`}>{c.campaign_name || c.campaign_id}</div>
+                      </div>
+                      {!c.archived && !c.board_id && <div className="text-xs text-amber-600">Por definir</div>}
+                      {c.archived && <div className="text-xs text-slate-400">Arquivada</div>}
                     </div>
-                    <select
-                      value={c.board_id ?? ''}
-                      onChange={(e) => {
-                        const bid = e.target.value || null;
-                        const firstStage = bid ? boards.find((b) => b.id === bid)?.stages[0]?.id ?? null : null;
-                        save(c, bid, firstStage);
-                      }}
-                      className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm bg-white focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
-                      aria-label={`Board de destino da campanha ${c.campaign_name || c.campaign_id}`}
-                    >
-                      <option value="">— Sem destino —</option>
-                      {boards.map((b) => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
-                      ))}
-                    </select>
-                    {board && board.stages.length > 0 && (
-                      <select
-                        value={c.stage_id ?? ''}
-                        onChange={(e) => save(c, c.board_id, e.target.value || null)}
-                        className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm bg-white focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
-                        aria-label="Etapa de entrada"
-                      >
-                        {board.stages.map((s) => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                      </select>
+
+                    {!c.archived && (
+                      <>
+                        <select
+                          value={c.board_id ?? ''}
+                          onChange={(e) => {
+                            const bid = e.target.value || null;
+                            const firstStage = bid ? boards.find((b) => b.id === bid)?.stages[0]?.id ?? null : null;
+                            save(c, bid, firstStage);
+                          }}
+                          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm bg-white focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
+                          aria-label={`Board de destino da campanha ${c.campaign_name || c.campaign_id}`}
+                        >
+                          <option value="">— Sem destino —</option>
+                          {boards.map((b) => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                          ))}
+                        </select>
+                        {board && board.stages.length > 0 && (
+                          <select
+                            value={c.stage_id ?? ''}
+                            onChange={(e) => save(c, c.board_id, e.target.value || null)}
+                            className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm bg-white focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
+                            aria-label="Etapa de entrada"
+                          >
+                            {board.stages.map((s) => (
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </>
                     )}
+
                     {savingId === c.campaign_id && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+
+                    {c.archived ? (
+                      <button
+                        type="button"
+                        onClick={() => setArchived(c, false)}
+                        disabled={archivingId === c.campaign_id}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-600 hover:border-violet-300 hover:text-violet-700 disabled:opacity-50"
+                        title="Desarquivar"
+                      >
+                        {archivingId === c.campaign_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArchiveRestore className="w-3.5 h-3.5" />}
+                        Desarquivar
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setArchived(c, true)}
+                        disabled={archivingId === c.campaign_id}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-500 hover:border-slate-300 hover:text-slate-700 disabled:opacity-50"
+                        title="Arquivar (não apaga; reaparece se voltar a ficar activa ou receber lead nova)"
+                      >
+                        {archivingId === c.campaign_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+                        Arquivar
+                      </button>
+                    )}
                   </div>
                 );
               })}

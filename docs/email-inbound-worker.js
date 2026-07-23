@@ -20,7 +20,7 @@ const CRM_ENDPOINT =
 // Caixa de destino JÁ VERIFICADA no Email Routing (para onde reencaminhas hoje).
 const FORWARD_TO = "joaofonseca_13_@hotmail.com";
 
-export default {
+const worker = {
   async email(message, env, ctx) {
     // 1) Copiar para o CRM — best-effort, nunca bloqueia o reencaminhamento.
     try {
@@ -60,3 +60,5 @@ export default {
     await message.forward(FORWARD_TO);
   },
 };
+
+export default worker;
