@@ -7,6 +7,10 @@
 > **PENDENTE (mão do João):** configurar o webhook do Resend (eventos open/click) no painel Resend a apontar
 > para `…/functions/v1/messaging-webhook-resend/<channel_id>` com o secret Svix em
 > `messaging_channels.credentials.webhookSecret` — sem isto o movimento só sobe se `opened_at` for gravado.
+> **Refinamentos 23/07 (`16c4835`):** email na marca Verde Fonseca (slogan "Para a vida que vais viver." em
+> destaque + botão cartão `/cartao`); conteúdo refere o imóvel que gerou a lead (attribution.imovel) com certeza;
+> UI com pré-visualização HTML + modo Editar explícito (mudar 1 palavra). **Ideia capturada (NÃO executar):**
+> auto-segmentar leads novas à entrada (hoje entram como "por classificar" até correr "Segmentar base").
 > **Capturado:** os 20 rascunhos comprador pendentes na fila são sugestão da IA (mais antigos) — o João
 > pode rejeitar/regenerar o "seu" piloto de 20 antes de aprovar. Passos 2-3 das sequências: template existe,
 > só o passo 1 foi gerado (gerar quando quiser a cadência completa).
