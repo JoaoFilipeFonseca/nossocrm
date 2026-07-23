@@ -23,7 +23,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('system_automations')
-    .select('id, key, name, description, icon, cron_job_name, cron_expression, function_url, enabled, params, last_run_at, last_run_ok, last_run_error, run_count, fail_count, updated_at')
+    .select('id, key, name, description, icon, kind, cron_job_name, cron_expression, function_url, enabled, params, last_run_at, last_run_ok, last_run_error, run_count, fail_count, updated_at')
     .order('name');
   if (error) return json({ error: error.message }, 500);
   return json({ items: data ?? [] });

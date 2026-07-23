@@ -10,6 +10,7 @@ type SystemAutomation = {
   name: string;
   description: string | null;
   icon: string;
+  kind?: 'cron' | 'webhook';
   cron_job_name: string;
   cron_expression: string;
   function_url: string;
@@ -208,6 +209,16 @@ export const SystemAutomationsSection: React.FC = () => {
             {it.description && <p className="text-xs text-slate-600 mb-3">{it.description}</p>}
 
             <div className="space-y-2 text-xs">
+              {it.kind === 'webhook' ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Gatilho</span>
+                  <span className="inline-flex items-center gap-1 text-slate-700">
+                    <code className="bg-slate-100 px-1.5 py-0.5 rounded">evento</code>
+                    <span className="text-[10px] text-slate-400">dispara a cada email recebido</span>
+                  </span>
+                </div>
+              ) : (
+              <>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Schedule</span>
                 {editing === it.key ? (
@@ -234,6 +245,8 @@ export const SystemAutomationsSection: React.FC = () => {
                 )}
               </div>
               <div className="text-[10px] text-slate-400 text-right -mt-1">{describeCron(it.cron_expression)}</div>
+              </>
+              )}
 
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Parâmetros</span>
@@ -289,13 +302,15 @@ export const SystemAutomationsSection: React.FC = () => {
                     {openFlow === it.key ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                   </button>
                 )}
-                <button
-                  onClick={() => trigger(it)}
-                  disabled={busy === it.key}
-                  className="flex-1 inline-flex items-center justify-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-300 hover:border-violet-400 hover:bg-violet-50 text-slate-700 hover:text-violet-700 transition-colors disabled:opacity-50"
-                >
-                  <Play className="h-3 w-3" /> Disparar agora
-                </button>
+                {it.kind !== 'webhook' && (
+                  <button
+                    onClick={() => trigger(it)}
+                    disabled={busy === it.key}
+                    className="flex-1 inline-flex items-center justify-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md border border-slate-300 hover:border-violet-400 hover:bg-violet-50 text-slate-700 hover:text-violet-700 transition-colors disabled:opacity-50"
+                  >
+                    <Play className="h-3 w-3" /> Disparar agora
+                  </button>
+                )}
               </div>
 
               {/* SYS-FLOW: a montagem passo a passo, na linguagem das outras automações */}

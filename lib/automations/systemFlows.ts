@@ -26,6 +26,15 @@ export interface SystemFlow {
 }
 
 export const SYSTEM_FLOWS: Record<string, SystemFlow> = {
+  'email-inbound': {
+    steps: [
+      { icon: '📥', title: 'Recebe a resposta do lead', detail: 'Quando um lead responde a um email do João, o Resend (ou um Cloudflare Email Worker) entrega essa resposta ao webhook messaging-webhook-resend, autenticada (Svix ou segredo partilhado).' },
+      { icon: '🎯', title: 'Liga à conversa certa', detail: 'Casa pelo In-Reply-To/References com o email original (nurture ou mensagem enviada) e, em falha, pelo email do remetente. Nunca cria lead — só associa a contactos e negócios que já existem (contacto≠lead).' },
+      { icon: '💬', title: 'Grava a mensagem na conversa', detail: 'Regista a resposta como mensagem inbound na aba Mensagens (assunto + corpo) e actualiza a conversa. Idempotente: a mesma resposta nunca entra duas vezes.' },
+      { icon: '🧾', title: 'Escreve na timeline do negócio', detail: 'Acrescenta "Resposta do cliente por email" à timeline do negócio aberto do contacto, para a IA e o João verem a conversa dos dois lados. Se era resposta a um nurture, marca replied_at.' },
+    ],
+    note: 'É um webhook: dispara-se sozinho a cada email recebido (não tem horário nem botão de disparo). Precisa da configuração de inbound na Cloudflare/Resend (mão do João).',
+  },
   'client-errors-alert': {
     steps: [
       { icon: '🔍', title: 'Lê os erros recentes do CRM', detail: 'Procura em client_errors os erros dos últimos minutos ainda sem alerta, agrupados por organização.', params: ['window_minutes'] },

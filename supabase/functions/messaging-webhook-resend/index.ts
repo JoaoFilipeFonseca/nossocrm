@@ -7,21 +7,49 @@
  * - email.opened → status 'read'
  * - email.bounced → status 'failed'
  * - email.complained → status 'failed'
+ * - email.received → INBOUND (resposta do lead) → contacto + negócio + timeline
  *
  * Rotas:
  * - `POST /functions/v1/messaging-webhook-resend/<channel_id>` → Eventos do webhook
+ * - `POST /functions/v1/messaging-webhook-resend/<channel_id>?source=worker` → inbound
+ *   vindo de um Cloudflare Email Worker (auth por segredo partilhado `inboundSecret`).
  *
  * Autenticação:
- * - Svix headers: svix-id, svix-timestamp, svix-signature
- * - HMAC-SHA256 verification against channel webhookSecret
+ * - Resend (status + Resend Inbound): Svix headers (svix-id/svix-timestamp/svix-signature)
+ *   verificados por HMAC-SHA256 contra `credentials.webhookSecret`.
+ * - Cloudflare Email Worker: header `x-inbound-secret` comparado com
+ *   `credentials.inboundSecret` (timing-safe). Não usa Svix.
+ *
+ * INBOUND (MSG-3 / task_3ebe04f0): as respostas dos leads aos emails do João passam
+ * a entrar no CRM (hoje caem só na caixa via Cloudflare Email Routing), para a IA ter
+ * a conversa dos dois lados. Nunca fabrica lead: só associa a contacto/negócio já
+ * existentes (contacto≠lead). Idempotente e nunca devolve 5xx em erro lógico.
  *
  * @see https://resend.com/docs/webhooks
+ * @see https://resend.com/docs/dashboard/receiving/introduction
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 // =============================================================================
 // TYPES
 // =============================================================================
+
+interface ResendInboundData {
+  email_id: string;
+  from: string;
+  to?: string[];
+  cc?: string[];
+  bcc?: string[];
+  subject?: string;
+  created_at?: string;
+  message_id?: string;
+  // Preenchidos pelo Cloudflare Email Worker (Resend Inbound não os traz no webhook):
+  text?: string;
+  html?: string;
+  in_reply_to?: string;
+  references?: string;
+  headers?: unknown;
+}
 
 interface ResendWebhookPayload {
   type:
@@ -31,7 +59,8 @@ interface ResendWebhookPayload {
     | "email.complained"
     | "email.bounced"
     | "email.opened"
-    | "email.clicked";
+    | "email.clicked"
+    | "email.received";
   created_at: string;
   data: {
     email_id: string;
@@ -47,7 +76,7 @@ interface ResendWebhookPayload {
       timestamp: string;
       userAgent: string;
     };
-  };
+  } & ResendInboundData;
 }
 
 // =============================================================================
@@ -57,7 +86,7 @@ interface ResendWebhookPayload {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, svix-id, svix-timestamp, svix-signature",
+  "Access-Control-Allow-Headers": "Content-Type, svix-id, svix-timestamp, svix-signature, x-inbound-secret",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -146,13 +175,14 @@ async function timingSafeEqual(a: Uint8Array, b: Uint8Array): Promise<boolean> {
   return diff === 0;
 }
 
+/** Timing-safe compare of two strings (UTF-8). */
+async function timingSafeEqualStr(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  return timingSafeEqual(enc.encode(a), enc.encode(b));
+}
+
 /**
  * Verify Svix webhook signature.
- *
- * @param rawBody - The raw request body as a string
- * @param headers - Object with svix-id, svix-timestamp, svix-signature
- * @param secret - The webhook signing secret from channel credentials
- * @returns true if signature is valid, false otherwise
  */
 async function verifySvixSignature(
   rawBody: string,
@@ -211,6 +241,353 @@ async function verifySvixSignature(
 }
 
 // =============================================================================
+// INBOUND — helpers
+// =============================================================================
+
+/** Extrai o endereço "puro" de um cabeçalho From ("Nome <a@b.pt>" → "a@b.pt"). */
+function extractEmailAddress(raw: string | undefined | null): string {
+  if (!raw) return "";
+  const m = raw.match(/<([^>]+)>/);
+  const addr = (m ? m[1] : raw).trim().toLowerCase();
+  return addr;
+}
+
+/** Escapa % _ \ para usar num ilike literal. */
+function escapeLike(v: string): string {
+  return v.replace(/([\\%_])/g, "\\$1");
+}
+
+/**
+ * A partir de In-Reply-To / References devolve candidatos de id do email original
+ * enviado por nós (o Resend costuma usar o id do email no Message-ID). Para cada
+ * token: guarda o conteúdo dentro de <> e também a parte antes do '@'.
+ */
+function parseRefIds(inReplyTo?: string | null, references?: string | null): string[] {
+  const out = new Set<string>();
+  const push = (tokenRaw: string) => {
+    let t = tokenRaw.trim();
+    if (!t) return;
+    t = t.replace(/^</, "").replace(/>$/, "");
+    if (!t) return;
+    out.add(t);
+    const at = t.indexOf("@");
+    if (at > 0) out.add(t.slice(0, at));
+  };
+  for (const src of [inReplyTo, references]) {
+    if (!src) continue;
+    for (const tok of src.split(/[\s,]+/)) push(tok);
+  }
+  return [...out];
+}
+
+/** Lê um header (case-insensitive) de estruturas array [{name,value}] ou objecto. */
+function getHeaderValue(headers: unknown, name: string): string | null {
+  const lower = name.toLowerCase();
+  if (!headers) return null;
+  if (Array.isArray(headers)) {
+    for (const h of headers) {
+      const hn = (h?.name ?? h?.key ?? "").toString().toLowerCase();
+      if (hn === lower) return (h?.value ?? "").toString();
+    }
+    return null;
+  }
+  if (typeof headers === "object") {
+    for (const [k, v] of Object.entries(headers as Record<string, unknown>)) {
+      if (k.toLowerCase() === lower) return v == null ? null : String(v);
+    }
+  }
+  return null;
+}
+
+/**
+ * Best-effort: busca o corpo + headers de um email recebido à API do Resend.
+ * Só é preciso no caminho "Resend Inbound" (o webhook traz só metadados). Se
+ * falhar, devolve null e o inbound é gravado só com o assunto.
+ */
+async function fetchReceivedEmail(
+  apiKey: string,
+  emailId: string,
+): Promise<{ text?: string; html?: string; headers?: unknown } | null> {
+  try {
+    const res = await fetch(`https://api.resend.com/emails/receiving/${emailId}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (!res.ok) {
+      console.warn(`[Webhook/Resend] Received API ${res.status} para ${emailId}`);
+      return null;
+    }
+    const body = await res.json().catch(() => null);
+    if (!body || typeof body !== "object") return null;
+    return {
+      text: (body as Record<string, unknown>).text as string | undefined,
+      html: (body as Record<string, unknown>).html as string | undefined,
+      headers: (body as Record<string, unknown>).headers,
+    };
+  } catch (e) {
+    console.warn("[Webhook/Resend] fetchReceivedEmail falhou:", e);
+    return null;
+  }
+}
+
+// deno-lint-ignore no-explicit-any
+type Supa = any;
+
+/**
+ * Regista a corrida da automação de sistema 'email-inbound' (para /automacoes
+ * mostrar a "Última corrida" real). Best-effort — nunca trava.
+ */
+async function recordAutomationRun(supabase: Supa, ok: boolean, errorText?: string | null): Promise<void> {
+  try {
+    const { data: cur } = await supabase
+      .from("system_automations")
+      .select("run_count, fail_count")
+      .eq("key", "email-inbound")
+      .maybeSingle();
+    await supabase
+      .from("system_automations")
+      .update({
+        last_run_at: new Date().toISOString(),
+        last_run_ok: ok,
+        last_run_error: errorText ?? null,
+        run_count: (cur?.run_count ?? 0) + 1,
+        fail_count: (cur?.fail_count ?? 0) + (ok ? 0 : 1),
+      })
+      .eq("key", "email-inbound");
+  } catch (_e) {
+    // best-effort
+  }
+}
+
+interface InboundResult {
+  matched: boolean;
+  contact_id: string | null;
+  deal_id: string | null;
+  nurture_reply: boolean;
+  conversation_id: string | null;
+  via: string;
+}
+
+/**
+ * Processa uma resposta de email (inbound). Associa a contacto/negócio já
+ * existentes (NUNCA cria lead), grava a mensagem na conversa e a resposta na
+ * timeline do negócio. Idempotência garantida a montante por
+ * messaging_webhook_events + índice único de external_id.
+ */
+async function processInboundEmail(
+  supabase: Supa,
+  channel: { id: string; organization_id: string; business_unit_id?: string | null; credentials: Record<string, unknown> },
+  data: ResendInboundData,
+): Promise<InboundResult> {
+  const orgId = channel.organization_id;
+  const fromEmail = extractEmailAddress(data.from);
+  const subject = (data.subject || "(sem assunto)").trim();
+  const emailId = data.email_id;
+
+  // --- corpo + headers ------------------------------------------------------
+  let text = typeof data.text === "string" ? data.text : undefined;
+  let html = typeof data.html === "string" ? data.html : undefined;
+  let inReplyTo = typeof data.in_reply_to === "string" ? data.in_reply_to : null;
+  let references = typeof data.references === "string" ? data.references : null;
+  let messageId = typeof data.message_id === "string" ? data.message_id : null;
+
+  // Caminho "Resend Inbound": webhook só traz metadados → buscar à Received API.
+  if (!text && !html) {
+    const apiKey = (channel.credentials?.apiKey as string | undefined) || "";
+    if (apiKey && emailId) {
+      const full = await fetchReceivedEmail(apiKey, emailId);
+      if (full) {
+        text = full.text ?? text;
+        html = full.html ?? html;
+        inReplyTo = inReplyTo ?? getHeaderValue(full.headers, "in-reply-to");
+        references = references ?? getHeaderValue(full.headers, "references");
+        messageId = messageId ?? getHeaderValue(full.headers, "message-id");
+      }
+    }
+  }
+
+  const bodyText = (text && text.trim()) ||
+    (html ? html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "") ||
+    "";
+  const preview = bodyText ? bodyText.slice(0, 140) : "(corpo não obtido)";
+  // external_id do inbound: o Message-ID próprio (globalmente único) com fallback ao email_id.
+  const externalId = messageId ? messageId.replace(/^</, "").replace(/>$/, "") : `resend_in_${emailId}`;
+
+  // --- 1) associação por In-Reply-To (o mais preciso) -----------------------
+  let contactId: string | null = null;
+  let dealId: string | null = null;
+  let nurtureReply = false;
+  let conversationId: string | null = null;
+  let via = "sender";
+
+  const candidates = parseRefIds(inReplyTo, references);
+  if (candidates.length > 0) {
+    // 1a) nurture_emails.external_message_id → dá contacto E negócio exactos
+    const { data: nur } = await supabase
+      .from("nurture_emails")
+      .select("id, contact_id, deal_id")
+      .eq("organization_id", orgId)
+      .in("external_message_id", candidates)
+      .limit(1)
+      .maybeSingle();
+    if (nur) {
+      contactId = nur.contact_id ?? null;
+      dealId = nur.deal_id ?? null;
+      nurtureReply = true;
+      via = "in-reply-to:nurture";
+      // interromper/assinalar resposta no nurture (idempotente)
+      await supabase
+        .from("nurture_emails")
+        .update({ replied_at: new Date().toISOString() })
+        .eq("id", nur.id)
+        .is("replied_at", null);
+    } else {
+      // 1b) messaging_messages.external_id → dá a conversa (e o contacto dela)
+      const { data: mm } = await supabase
+        .from("messaging_messages")
+        .select("conversation_id, messaging_conversations!inner(id, contact_id, channel_id)")
+        .in("external_id", candidates)
+        .limit(1)
+        .maybeSingle();
+      const conv = mm?.messaging_conversations as { id: string; contact_id: string | null } | undefined;
+      if (conv) {
+        conversationId = conv.id;
+        contactId = conv.contact_id ?? null;
+        via = "in-reply-to:message";
+      }
+    }
+  }
+
+  // --- 2) fallback: remetente → contacto ------------------------------------
+  if (!contactId && fromEmail) {
+    const { data: c } = await supabase
+      .from("contacts")
+      .select("id")
+      .eq("organization_id", orgId)
+      .ilike("email", escapeLike(fromEmail))
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (c) contactId = c.id;
+  }
+
+  // --- 3) negócio: o do In-Reply-To ou o negócio aberto mais recente --------
+  if (!dealId && contactId) {
+    const { data: d } = await supabase
+      .from("deals")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("contact_id", contactId)
+      .eq("status", "open")
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (d) dealId = d.id;
+  }
+
+  // --- 4) conversa (reutiliza a do In-Reply-To ou por email do remetente) ---
+  if (!conversationId) {
+    const { data: existingConv } = await supabase
+      .from("messaging_conversations")
+      .select("id, contact_id")
+      .eq("channel_id", channel.id)
+      .eq("external_contact_id", fromEmail)
+      .limit(1)
+      .maybeSingle();
+    if (existingConv) {
+      conversationId = existingConv.id;
+      if (!contactId && existingConv.contact_id) contactId = existingConv.contact_id;
+    }
+  }
+  if (!conversationId) {
+    const { data: newConv, error: convErr } = await supabase
+      .from("messaging_conversations")
+      .insert({
+        organization_id: orgId,
+        channel_id: channel.id,
+        business_unit_id: channel.business_unit_id ?? null,
+        external_contact_id: fromEmail || `resend_in_${emailId}`,
+        external_contact_name: data.from || fromEmail,
+        contact_id: contactId,
+        status: "open",
+        priority: "normal",
+        metadata: { source: "email-inbound", unmatched: !contactId },
+      })
+      .select("id")
+      .single();
+    if (convErr) throw new Error(`criar conversa: ${convErr.message}`);
+    conversationId = newConv.id;
+  }
+
+  // --- 5) mensagem inbound na conversa (idempotente por external_id) --------
+  const { error: msgErr } = await supabase.from("messaging_messages").insert({
+    conversation_id: conversationId,
+    external_id: externalId,
+    direction: "inbound",
+    content_type: "text",
+    content: { type: "text", text: bodyText || `[${subject}]`, subject, html: html ?? null },
+    status: "delivered",
+    delivered_at: new Date().toISOString(),
+    sender_name: data.from || fromEmail,
+    metadata: {
+      source: "email-inbound",
+      resend_email_id: emailId,
+      message_id: messageId,
+      in_reply_to: inReplyTo,
+      subject,
+      from: data.from,
+      has_body: !!bodyText,
+    },
+  });
+  if (msgErr && !msgErr.message.toLowerCase().includes("duplicate")) {
+    throw new Error(`inserir mensagem: ${msgErr.message}`);
+  }
+
+  await supabase
+    .from("messaging_conversations")
+    .update({
+      last_message_at: new Date().toISOString(),
+      last_message_preview: preview,
+      last_message_direction: "inbound",
+      status: "open",
+    })
+    .eq("id", conversationId);
+
+  // --- 6) timeline do negócio/contacto --------------------------------------
+  // Só grava se houver contacto ou negócio (evita actividade totalmente órfã).
+  if (contactId || dealId) {
+    await supabase.from("deal_activities").insert({
+      organization_id: orgId,
+      deal_id: dealId,
+      contact_id: contactId,
+      type: "email_inbound",
+      actor: "system",
+      description: `📧 Resposta do cliente por email — ${subject}${preview ? `\n${preview}` : ""}`,
+      metadata: {
+        source: "email-inbound",
+        resend_email_id: emailId,
+        message_id: messageId,
+        in_reply_to: inReplyTo,
+        via,
+        from: data.from,
+        subject,
+        conversation_id: conversationId,
+      },
+    });
+  }
+
+  return {
+    matched: !!(contactId || dealId),
+    contact_id: contactId,
+    deal_id: dealId,
+    nurture_reply: nurtureReply,
+    conversation_id: conversationId,
+    via,
+  };
+}
+
+// =============================================================================
 // MAIN HANDLER
 // =============================================================================
 
@@ -229,6 +606,9 @@ Deno.serve(async (req) => {
   if (!channelId) {
     return json(404, { error: "channel_id ausente na URL" });
   }
+
+  const url = new URL(req.url);
+  const isWorkerInbound = url.searchParams.get("source") === "worker";
 
   // Read raw body BEFORE parsing JSON — needed for signature verification
   const rawBody = await req.text();
@@ -250,7 +630,7 @@ Deno.serve(async (req) => {
   // Fetch channel to verify it exists
   const { data: channel, error: channelErr } = await supabase
     .from("messaging_channels")
-    .select("id, organization_id, credentials")
+    .select("id, organization_id, business_unit_id, credentials")
     .eq("id", channelId)
     .eq("channel_type", "email")
     .is("deleted_at", null)
@@ -264,31 +644,45 @@ Deno.serve(async (req) => {
     return json(404, { error: "Canal não encontrado" });
   }
 
-  // =========================================================================
-  // SVIX SIGNATURE VERIFICATION
-  // =========================================================================
-  const webhookSecret = (channel.credentials as Record<string, string>)?.webhookSecret;
-  const svixId = req.headers.get("svix-id");
-  const svixTimestamp = req.headers.get("svix-timestamp");
-  const svixSignature = req.headers.get("svix-signature");
+  const credentials = (channel.credentials ?? {}) as Record<string, string>;
 
-  if (webhookSecret) {
-    // If the channel has a webhookSecret configured, enforce Svix verification
-    if (!svixId || !svixTimestamp || !svixSignature) {
-      console.warn(`[Webhook/Resend] Missing Svix headers for channel ${channelId}`);
-      return json(401, { error: "Svix headers ausentes" });
+  // =========================================================================
+  // AUTENTICAÇÃO
+  // =========================================================================
+  if (isWorkerInbound) {
+    // Cloudflare Email Worker — segredo partilhado (timing-safe).
+    const inboundSecret = credentials.inboundSecret;
+    const provided = req.headers.get("x-inbound-secret");
+    if (!inboundSecret) {
+      console.warn(`[Webhook/Resend] inboundSecret não configurado para ${channelId} — rejeitar worker`);
+      return json(401, { error: "inboundSecret não configurado para este canal" });
     }
-
-    const isValid = await verifySvixSignature(rawBody, { svixId, svixTimestamp, svixSignature }, webhookSecret);
-    if (!isValid) {
-      console.warn(`[Webhook/Resend] Invalid Svix signature for channel ${channelId}`);
-      return json(401, { error: "Assinatura Svix inválida" });
+    if (!provided || !(await timingSafeEqualStr(inboundSecret, provided))) {
+      console.warn(`[Webhook/Resend] x-inbound-secret inválido para ${channelId}`);
+      return json(401, { error: "Segredo de inbound inválido" });
     }
   } else {
-    // Default-deny: reject unauthenticated requests when no secret is configured.
-    // Consistent with messaging-webhook-zapi and messaging-webhook-evolution.
-    console.warn(`[Webhook/Resend] No webhookSecret configured for channel ${channelId} — rejecting request`);
-    return json(401, { error: "Webhook secret não configurado para este canal" });
+    // Resend (status + Resend Inbound) — Svix.
+    const webhookSecret = credentials.webhookSecret;
+    const svixId = req.headers.get("svix-id");
+    const svixTimestamp = req.headers.get("svix-timestamp");
+    const svixSignature = req.headers.get("svix-signature");
+
+    if (webhookSecret) {
+      if (!svixId || !svixTimestamp || !svixSignature) {
+        console.warn(`[Webhook/Resend] Missing Svix headers for channel ${channelId}`);
+        return json(401, { error: "Svix headers ausentes" });
+      }
+      const isValid = await verifySvixSignature(rawBody, { svixId, svixTimestamp, svixSignature }, webhookSecret);
+      if (!isValid) {
+        console.warn(`[Webhook/Resend] Invalid Svix signature for channel ${channelId}`);
+        return json(401, { error: "Assinatura Svix inválida" });
+      }
+    } else {
+      // Default-deny: rejeita pedidos não autenticados quando não há secret.
+      console.warn(`[Webhook/Resend] No webhookSecret configured for channel ${channelId} — rejecting request`);
+      return json(401, { error: "Webhook secret não configurado para este canal" });
+    }
   }
 
   // Parse payload from raw body
@@ -328,6 +722,59 @@ Deno.serve(async (req) => {
     console.error("[Webhook/Resend] Error logging webhook event:", eventInsertErr);
   }
 
+  // =========================================================================
+  // INBOUND (email.received) — resposta do lead entra no CRM
+  // =========================================================================
+  if (payload.type === "email.received") {
+    // ON/OFF via /automacoes (a edge respeita o enabled da automação de sistema).
+    let enabled = true;
+    try {
+      const { data: sys } = await supabase
+        .from("system_automations")
+        .select("enabled")
+        .eq("key", "email-inbound")
+        .maybeSingle();
+      if (sys && sys.enabled === false) enabled = false;
+    } catch (_e) {
+      // fail-open: se não conseguir ler, processa na mesma
+    }
+
+    if (!enabled) {
+      await supabase
+        .from("messaging_webhook_events")
+        .update({ processed: true, processed_at: new Date().toISOString(), error: "skipped: disabled" })
+        .eq("channel_id", channelId)
+        .eq("external_event_id", externalEventId);
+      return json(200, { ok: true, skipped: "disabled" });
+    }
+
+    try {
+      const result = await processInboundEmail(supabase, channel, payload.data);
+      await recordAutomationRun(supabase, true, null);
+      await supabase
+        .from("messaging_webhook_events")
+        .update({ processed: true, processed_at: new Date().toISOString() })
+        .eq("channel_id", channelId)
+        .eq("external_event_id", externalEventId);
+      console.log(`[Webhook/Resend] Inbound processado (${result.via}): contact=${result.contact_id} deal=${result.deal_id}`);
+      return json(200, { ok: true, event_type: payload.type, inbound: result });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      console.error("[Webhook/Resend] Inbound processing error:", msg);
+      await recordAutomationRun(supabase, false, msg);
+      await supabase
+        .from("messaging_webhook_events")
+        .update({ processed: true, processed_at: new Date().toISOString(), error: msg })
+        .eq("channel_id", channelId)
+        .eq("external_event_id", externalEventId);
+      // Nunca 5xx em erro lógico — evita retry storms do Resend.
+      return json(200, { ok: false, error: "Inbound processing error", details: msg });
+    }
+  }
+
+  // =========================================================================
+  // STATUS EVENTS (sent/delivered/opened/bounced/…)
+  // =========================================================================
   try {
     const emailId = payload.data.email_id;
     const timestamp = new Date(payload.created_at).toISOString();
