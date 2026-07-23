@@ -7,6 +7,7 @@ import { SkeletonDealCard } from '@/components/ui/Skeleton';
 import { useLifecycleStages } from '@/lib/query/hooks/useLifecycleStagesQuery';
 import { useLeadScoresQuery } from '@/lib/query/hooks/useLeadScoresQuery';
 import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
+import { useDealQuickStats } from '@/lib/query/hooks/useDealQuickStats';
 import { isAtRisk } from '@/lib/deals/dealState';
 
 /**
@@ -125,6 +126,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   // PONTO 1 — "estagnado" do cartão pela verdade única (último toque humano),
   // não por lastStageChangeDate/updatedAt (que marcava todos os Contactos).
   const { data: dealStates } = useDealStatesQuery();
+  // Contadores rápidos (man·auto·tar) — 1 só chamada para todos os cartões do board.
+  const allDealIds = useMemo(() => filteredDeals.map(d => d.id), [filteredDeals]);
+  const { data: quickStatsMap } = useDealQuickStats(allDealIds);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   
   // State for move-to-stage modal (keyboard accessibility alternative to drag-and-drop)
@@ -305,6 +309,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   <DealCard
                     deal={deal}
                     leadScore={leadScores?.[deal.id]}
+                    quickStats={quickStatsMap?.[deal.id]}
                     isRotting={(() => {
                       const st = dealStates?.[deal.id];
                       // Com sinais de estado: só 'parado'/'arrefecer' apodrece (Contactos

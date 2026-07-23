@@ -206,7 +206,6 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                                     <th scope="col" className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 font-display text-xs uppercase tracking-wider">Nome</th>
                                 )}
                                 <th scope="col" className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 font-display text-xs uppercase tracking-wider">Estágio</th>
-                                <th scope="col" className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 font-display text-xs uppercase tracking-wider">Cargo</th>
                                 <th scope="col" className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 font-display text-xs uppercase tracking-wider">Contato</th>
                                 <th scope="col" className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 font-display text-xs uppercase tracking-wider">Status</th>
                                 {onSort ? (
@@ -225,7 +224,7 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                             {filteredContacts.length === 0 ? (
                                 <tr>
-                                    <td colSpan={9}>
+                                    <td colSpan={8}>
                                         <EmptyState
                                             icon={Users}
                                             title="Nenhum contacto encontrado"
@@ -277,9 +276,6 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                                     </td>
                                     <td className="px-6 py-4">
                                         <StageBadge stage={contact.stage} />
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="text-slate-900 dark:text-white font-medium block">{contact.role || 'Cargo não inf.'}</span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col gap-1">

@@ -1,5 +1,14 @@
 # TODO — Foco Imo (CRM) — CATÁLOGO ÚNICO
 
+> ## 📊 PAINEL DIÁRIO — maqueta validada 23/07/2026, PRONTO A CONSTRUIR
+> O cockpit que o João vê sempre que abre o CRM (reconstruir `/dashboard`; página de arranque via
+> `user_settings.default_route` já existe). Funis Vendedores+Compradores, 4 KPIs, receita por linha
+> (Vendedores/Compradores/Arrendamento/Créditos), pipeline por etapa com valor previsto, ♥ tarefas+
+> tentativas/realizadas (vocab `lib/activities/vocab.ts`), carteira de imóveis derivada, top canais.
+> Actualização ao minuto (refetch 60s + realtime). **Brief completo: `docs/painel-diario-brief.md`.**
+> **Capturado (não construir já):** bloco Radar Maia (FSBO do dia) como alternativa/complemento à
+> Carteira; integração com `settings/metas` no painel (fase 2 se o João pedir).
+
 > ## 🌱 BRIEF 7 + 7b — Nurture email (FIM 22/07/2026, LIVE, commit `bc27cc8`)
 > Aba `Mensagens › Nurture` (fila de aprovação + segmentos). Base 685 segmentada; gerador de ondas por IA;
 > envio Resend só dos aprovados (nunca Domingo, opt-out); movimento aberto/clicado → Power List (bucket
@@ -1452,3 +1461,14 @@ aplicadas em prod; edge `webhook-in` v2 (verify_jwt:false, curl 401/404 confirma
   valor). Ambas capturadas aqui se um dia se quiser.
 - ⏳ **Falta só o João (login):** click-through final em produção (abrir negócio → badges; registar
   "Chamada · Não atendeu" → histórico + badge man+1; /contacts sem Empresas). Tudo o resto verificado.
+- **Refinamentos do cartão (23/07, pedido do João — FEITO):** badges no cartão do board sem abrir
+  (fetch único no KanbanBoard, sem N+1); "Sem empresa" removido; canal deixa de vir colado ao nome
+  ("Bárbara Miranda - Meta Ads" → "Bárbara Miranda", canal só no chip); linha da temperatura
+  (temperatura · canal · Nd no pipeline) e linha de contadores (📞 man · ⚡ auto · ☑ tar) cada uma
+  SEMPRE numa só linha (nowrap, pensado para números grandes). "Cargo" removido da lista de contactos
+  e do formulário de contacto.
+- 🆕 **CAPTURADO (NÃO executar — capacidade nova, pedido do João 23/07): valor do negócio a partir do
+  anúncio.** Quando a lead vem de um anúncio Meta com preço do imóvel (ex.: anúncio de 260.000 €), o
+  `deal.value` deve nascer com esse valor. Para proprietários ou quando não se sabe, fica a 0 e o João
+  coloca à mão. Requer extrair o preço da atribuição/anúncio (Meta lead ingestion / attribution) e
+  escrever em `deals.value` na criação da lead. Desenhar antes de construir (fatia própria).

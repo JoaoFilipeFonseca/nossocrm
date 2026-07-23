@@ -155,33 +155,20 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
               onChange={e => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="contact-phone" className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                Telefone <span aria-hidden="true">*</span>
-              </label>
-              <input
-                id="contact-phone"
-                required
-                aria-required="true"
-                type="text"
-                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="+351912345678"
-                value={formData.phone}
-                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </div>
-            <div>
-              <label htmlFor="contact-role" className="block text-xs font-bold text-slate-500 uppercase mb-1">Cargo</label>
-              <input
-                id="contact-role"
-                type="text"
-                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="Gerente"
-                value={formData.role}
-                onChange={e => setFormData({ ...formData, role: e.target.value })}
-              />
-            </div>
+          <div>
+            <label htmlFor="contact-phone" className="block text-xs font-bold text-slate-500 uppercase mb-1">
+              Telefone <span aria-hidden="true">*</span>
+            </label>
+            <input
+              id="contact-phone"
+              required
+              aria-required="true"
+              type="text"
+              className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="+351912345678"
+              value={formData.phone}
+              onChange={e => setFormData({ ...formData, phone: e.target.value })}
+            />
           </div>
           <div>
             <label htmlFor="contact-source" className="block text-xs font-bold text-slate-500 uppercase mb-1">

@@ -1,12 +1,33 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { DealView } from '@/types';
-import { Building2, Hourglass, Trophy, XCircle } from 'lucide-react';
+import { Hourglass, Trophy, XCircle } from 'lucide-react';
 import { ActivityStatusIcon } from './ActivityStatusIcon';
 import { LogCHQQuick } from './LogCHQQuick';
-import { daysInStage, stageAgeBucket } from '@/features/boards/utils';
 import { priorityAriaLabelPtBr } from '@/lib/utils/priority';
 import { TEMPERATURE_ICONS, type LeadScore } from '@/lib/deals/leadScore';
+import { sourceLabel } from '@/lib/activities/sourceLabels';
+import type { DealQuickStats } from '@/lib/query/hooks/useDealQuickStats';
+
+/** Remove um sufixo redundante " - <canal>" do título (o canal já aparece num chip). */
+function cleanDealTitle(title: string, source: string | null | undefined): string {
+  const label = sourceLabel(source);
+  let t = title || '';
+  for (const suffix of [label, source]) {
+    if (!suffix) continue;
+    const esc = suffix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    t = t.replace(new RegExp(`\\s*[-–—]\\s*${esc}\\s*$`, 'i'), '');
+  }
+  return t.trim() || title;
+}
+
+/** Dias desde a criação do negócio (idade no pipeline). */
+function daysInPipeline(createdAt: string | null | undefined): number | null {
+  if (!createdAt) return null;
+  const t = new Date(createdAt).getTime();
+  if (Number.isNaN(t)) return null;
+  return Math.max(0, Math.floor((Date.now() - t) / 86_400_000));
+}
 
 /** DASH-2: classes do chip de temperatura (mesma família visual dos restantes badges). */
 const TEMP_CHIP_CLASSES: Record<LeadScore['temperature'], string> = {
@@ -40,6 +61,8 @@ interface DealCardProps {
   onMoveToStage?: (dealId: string) => void;
   /** DASH-2: probabilidade da lead (score+temperatura) — só calculada para negócios abertos. */
   leadScore?: LeadScore;
+  /** Contadores rápidos do negócio (manuais · automáticos · tarefas). */
+  quickStats?: DealQuickStats;
 }
 
 // Check if deal is closed (won or lost)
@@ -71,9 +94,14 @@ const DealCardComponent: React.FC<DealCardProps> = ({
   setLastMouseDownDealId,
   onMoveToStage,
   leadScore,
+  quickStats,
 }) => {
   const [localDragging, setLocalDragging] = useState(false);
   const isClosed = isDealClosed(deal);
+  const source = deal.attribution?.source ?? null;
+  const channel = sourceLabel(source);
+  const pipelineDays = daysInPipeline(deal.createdAt);
+  const displayTitle = cleanDealTitle(deal.title, source);
 
   const handleToggleMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -152,8 +180,7 @@ const DealCardComponent: React.FC<DealCardProps> = ({
     }
 
     // Main content
-    parts.push(deal.title);
-    if (deal.companyName) parts.push(deal.companyName);
+    parts.push(displayTitle);
     parts.push(`${deal.value.toLocaleString('pt-PT')} €`);
 
     // Additional context
@@ -239,37 +266,6 @@ const DealCardComponent: React.FC<DealCardProps> = ({
             ⏸ AUTO PAUSADAS
           </span>
         )}
-        {/* DASH-2: probabilidade da lead (score + temperatura) — só em deals abertos */}
-        {!isClosed && leadScore && (
-          <span
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${TEMP_CHIP_CLASSES[leadScore.temperature]}`}
-            title={leadScore.reasons.join(' · ')}
-          >
-            {TEMPERATURE_ICONS[leadScore.temperature]}{' '}
-            {leadScore.temperature === 'adiado' ? 'adiado' : `${leadScore.score} · ${leadScore.temperature}`}
-          </span>
-        )}
-        {/* Sprint 14 c1: badge "Xd na fase" — só em deals abertos */}
-        {!isClosed && (() => {
-          const days = daysInStage(deal);
-          if (days < 1) return null;
-          const bucket = stageAgeBucket(days);
-          const colorClass = bucket === 'cold'
-            ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-700/50'
-            : bucket === 'warm'
-              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700/50'
-              : bucket === 'fresh'
-                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700/50'
-                : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/5';
-          return (
-            <span
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${colorClass}`}
-              title={`Está nesta fase há ${days} dia${days === 1 ? '' : 's'}`}
-            >
-              {days}d
-            </span>
-          );
-        })()}
         {/* Regular tags */}
         {deal.tags.slice(0, isClosed ? 1 : 2).map((tag, index) => (
           <span
@@ -281,14 +277,56 @@ const DealCardComponent: React.FC<DealCardProps> = ({
         ))}
       </div>
 
+      {/* Linha da temperatura — SEMPRE 1 linha (temperatura · canal · dias no pipeline). */}
+      {!isClosed && (leadScore || channel || pipelineDays !== null) && (
+        <div className="flex items-center gap-1 mb-1.5 whitespace-nowrap overflow-hidden">
+          {leadScore && (
+            <span
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${TEMP_CHIP_CLASSES[leadScore.temperature]}`}
+              title={leadScore.reasons.join(' · ')}
+            >
+              {TEMPERATURE_ICONS[leadScore.temperature]}{' '}
+              {leadScore.temperature === 'adiado' ? 'adiado' : `${leadScore.score} · ${leadScore.temperature}`}
+            </span>
+          )}
+          {channel && (
+            <span
+              className="text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700/50"
+              title="Canal de aquisição"
+            >
+              {channel}
+            </span>
+          )}
+          {pipelineDays !== null && (
+            <span
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${
+                pipelineDays > 30
+                  ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-700/50'
+                  : pipelineDays > 14
+                    ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700/50'
+                    : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/5'
+              }`}
+              title="Dias desde a criação do negócio"
+            >
+              {pipelineDays}d no pipeline
+            </span>
+          )}
+        </div>
+      )}
+
       <h4
-        className={`text-sm font-bold font-display leading-snug mb-0.5 ${isRotting ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}
+        className={`text-sm font-bold font-display leading-snug mb-1 ${isRotting ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}
       >
-        {deal.title}
+        {displayTitle}
       </h4>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1">
-        <Building2 size={10} aria-hidden="true" /> {deal.companyName}
-      </p>
+      {/* Contadores rápidos — sempre 1 linha (nunca quebra, pensado para números grandes). */}
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-3 whitespace-nowrap overflow-hidden">
+        <span title="Contactos manuais (chamadas/mensagens que registou)">📞 {quickStats?.manual ?? 0} man</span>
+        <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>
+        <span title="Contactos automáticos (feitos por automações)">⚡ {quickStats?.auto ?? 0} auto</span>
+        <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>
+        <span title="Tarefas em aberto">☑ {quickStats?.tasks ?? 0} tar</span>
+      </div>
 
       <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-white/5">
         <div className="flex items-center gap-2">
