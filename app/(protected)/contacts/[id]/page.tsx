@@ -82,9 +82,6 @@ export default async function ContactDetailPage({ params, searchParams }: { para
                 </span>
               )}
             </div>
-            {contact.role && (
-              <p className="text-sm text-slate-500 mt-0.5">{contact.role}</p>
-            )}
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${
                 contact.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200'

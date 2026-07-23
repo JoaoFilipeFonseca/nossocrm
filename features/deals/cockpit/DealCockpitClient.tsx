@@ -1603,9 +1603,6 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                     >
                       {humanizeTestLabel(contact?.name) || contact?.name || '—'}
                     </div>
-                    <div className="mt-1 text-xs text-slate-400 truncate" title={selectedContact?.role ?? ''}>
-                      {selectedContact?.role ?? ''}
-                    </div>
                   </div>
                   <div className="mt-3 space-y-2 text-xs">
                     <div className="flex items-center justify-between gap-2">
