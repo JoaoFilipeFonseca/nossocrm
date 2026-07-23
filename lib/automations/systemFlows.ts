@@ -69,6 +69,16 @@ export const SYSTEM_FLOWS: Record<string, SystemFlow> = {
       { icon: '🔔', title: 'Toca o sino no CRM', detail: 'Deixa o alerta das tarefas nas notificações do CRM (uma por dia, com link para o Painel), para veres ao abrir mesmo sem ler o Telegram.' },
     ],
   },
+  'google-calendar-sync': {
+    steps: [
+      { icon: '🔌', title: 'Confirma a ligação', detail: 'Vê se a conta Google está ligada nesta organização (Definições → Integrações → Google Calendar). Se não estiver, não faz nada.' },
+      { icon: '🔑', title: 'Renova o acesso', detail: 'Usa a credencial de renovação guardada no Vault para pedir ao Google um acesso fresco. O CRM nunca guarda a tua palavra-passe.' },
+      { icon: '📅', title: 'Garante o calendário', detail: 'Confirma que o calendário dedicado "Foco Imo — Tarefas" existe; se o tiveres apagado, cria-o outra vez.' },
+      { icon: '🗑️', title: 'Remove o que apagaste', detail: 'Tarefas apagadas no CRM saem do calendário (a fila guarda o evento até ser mesmo removido lá).' },
+      { icon: '📤', title: 'Empurra as tarefas', detail: 'Cria ou actualiza o evento de cada tarefa por sincronizar: título, negócio, contacto, hora e link para o CRM. Concluídas ficam com ✓ à frente.' },
+    ],
+    note: 'Tempo real: a base de dados chama esta sincronização assim que uma tarefa muda. O cron de 10 em 10 minutos é só a rede de segurança. Um sentido só — o CRM manda, o Google reflecte, e o CRM não lê o resto da tua agenda.',
+  },
   'social-inbox-sync': {
     steps: [
       { icon: '🔗', title: 'Puxa as conversas do Messenger', detail: 'Com o token da Página (Vault), lê as DMs recentes da Graph API (participante, última mensagem, quando).' },
