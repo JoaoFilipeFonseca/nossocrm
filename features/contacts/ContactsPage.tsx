@@ -7,7 +7,6 @@ import { Trash2, X } from 'lucide-react';
 import { useContactsController } from './hooks/useContactsController';
 import { ContactsHeader } from './components/ContactsHeader';
 import { ContactsFilters } from './components/ContactsFilters';
-import { ContactsTabs } from './components/ContactsTabs';
 import { ContactsStageTabs } from './components/ContactsStageTabs';
 import { ContactsList } from './components/ContactsList';
 import { PaginationControls } from './components/PaginationControls';
@@ -17,10 +16,6 @@ import { ConfirmDialog as ConfirmModal } from '@/components/ui/confirm-dialog';
 
 const ContactFormModal = dynamic(
     () => import('./components/ContactFormModal').then(m => ({ default: m.ContactFormModal })),
-    { ssr: false }
-);
-const CompanyFormModal = dynamic(
-    () => import('./components/CompanyFormModal').then(m => ({ default: m.CompanyFormModal })),
     { ssr: false }
 );
 const SelectBoardModal = dynamic(
@@ -111,13 +106,6 @@ export const ContactsPage: React.FC = () => {
                 />
             )}
 
-            <ContactsTabs
-                viewMode={controller.viewMode}
-                setViewMode={controller.setViewMode}
-                contactsCount={controller.totalCount}
-                companiesCount={controller.companies.length}
-            />
-
             {/* Bulk Actions Bar */}
             {controller.selectedIds.size > 0 && (
                 <div className="flex items-center justify-between bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg px-4 py-3">
@@ -188,13 +176,6 @@ export const ContactsPage: React.FC = () => {
                 isSubmitting={controller.isSubmittingContact}
             />
 
-            <CompanyFormModal
-                isOpen={controller.isCompanyModalOpen}
-                onClose={() => controller.setIsCompanyModalOpen(false)}
-                onSubmit={controller.handleCompanySubmit}
-                editingCompany={controller.editingCompany}
-            />
-
             <SelectBoardModal
                 isOpen={!!controller.createDealContactId}
                 onClose={() => controller.setCreateDealContactId(null)}
@@ -209,16 +190,6 @@ export const ContactsPage: React.FC = () => {
                 onConfirm={controller.confirmDelete}
                 title="Eliminar Contacto"
                 message="Tem a certeza que pretende eliminar este contacto? Esta acção não pode ser desfeita."
-                confirmText="Eliminar"
-                variant="danger"
-            />
-
-            <ConfirmModal
-                isOpen={!!controller.deleteCompanyId}
-                onClose={() => controller.setDeleteCompanyId(null)}
-                onConfirm={controller.confirmDeleteCompany}
-                title="Eliminar Empresa"
-                message="Tem a certeza que pretende eliminar esta empresa? Esta acção não pode ser desfeita."
                 confirmText="Eliminar"
                 variant="danger"
             />

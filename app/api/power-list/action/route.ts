@@ -6,9 +6,10 @@
  *  - answered  : houve conversa → regista CHQ (call, actor=human) e promove o
  *                negócio para a etapa "Oportunidade" (só se ainda estiver na etapa
  *                de espera "Contactos"). Conta para o número do dia.
- *  - no_answer : não atendeu → NÃO conta como conversa; regista a tentativa
- *                (não repõe o relógio de frieza) e adia 3 dias (volta para nova
- *                tentativa).
+ *  - no_answer : não atendeu → CONTA como contacto manual (trabalho feito), mas
+ *                a lead ainda não foi atendida: NÃO conta como conversa e NÃO
+ *                repõe o relógio de frieza (deal_state_signals exclui
+ *                result=no_answer/voicemail do último toque). Adia 3 dias.
  *  - snooze    : adiar → adia 30 dias.
  *
  * Autenticado (sessão). Nunca 5xx em erro lógico previsível.
@@ -140,13 +141,15 @@ export async function POST(request: NextRequest) {
     if (snErr) return json({ error: snErr.message }, 500);
 
     if (action === 'no_answer') {
-      // Registar a tentativa como evento de sistema — NÃO conta como conversa nem
-      // repõe o relógio de frieza (deal_state_signals ignora type='system').
+      // Regista como CHAMADA humana com resultado 'no_answer': CONTA como contacto
+      // manual (trabalho feito), mas o relógio de frieza NÃO é reposto — o
+      // deal_state_signals exclui result=no_answer/voicemail do último toque.
       await supabase.from('deal_activities').insert({
         deal_id: dealId,
         organization_id: orgId,
         owner_id: user.id,
-        type: 'system',
+        type: 'call',
+        actor: 'human',
         ...(d.contact_id ? { contact_id: d.contact_id } : {}),
         description: 'Tentativa de chamada sem resposta (Power List)',
         metadata: { via: 'power-list', result: 'no_answer', logged_by: user.id },

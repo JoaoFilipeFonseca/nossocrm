@@ -1,8 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Activity, Deal, Contact, Company } from '@/types';
 import { ActivityRow } from './ActivityRow';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { CheckSquare } from 'lucide-react';
+import { useDealQuickStats } from '@/lib/query/hooks/useDealQuickStats';
+import { DealActivityModal } from '@/components/activity/DealActivityModal';
 
 interface ActivitiesListProps {
     activities: Activity[];
@@ -70,6 +72,17 @@ export const ActivitiesList: React.FC<ActivitiesListProps> = ({
         return map;
     }, [companies]);
 
+    // Uma única chamada de quick-stats para todos os negócios visíveis (evita N+1).
+    const dealIds = useMemo(() => {
+        const set = new Set<string>();
+        for (const a of activities) if (a.dealId) set.add(a.dealId);
+        return [...set];
+    }, [activities]);
+    const { data: quickStatsMap } = useDealQuickStats(dealIds);
+
+    // Modal "Actividade" partilhado (uma instância; o negócio activo controla-o).
+    const [activityDeal, setActivityDeal] = useState<Deal | null>(null);
+
     if (activities.length === 0) {
         return (
             <div className="bg-white dark:bg-dark-card rounded-xl border border-slate-200 dark:border-white/5 border-dashed">
@@ -85,20 +98,34 @@ export const ActivitiesList: React.FC<ActivitiesListProps> = ({
 
     return (
         <div className="space-y-3">
-            {activities.map(activity => (
-                <ActivityRow
-                    key={activity.id}
-                    activity={activity}
-                    deal={activity.dealId ? dealById.get(activity.dealId) : undefined}
-                    contact={activity.contactId ? contactById.get(activity.contactId) : undefined}
-                    company={activity.clientCompanyId ? companyById.get(activity.clientCompanyId) : undefined}
-                    onToggleComplete={onToggleComplete}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    isSelected={selectedActivities.has(activity.id)}
-                    onSelect={onSelectActivity}
+            {activities.map(activity => {
+                const rowDeal = activity.dealId ? dealById.get(activity.dealId) : undefined;
+                return (
+                    <ActivityRow
+                        key={activity.id}
+                        activity={activity}
+                        deal={rowDeal}
+                        contact={activity.contactId ? contactById.get(activity.contactId) : undefined}
+                        company={activity.clientCompanyId ? companyById.get(activity.clientCompanyId) : undefined}
+                        onToggleComplete={onToggleComplete}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        isSelected={selectedActivities.has(activity.id)}
+                        onSelect={onSelectActivity}
+                        quickStats={rowDeal ? quickStatsMap?.[rowDeal.id] : undefined}
+                        onOpenActivity={setActivityDeal}
+                    />
+                );
+            })}
+
+            {activityDeal && (
+                <DealActivityModal
+                    dealId={activityDeal.id}
+                    contactName={(activityDeal.contactId ? contactById.get(activityDeal.contactId)?.name : null) ?? activityDeal.title}
+                    open={!!activityDeal}
+                    onOpenChange={(o) => { if (!o) setActivityDeal(null); }}
                 />
-            ))}
+            )}
         </div>
     );
 };

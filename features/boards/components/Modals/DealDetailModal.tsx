@@ -29,6 +29,9 @@ import { DealImovelField } from '@/components/ui/ImovelSearchCombobox';
 import { useMoveDealSimple } from '@/lib/query/hooks';
 import { DEALS_VIEW_KEY } from '@/lib/query';
 import { MetaAttribution } from '@/components/MetaAttribution';
+import { DealActivityModal } from '@/components/activity/DealActivityModal';
+import { DealQuickBadges } from '@/components/activity/DealQuickBadges';
+import { useDealQuickStats } from '@/lib/query/hooks/useDealQuickStats';
 import { FocusTrap, useFocusReturn } from '@/lib/a11y';
 import { interceptCallClick } from '@/lib/calls';
 import { Activity, DealView } from '@/types';
@@ -53,7 +56,6 @@ import {
   ThumbsUp,
   ThumbsDown,
   PauseCircle,
-  Building2,
   User,
   Package,
   Sword,
@@ -314,6 +316,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
   const updateContactMutation = useUpdateContact();
   const [execLoading, setExecLoading] = useState<'wa' | 'email' | null>(null);
   const [callModalOpen, setCallModalOpen] = useState(false);
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const { data: quickStatsMap } = useDealQuickStats(deal?.id ? [deal.id] : []);
+  const quickStats = deal?.id ? quickStatsMap?.[deal.id] : undefined;
 
   const execActionWhatsApp = async () => {
     const d: any = deal;
@@ -683,6 +688,16 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                     {deal.value.toLocaleString('pt-PT')} €
                   </p>
                 )}
+
+                <DealQuickBadges
+                  manual={quickStats?.manual}
+                  auto={quickStats?.auto}
+                  tasks={quickStats?.tasks}
+                  source={deal.attribution?.source ?? null}
+                  createdAt={deal.createdAt}
+                  loading={!quickStats}
+                  className="mt-2"
+                />
               </div>
               <div className="flex flex-wrap gap-2 items-center justify-end">
                 {/* Se fechado: mostra badge + botão Reabrir */}
@@ -857,14 +872,6 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
             {/* Left Sidebar (Static Info + Custom Fields) */}
             <div className="hidden md:flex md:w-1/3 md:border-r border-slate-200 dark:border-white/5 p-4 sm:p-6 md:overflow-y-auto bg-white dark:bg-dark-card md:max-h-none">
               <div className="space-y-6">
-                {(deal.companyName && deal.companyName !== 'Sem empresa') ? (
-                <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
-                    <Building2 size={14} /> Empresa (Conta)
-                  </h3>
-                  <p className="text-slate-900 dark:text-white font-medium">{deal.companyName}</p>
-                </div>
-                ) : null}
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
                     <User size={14} /> Contacto Principal
@@ -1229,6 +1236,11 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       <button type="button" onClick={() => setCallModalOpen(true)} title="Adicionar chamada gravada (IA transcreve e analisa)" className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-600 dark:text-rose-400 transition" aria-label="Adicionar chamada">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
                       </button>
+                      {/* Registo manual explícito: canal + resultado + nota (com histórico). */}
+                      <button type="button" onClick={() => setActivityModalOpen(true)} title="Registar contacto (canal, resultado e nota)" className="inline-flex items-center gap-2 h-12 px-4 rounded-xl bg-primary-600/15 hover:bg-primary-600/25 border border-primary-600/30 text-primary-700 dark:text-primary-300 font-semibold text-sm transition" aria-label="Registar contacto">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        Registar contacto
+                      </button>
                     </div>
                     </div>
                     <CallUploadModal
@@ -1236,6 +1248,12 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       onClose={() => setCallModalOpen(false)}
                       dealId={deal.id}
                       contactId={(deal as any).contactId ?? null}
+                    />
+                    <DealActivityModal
+                      dealId={deal.id}
+                      contactName={deal.contactName}
+                      open={activityModalOpen}
+                      onOpenChange={setActivityModalOpen}
                     />
 
                   <div className="grid grid-cols-3 gap-3">

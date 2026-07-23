@@ -1,16 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Search, User, Plus, Building2 } from 'lucide-react';
-import { useContacts, useCompanies } from '@/lib/query/hooks';
-import type { Contact, Company } from '@/types';
+import { Search, User, Plus } from 'lucide-react';
+import { useContacts } from '@/lib/query/hooks';
+import type { Contact } from '@/types';
 
 interface ContactSearchComboboxProps {
   onSelectContact: (contact: Contact | null) => void;
-  onSelectCompany: (company: Company | null) => void;
   onCreateNew: (searchTerm: string) => void;
   selectedContact: Contact | null;
-  selectedCompany: Company | null;
   placeholder?: string;
 }
 
@@ -20,10 +18,8 @@ interface ContactSearchComboboxProps {
  */
 export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
   onSelectContact,
-  onSelectCompany,
   onCreateNew,
   selectedContact,
-  selectedCompany,
   placeholder = 'Procurar contacto (nome, telefone ou email)...'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,12 +29,6 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
   const listRef = useRef<HTMLDivElement>(null);
 
   const { data: contacts = [] } = useContacts();
-  const { data: companies = [] } = useCompanies();
-
-  // Criar mapa de empresas para lookup rápido
-  const companyMap = useMemo(() => {
-    return new Map(companies.map(c => [c.id, c]));
-  }, [companies]);
 
   // Filtrar contatos baseado no termo de busca
   const filteredContacts = useMemo(() => {
@@ -79,15 +69,6 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
 
   const handleSelect = (contact: Contact) => {
     onSelectContact(contact);
-    
-    // Auto-selecionar empresa do contato se existir
-    if (contact.clientCompanyId) {
-      const company = companyMap.get(contact.clientCompanyId);
-      if (company) {
-        onSelectCompany(company);
-      }
-    }
-    
     setSearchTerm('');
     setIsOpen(false);
   };
@@ -164,7 +145,6 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
           {filteredContacts.length > 0 ? (
             <div className="max-h-64 overflow-y-auto">
               {filteredContacts.map((contact, index) => {
-                const company = contact.clientCompanyId ? companyMap.get(contact.clientCompanyId) : null;
                 return (
                   <button
                     key={contact.id}
@@ -188,12 +168,6 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
                         {contact.email && contact.phone && <span>•</span>}
                         {contact.phone && <span>{contact.phone}</span>}
                       </div>
-                      {company && (
-                        <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
-                          <Building2 size={10} />
-                          <span className="truncate">{company.name}</span>
-                        </div>
-                      )}
                     </div>
                   </button>
                 );

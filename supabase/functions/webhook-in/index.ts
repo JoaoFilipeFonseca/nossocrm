@@ -250,47 +250,12 @@ Deno.serve(async (req) => {
 
   // 2) Upsert de contato (por email e/ou telefone)
   let contactId: string | null = null;
-  let clientCompanyId: string | null = null;
+  // Entidade "Empresas" removida do produto (Jul 2026): o nome da empresa fica
+  // apenas como texto livre em company_name / inbound_company_name; não se cria
+  // nem vincula crm_companies. clientCompanyId permanece sempre null.
+  const clientCompanyId: string | null = null;
   let contactAction: "created" | "updated" | "none" = "none";
-  let companyAction: "created" | "linked" | "none" = "none";
-
-  // 2.0) Empresa (best-effort): cria/vincula em crm_companies quando companyName existir
-  if (companyName) {
-    try {
-      const { data: existingCompany, error: companyFindErr } = await supabase
-        .from("crm_companies")
-        .select("id")
-        .eq("organization_id", source.organization_id)
-        .is("deleted_at", null)
-        .eq("name", companyName)
-        .limit(1)
-        .maybeSingle();
-
-      if (companyFindErr) throw companyFindErr;
-
-      if (existingCompany?.id) {
-        clientCompanyId = existingCompany.id as string;
-        companyAction = "linked";
-      } else {
-        const { data: createdCompany, error: companyCreateErr } = await supabase
-          .from("crm_companies")
-          .insert({
-            organization_id: source.organization_id,
-            name: companyName,
-          })
-          .select("id")
-          .single();
-
-        if (companyCreateErr) throw companyCreateErr;
-        clientCompanyId = (createdCompany as any)?.id ?? null;
-        if (clientCompanyId) companyAction = "created";
-      }
-    } catch {
-      // não bloqueia o fluxo do webhook
-      clientCompanyId = null;
-      companyAction = "none";
-    }
-  }
+  const companyAction: "created" | "linked" | "none" = "none";
 
   if (leadEmail || leadPhone) {
     const filters: string[] = [];

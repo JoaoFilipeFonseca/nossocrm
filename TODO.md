@@ -1429,3 +1429,13 @@ Provado nos 1300 reais: 22 dos 46 FSBO eram agentes disfarçados → apagados. F
 RESIDUAL (rever depois): os 140 da base InfoCasa NÃO têm descrição → o detector não corre neles;
 podem conter agentes de portais não-Idealista (SuperCasa/Imovirtual/CustoJusto). Rever com
 descrições desses portais ou confirmação manual do João.
+
+## 🧹 SIMPLIFICAÇÃO CONTACTOS + NEGÓCIOS (pedido do João 23/07, spec pronta — AGUARDA VALIDAÇÃO)
+Pedido: retirar Empresas do produto; badges rápidos por negócio ("X man · Y auto · Z tar" + canal
+de aquisição + dias no pipeline); modal "Actividade" (Nota | Contacto: Canal + Resultado + nota
+opcional c/ microfone + histórico completo) no negócio, em /activities e alinhado na ficha de contacto.
+Referência visual: CRM Pinheirinho (3 fotos, 23/07). **Spec completa fatia a fatia (F1-F6) com SQL,
+contratos de API e componentes: `docs/simplificacao-contactos-negocios.md`.** Apurado na BD: 3 empresas,
+0 vínculos → remoção segura (soft-delete + BD intacta). Construir em sessão Opus após "avança" do João.
+Decisão a validar: chamada não atendida CONTA como contacto manual, mas não conta como conversa
+para o relógio de follow-up (results no_answer/voicemail excluídos do last_human_touch).

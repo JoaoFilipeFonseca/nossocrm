@@ -1,8 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
-import { Phone, Users, Mail, CheckSquare, Clock, Trash2, Edit2, CheckCircle2, Circle, Building2 } from 'lucide-react';
+import { Phone, Users, Mail, CheckSquare, Clock, Trash2, Edit2, CheckCircle2, Circle, Building2, MessageSquarePlus } from 'lucide-react';
 import { useBoards } from '@/lib/query/hooks/useBoardsQuery';
 import { Activity, Deal, Contact, Company } from '@/types';
+import { DealQuickBadges } from '@/components/activity/DealQuickBadges';
+import type { DealQuickStats } from '@/lib/query/hooks/useDealQuickStats';
 
 interface ActivityRowProps {
     activity: Activity;
@@ -14,6 +16,10 @@ interface ActivityRowProps {
     onDelete: (id: string) => void;
     isSelected?: boolean;
     onSelect?: (id: string, selected: boolean) => void;
+    /** Contadores rápidos do negócio (manuais · automáticos · tarefas). */
+    quickStats?: DealQuickStats;
+    /** Abre o modal "Actividade" para o negócio desta linha. */
+    onOpenActivity?: (deal: Deal) => void;
 }
 
 /**
@@ -29,7 +35,9 @@ const ActivityRowComponent: React.FC<ActivityRowProps> = ({
     onEdit,
     onDelete,
     isSelected = false,
-    onSelect
+    onSelect,
+    quickStats,
+    onOpenActivity,
 }) => {
     const getActivityIcon = (type: Activity['type']) => {
         switch (type) {
@@ -189,9 +197,30 @@ const ActivityRowComponent: React.FC<ActivityRowProps> = ({
                         {formatRelativeTime(activity.date)}
                     </span>
                 </div>
+                {deal && (
+                    <DealQuickBadges
+                        manual={quickStats?.manual}
+                        auto={quickStats?.auto}
+                        tasks={quickStats?.tasks}
+                        source={deal.attribution?.source ?? null}
+                        createdAt={deal.createdAt}
+                        loading={!quickStats}
+                        className="mt-2"
+                    />
+                )}
             </div>
 
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {deal && onOpenActivity && (
+                    <button
+                        onClick={() => onOpenActivity(deal)}
+                        className="p-2 text-slate-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-colors"
+                        title="Notas & contactos"
+                        aria-label="Registar contacto / nota"
+                    >
+                        <MessageSquarePlus size={16} />
+                    </button>
+                )}
                 <button
                     onClick={() => onEdit(activity)}
                     className="p-2 text-slate-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-colors"

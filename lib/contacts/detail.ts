@@ -195,9 +195,48 @@ export interface TimelineEntry {
   system: boolean;
   /** 👤 humano / 🤖 automação / sistema — vem da coluna deal_activities.actor. */
   actor: TimelineActor;
+  /** Resultado do contacto (atendeu/não atendeu/...) — vem de metadata.result. */
+  result: string | null;
 }
 
 const SYSTEM_TYPES = new Set(['stage_moved', 'stage_change', 'created', 'deal_created', 'system']);
+
+interface DealActivityRow {
+  id: string;
+  type: string;
+  description: string | null;
+  created_at: string;
+  metadata: Record<string, unknown> | null;
+  actor: string | null;
+}
+
+/** Mapeia uma linha de deal_activities para uma entrada de timeline (fonte única). */
+function mapActivityRow(r: DealActivityRow): TimelineEntry {
+  const occurred = r.metadata && typeof r.metadata['occurred_at'] === 'string' ? (r.metadata['occurred_at'] as string) : null;
+  const result = r.metadata && typeof r.metadata['result'] === 'string' ? (r.metadata['result'] as string) : null;
+  const isSystem = SYSTEM_TYPES.has(r.type);
+  // actor vem da coluna (fiável); fallback para a heurística antiga se vier nulo.
+  const actor: TimelineActor =
+    r.actor === 'automation' ? 'automation'
+    : r.actor === 'system' || isSystem ? 'system'
+    : 'human';
+  return {
+    id: r.id,
+    type: r.type,
+    description: r.description,
+    at: occurred || r.created_at,
+    // "manual" = apagável na UI: qualquer toque registado por HUMANO (manual ou
+    // clique nos botões de contacto). Automação/sistema nunca se apagam.
+    manual: actor === 'human' && !isSystem,
+    system: isSystem,
+    actor,
+    result,
+  };
+}
+
+function sortByEffectiveDate(entries: TimelineEntry[]): TimelineEntry[] {
+  return entries.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+}
 
 export async function getContactTimeline(id: string, limit = 50): Promise<TimelineEntry[]> {
   const supabase = await createClient();
@@ -218,30 +257,36 @@ export async function getContactTimeline(id: string, limit = 50): Promise<Timeli
 
   const { data, error } = await query;
   if (error || !data) return [];
-  const entries = (data as Array<{ id: string; type: string; description: string | null; created_at: string; metadata: Record<string, unknown> | null; actor: string | null }>).map((r) => {
-    const occurred = r.metadata && typeof r.metadata['occurred_at'] === 'string' ? (r.metadata['occurred_at'] as string) : null;
-    const via = r.metadata && typeof r.metadata['via'] === 'string' ? (r.metadata['via'] as string) : '';
-    const isSystem = SYSTEM_TYPES.has(r.type);
-    // actor vem da coluna (fiável); fallback para a heurística antiga se vier nulo.
-    const actor: TimelineActor =
-      r.actor === 'automation' ? 'automation'
-      : r.actor === 'system' || isSystem ? 'system'
-      : 'human';
-    return {
-      id: r.id,
-      type: r.type,
-      description: r.description,
-      at: occurred || r.created_at,
-      // "manual" = apagável na UI: qualquer toque registado por HUMANO (manual ou
-      // clique nos botões de contacto). Automação/sistema nunca se apagam.
-      manual: actor === 'human' && !isSystem,
-      system: isSystem,
-      actor,
-    };
-  });
-  // Ordena pela data efectiva (suporta entradas com data retroactiva).
-  entries.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
-  return entries;
+  return sortByEffectiveDate((data as DealActivityRow[]).map(mapActivityRow));
+}
+
+/**
+ * Timeline de um NEGÓCIO: toques ligados ao próprio negócio E ao seu contacto
+ * principal (as automações escrevem em deal_activities com deal_id OU contact_id).
+ * Mesmo shape de getContactTimeline — usado pelo modal Actividade do negócio.
+ */
+export async function getDealTimeline(dealId: string, limit = 50): Promise<TimelineEntry[]> {
+  const supabase = await createClient();
+
+  const { data: deal } = await supabase
+    .from('deals')
+    .select('id, contact_id')
+    .eq('id', dealId)
+    .maybeSingle();
+  const contactId = (deal as { contact_id: string | null } | null)?.contact_id ?? null;
+
+  let query = supabase
+    .from('deal_activities')
+    .select('id, type, description, created_at, metadata, actor')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  query = contactId
+    ? query.or(`deal_id.eq.${dealId},contact_id.eq.${contactId}`)
+    : query.eq('deal_id', dealId);
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return sortByEffectiveDate((data as DealActivityRow[]).map(mapActivityRow));
 }
 
 /** Última análise do Assistente 360 guardada (Fase 3). */

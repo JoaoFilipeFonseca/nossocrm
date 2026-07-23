@@ -38,6 +38,23 @@ export const queryKeys = {
         byDeal: (dealId: string) => [...base.all, 'deal', dealId] as const,
     })),
 
+    /**
+     * Timeline de deal_activities (toques manuais + automáticos) de um negócio.
+     * Distinta de `activities` (tabela legada de tarefas).
+     */
+    dealActivities: createExtendedQueryKeys('dealActivities', base => ({
+        byDeal: (dealId: string) => [...base.all, 'byDeal', dealId] as const,
+    })),
+
+    /**
+     * Contadores rápidos por negócio (manuais · automáticos · tarefas) — RPC deal_quick_stats.
+     */
+    dealQuickStats: {
+        all: ['dealQuickStats'] as const,
+        byDeals: (dealIds: string[]) =>
+            ['dealQuickStats', [...dealIds].sort().join(',')] as const,
+    },
+
     // Dashboard (non-standard structure)
     dashboard: {
         stats: ['dashboard', 'stats'] as const,

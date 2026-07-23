@@ -12,13 +12,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { isAllowedOrigin } from '@/lib/security/sameOrigin';
+import { CHANNELS, RESULTS } from '@/lib/activities/vocab';
 
-const ALLOWED_TYPES = ['call', 'meeting', 'visit', 'whatsapp', 'email', 'note'] as const;
+const ALLOWED_TYPES = [...CHANNELS, 'note'] as const;
 
 const BodySchema = z
   .object({
     type: z.enum(ALLOWED_TYPES),
     description: z.string().max(5000).nullable().optional(),
+    // Resultado do contacto (só faz sentido com um canal, não com nota).
+    result: z.enum(RESULTS).nullable().optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
     // CT-TIMELINE: data/hora em que a interação ocorreu (permite registo retroactivo).
     occurredAt: z.string().datetime({ offset: true }).optional(),
@@ -71,6 +74,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Contact not found' }, { status: 404 });
     }
 
+    const result = parsed.data.type === 'note' ? null : parsed.data.result ?? null;
+
     const payload = {
       deal_id: null,
       contact_id: contactId,
@@ -81,6 +86,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       metadata: {
         ...(parsed.data.metadata ?? {}),
         via: parsed.data.metadata?.via || (parsed.data.occurredAt ? 'timeline-manual' : 'log-chq-quick-contact'),
+        ...(result ? { result } : {}),
         ...(parsed.data.occurredAt ? { occurred_at: parsed.data.occurredAt } : {}),
         logged_by: user.id,
       },
