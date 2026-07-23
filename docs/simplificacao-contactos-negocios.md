@@ -1,7 +1,9 @@
 # SIMPLIFICAÇÃO CONTACTOS + NEGÓCIOS — Spec de implementação (desenhada 23/07/2026, Fable)
 
-> **Estado: AGUARDA VALIDAÇÃO DO JOÃO.** Depois de validado, construir numa sessão Opus seguindo
-> esta spec fatia a fatia (1 commit por fatia, typecheck 0 / lint 0, verificação real em produção).
+> **Estado: CONSTRUÍDO E LIVE (23/07/2026, commit `07c4b7e`).** Validado pelo João; construído em Opus.
+> Deploy: git push → Vercel; migrações 20260723140000 + 20260723150000 aplicadas em prod; edge
+> `webhook-in` v2 (verify_jwt:false, curl 401/404 ok). typecheck0/lint0, 564+8 testes, build ok.
+> Falta só o click-through final do João (login) em produção. Ver o registo de fecho no fundo.
 > Referência visual: CRM Pinheirinho (3 fotos do João, 23/07) — lista de tarefas com badges
 > "2 man · 1 auto · 4 tar", e modal "Actividade" com abas Nota | Contacto, Canal + Resultado + histórico.
 

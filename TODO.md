@@ -1430,12 +1430,25 @@ RESIDUAL (rever depois): os 140 da base InfoCasa NÃO têm descrição → o det
 podem conter agentes de portais não-Idealista (SuperCasa/Imovirtual/CustoJusto). Rever com
 descrições desses portais ou confirmação manual do João.
 
-## 🧹 SIMPLIFICAÇÃO CONTACTOS + NEGÓCIOS (pedido do João 23/07, spec pronta — AGUARDA VALIDAÇÃO)
-Pedido: retirar Empresas do produto; badges rápidos por negócio ("X man · Y auto · Z tar" + canal
-de aquisição + dias no pipeline); modal "Actividade" (Nota | Contacto: Canal + Resultado + nota
-opcional c/ microfone + histórico completo) no negócio, em /activities e alinhado na ficha de contacto.
-Referência visual: CRM Pinheirinho (3 fotos, 23/07). **Spec completa fatia a fatia (F1-F6) com SQL,
-contratos de API e componentes: `docs/simplificacao-contactos-negocios.md`.** Apurado na BD: 3 empresas,
-0 vínculos → remoção segura (soft-delete + BD intacta). Construir em sessão Opus após "avança" do João.
-Decisão a validar: chamada não atendida CONTA como contacto manual, mas não conta como conversa
-para o relógio de follow-up (results no_answer/voicemail excluídos do last_human_touch).
+## 🧹 SIMPLIFICAÇÃO CONTACTOS + NEGÓCIOS — FIM 23/07 (LIVE, commit `07c4b7e`, validado pelo João)
+Spec: `docs/simplificacao-contactos-negocios.md`. Construído em Opus, 6 fatias, tudo verde
+(typecheck0/lint0, 564 testes + 8 novos, build ok). **DEPLOY FEITO:** git push → Vercel; migrações
+aplicadas em prod; edge `webhook-in` v2 (verify_jwt:false, curl 401/404 confirmado).
+- **F1 Empresas removidas do produto:** tab, CompanyFormModal, campo Empresa (contacto+negócio),
+  combobox, bloco crm_companies do webhook-in. BD intacta (3 empresas soft-deleted); `company_name`
+  fica como texto livre. `crm_companies`/`client_company_id` ficam órfãos de propósito (não dropados).
+- **F2 `deal_quick_stats(uuid[])`** → manual · auto · tarefas por negócio (migração 20260723140000).
+- **F3 modal "Actividade" (Nota|Contacto)** no DealDetailModal + /activities: Canal + Resultado + nota
+  com ditado por voz (Web Speech pt-PT) + histórico com 👤/🤖 e apagar humanos. Vocabulário em
+  `lib/activities/vocab.ts`; ContactTimeline reutiliza `components/activity/*` e ganha Resultado.
+  API: GET/POST/DELETE em `/api/deals/[id]/activities` (+ result/sms no /api/contacts/[id]/activities).
+- **F4 badges da lead** (`DealQuickBadges`): X man · Y auto · Z tar + canal de aquisição + dias no
+  pipeline. No DealDetailModal (header) e em /activities (1 fetch de quick-stats por lista, sem N+1).
+- **F5 verdade única:** "Não atendeu" da Power List grava `type=call, result=no_answer` (CONTA como
+  contacto manual), e `deal_state_signals` exclui no_answer/voicemail do `last_human_touch` — o relógio
+  do pipeline continua a andar (decisão do João). Migração 20260723150000.
+- **DECISÃO CONSTRUÍDA (não em toda a superfície):** badges NÃO postos nos cartões do board (DealCard)
+  para evitar N+1/perf; API pública `/api/public/v1/companies` mantida (fora do produto visível, baixo
+  valor). Ambas capturadas aqui se um dia se quiser.
+- ⏳ **Falta só o João (login):** click-through final em produção (abrir negócio → badges; registar
+  "Chamada · Não atendeu" → histórico + badge man+1; /contacts sem Empresas). Tudo o resto verificado.
