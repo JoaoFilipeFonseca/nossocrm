@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, AlertTriangle, Clock, Calendar, TrendingUp, ChevronRight } from 'lucide-react';
 import { Deal } from '@/types';
-import { isAtRisk, type DealStateSignals } from '@/lib/deals/dealState';
+import { dealAtRisk, type DealStateSignals } from '@/lib/deals/dealState';
 
 interface PipelineAlert {
   type: 'stagnant' | 'no-activity' | 'ready-to-close';
@@ -60,10 +60,7 @@ export const PipelineAlertsModal: React.FC<PipelineAlertsModalProps> = ({
   // 1. Negócios parados — PELA VERDADE ÚNICA (estado 'parado'/'arrefecer' =
   // sem contacto humano recente), não por mudança de etapa. Os Contactos por
   // trabalhar (sem toque) NÃO entram.
-  const stagnantDeals = activeDeals.filter(deal => {
-    const st = dealStates[deal.id];
-    return st ? isAtRisk(st.status) : false;
-  });
+  const stagnantDeals = activeDeals.filter(deal => dealAtRisk(dealStates[deal.id]));
 
   // 2. Deals sem próxima atividade agendada
   /**

@@ -13,7 +13,7 @@
 
 import { DealView, Activity } from '@/types';
 import { Decision, AnalyzerResult, AnalyzerConfig, SuggestedAction } from '../types';
-import { isAtRisk, type DealStateSignals } from '@/lib/deals/dealState';
+import { dealAtRisk, type DealStateSignals } from '@/lib/deals/dealState';
 
 export const stagnantDealsConfig: AnalyzerConfig = {
   id: 'stagnant_deals',
@@ -228,7 +228,7 @@ export function analyzeStagnantDeals(
 
     let daysSinceActivity: number;
     if (hasTruth) {
-      if (!st || !isAtRisk(st.status)) continue;
+      if (!st || !dealAtRisk(st)) continue;
       daysSinceActivity = st.days_idle;
     } else if (lastActivity) {
       daysSinceActivity = Math.floor(

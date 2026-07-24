@@ -48,6 +48,15 @@ export function isAtRisk(status: DealStatus): boolean {
   return status === 'parado' || status === 'arrefecer';
 }
 
+/**
+ * DEFINIÇÃO ÚNICA de "negócio parado/em risco" para TODO o CRM (Painel, Kanban,
+ * Dashboard). Verdade única = sinais de estado. Sem sinal → NÃO em risco (evita
+ * os falsos alarmes da heurística antiga por updated_at). Usar sempre esta.
+ */
+export function dealAtRisk(state: DealStateSignals | undefined | null): boolean {
+  return state ? isAtRisk(state.status) : false;
+}
+
 function daysAgoLabel(days: number | null): string | null {
   if (days == null) return null;
   if (days <= 0) return 'hoje';

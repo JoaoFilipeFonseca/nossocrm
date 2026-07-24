@@ -379,7 +379,9 @@ Nunca propõe Domingos; sábados só de manhã."
   `features/activities/components/ActivityFormModalV2.tsx`.
 - Dois componentes com o mesmo nome: `BoardAIConfigModal.tsx` em features/boards e em
   features/settings — unificar num só.
-- `globalSearchQuery` existe no store (`lib/stores/index.ts:64`) mas **nenhuma UI o usa**.
+- `globalSearchQuery` existe no store (`lib/stores/index.ts:64`) — agora usado pela pesquisa Ctrl+K (opcional).
+- `isDealRotting` (`features/boards/utils.ts` + `features/boards/hooks/useBoardsController.ts`) ficou
+  SEM uso depois do W3 (todos passaram a `dealAtRisk`) — apagar as duas definições + `daysInStage` se orfão.
 
 ### 6.7 Em falta para um consultor de topo (não referido antes)
 - **Pesquisa global (Ctrl+K)**: escrever um nome em qualquer página → contacto/negócio/imóvel.

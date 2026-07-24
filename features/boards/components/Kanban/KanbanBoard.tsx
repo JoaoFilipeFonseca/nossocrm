@@ -1,14 +1,14 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { DealView, BoardStage } from '@/types';
 import { DealCard } from './DealCard';
-import { isDealRotting, getActivityStatus } from '@/features/boards/hooks/useBoardsController';
+import { getActivityStatus } from '@/features/boards/hooks/useBoardsController';
 import { MoveToStageModal } from '../Modals/MoveToStageModal';
 import { SkeletonDealCard } from '@/components/ui/Skeleton';
 import { useLifecycleStages } from '@/lib/query/hooks/useLifecycleStagesQuery';
 import { useLeadScoresQuery } from '@/lib/query/hooks/useLeadScoresQuery';
 import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
 import { useDealQuickStats } from '@/lib/query/hooks/useDealQuickStats';
-import { isAtRisk } from '@/lib/deals/dealState';
+import { dealAtRisk } from '@/lib/deals/dealState';
 
 /**
  * UI: Drop highlight should follow the stage color.
@@ -310,13 +310,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     deal={deal}
                     leadScore={leadScores?.[deal.id]}
                     quickStats={quickStatsMap?.[deal.id]}
-                    isRotting={(() => {
-                      const st = dealStates?.[deal.id];
-                      // Com sinais de estado: só 'parado'/'arrefecer' apodrece (Contactos
-                      // por trabalhar e adiados NÃO). Sem sinais: fallback à regra antiga.
-                      if (st) return isAtRisk(st.status);
-                      return isDealRotting(deal) && !deal.isWon && !deal.isLost;
-                    })()}
+                    isRotting={dealAtRisk(dealStates?.[deal.id])}
                     activityStatus={getActivityStatus(deal)}
                     isDragging={draggingId === deal.id}
                     onDragStart={handleDragStart}

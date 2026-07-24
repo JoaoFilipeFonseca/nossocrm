@@ -3,7 +3,7 @@ import { useDeals } from '@/lib/query/hooks/useDealsQuery';
 import { useContacts } from '@/lib/query/hooks/useContactsQuery';
 import { useBoards, useDefaultBoard } from '@/lib/query/hooks/useBoardsQuery';
 import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
-import { isAtRisk } from '@/lib/deals/dealState';
+import { dealAtRisk } from '@/lib/deals/dealState';
 
 export type PeriodFilter =
   | 'all'
@@ -389,8 +389,7 @@ export const useDashboardMetrics = (period: PeriodFilter = 'this_month', boardId
   let stagnantDealsValue = 0;
   for (const deal of allDeals) {
     if (deal.isWon || deal.isLost) continue;
-    const st = dealStates[deal.id];
-    if (st && isAtRisk(st.status)) {
+    if (dealAtRisk(dealStates[deal.id])) {
       stagnantDealsCount += 1;
       stagnantDealsValue += deal.value;
     }

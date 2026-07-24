@@ -16,7 +16,7 @@ import {
 import { useMoveDeal } from '@/lib/query/hooks/useMoveDeal';
 import { useCreateActivity } from '@/lib/query/hooks/useActivitiesQuery';
 import { useDealStatesQuery } from '@/lib/query/hooks/useDealStatesQuery';
-import { isAtRisk } from '@/lib/deals/dealState';
+import { dealAtRisk } from '@/lib/deals/dealState';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { useRealtimeSyncKanban } from '@/lib/realtime/useRealtimeSync';
 import { createClient } from '@/lib/supabase/client';
@@ -174,8 +174,7 @@ export const useBoardsController = () => {
 
     for (const d of deals) {
       pipelineValue += d.value ?? 0;
-      const st = dealStates[d.id];
-      if (st ? isAtRisk(st.status) : isDealRotting(d)) stagnantDeals += 1;
+      if (dealAtRisk(dealStates[d.id])) stagnantDeals += 1;
       if (d.nextActivity?.isOverdue) overdueDeals += 1;
 
       const label = stageIdToLabel.get(d.status);
