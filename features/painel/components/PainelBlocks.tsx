@@ -29,7 +29,6 @@ import {
   type PainelFunnel,
   type PainelKpis,
   type PainelMetas,
-  type PipelineEtapa,
   type ReceitaLinha,
   type TopCanais,
 } from '@/lib/painel/shared';
@@ -236,38 +235,6 @@ export function ReceitaCard({ linhas }: { linhas: ReceitaLinha[] }) {
         </div>
       )}
       <p className="text-[10.5px] text-slate-400 dark:text-slate-500 mt-3">Créditos entram quando os começar a registar no CRM.</p>
-    </div>
-  );
-}
-
-export function PipelineEtapaCard({ etapas }: { etapas: PipelineEtapa[] }) {
-  const max = Math.max(1, ...etapas.map((e) => e.count));
-  return (
-    <div className={`${card} p-4`}>
-      <div className={`${sectionTitle} mb-3`}>Pipeline aberto por etapa · valor previsto</div>
-      {etapas.length === 0 ? (
-        <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">Sem negócios abertos.</p>
-      ) : (
-        <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
-          {etapas.map((e, i) => (
-            <div key={i} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-xs">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate text-slate-700 dark:text-slate-200">{e.label}</span>
-                  <span className="shrink-0 text-[9px] px-1.5 py-px rounded-full bg-slate-100 dark:bg-white/10 text-slate-400 dark:text-slate-500">
-                    {e.funnelName}
-                  </span>
-                </div>
-                <div className="h-1 rounded-full bg-slate-100 dark:bg-white/10 mt-1 overflow-hidden">
-                  <div className="h-full rounded-full bg-blue-500" style={{ width: `${(e.count / max) * 100}%` }} />
-                </div>
-              </div>
-              <b className="text-slate-900 dark:text-white tabular-nums w-6 text-right">{e.count}</b>
-              <b className="text-slate-500 dark:text-slate-400 tabular-nums w-20 text-right">{eur(e.valueCents)}</b>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

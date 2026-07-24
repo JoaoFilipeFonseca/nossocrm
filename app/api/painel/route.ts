@@ -19,7 +19,6 @@ import {
   type PainelMetas,
   type PainelSnapshot,
   type PainelWindow,
-  type PipelineEtapa,
   type ReceitaLinha,
 } from '@/lib/painel/shared';
 
@@ -199,7 +198,6 @@ export async function GET(request: NextRequest) {
   // ── Funis (Vendedores + Compradores) ─────────────────────────────────────
   const funnelKeys = ['proprietarios', 'compradores'];
   const funnels: PainelFunnel[] = [];
-  const pipelinePorEtapa: PipelineEtapa[] = [];
   for (const key of funnelKeys) {
     const board = boardByKey.get(key);
     if (!board) continue;
@@ -209,9 +207,6 @@ export async function GET(request: NextRequest) {
     const funnelStages = stageDefs.map((s) => {
       const count = openCountByStage.get(s.id) ?? 0;
       const valueCents = openValueByStage.get(s.id) ?? 0;
-      if (count > 0) {
-        pipelinePorEtapa.push({ funnelKey: key, funnelName: displayName, label: s.label, count, valueCents });
-      }
       return { label: s.label, color: stageColorHex(s.color), count, valueCents };
     });
     funnels.push({
@@ -432,7 +427,6 @@ export async function GET(request: NextRequest) {
       fechadosCompradores,
     },
     receitaLinhas,
-    pipelinePorEtapa,
     coracao: {
       tarefasPendentes,
       tarefasHoje,

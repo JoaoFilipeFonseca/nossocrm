@@ -50,14 +50,6 @@ export interface ReceitaLinha {
   cents: number;
 }
 
-export interface PipelineEtapa {
-  funnelKey: string;
-  funnelName: string;
-  label: string;
-  count: number;
-  valueCents: number;
-}
-
 export interface CoracaoDia {
   tarefasPendentes: number;
   tarefasHoje: number;
@@ -126,7 +118,6 @@ export interface PainelSnapshot {
   funnels: PainelFunnel[];
   kpis: PainelKpis;
   receitaLinhas: ReceitaLinha[];
-  pipelinePorEtapa: PipelineEtapa[];
   coracao: CoracaoDia;
   agendaHoje: AgendaItem[]; // tarefas atrasadas + de hoje, por fazer (accionáveis)
   metas: PainelMetas;
