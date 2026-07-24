@@ -57,7 +57,6 @@ import { useUnreadCount } from '@/lib/query/hooks/useConversationsQuery';
 import { UIChat } from './ai/UIChat';
 
 import { NotificationPopover } from './notifications/NotificationPopover';
-import { VoiceCaptureFAB } from '@/features/voice/VoiceCaptureFAB';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 /**
@@ -639,9 +638,6 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
         userLabel={profile?.nickname || profile?.first_name || profile?.email?.split('@')[0] || 'Utilizador'}
         userEmail={profile?.email || undefined}
       />
-
-      {/* Voice capture FAB — sempre visível em qualquer página protegida */}
-      <VoiceCaptureFAB />
     </div>
   );
 };

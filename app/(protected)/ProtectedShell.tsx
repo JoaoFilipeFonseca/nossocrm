@@ -10,7 +10,6 @@ import { AuthProvider } from '@/context/AuthContext'
 import { AIProvider } from '@/context/AIContext'
 import Layout from '@/components/Layout'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { CHQFloatingButton } from '@/components/CHQFloatingButton'
 import { ClientErrorReporter } from '@/components/ClientErrorReporter'
 import { ConsentGate } from '@/components/ConsentGate'
 
@@ -71,7 +70,6 @@ export default function ProtectedShell({
                             <TooltipProvider delayDuration={200}>
                                 <ClientErrorReporter />
                                 {shouldUseAppShell ? <Layout>{children}</Layout> : children}
-                                {shouldUseAppShell && <CHQFloatingButton />}
                                 {shouldUseAppShell && <ConsentGate />}
                             </TooltipProvider>
                         </AIProvider>

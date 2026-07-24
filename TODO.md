@@ -1,5 +1,26 @@
 # TODO — Foco Imo (CRM) — CATÁLOGO ÚNICO
 
+> ## 🧹 ARRUMAÇÃO DO CRM — PLANO PRONTO (23/07/2026, executar em sessão Opus)
+> Decisões do João: Inbox morre (→/hoje no topo + banner atrasadas) · Visão Geral 1ª posição ·
+> Actividades→"Tarefas" · Boards→"Pipeline" · Matches+Cruzamentos unem-se em /cruzamentos ·
+> Funil fica · Metas nos Relatórios. + Análise 8 ângulos (pipeline honesto sem "Contactos",
+> marcar ganhos históricos, normalizar sources, cockpit v2 único, /decisions fora da nav).
+> **Guião completo com ordem de execução e conteúdo da Estratégia dos Boards:
+> `docs/plano-arrumacao-crm.md`.** Substitui a análise de duplicação abaixo (mesma matéria, já decidida).
+
+> ## 🔎 ANÁLISE DE DUPLICAÇÃO (23/07/2026, só diagnóstico — NÃO executar)
+> Dados LIMPOS: 690 contactos 0 telefones/emails repetidos; negócios ~0 duplicados (1 pessoa 2 abertos no mesmo funil).
+> Duplicação real = FUNCIONALIDADES/menu. Grupos (gravidade ↓):
+> **A. `/matches` + `/cruzamentos`** — ambos vivem de `raw_intel`; matches=ingestão/lista, cruzamentos=resultado do engine
+> (`matches`⨝`raw_intel`⨝`imoveis`). Agravado: `/matches` tem title="Inbox Bruto", H1="Matches", rota=/matches (nome triplo).
+> **D. `/inbox` + `/hoje` + `/decisions`** — os 3 respondem "o que fazer a seguir" de deals+activities; /inbox já linka /hoje.
+> **B. `/funil` + `/reports`** — win rate + ciclo médio calculados nos dois (ângulos diferentes, KPIs repetidos).
+> **C. `/deals/[id]/cockpit` + `/cockpit-v2`** — 2 versões do mesmo ecrã (V1 wrapper do Focus; V2 reescrita); rollout.
+> **E. já neutralizados (rotas-fantasma):** /caixa-social→/messaging?tab=social; /pipeline→/boards; /despesas→/financeiro.
+> **NÃO é duplicação:** /criativos vs /anuncios vs /organico (complementares); /cerebro vs /ai (marketing vs chat).
+> Painel Diário (/dashboard) é OBRIGATÓRIO — fica. Decisão de consolidar cada grupo é do João, sessão dedicada.
+
+
 > ## 📊 PAINEL DIÁRIO — maqueta validada 23/07/2026, PRONTO A CONSTRUIR
 > O cockpit que o João vê sempre que abre o CRM (reconstruir `/dashboard`; página de arranque via
 > `user_settings.default_route` já existe). Funis Vendedores+Compradores, 4 KPIs, receita por linha
