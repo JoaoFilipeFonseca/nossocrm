@@ -193,10 +193,10 @@ const PainelPage: React.FC = () => {
           <AgendaHojeCard itens={data.agendaHoje} />
           <FunnelsRow funnels={data.funnels} />
           <KpiRow kpis={data.kpis} />
-          <ReceitaCard linhas={data.receitaLinhas} />
+          <CoracaoCard coracao={data.coracao} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <MetasCard metas={data.metas} />
-            <CoracaoCard coracao={data.coracao} />
+            <ReceitaCard linhas={data.receitaLinhas} />
             <CarteiraCard carteira={data.carteira} />
           </div>
           <TopCanaisRow topCanais={data.topCanais} />
