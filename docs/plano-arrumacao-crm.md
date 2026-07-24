@@ -135,9 +135,17 @@ ninguém os abre, só confundem. Apagar não afecta nada.)
    + troca coração↔receita no layout (`fcadd45`).
 6. ✅ **W3** parado único `dealAtRisk` (`8a6f5c7`).
 7. ✅ **Cruzamentos unificado** (`bbee9ed`) + matches no topo/colar minimizável/abrir·editar·apagar (`8ad1b4c`).
-8. ⏳ **W5** cockpit único → limpar feature inbox. **PRÓXIMO.**
-9. ⏳ **W6** um agente IA.
-10. ⏳ **W7** código morto + **W4** funis coerentes.
+8. ✅ **W5** cockpit único + verdade das chamadas (`79b187b`) — v2 promovido a `/cockpit`,
+   `/cockpit-v2` redirect, v1 apagado; timeline lê `deal_activities`; TODOS os toques do
+   cockpit (chamada+WhatsApp+email+reunião+nota+breadcrumb) gravam no canónico; CallModal
+   movido para `components/activity/`. **Nota:** `features/inbox/` NÃO foi apagada por inteiro
+   (cockpit v2 + labs ainda dependem de hooks/modais partilhados; `lib/prefetch` importa
+   InboxPage) → dissolução total capturada como follow-up. Botão "Tarefa (fora do CRM)" fica
+   em `activities` (é tarefa).
+9. ✅ **W6** um agente IA (`340b5d8`) — AI Hub (`useCRMAgent`) passou a `/api/ai/chat`
+   (cérebro canónico); rota `/api/ai/crm-agent` + `crmTools.ts` apagados (13 tools já cobertas
+   pelas 35 do canónico; zero refs).
+10. ⏳ **W7** código morto + **W4** funis coerentes. **PRÓXIMO.**
 11. ⏳ **Mão do João:** marcar ganhos históricos 2026; colar Estratégia dos boards (Parte 4);
     confirmar valores das metas em /settings/metas.
 
