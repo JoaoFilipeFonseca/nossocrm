@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import MatchCard from '@/components/matches/MatchCard';
 import RefreshButton from '@/components/matches/RefreshButton';
+import { MatchesClient } from '@/features/matches/MatchesClient';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Cruzamentos | Foco Imo' };
@@ -101,13 +102,21 @@ export default async function CruzamentosPage({ searchParams }: PageProps) {
 
   return (
     <div className="p-6 max-w-5xl">
-      <div className="mb-4 flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-semibold">Cruzamentos</h1>
-          <p className="text-sm text-slate-600 mt-1">
-            Cruzamento automático entre procuras de clientes (raw intel) e os teus imóveis.
-          </p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold">Cruzamentos</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+          Cola informação que vês por aí (WhatsApp, portais, notas) e vê logo com que leads e imóveis teus faz match.
+        </p>
+      </div>
+
+      {/* Função 1 — colar informação (extrai para raw intel) */}
+      <div className="mb-8 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 p-4">
+        <MatchesClient embedded />
+      </div>
+
+      {/* Função 2 — matches calculados entre procuras e imóveis */}
+      <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-lg font-semibold">Matches encontrados</h2>
         <RefreshButton />
       </div>
 

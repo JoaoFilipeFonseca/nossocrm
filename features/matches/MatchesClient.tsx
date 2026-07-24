@@ -44,7 +44,7 @@ const FILTERS = [
   { id: 'evento_mercado', label: 'Mercado' }
 ];
 
-export function MatchesClient() {
+export function MatchesClient({ embedded = false }: { embedded?: boolean }) {
   const [text, setText] = useState('');
   const [items, setItems] = useState<RawIntel[]>([]);
   const [summary, setSummary] = useState<Record<string, number>>({});
@@ -77,13 +77,19 @@ export function MatchesClient() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8">
+    <div className={embedded ? '' : 'max-w-5xl mx-auto px-6 py-8'}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
-            <Inbox size={26} className="text-blue-600" /> Matches
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Cola texto solto e a IA cruza com o teu pipeline para te mostrar matches.</p>
+          {embedded ? (
+            <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
+              <Clipboard size={20} className="text-blue-600" /> Colar informação
+            </h2>
+          ) : (
+            <h1 className="text-2xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
+              <Inbox size={26} className="text-blue-600" /> Matches
+            </h1>
+          )}
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Cola texto solto (WhatsApp, Idealista, notas) e a IA extrai e cruza com o teu pipeline.</p>
         </div>
         <div className="text-xs text-slate-500 dark:text-slate-400">
           {Object.values(summary).reduce((a, b) => a + b, 0)} processados

@@ -1,7 +1,6 @@
 import type { ComponentType } from 'react';
 import type { RouteName } from '@/lib/prefetch';
 import {
-  Inbox,
   MessageSquare,
   KanbanSquare,
   Users,
@@ -26,7 +25,7 @@ import {
   Sun,
 } from 'lucide-react';
 
-export type PrimaryNavId = 'dashboard' | 'hoje' | 'messaging' | 'cruzamentos' | 'matches' | 'boards' | 'contacts' | 'imoveis' | 'activities' | 'more';
+export type PrimaryNavId = 'dashboard' | 'hoje' | 'messaging' | 'cruzamentos' | 'boards' | 'contacts' | 'imoveis' | 'activities' | 'more';
 
 export interface PrimaryNavItem {
   id: PrimaryNavId;
@@ -45,7 +44,6 @@ export const PRIMARY_NAV: PrimaryNavItem[] = [
   { id: 'contacts', label: 'Contactos', href: '/contacts', icon: Users },
   { id: 'imoveis', label: 'Imóveis', href: '/imoveis', icon: Home },
   { id: 'cruzamentos', label: 'Cruzamentos', href: '/cruzamentos', icon: Target },
-  { id: 'matches', href: '/matches', label: 'Matches', icon: Inbox },
   { id: 'more', label: 'Mais', icon: MoreHorizontal },
 ];
 
@@ -113,7 +111,6 @@ export const NAV_FAMILIES: NavFamily[] = [
       { id: 'contacts', label: 'Contactos', href: '/contacts', icon: Users, prefetch: 'contacts' },
       { id: 'imoveis', label: 'Imóveis', href: '/imoveis', icon: Home },
       { id: 'cruzamentos', label: 'Cruzamentos', href: '/cruzamentos', icon: Target },
-      { id: 'matches', label: 'Matches', href: '/matches', icon: Inbox },
     ],
   },
   {
