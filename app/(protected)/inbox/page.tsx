@@ -1,8 +1,10 @@
-import type { Metadata } from 'next';
-import { InboxPage } from '@/features/inbox/InboxPage'
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = { title: 'Inbox | Foco Imo' };
-
-export default function Inbox() {
-    return <InboxPage />
+/**
+ * Rota legada `/inbox` → `/hoje` (Power List).
+ * O Inbox deixou de existir (arrumação do CRM, W1/W2). O trabalho do dia
+ * vive agora no Hoje. Alias mantido para marcadores e links antigos.
+ */
+export default function InboxPage() {
+  redirect('/hoje');
 }

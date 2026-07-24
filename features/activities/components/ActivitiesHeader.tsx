@@ -43,7 +43,7 @@ export const ActivitiesHeader: React.FC<ActivitiesHeaderProps> = ({
     <div className="flex justify-between items-center mb-8">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-display">
-          Actividades
+          Tarefas
         </h1>
         <div className="mt-1 flex items-center gap-2">
           <p className="text-slate-500 dark:text-slate-400">Faça a gestão das suas tarefas e compromissos</p>
