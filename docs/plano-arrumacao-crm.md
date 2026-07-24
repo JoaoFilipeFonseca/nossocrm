@@ -126,21 +126,59 @@ ninguém os abre, só confundem. Apagar não afecta nada.)
    Esc fecha. Pode ligar ao `globalSearchQuery` já existente em `lib/stores/index.ts:64`.
 3. Mobile: ocupa o ecrã inteiro, teclado abre sozinho.
 
-### ORDEM FINAL DE EXECUÇÃO (substitui a da Parte 5)
-1. **W1** chamadas + matar FAB → teste real no cockpit.
-2. **Nav** (Parte 1): /inbox→redirect /hoje · Hoje no topo · Visão Geral 1º · "Tarefas" ·
-   "Pipeline" (labels) — sem apagar código do inbox ainda.
-3. **W8** pesquisa global Ctrl+K.
-4. **W2** metas fonte única.
-5. **Pipeline honesto** (Parte 2.1): etapa "Contactos" fora do pipeline previsto no
-   /api/painel; mostrar "pipeline a trabalhar" vs "base por activar".
-6. **W3** parado único + /decisions fora da nav.
-7. **Cruzamentos unificado** (Parte 1.4): ingestão + matches numa página; /matches redirect.
-8. **W5** cockpit único → limpar feature inbox.
-9. **W6** um agente IA.
-10. **W7** código morto + **W4** funis coerentes.
-11. **Mão do João:** marcar ganhos históricos 2026; colar Estratégia dos boards (Parte 4);
+### ORDEM FINAL DE EXECUÇÃO — ESTADO (progresso 23/07, HEAD `8ad1b4c`)
+1. ✅ **W1** chamadas + matar FAB (`252b35b`).
+2. ✅ **Nav** — /inbox→/hoje, Visão Geral 1ª, Hoje, "Tarefas", "Pipeline" (`e0b8f2f`).
+3. ✅ **W8** pesquisa global Ctrl+K (`bb5f7e5`).
+4. ✅ **W2** metas fonte única (`2d38af4`) + remoção CHQ/dia útil e 0 nos meses (`4cd4427`).
+5. ✅ **Pipeline honesto** — Contactos fora (`45a101c`) + remoção quadro por-etapa (`dd684a0`)
+   + troca coração↔receita no layout (`fcadd45`).
+6. ✅ **W3** parado único `dealAtRisk` (`8a6f5c7`).
+7. ✅ **Cruzamentos unificado** (`bbee9ed`) + matches no topo/colar minimizável/abrir·editar·apagar (`8ad1b4c`).
+8. ⏳ **W5** cockpit único → limpar feature inbox. **PRÓXIMO.**
+9. ⏳ **W6** um agente IA.
+10. ⏳ **W7** código morto + **W4** funis coerentes.
+11. ⏳ **Mão do João:** marcar ganhos históricos 2026; colar Estratégia dos boards (Parte 4);
     confirmar valores das metas em /settings/metas.
+
+### ⏭️ O QUE FALTA — DETALHE PARA A PRÓXIMA SESSÃO (ficheiros exactos)
+
+**Passo 8 — W5 Cockpit único + verdade das chamadas** (ver W5 completo acima):
+- Rotas: `/deals/[dealId]/cockpit` (v1 = `DealCockpitFocusClient.tsx`, wrapper do Focus do Inbox)
+  vs `/deals/[dealId]/cockpit-v2` (v2 = `DealCockpitClient.tsx`, rico). Promover v2 → `/cockpit`;
+  `/cockpit-v2` redirect → `/cockpit`; apagar v1.
+- **Verdade das chamadas (fica DENTRO deste passo):** no `DealCockpitClient.tsx` a timeline
+  (`dealActivities` ~:598) deriva de `useActivities` (tabela **`activities`**) e o
+  `handleCallLogSave` (~:1136) grava lá com `type:'CALL'`. Trocar AMBOS para o canónico
+  `deal_activities`: timeline via `useActivitiesByDeal`/`getDealTimeline`; gravação via
+  `POST /api/deals/[id]/activities` `{type:'call', result, description}`, mapear o outcome do
+  `CallModal` (connected→answered, no_answer→no_answer, voicemail→voicemail, busy→no_answer).
+  O `CallModal` vive em `features/inbox/components/CallModal.tsx` → mover para
+  `components/activity/CallModal.tsx`. Shape da API canónica: ver `app/api/deals/[id]/activities/route.ts`
+  (aceita `{type, result, description, metadata, occurredAt}`; `type` ∈ CHANNELS de `lib/activities/vocab.ts`).
+- SÓ DEPOIS: apagar `features/inbox/` inteira; `/inbox` já é redirect `/hoje` (feito).
+  ⚠️ `FocusContextPanel` (inbox) só o cockpit v1 usa fora do inbox → morre com v1.
+
+**Passo 9 — W6 Um agente IA:**
+- `features/ai-hub/hooks/useCRMAgent.ts` chama `/api/ai/crm-agent` (reimplementação ~666 linhas).
+  Passar a `/api/ai/chat` (agente canónico `lib/ai/crmAgent`, ferramentas `lib/ai/tools.ts`).
+  Comparar tools de `features/ai-hub/tools/crmTools.ts` com `lib/ai/tools.ts`, portar o que faltar,
+  depois apagar `app/api/ai/crm-agent/route.ts` + `crmTools.ts` (grep zero refs).
+
+**Passo 10 — W7 código morto + W4 funis coerentes:**
+- Apagar (grep zero refs antes): `features/boards/components/Modals/CreateDealModalV2.tsx`,
+  `features/activities/components/ActivityFormModalV2.tsx`, `isDealRotting` (em `features/boards/utils.ts`
+  E `features/boards/hooks/useBoardsController.ts` — já SEM uso após W3) + `daysInStage` se órfão.
+  `BoardAIConfigModal.tsx` duplicado (features/boards vs features/settings): manter o montado, apagar o outro.
+- W4 funis: 3 APIs (`/api/funnel`, `/api/financeiro/funnel`, `/api/painel`) na MESMA regra —
+  `deleted_at is null`, aberto = `not is_won and not is_lost`, fechado na janela por `closed_at`.
+  O `/api/painel` já cumpre; auditar/alinhar os outros dois.
+
+**Regras de execução (INEGOCIÁVEIS):** cada passo → `npm run precheck` (lint+typecheck+583 testes+build)
+verde → `git push origin main` (deploy Vercel) → dizer ao João o que validar no live → só então o passo
+seguinte. NÃO fazer login (proibido introduzir password). Migrations via supabase MCP `apply_migration`
++ ficheiro em `supabase/migrations/`. Org do João = `29455d22-ebbf-4996-ac46-a071cb4363bf`, user
+`15a3f1c9-5837-41ff-b68f-a25893e79f62`. PT-PT pré-AO, nunca "avaliação", mobile 375/768.
 
 ---
 
