@@ -105,16 +105,11 @@ export default async function CruzamentosPage({ searchParams }: PageProps) {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Cruzamentos</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-          Cola informação que vês por aí (WhatsApp, portais, notas) e vê logo com que leads e imóveis teus faz match.
+          O ouro: com que leads e imóveis teus a informação faz match. Cola coisas novas na secção em baixo.
         </p>
       </div>
 
-      {/* Função 1 — colar informação (extrai para raw intel) */}
-      <div className="mb-8 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 p-4">
-        <MatchesClient embedded />
-      </div>
-
-      {/* Função 2 — matches calculados entre procuras e imóveis */}
+      {/* Função 1 (ouro) — matches calculados, no topo */}
       <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-lg font-semibold">Matches encontrados</h2>
         <RefreshButton />
@@ -187,6 +182,17 @@ export default async function CruzamentosPage({ searchParams }: PageProps) {
           })}
         </div>
       )}
+
+      {/* Função 2 — colar informação (minimizável, extrai para raw intel) */}
+      <details className="mt-8 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5">
+        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+          Colar informação
+          <span className="text-xs font-normal text-slate-400">— adicionar coisas novas para cruzar</span>
+        </summary>
+        <div className="px-4 pb-4">
+          <MatchesClient embedded />
+        </div>
+      </details>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Inbox, Sparkles, Home, Search, Lightbulb, TrendingUp, Handshake, Target, Clipboard, Loader2, Wand2 } from 'lucide-react';
+import { Inbox, Sparkles, Home, Search, Lightbulb, TrendingUp, Handshake, Target, Clipboard, Loader2, Wand2, ChevronDown, Pencil, Trash2, Save, X } from 'lucide-react';
 
 type RawIntel = {
   id: string;
@@ -17,6 +17,8 @@ type RawIntel = {
   status: string;
   created_at: string;
   source_attribution: string | null;
+  tags?: string[] | null;
+  raw_text?: string | null;
 };
 
 const INTENT_META: Record<string, { label: string; icon: any; bg: string; fg: string }> = {
@@ -51,6 +53,55 @@ export function MatchesClient({ embedded = false }: { embedded?: boolean }) {
   const [filter, setFilter] = useState('all');
   const [processing, setProcessing] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<RawIntel | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function remove(id: string) {
+    if (!confirm('Apagar este registo da lista? (fica arquivado, não se perde)')) return;
+    setBusyId(id);
+    try {
+      const r = await fetch(`/api/inbox-raw/${id}`, { method: 'DELETE' });
+      if (r.ok) {
+        setItems((prev) => prev.filter((x) => x.id !== id));
+        if (expandedId === id) setExpandedId(null);
+      }
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function startEdit(r: RawIntel) {
+    setEditingId(r.id);
+    setEditDraft(JSON.parse(JSON.stringify(r)));
+    setExpandedId(r.id);
+  }
+
+  async function saveEdit() {
+    if (!editDraft) return;
+    setBusyId(editDraft.id);
+    try {
+      const r = await fetch(`/api/inbox-raw/${editDraft.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: editDraft.notes ?? '',
+          intent: editDraft.intent,
+          ownership: editDraft.ownership,
+          contact: editDraft.contact ?? {},
+          property: editDraft.property ?? {},
+        }),
+      });
+      if (r.ok) {
+        setEditingId(null);
+        setEditDraft(null);
+        await load();
+      }
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function load() {
     const url = filter === 'all' ? '/api/inbox-raw/list' : '/api/inbox-raw/list?intent=' + filter;
@@ -78,13 +129,9 @@ export function MatchesClient({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <div className={embedded ? '' : 'max-w-5xl mx-auto px-6 py-8'}>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          {embedded ? (
-            <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
-              <Clipboard size={20} className="text-blue-600" /> Colar informação
-            </h2>
-          ) : (
+          {!embedded && (
             <h1 className="text-2xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
               <Inbox size={26} className="text-blue-600" /> Matches
             </h1>
@@ -145,28 +192,133 @@ export function MatchesClient({ embedded = false }: { embedded?: boolean }) {
           const im = INTENT_META[r.intent] || INTENT_META.irrelevante;
           const om = OWNERSHIP_META[r.ownership] || OWNERSHIP_META.externa;
           const IconI = im.icon;
+          const open = expandedId === r.id;
+          const editing = editingId === r.id;
+          const busy = busyId === r.id;
           return (
-            <div key={r.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-              <div className="flex flex-wrap gap-2 mb-2">
-                <span className="text-[11px] px-2 py-1 rounded-full font-medium inline-flex items-center gap-1" style={{ background: im.bg, color: im.fg }}>
-                  <IconI size={12} /> {im.label}
-                </span>
-                <span className="text-[11px] px-2 py-1 rounded-full font-medium" style={{ background: om.bg, color: om.fg }}>{om.label}</span>
-                {r.requires_review && <span className="text-[11px] px-2 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-300 font-medium">Precisa revisão</span>}
-                {r.confidence_overall != null && <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-auto">{r.confidence_overall}%</span>}
+            <div key={r.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+              {/* Cabeçalho clicável */}
+              <div className="p-4">
+                <div className="flex flex-wrap gap-2 mb-2 items-center">
+                  <span className="text-[11px] px-2 py-1 rounded-full font-medium inline-flex items-center gap-1" style={{ background: im.bg, color: im.fg }}>
+                    <IconI size={12} /> {im.label}
+                  </span>
+                  <span className="text-[11px] px-2 py-1 rounded-full font-medium" style={{ background: om.bg, color: om.fg }}>{om.label}</span>
+                  {r.requires_review && <span className="text-[11px] px-2 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-300 font-medium">Precisa revisão</span>}
+                  <div className="ml-auto flex items-center gap-1">
+                    {r.confidence_overall != null && <span className="text-[11px] text-slate-500 dark:text-slate-400 mr-1">{r.confidence_overall}%</span>}
+                    <button onClick={() => startEdit(r)} disabled={busy} title="Editar" className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 disabled:opacity-40">
+                      <Pencil size={14} />
+                    </button>
+                    <button onClick={() => remove(r.id)} disabled={busy} title="Apagar" className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 disabled:opacity-40">
+                      {busy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                    </button>
+                    <button onClick={() => setExpandedId(open ? null : r.id)} title={open ? 'Fechar' : 'Ver tudo'} className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10">
+                      <ChevronDown size={16} className={open ? 'rotate-180 transition-transform' : 'transition-transform'} />
+                    </button>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setExpandedId(open ? null : r.id)} className="w-full text-left">
+                  <div className="text-sm font-medium text-slate-900 dark:text-white mb-1">{titleFor(r)}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{r.notes || subtitleFor(r)}</div>
+                  {r.contact && !open && (
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex gap-3 flex-wrap">
+                      {r.contact.nome && <span>{r.contact.nome} {r.contact.apelido || ''}</span>}
+                      {r.contact.telefone && <span>· {r.contact.telefone}</span>}
+                      {r.contact.agencia && <span>· {r.contact.agencia}</span>}
+                    </div>
+                  )}
+                </button>
               </div>
-              <div className="text-sm font-medium text-slate-900 dark:text-white mb-1">{titleFor(r)}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{r.notes || subtitleFor(r)}</div>
-              {r.contact && (
-                <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex gap-3 flex-wrap">
-                  {r.contact.nome && <span>{r.contact.nome} {r.contact.apelido || ''}</span>}
-                  {r.contact.telefone && <span>· {r.contact.telefone}</span>}
-                  {r.contact.agencia && <span>· {r.contact.agencia}</span>}
+
+              {/* Edição inline */}
+              {editing && editDraft && (
+                <div className="border-t border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-white/5 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="text-xs text-slate-500 dark:text-slate-400">Tipo
+                      <select value={editDraft.intent} onChange={(e) => setEditDraft({ ...editDraft, intent: e.target.value })} className="mt-1 w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-900 dark:text-white">
+                        {Object.entries(INTENT_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                      </select>
+                    </label>
+                    <label className="text-xs text-slate-500 dark:text-slate-400">Origem
+                      <select value={editDraft.ownership} onChange={(e) => setEditDraft({ ...editDraft, ownership: e.target.value })} className="mt-1 w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-900 dark:text-white">
+                        {Object.entries(OWNERSHIP_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                      </select>
+                    </label>
+                    <label className="text-xs text-slate-500 dark:text-slate-400">Nome
+                      <input value={editDraft.contact?.nome ?? ''} onChange={(e) => setEditDraft({ ...editDraft, contact: { ...editDraft.contact, nome: e.target.value } })} className="mt-1 w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-900 dark:text-white" />
+                    </label>
+                    <label className="text-xs text-slate-500 dark:text-slate-400">Telefone
+                      <input value={editDraft.contact?.telefone ?? ''} onChange={(e) => setEditDraft({ ...editDraft, contact: { ...editDraft.contact, telefone: e.target.value } })} className="mt-1 w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-900 dark:text-white" />
+                    </label>
+                    <label className="text-xs text-slate-500 dark:text-slate-400">Tipologia
+                      <input value={editDraft.property?.tipologia ?? ''} onChange={(e) => setEditDraft({ ...editDraft, property: { ...editDraft.property, tipologia: e.target.value } })} className="mt-1 w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-900 dark:text-white" />
+                    </label>
+                    <label className="text-xs text-slate-500 dark:text-slate-400">Zona
+                      <input value={editDraft.property?.zona ?? editDraft.property?.freguesia ?? ''} onChange={(e) => setEditDraft({ ...editDraft, property: { ...editDraft.property, zona: e.target.value } })} className="mt-1 w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-900 dark:text-white" />
+                    </label>
+                    <label className="text-xs text-slate-500 dark:text-slate-400">Preço (€)
+                      <input type="number" value={editDraft.property?.preco_eur ?? ''} onChange={(e) => setEditDraft({ ...editDraft, property: { ...editDraft.property, preco_eur: e.target.value === '' ? null : Number(e.target.value) } })} className="mt-1 w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-900 dark:text-white" />
+                    </label>
+                  </div>
+                  <label className="text-xs text-slate-500 dark:text-slate-400 block">Notas
+                    <textarea value={editDraft.notes ?? ''} onChange={(e) => setEditDraft({ ...editDraft, notes: e.target.value })} rows={2} className="mt-1 w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-900 dark:text-white" />
+                  </label>
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => { setEditingId(null); setEditDraft(null); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"><X size={14} /> Cancelar</button>
+                    <button onClick={saveEdit} disabled={busy} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50">
+                      {busy ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Guardar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Detalhe completo (ver tudo) */}
+              {open && !editing && (
+                <div className="border-t border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-white/5 space-y-3">
+                  <ObjSection title="Imóvel / procura" data={r.property} />
+                  <ObjSection title="Contacto" data={r.contact} />
+                  <ObjSection title="Evento de mercado" data={r.market_event} />
+                  <ObjSection title="Parceiro" data={r.partner} />
+                  {Array.isArray(r.tags) && r.tags.length > 0 && (
+                    <div className="text-xs"><span className="text-slate-400">Etiquetas</span> <span className="text-slate-700 dark:text-slate-200">{r.tags.join(', ')}</span></div>
+                  )}
+                  {r.notes && <ObjSection title="Notas" data={{ nota: r.notes }} />}
+                  {r.raw_text && (
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">Texto original</div>
+                      <div className="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700 p-2">{r.raw_text}</div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/** Mostra os campos primitivos de um objecto jsonb (property, contact, etc.). */
+function ObjSection({ title, data }: { title: string; data: unknown }) {
+  if (!data) return null;
+  const obj = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | null;
+  if (!obj || typeof obj !== 'object') return null;
+  const rows = Object.entries(obj).filter(
+    ([, v]) => v != null && v !== '' && (typeof v !== 'object' || Array.isArray(v)),
+  );
+  if (rows.length === 0) return null;
+  return (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">{title}</div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+        {rows.map(([k, v]) => (
+          <div key={k} className="flex gap-2 text-xs">
+            <span className="text-slate-400 capitalize shrink-0">{k.replace(/_/g, ' ')}</span>
+            <span className="text-slate-700 dark:text-slate-200 truncate">{Array.isArray(v) ? v.join(', ') : String(v)}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
