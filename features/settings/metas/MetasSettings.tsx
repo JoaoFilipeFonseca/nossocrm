@@ -136,7 +136,9 @@ export const MetasSettings: React.FC = () => {
           year: draft.year,
           annual_target_eur: Number(draft.annual_target_eur) || 0,
           monthly_target_eur: draft.monthly_target_eur.map((v) => Number(v) || 0),
-          daily_chq_target: Number(draft.daily_chq_target) || 0,
+          // CHQ/dia útil deixou de ser campo próprio: deriva das conversas/semana
+          // (÷5 dias úteis) para o painel Detalhado continuar a ter valor sensato.
+          daily_chq_target: Math.round((Number(draft.weekly_conversas) || 0) / 5),
           weekly_conversas: Number(draft.weekly_conversas) || 0,
           cmi_mes: Number(draft.cmi_mes) || 0,
           escrituras_mes: Number(draft.escrituras_mes) || 0,
@@ -230,22 +232,6 @@ export const MetasSettings: React.FC = () => {
             />
           </label>
 
-          <label className="block min-w-[150px]">
-            <span className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Meta CHQ/dia útil</span>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              disabled={!isAdmin}
-              placeholder="Ex: 8"
-              value={draft.daily_chq_target ? draft.daily_chq_target : ''}
-              onChange={(e) => setDraft((d) => ({ ...d, daily_chq_target: Math.max(0, Math.min(100, Number(e.target.value) || 0)) }))}
-              className="w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white disabled:opacity-60"
-              title="Quantas Conversas Humanas Qualificadas queres fazer por dia útil"
-            />
-          </label>
-
           {isAdmin && (
             <div className="flex gap-2">
               <Button type="button" variant="outline" size="sm" onClick={distributeEqual}>
@@ -311,8 +297,9 @@ export const MetasSettings: React.FC = () => {
                   step={1}
                   disabled={!isAdmin}
                   placeholder={ph}
-                  value={(draft[key] as number) ? (draft[key] as number) : ''}
-                  onChange={(e) => setDraft((d) => ({ ...d, [key]: Math.max(0, Number(e.target.value) || 0) }))}
+                  value={Number.isFinite(draft[key] as number) ? (draft[key] as number) : ''}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0) }))}
                   className="w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white disabled:opacity-60"
                 />
               </label>
@@ -331,8 +318,9 @@ export const MetasSettings: React.FC = () => {
                 step={100}
                 disabled={!isAdmin}
                 placeholder="0"
-                value={draft.monthly_target_eur[idx] ? draft.monthly_target_eur[idx] : ''}
-                onChange={(e) => setMonth(idx, Number(e.target.value))}
+                value={Number.isFinite(draft.monthly_target_eur[idx]) ? draft.monthly_target_eur[idx] : ''}
+                onFocus={(e) => e.currentTarget.select()}
+                onChange={(e) => setMonth(idx, e.target.value === '' ? 0 : Number(e.target.value))}
                 className="w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white disabled:opacity-60"
               />
             </label>
