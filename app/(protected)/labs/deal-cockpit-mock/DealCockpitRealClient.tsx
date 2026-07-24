@@ -38,7 +38,7 @@ import { useDealFiles } from '@/features/inbox/hooks/useDealFiles';
 import { useQuickScripts } from '@/features/inbox/hooks/useQuickScripts';
 
 import { UIChat } from '@/components/ai/UIChat';
-import { CallModal, type CallLogData } from '@/features/inbox/components/CallModal';
+import { CallModal, type CallLogData } from '@/components/activity/CallModal';
 import { MessageComposerModal, type MessageChannel, type MessageExecutedEvent } from '@/features/inbox/components/MessageComposerModal';
 import { ScheduleModal, type ScheduleData, type ScheduleType } from '@/features/inbox/components/ScheduleModal';
 

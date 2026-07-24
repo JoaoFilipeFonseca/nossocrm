@@ -1,13 +1,15 @@
 import type { Metadata } from 'next';
-import DealCockpitFocusClient from '@/features/deals/cockpit/DealCockpitFocusClient';
+import DealCockpitClient from '@/features/deals/cockpit/DealCockpitClient';
 
 /**
- * Cockpit (verdadeiro/original) - UI do Focus (Inbox) como rota canônica.
+ * Cockpit do negócio — rota canónica única.
+ * O antigo cockpit v1 (wrapper do Focus do Inbox) foi aposentado; o cockpit
+ * rico passou a ser o único. `/cockpit-v2` continua como redirect para aqui.
  * URL: /deals/[dealId]/cockpit
  */
 export async function generateMetadata({ params }: { params: Promise<{ dealId: string }> }): Promise<Metadata> {
   const { dealId } = await params;
-  return { title: `Deal ${dealId} | Foco Imo` };
+  return { title: `Negócio ${dealId} | Foco Imo` };
 }
 
 export default async function DealCockpitPage({
@@ -16,5 +18,5 @@ export default async function DealCockpitPage({
   params: Promise<{ dealId: string }>;
 }) {
   const { dealId } = await params;
-  return <DealCockpitFocusClient dealId={dealId} />;
+  return <DealCockpitClient dealId={dealId} />;
 }

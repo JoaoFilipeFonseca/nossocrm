@@ -25,9 +25,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useDealsView, useUpdateDeal as useUpdateDealMut } from '@/lib/query/hooks/useDealsQuery';
 import { useContacts } from '@/lib/query/hooks/useContactsQuery';
 import { useBoards } from '@/lib/query/hooks/useBoardsQuery';
-import { useActivities, useCreateActivity } from '@/lib/query/hooks/useActivitiesQuery';
+import { useCreateActivity } from '@/lib/query/hooks/useActivitiesQuery';
 import { useMoveDealSimple } from '@/lib/query/hooks';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/queryKeys';
 import { normalizePhoneE164 } from '@/lib/phone';
+import { channelMeta } from '@/lib/activities/vocab';
+import type { TimelineEntry } from '@/lib/contacts/detail';
 
 import { useAIDealAnalysis, deriveHealthFromProbability } from '@/features/inbox/hooks/useAIDealAnalysis';
 import { useLeadScoresQuery } from '@/lib/query/hooks/useLeadScoresQuery';
@@ -36,12 +40,12 @@ import { useDealFiles } from '@/features/inbox/hooks/useDealFiles';
 import { useQuickScripts } from '@/features/inbox/hooks/useQuickScripts';
 
 import { UIChat } from '@/components/ai/UIChat';
-import { CallModal, type CallLogData } from '@/features/inbox/components/CallModal';
+import { CallModal, type CallLogData } from '@/components/activity/CallModal';
 import { MessageComposerModal, type MessageChannel, type MessageExecutedEvent } from '@/features/inbox/components/MessageComposerModal';
 import { ScheduleModal, type ScheduleData, type ScheduleType } from '@/features/inbox/components/ScheduleModal';
 
 import type { QuickScript, ScriptCategory } from '@/lib/supabase/quickScripts';
-import type { Activity, Board, BoardStage, Contact, DealView } from '@/types';
+import type { Board, BoardStage, Contact, DealView } from '@/types';
 
 type Tab = 'chat' | 'notas' | 'scripts' | 'ficheiros';
 
@@ -343,6 +347,20 @@ function formatAtISO(iso: string): string {
   return `${dd} · ${tt}`;
 }
 
+/**
+ * Timeline canónica do negócio: toques manuais + automáticos guardados em
+ * `deal_activities` (a MESMA fonte do Painel, /hoje e do modal Actividade).
+ * Substitui a leitura da tabela legada `activities` (que fica só para tarefas).
+ */
+async function fetchDealTimeline(dealId: string): Promise<TimelineEntry[]> {
+  const res = await fetch(`/api/deals/${dealId}/activities`, {
+    headers: { accept: 'application/json' },
+  });
+  if (!res.ok) throw new Error('Falha ao carregar a timeline');
+  const body = await res.json();
+  return (body?.entries ?? []) as TimelineEntry[];
+}
+
 function formatCurrencyBRL(value: number): string {
   try {
     return BRL_CURRENCY_FORMATTER.format(value);
@@ -470,8 +488,8 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
   const crmError = crmErrorRaw ? (crmErrorRaw instanceof Error ? crmErrorRaw.message : String(crmErrorRaw)) : null;
   const { data: contacts = [] } = useContacts();
   const { data: boards = [] } = useBoards();
-  const { data: activities = [] } = useActivities();
   const createActivityMut = useCreateActivity();
+  const queryClient = useQueryClient();
   const updateDealMut = useUpdateDealMut();
   const addActivity = useCallback((activity: Omit<import('@/types').Activity, 'id' | 'createdAt'>) => createActivityMut.mutateAsync({ activity }), [createActivityMut]);
   const updateDeal = useCallback((id: string, updates: Partial<import('@/types').Deal>) => updateDealMut.mutateAsync({ id, updates }), [updateDealMut]);
@@ -536,25 +554,6 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
   const contactsById = useMemo(() => new Map(contacts.map((c) => [c.id, c])), [contacts]);
   const boardsById = useMemo(() => new Map(boards.map((b) => [b.id, b])), [boards]);
 
-  /**
-   * Performance: group & sort activities by dealId once.
-   * Avoid filter+sort per selectedDeal change.
-   */
-  const activitiesByDealIdSorted = useMemo(() => {
-    const map = new Map<string, Activity[]>();
-    for (const a of activities ?? []) {
-      if (!a.dealId) continue;
-      const list = map.get(a.dealId);
-      if (list) list.push(a);
-      else map.set(a.dealId, [a]);
-    }
-    for (const [id, list] of map) {
-      list.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
-      map.set(id, list);
-    }
-    return map;
-  }, [activities]);
-
   const selectedDeal = useMemo(() => {
     if (dealId) return dealsById.get(dealId) ?? null;
     return deals[0] ?? null;
@@ -595,10 +594,45 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
     selectedDeal?.value,
   ]);
 
-  const dealActivities = useMemo(() => {
-    if (!selectedDeal) return [] as Activity[];
-    return activitiesByDealIdSorted.get(selectedDeal.id) ?? [];
-  }, [activitiesByDealIdSorted, selectedDeal]);
+  // Timeline canónica (deal_activities) — a MESMA fonte do Painel, /hoje e do
+  // modal Actividade. Toques (chamada/WhatsApp/email/reunião/visita/nota) contam
+  // aqui E nas Tentativas/Realizadas. `activities` fica só para TAREFAS.
+  const { data: timelineEntries = [] } = useQuery({
+    queryKey: queryKeys.dealActivities.byDeal(selectedDeal?.id ?? ''),
+    queryFn: () => fetchDealTimeline(selectedDeal!.id),
+    enabled: !!selectedDeal?.id,
+    staleTime: 15_000,
+  });
+  const dealActivities = timelineEntries;
+
+  /**
+   * Regista um TOQUE humano na timeline canónica (deal_activities) via a rota
+   * partilhada `POST /api/deals/[id]/activities`. Invalida os caches que lêem
+   * dessa fonte (timeline, contadores rápidos, sinais de estado) para o Painel
+   * e o cockpit ficarem sempre a dizer o mesmo.
+   */
+  const logTouch = useCallback(
+    async (input: { type: string; result?: string | null; description?: string | null }) => {
+      if (!selectedDeal) return;
+      const res = await fetch(`/api/deals/${selectedDeal.id}/activities`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          type: input.type,
+          ...(input.result ? { result: input.result } : {}),
+          ...(input.description ? { description: input.description } : {}),
+        }),
+      });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        throw new Error(b?.error || 'Falha ao registar.');
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.dealActivities.byDeal(selectedDeal.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dealQuickStats.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dealStates.all });
+    },
+    [queryClient, selectedDeal]
+  );
 
   const { moveDeal } = useMoveDealSimple(selectedBoard as Board | null, []);
 
@@ -736,11 +770,11 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
     const activitiesPreview = (dealActivities ?? []).slice(0, activitiesLimit).map((a) => ({
       id: a.id,
       type: a.type,
-      title: a.title,
+      title: channelMeta(a.type).label,
       description: a.description,
-      date: a.date,
-      completed: a.completed,
-      user: a.user?.name,
+      date: a.at,
+      completed: !a.system,
+      user: a.actor,
     }));
 
     const notesLimit = 50;
@@ -840,24 +874,27 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
     const items: TimelineItem[] = [];
 
     for (const a of dealActivities) {
-      const kind: TimelineItem['kind'] = a.type === 'CALL' ? 'call' : a.type === 'STATUS_CHANGE' ? 'status' : 'note';
+      const kind: TimelineItem['kind'] = a.type === 'call' ? 'call' : a.system ? 'status' : 'note';
 
-      const tone: TimelineItem['tone'] =
-        a.type === 'STATUS_CHANGE'
-          ? `${a.title ?? ''} ${a.description ?? ''}`.toLowerCase().includes('ganh')
-            ? 'success'
-            : `${a.title ?? ''} ${a.description ?? ''}`.toLowerCase().includes('perd')
-              ? 'danger'
-              : 'neutral'
-          : undefined;
+      const tone: TimelineItem['tone'] = a.system
+        ? `${a.description ?? ''}`.toLowerCase().includes('ganh')
+          ? 'success'
+          : `${a.description ?? ''}`.toLowerCase().includes('perd')
+            ? 'danger'
+            : 'neutral'
+        : a.result === 'answered' || a.result === 'returned'
+          ? 'success'
+          : a.result === 'no_answer' || a.result === 'voicemail'
+            ? 'danger'
+            : undefined;
 
       const subtitle = a.description?.trim() ? a.description.trim() : undefined;
 
       items.push({
         id: a.id,
-        at: formatAtISO(a.date),
+        at: formatAtISO(a.at),
         kind,
-        title: a.title || a.type,
+        title: channelMeta(a.type).label,
         subtitle,
         tone,
       });
@@ -1055,16 +1092,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
       if (ev.channel === 'WHATSAPP') {
         const msg = ev.message?.trim() ? ev.message.trim() : 'Mensagem enviada via WhatsApp.';
         try {
-          await addActivity({
-            dealId: selectedDeal.id,
-            dealTitle: selectedDeal.title,
-            type: 'NOTE',
-            title: 'WhatsApp',
-            description: `${header}\n\n---\n\n${msg}`,
-            date: new Date().toISOString(),
-            completed: true,
-            user: actor,
-          });
+          await logTouch({ type: 'whatsapp', description: `${header}\n\n---\n\n${msg}` });
           pushToast('WhatsApp registado', 'success');
           setMessageLogContext(null);
         } catch (e) {
@@ -1077,23 +1105,14 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
       const body = ev.message?.trim() ? ev.message.trim() : 'Email enviado.';
 
       try {
-        await addActivity({
-          dealId: selectedDeal.id,
-          dealTitle: selectedDeal.title,
-          type: 'EMAIL',
-          title: subject,
-          description: `${header}\nAssunto: ${subject}\n\n---\n\n${body}`,
-          date: new Date().toISOString(),
-          completed: true,
-          user: actor,
-        });
+        await logTouch({ type: 'email', description: `${header}\nAssunto: ${subject}\n\n---\n\n${body}` });
         pushToast('Email registado', 'success');
         setMessageLogContext(null);
       } catch (e) {
         pushToast(errorMessage(e, 'Não foi possível registar o email.'), 'danger');
       }
     },
-    [addActivity, actor, messageLogContext, messageLogDedupe, pushToast, selectedDeal]
+    [logTouch, messageLogContext, messageLogDedupe, pushToast, selectedDeal]
   );
 
   const handleScheduleSave = useCallback(
@@ -1137,33 +1156,32 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
     async (data: CallLogData) => {
       if (!selectedDeal) return;
 
-      const outcomeLabels = {
-        connected: 'Atendeu',
-        no_answer: 'Não atendeu',
-        voicemail: 'Caixa postal',
-        busy: 'Ocupado',
-      };
+      // Mapa outcome do CallModal → resultado canónico (metadata.result).
+      // "Ocupado" conta como contacto mas o relógio continua → no_answer.
+      const resultMap = {
+        connected: 'answered',
+        no_answer: 'no_answer',
+        voicemail: 'voicemail',
+        busy: 'no_answer',
+      } as const;
+
+      const durTxt = `Duração: ${Math.floor(data.duration / 60)}min ${data.duration % 60}s`;
+      const description = [
+        data.title && data.title !== 'Ligação' ? data.title : null,
+        durTxt,
+        data.notes?.trim() || null,
+      ]
+        .filter(Boolean)
+        .join('\n');
 
       try {
-        await addActivity({
-          dealId: selectedDeal.id,
-          dealTitle: selectedDeal.title,
-          type: 'CALL',
-          title: data.title,
-          description: `${outcomeLabels[data.outcome]} - Duração: ${Math.floor(data.duration / 60)}min ${data.duration % 60}s${
-            data.notes ? `\n\n${data.notes}` : ''
-          }`,
-          date: new Date().toISOString(),
-          completed: true,
-          user: actor,
-        });
-
+        await logTouch({ type: 'call', result: resultMap[data.outcome], description });
         pushToast('Ligação registada', 'success');
       } catch (e) {
         pushToast(errorMessage(e, 'Não foi possível registar a ligação.'), 'danger');
       }
     },
-    [addActivity, actor, pushToast, selectedDeal]
+    [logTouch, pushToast, selectedDeal]
   );
 
   const handleExecuteNext = useCallback(async () => {
@@ -1233,18 +1251,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
         const next = selectedBoard.stages.find((s) => s.id === nextStageId);
         pushToast(`Etapa: ${next?.label ?? 'Actualizada'}`, 'success');
 
-        // Log na timeline (best-effort)
+        // Breadcrumb na timeline canónica (best-effort; não conta como conversa).
         try {
-          await addActivity({
-            dealId: selectedDeal.id,
-            dealTitle: selectedDeal.title,
-            type: 'STATUS_CHANGE',
-            title: 'Moveu para',
-            description: next?.label ?? 'Etapa actualizada',
-            date: new Date().toISOString(),
-            completed: true,
-            user: actor,
-          });
+          await logTouch({ type: 'note', description: `Moveu para: ${next?.label ?? 'Etapa actualizada'}` });
         } catch {
           // Não bloqueia o fluxo principal
           pushToast('Etapa actualizada (sem log)', 'neutral');
@@ -1253,7 +1262,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
         pushToast(errorMessage(e, 'Não foi possível mover etapa.'), 'danger');
       }
     },
-    [addActivity, actor, moveDeal, pushToast, selectedBoard, selectedDeal]
+    [logTouch, moveDeal, pushToast, selectedBoard, selectedDeal]
   );
 
   if (crmError) {
@@ -1834,15 +1843,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                         outsideCRM: true,
                       });
                       try {
-                        await addActivity({
-                          dealId: deal.id,
-                          dealTitle: deal.title,
-                          type: 'NOTE',
-                          title: 'WhatsApp',
+                        await logTouch({
+                          type: 'whatsapp',
                           description: `${header}\n\n---\n\nMensagem enviada (registada fora do CRM).`,
-                          date: new Date().toISOString(),
-                          completed: true,
-                          user: actor,
                         });
                         pushToast('WhatsApp registado', 'success');
                       } catch (e) {
@@ -1863,15 +1866,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                         outsideCRM: true,
                       });
                       try {
-                        await addActivity({
-                          dealId: deal.id,
-                          dealTitle: deal.title,
-                          type: 'EMAIL',
-                          title: 'Email',
+                        await logTouch({
+                          type: 'email',
                           description: `${header}\nAssunto: Email\n\n---\n\nEnviado (registado fora do CRM).`,
-                          date: new Date().toISOString(),
-                          completed: true,
-                          user: actor,
                         });
                         pushToast('Email registado', 'success');
                       } catch (e) {
@@ -1887,15 +1884,10 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                     className="inline-flex items-center gap-2 hover:text-slate-200"
                     onClick={async () => {
                       try {
-                        await addActivity({
-                          dealId: deal.id,
-                          dealTitle: deal.title,
-                          type: 'CALL',
-                          title: 'Ligação',
+                        await logTouch({
+                          type: 'call',
+                          result: 'answered',
                           description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nRealizada (registada fora do CRM).',
-                          date: new Date().toISOString(),
-                          completed: true,
-                          user: actor,
                         });
                         pushToast('Ligação registada', 'success');
                       } catch (e) {
@@ -1911,15 +1903,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                     className="inline-flex items-center gap-2 hover:text-slate-200"
                     onClick={async () => {
                       try {
-                        await addActivity({
-                          dealId: deal.id,
-                          dealTitle: deal.title,
-                          type: 'MEETING',
-                          title: 'Reunião',
-                          description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nRegistrada fora do CRM.',
-                          date: new Date().toISOString(),
-                          completed: true,
-                          user: actor,
+                        await logTouch({
+                          type: 'meeting',
+                          description: 'Fonte: Cockpit\nFora do CRM: sim\n\n---\n\nRegistada fora do CRM.',
                         });
                         pushToast('Reunião registada', 'success');
                       } catch (e) {
@@ -1968,7 +1954,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                   placeholder="Notas, resumo da call, próximos passos…"
                 />
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <div className="text-[11px] text-slate-500">Isso vira uma Activity NOTE (log do deal).</div>
+                  <div className="text-[11px] text-slate-500">Fica na timeline do negócio como nota.</div>
                   <button
                     type="button"
                     className="rounded-xl bg-white px-4 py-2 text-xs font-semibold text-slate-900 hover:bg-slate-100"
@@ -1980,19 +1966,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                       }
 
                       try {
-                        await addActivity({
-                          dealId: deal.id,
-                          dealTitle: deal.title,
-                          type: 'NOTE',
-                          title: 'Nota',
-                          description: text,
-                          date: new Date().toISOString(),
-                          completed: true,
-                          user: actor,
-                        });
-
+                        await logTouch({ type: 'note', description: text });
                         setNoteDraftTimeline('');
-                        pushToast('Nota salva', 'success');
+                        pushToast('Nota guardada', 'success');
                       } catch (e) {
                         pushToast(errorMessage(e, 'Não foi possível guardar a nota.'), 'danger');
                       }

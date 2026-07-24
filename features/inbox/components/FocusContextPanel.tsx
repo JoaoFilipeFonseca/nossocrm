@@ -42,14 +42,14 @@ import { useDealNotes } from '../hooks/useDealNotes';
 import { useDealFiles } from '../hooks/useDealFiles';
 import { useQuickScripts } from '../hooks/useQuickScripts';
 import { useAI } from '@/context/AIContext';
-import type { CallLogData } from './CallModal';
+import type { CallLogData } from '@/components/activity/CallModal';
 import type { ScriptFormData } from './ScriptEditorModal';
 import type { ScheduleData, ScheduleType } from './ScheduleModal';
 import { generateSalesScript } from '@/lib/ai/tasksClient';
 import type { MessageChannel } from './MessageComposerModal';
 
 const CallModal = dynamic(
-    () => import('./CallModal').then(m => ({ default: m.CallModal })),
+    () => import('@/components/activity/CallModal').then(m => ({ default: m.CallModal })),
     { ssr: false }
 );
 const ScriptEditorModal = dynamic(

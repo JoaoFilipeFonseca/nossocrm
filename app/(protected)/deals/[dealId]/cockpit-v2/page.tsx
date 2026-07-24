@@ -1,8 +1,9 @@
-import DealCockpitClient from '@/features/deals/cockpit/DealCockpitClient';
+import { redirect } from 'next/navigation';
 
 /**
- * Cockpit V2 (experimentação / rollout controlado).
- * URL: /deals/[dealId]/cockpit-v2
+ * Rota legada `/deals/[dealId]/cockpit-v2` → `/deals/[dealId]/cockpit`.
+ * O cockpit rico deixou de ser "v2": passou a ser o cockpit único. Alias
+ * mantido para marcadores e links antigos (arrumação do CRM, W5).
  */
 export default async function DealCockpitV2Page({
   params,
@@ -10,6 +11,5 @@ export default async function DealCockpitV2Page({
   params: Promise<{ dealId: string }>;
 }) {
   const { dealId } = await params;
-  return <DealCockpitClient dealId={dealId} />;
+  redirect(`/deals/${dealId}/cockpit`);
 }
-
