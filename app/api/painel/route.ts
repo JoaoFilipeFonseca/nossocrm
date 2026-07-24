@@ -94,10 +94,13 @@ export async function GET(request: NextRequest) {
   const boardByKey = new Map((boards ?? []).map((b) => [b.key as string, b]));
   const boardById = new Map((boards ?? []).map((b) => [b.id as string, b]));
   const stagesByBoard = new Map<string, { id: string; label: string; color: string }[]>();
+  // Etapas "base" (Contactos) — a base por trabalhar, não conta como pipeline a sério.
+  const baseStageIds = new Set<string>();
   for (const s of stages ?? []) {
     const list = stagesByBoard.get(s.board_id as string) ?? [];
     list.push({ id: s.id as string, label: s.label as string, color: s.color as string });
     stagesByBoard.set(s.board_id as string, list);
+    if (String(s.label).trim().toLowerCase() === 'contactos') baseStageIds.add(s.id as string);
   }
 
   // ── Negócios (activos + ganhos) ──────────────────────────────────────────
@@ -124,8 +127,10 @@ export async function GET(request: NextRequest) {
   // Acumuladores por etapa (abertos) e comissões.
   const openCountByStage = new Map<string, number>();
   const openValueByStage = new Map<string, number>();
-  let pipelinePrevistoCents = 0;
+  let pipelinePrevistoCents = 0; // só o que está a trabalhar (exclui Contactos)
   let negociosAbertos = 0;
+  let abertosTrabalho = 0;
+  let basePorActivar = 0;
   let abertosVendedores = 0;
   let abertosCompradores = 0;
   let faturacaoCents = 0;
@@ -170,8 +175,14 @@ export async function GET(request: NextRequest) {
       const stageId = d.stage_id as string;
       openCountByStage.set(stageId, (openCountByStage.get(stageId) ?? 0) + 1);
       openValueByStage.set(stageId, (openValueByStage.get(stageId) ?? 0) + commission);
-      pipelinePrevistoCents += commission;
       negociosAbertos += 1;
+      const isBase = baseStageIds.has(stageId);
+      if (isBase) {
+        basePorActivar += 1;
+      } else {
+        pipelinePrevistoCents += commission; // só o que está a trabalhar
+        abertosTrabalho += 1;
+      }
       if (boardId === propKey) abertosVendedores += 1;
       if (boardId === compKey) abertosCompradores += 1;
     }
@@ -412,6 +423,8 @@ export async function GET(request: NextRequest) {
       faturacaoCents,
       pipelinePrevistoCents,
       negociosAbertos,
+      abertosTrabalho,
+      basePorActivar,
       abertosVendedores,
       abertosCompradores,
       fechados,

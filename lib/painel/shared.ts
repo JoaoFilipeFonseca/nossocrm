@@ -33,8 +33,10 @@ export interface PainelFunnel {
 
 export interface PainelKpis {
   faturacaoCents: number; // comissão líquida dos negócios ganhos na janela
-  pipelinePrevistoCents: number; // comissão prevista dos negócios abertos (todos)
-  negociosAbertos: number;
+  pipelinePrevistoCents: number; // comissão prevista SÓ do que está a trabalhar (exclui Contactos)
+  negociosAbertos: number; // total aberto (a trabalhar + base)
+  abertosTrabalho: number; // abertos fora da etapa "Contactos" (a trabalhar a sério)
+  basePorActivar: number; // abertos na etapa "Contactos" (base por trabalhar)
   abertosVendedores: number;
   abertosCompradores: number;
   fechados: number; // ganhos na janela
