@@ -20,8 +20,10 @@ interface UseCRMAgentOptions {
 /**
  * Hook React `useCRMAgent` — interface para o AI Hub chat.
  *
- * Delega ao `useChat` do @ai-sdk/react apontando para `/api/ai/crm-agent`,
- * onde a lógica de IA e as API keys ficam exclusivamente no servidor.
+ * Delega ao `useChat` do @ai-sdk/react apontando para o agente CANÓNICO
+ * `/api/ai/chat` (`lib/ai/crmAgent` + ferramentas `lib/ai/tools.ts`), o MESMO
+ * cérebro do UIChat global e do cockpit — um só agente em todo o CRM. As API
+ * keys e a lógica ficam exclusivamente no servidor.
  *
  * Expõe a mesma interface que `AIHubPage` consome:
  * `{ messages, isLoading, error, sendMessage, clearMessages, stopGeneration }`
@@ -29,7 +31,7 @@ interface UseCRMAgentOptions {
 export function useCRMAgent(_options: UseCRMAgentOptions = {}) {
   const { messages: uiMessages, sendMessage: chatSendMessage, stop, status, error, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      api: '/api/ai/crm-agent',
+      api: '/api/ai/chat',
     }),
   });
 
