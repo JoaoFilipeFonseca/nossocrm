@@ -28,6 +28,7 @@ import {
   type CoracaoDia,
   type PainelFunnel,
   type PainelKpis,
+  type PainelMetas,
   type PipelineEtapa,
   type ReceitaLinha,
   type TopCanais,
@@ -158,6 +159,50 @@ export function KpiRow({ kpis }: { kpis: PainelKpis }) {
         accent="#f59e0b"
         icon={CheckCircle2}
       />
+    </div>
+  );
+}
+
+function MetaRow({ label, atual, alvo, display }: { label: string; atual: number; alvo: number; display?: (n: number) => string }) {
+  const fmt = display ?? ((n: number) => String(n));
+  const pct = alvo > 0 ? Math.min(100, Math.round((atual / alvo) * 100)) : 0;
+  const cor = pct >= 100 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+  return (
+    <div>
+      <div className="flex justify-between text-xs mb-1">
+        <span className="text-slate-600 dark:text-slate-300">{label}</span>
+        <span className="text-slate-900 dark:text-white">
+          <b>{fmt(atual)}</b> <span className="text-slate-400">/ {fmt(alvo)}</span>
+        </span>
+      </div>
+      <div className="h-1.5 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: cor }} />
+      </div>
+    </div>
+  );
+}
+
+export function MetasCard({ metas }: { metas: PainelMetas }) {
+  const semMetas =
+    metas.faturacaoAnoAlvoCents === 0 &&
+    metas.conversasSemanaAlvo === 0 &&
+    metas.escriturasMesAlvo === 0 &&
+    metas.carteiraAlvo === 0;
+  return (
+    <div className={`${card} p-4`}>
+      <div className={`${sectionTitle} mb-3`}>Metas · onde ando</div>
+      {semMetas ? (
+        <p className="py-4 text-center text-xs text-slate-400 dark:text-slate-500">
+          Define as metas em Definições → Metas para veres o progresso.
+        </p>
+      ) : (
+        <div className="space-y-2.5">
+          <MetaRow label="Facturação (ano)" atual={metas.faturacaoAnoCents} alvo={metas.faturacaoAnoAlvoCents} display={eur} />
+          <MetaRow label="Conversas (semana)" atual={metas.conversasSemana} alvo={metas.conversasSemanaAlvo} />
+          <MetaRow label="Escrituras (mês)" atual={metas.escriturasMes} alvo={metas.escriturasMesAlvo} />
+          <MetaRow label="Carteira activa" atual={metas.carteiraActivos} alvo={metas.carteiraAlvo} />
+        </div>
+      )}
     </div>
   );
 }

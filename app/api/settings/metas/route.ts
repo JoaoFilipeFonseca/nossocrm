@@ -15,6 +15,10 @@ const GoalSchema = z
     annual_target_eur: z.number().min(0).max(999_999_999),
     monthly_target_eur: z.array(z.number().min(0).max(999_999_999)).length(12),
     daily_chq_target: z.number().int().min(0).max(100).optional(),
+    weekly_conversas: z.number().int().min(0).max(500).optional(),
+    cmi_mes: z.number().int().min(0).max(100).optional(),
+    escrituras_mes: z.number().int().min(0).max(100).optional(),
+    carteira_min: z.number().int().min(0).max(500).optional(),
     notes: z.string().max(1000).nullable().optional(),
   })
   .strict();
@@ -43,7 +47,7 @@ export async function GET(req: Request) {
 
   let query = supabase
     .from('org_revenue_goals')
-    .select('id, year, annual_target_eur, monthly_target_eur, daily_chq_target, notes, updated_at')
+    .select('id, year, annual_target_eur, monthly_target_eur, daily_chq_target, weekly_conversas, cmi_mes, escrituras_mes, carteira_min, notes, updated_at')
     .eq('organization_id', profile!.organization_id)
     .order('year', { ascending: false });
 
@@ -78,6 +82,10 @@ export async function PUT(req: Request) {
     annual_target_eur: parsed.data.annual_target_eur,
     monthly_target_eur: parsed.data.monthly_target_eur,
     daily_chq_target: parsed.data.daily_chq_target ?? 0,
+    weekly_conversas: parsed.data.weekly_conversas ?? 25,
+    cmi_mes: parsed.data.cmi_mes ?? 2,
+    escrituras_mes: parsed.data.escrituras_mes ?? 1,
+    carteira_min: parsed.data.carteira_min ?? 5,
     notes: parsed.data.notes ?? null,
   };
 

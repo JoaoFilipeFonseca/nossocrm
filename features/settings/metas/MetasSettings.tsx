@@ -10,6 +10,10 @@ type Goal = {
   annual_target_eur: number;
   monthly_target_eur: number[];
   daily_chq_target: number;
+  weekly_conversas: number;
+  cmi_mes: number;
+  escrituras_mes: number;
+  carteira_min: number;
   notes: string | null;
   updated_at?: string;
 };
@@ -24,6 +28,10 @@ function makeEmptyGoal(year: number): Goal {
     annual_target_eur: 0,
     monthly_target_eur: emptyMonthly(),
     daily_chq_target: 0,
+    weekly_conversas: 25,
+    cmi_mes: 2,
+    escrituras_mes: 1,
+    carteira_min: 5,
     notes: '',
   };
 }
@@ -129,6 +137,10 @@ export const MetasSettings: React.FC = () => {
           annual_target_eur: Number(draft.annual_target_eur) || 0,
           monthly_target_eur: draft.monthly_target_eur.map((v) => Number(v) || 0),
           daily_chq_target: Number(draft.daily_chq_target) || 0,
+          weekly_conversas: Number(draft.weekly_conversas) || 0,
+          cmi_mes: Number(draft.cmi_mes) || 0,
+          escrituras_mes: Number(draft.escrituras_mes) || 0,
+          carteira_min: Number(draft.carteira_min) || 0,
           notes: draft.notes ?? null,
         }),
       });
@@ -277,6 +289,36 @@ export const MetasSettings: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Metas do dia a dia — fonte única (Painel + Hoje lêem daqui) */}
+        <div className="mb-6 p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+          <div className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Metas do dia a dia</div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+            É daqui que o Painel e o Hoje leem — um só sítio para saberes onde andas e para onde vais.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {([
+              ['weekly_conversas', 'Conversas / semana', 'Ex: 25'],
+              ['cmi_mes', 'CMI / mês', 'Ex: 2'],
+              ['escrituras_mes', 'Escrituras / mês', 'Ex: 1'],
+              ['carteira_min', 'Carteira mínima', 'Ex: 5'],
+            ] as [keyof Goal, string, string][]).map(([key, label, ph]) => (
+              <label key={key} className="block">
+                <span className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{label}</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  disabled={!isAdmin}
+                  placeholder={ph}
+                  value={(draft[key] as number) ? (draft[key] as number) : ''}
+                  onChange={(e) => setDraft((d) => ({ ...d, [key]: Math.max(0, Number(e.target.value) || 0) }))}
+                  className="w-full rounded-md border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white disabled:opacity-60"
+                />
+              </label>
+            ))}
+          </div>
+        </div>
 
         {/* Grelha de meses */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">

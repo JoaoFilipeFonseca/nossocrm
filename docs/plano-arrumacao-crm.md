@@ -29,8 +29,19 @@ flutuantes desapareceram para não haver caminhos paralelos.
   desapareceram de todas as páginas, PC e mobile. Registo de chamada no /hoje e no modal
   Actividade do negócio continua a contar no Painel (caminho canónico intacto).
 
-### W2 · Metas — UMA fonte única
+### W2 · Metas — UMA fonte única ✅ FEITO (deploy 4)
 **Decisão:** "ou falam todos entre si ou apenas um local" → fonte única: `org_revenue_goals`.
+- ✅ Migração: `org_revenue_goals` + weekly_conversas/cmi_mes/escrituras_mes/carteira_min.
+- ✅ `/settings/metas` (API + UI): secção "Metas do dia a dia" com os 4 alvos.
+- ✅ Power List (`/api/power-list`) lê `weekly_conversas` da fonte única (fallback params antigos).
+- ✅ Painel: cartão "Metas · onde ando" (Facturação ano, Conversas semana, Escrituras mês, Carteira)
+  via `/api/painel`. João já tinha meta anual 100.000€ (preservada); alvos do dia a dia seeded.
+- **Capturado (follow-up, NÃO agora):** (a) Reports lê ainda `board.goal` — migrar para
+  `org_revenue_goals` numa próxima; (b) actual de CMI/mês precisa de evento de entrada na etapa
+  "CMI Assinado" (won proprietarios ≠ CMI) — por isso o Painel mostra Escrituras (won compradores,
+  honesto) e não CMI; o alvo CMI fica guardado na fonte única.
+
+**Detalhe original abaixo (referência):**
 1. Migração idempotente: alargar `org_revenue_goals` com `weekly_conversas int` (default 25),
    `cmi_mes int` (default 2), `escrituras_mes int` (default 1), `carteira_min int` (default 5).
 2. `/settings/metas` (`features/settings/metas/MetasSettings.tsx`) ganha estes campos — é a

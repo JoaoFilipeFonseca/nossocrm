@@ -16,6 +16,7 @@ import {
   type CanalRanking,
   type CarteiraImovel,
   type PainelFunnel,
+  type PainelMetas,
   type PainelSnapshot,
   type PainelWindow,
   type PipelineEtapa,
@@ -67,6 +68,10 @@ export async function GET(request: NextRequest) {
   const windowStart = new Date(now.getTime() - windowDays(win) * 86_400_000);
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
+  // Âncoras para as metas: início do ano, do mês e da semana (segunda-feira).
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const weekStart = new Date(todayStart.getTime() - (((now.getDay() + 6) % 7) * 86_400_000));
 
   // ── Comissão por defeito da org ──────────────────────────────────────────
   const { data: settings } = await supabase
@@ -127,6 +132,8 @@ export async function GET(request: NextRequest) {
   let fechados = 0;
   let fechadosVendedores = 0;
   let fechadosCompradores = 0;
+  let faturacaoAnoCents = 0; // comissão ganha no ano (meta anual)
+  let escriturasMes = 0; // compradores ganhos este mês
   const wonInWindowByBoard = new Map<string, number>(); // boardId → contagem
   const receitaByBoard = new Map<string, number>(); // boardId → comissão ganha na janela
   const propKey = boardByKey.get('proprietarios')?.id as string | undefined;
@@ -145,6 +152,9 @@ export async function GET(request: NextRequest) {
 
     if (d.is_won) {
       const when = (d.closed_at as string | null) ?? (d.created_at as string | null);
+      const whenDate = when ? new Date(when) : null;
+      if (whenDate && whenDate >= yearStart) faturacaoAnoCents += commission;
+      if (whenDate && whenDate >= monthStart && boardId === compKey) escriturasMes += 1;
       const closedInWindow = when ? new Date(when) >= windowStart : false;
       if (closedInWindow) {
         faturacaoCents += commission;
@@ -353,6 +363,40 @@ export async function GET(request: NextRequest) {
     };
   });
 
+  // ── Metas: fonte única (org_revenue_goals do ano) + conversas da semana ──────
+  const { data: goalRow } = await supabase
+    .from('org_revenue_goals')
+    .select('annual_target_eur, weekly_conversas, escrituras_mes, carteira_min')
+    .eq('organization_id', orgId)
+    .eq('year', now.getFullYear())
+    .maybeSingle();
+  const goal = (goalRow ?? {}) as {
+    annual_target_eur?: number;
+    weekly_conversas?: number;
+    escrituras_mes?: number;
+    carteira_min?: number;
+  };
+  const { data: weekTouches } = await supabase
+    .from('deal_activities')
+    .select('metadata')
+    .eq('organization_id', orgId)
+    .gte('created_at', weekStart.toISOString());
+  let conversasSemana = 0;
+  for (const c of weekTouches ?? []) {
+    const result = (c.metadata as Record<string, unknown> | null)?.['result'] as string | undefined;
+    if (result && CONVERSA_RESULTS.includes(result)) conversasSemana += 1;
+  }
+  const metas: PainelMetas = {
+    faturacaoAnoCents,
+    faturacaoAnoAlvoCents: Math.round((Number(goal.annual_target_eur) || 0) * 100),
+    conversasSemana,
+    conversasSemanaAlvo: Number(goal.weekly_conversas) || 25,
+    escriturasMes,
+    escriturasMesAlvo: Number(goal.escrituras_mes) || 1,
+    carteiraActivos: carteiraImoveis.length,
+    carteiraAlvo: Number(goal.carteira_min) || 5,
+  };
+
   const rank = (m: Map<string, number>): CanalRanking[] =>
     Array.from(m.entries())
       .map(([label, count]) => ({ label, count }))
@@ -385,6 +429,7 @@ export async function GET(request: NextRequest) {
       realizadasHoje,
     },
     agendaHoje,
+    metas,
     carteira: {
       activos: carteiraImoveis.length,
       imoveis: carteiraImoveis,

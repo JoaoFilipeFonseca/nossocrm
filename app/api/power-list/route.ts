@@ -44,7 +44,20 @@ export async function GET(request: Request) {
     .maybeSingle();
   const params = (automation?.params ?? {}) as { list_size?: number; weekly_goal?: number };
   const listSize = Math.max(1, Math.floor(Number(params.list_size) || 15));
-  const weeklyGoal = Math.max(1, Math.floor(Number(params.weekly_goal) || 25));
+
+  // Meta de conversas: fonte única = org_revenue_goals (ano actual). Fallback ao
+  // valor antigo dos params da automação, depois 25.
+  const currentYear = new Date().getFullYear();
+  const { data: goal } = await admin
+    .from('org_revenue_goals')
+    .select('weekly_conversas')
+    .eq('organization_id', orgId)
+    .eq('year', currentYear)
+    .maybeSingle();
+  const weeklyGoal = Math.max(
+    1,
+    Math.floor(Number((goal as { weekly_conversas?: number } | null)?.weekly_conversas) || Number(params.weekly_goal) || 25),
+  );
 
   // Modo repor (dá-me outro): ?exclude=id1,id2&n=1 → devolve só itens NOVOS que
   // ainda não estão à vista, mantendo a fila cheia sem regenerar as frases das

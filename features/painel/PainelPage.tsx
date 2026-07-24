@@ -17,6 +17,7 @@ import {
   CoracaoCard,
   FunnelsRow,
   KpiRow,
+  MetasCard,
   PipelineEtapaCard,
   ReceitaCard,
   TopCanaisRow,
@@ -197,7 +198,8 @@ const PainelPage: React.FC = () => {
             <ReceitaCard linhas={data.receitaLinhas} />
             <PipelineEtapaCard etapas={data.pipelinePorEtapa} />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <MetasCard metas={data.metas} />
             <CoracaoCard coracao={data.coracao} />
             <CarteiraCard carteira={data.carteira} />
           </div>

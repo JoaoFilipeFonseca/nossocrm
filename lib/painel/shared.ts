@@ -106,6 +106,18 @@ export interface TopCanais {
   totalCompradores: number;
 }
 
+/** Metas do dia a dia — fonte única org_revenue_goals + progresso real. */
+export interface PainelMetas {
+  faturacaoAnoCents: number; // comissão ganha no ano até hoje
+  faturacaoAnoAlvoCents: number; // annual_target_eur × 100
+  conversasSemana: number; // conversas reais esta semana (deal_activities)
+  conversasSemanaAlvo: number; // weekly_conversas
+  escriturasMes: number; // compradores ganhos este mês
+  escriturasMesAlvo: number; // escrituras_mes
+  carteiraActivos: number; // imóveis activos
+  carteiraAlvo: number; // carteira_min
+}
+
 export interface PainelSnapshot {
   window: PainelWindow;
   generatedAt: string;
@@ -115,6 +127,7 @@ export interface PainelSnapshot {
   pipelinePorEtapa: PipelineEtapa[];
   coracao: CoracaoDia;
   agendaHoje: AgendaItem[]; // tarefas atrasadas + de hoje, por fazer (accionáveis)
+  metas: PainelMetas;
   carteira: Carteira;
   topCanais: TopCanais;
 }
