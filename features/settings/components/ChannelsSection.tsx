@@ -41,6 +41,8 @@ import {
   useToggleChannelStatusMutation,
 } from '@/lib/query/hooks/useChannelsQuery';
 import { useInstanceFlagsQuery } from '@/lib/query/hooks/useInstanceFlagsQuery';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/queryKeys';
 import {
   type MessagingChannel,
   type ChannelType,
@@ -654,6 +656,75 @@ function ChannelCard({
 }
 
 // =============================================================================
+// CREDENTIAL UPDATE (colar token de um canal já criado, ex.: Access Token do WhatsApp)
+// =============================================================================
+
+function CredentialUpdate({
+  channel,
+  onSaved,
+}: {
+  channel: MessagingChannel;
+  onSaved: () => void;
+}) {
+  const { addToast } = useToast();
+  const [token, setToken] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const isMeta = channel.provider === 'meta-cloud' || channel.provider === 'meta';
+  const credKey = isMeta ? 'accessToken' : 'token';
+  const label = isMeta ? 'Access Token do WhatsApp' : 'Token de API';
+
+  const save = async () => {
+    if (!token.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/messaging/channels/${channel.id}/credentials`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ [credKey]: token.trim() }),
+      });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        throw new Error(b?.error || 'Falha ao guardar o token.');
+      }
+      setToken('');
+      addToast('Token actualizado. Canal ligado.', 'success');
+      onSaved();
+    } catch (e) {
+      addToast(e instanceof Error ? e.message : 'Erro ao guardar o token.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="p-4 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 space-y-2">
+      <label className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</label>
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Cole aqui o token gerado no painel da Meta. Fica guardado em segurança e não é mostrado outra vez.
+      </p>
+      <div className="flex items-center gap-2">
+        <input
+          type="password"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder="Colar o token…"
+          autoComplete="off"
+          className="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        <button
+          onClick={save}
+          disabled={!token.trim() || saving}
+          className="shrink-0 px-4 py-2 rounded-lg text-sm font-semibold bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
+        >
+          {saving ? 'A guardar…' : 'Guardar token'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // =============================================================================
 // EMPTY STATE
 // =============================================================================
@@ -691,6 +762,7 @@ function EmptyChannelsState({ onAdd }: { onAdd: () => void }) {
 export function ChannelsSection() {
   const { profile } = useAuth();
   const { addToast } = useToast();
+  const queryClient = useQueryClient();
 
   // Queries
   const { data: channels = [], isLoading } = useChannelsQuery();
@@ -871,10 +943,16 @@ export function ChannelsSection() {
         size="md"
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            A configuração detalhada do canal será implementada no próximo passo
-            (ChannelSetupWizard).
-          </p>
+          {/* Actualizar credencial (ex.: Access Token do WhatsApp quando expira) */}
+          {channelToEdit && (
+            <CredentialUpdate
+              channel={channelToEdit}
+              onSaved={() => {
+                queryClient.invalidateQueries({ queryKey: queryKeys.messagingChannels.all });
+                setChannelToEdit(null);
+              }}
+            />
+          )}
 
           {channelToEdit && (
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10">
