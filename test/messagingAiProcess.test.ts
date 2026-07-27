@@ -234,14 +234,14 @@ describe('POST /api/messaging/ai/process', () => {
     expect(body.error).toMatch(/UUID/i)
   })
 
-  it('retorna 400 quando messageId é fornecido mas não é UUID válido', async () => {
-    // Arrange
+  it('aceita messageId no formato do provedor (ex.: WhatsApp wamid, não UUID)', async () => {
+    // Arrange — o webhook do WhatsApp passa "wamid...", que não é UUID
     const req = makeRequest(
       {
         conversationId: CONV_ID,
         organizationId: ORG_ID,
         messageText: 'Oi',
-        messageId: 'not-a-uuid',
+        messageId: 'wamid.HBgLABCDEF1234567890',
       },
       withSecret()
     )
@@ -250,9 +250,12 @@ describe('POST /api/messaging/ai/process', () => {
     const res = await POST(req)
     const body = await res.json()
 
-    // Assert
-    expect(res.status).toBe(400)
-    expect(body.error).toMatch(/UUID/i)
+    // Assert — já não rejeita; agenda a resposta
+    expect(res.status).toBe(200)
+    expect(body.received).toBe(true)
+    expect(enqueueScheduledReply).toHaveBeenCalledWith(
+      expect.objectContaining({ messageId: 'wamid.HBgLABCDEF1234567890' })
+    )
   })
 
   it('retorna 400 quando body é JSON inválido', async () => {

@@ -17,6 +17,8 @@ export const ONGOING_DELAY_SECONDS = 40;
 /** A partir deste silêncio, a mensagem volta a contar como "primeira". */
 export const ONGOING_WINDOW_MINUTES = 30;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface EnqueueParams {
   supabase: SupabaseClient;
   organizationId: string;
@@ -61,7 +63,9 @@ export async function enqueueScheduledReply({
       {
         organization_id: organizationId,
         conversation_id: conversationId,
-        last_inbound_message_id: messageId ?? null,
+        // Coluna uuid: o id do provedor (wamid) não é UUID, por isso só guardamos
+        // quando for mesmo um UUID interno; o cron responde na mesma pelo texto.
+        last_inbound_message_id: messageId && UUID_RE.test(messageId) ? messageId : null,
         last_inbound_text: messageText,
         due_at: dueAt,
         status: 'pending',

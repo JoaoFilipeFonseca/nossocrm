@@ -74,12 +74,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (messageId && !uuidRegex.test(messageId)) {
-    return NextResponse.json(
-      { error: 'Invalid UUID format for messageId' },
-      { status: 400 }
-    );
-  }
+  // messageId é auxiliar e pode vir no formato do provedor (ex.: WhatsApp "wamid...",
+  // que NÃO é um UUID). Não rejeitamos por causa disso — a fila guarda-o só se for UUID.
 
   // Create Supabase client with service role
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
