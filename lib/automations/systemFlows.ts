@@ -96,6 +96,16 @@ export const SYSTEM_FLOWS: Record<string, SystemFlow> = {
       { icon: '🧾', title: 'Marca e audita', detail: 'Grava capi_forwarded_at no negócio (idempotente) e regista em audit_logs.' },
     ],
   },
+  'ai-reply-timing': {
+    steps: [
+      { icon: '📥', title: 'Chega mensagem de um lead', detail: 'Quando entra uma mensagem (WhatsApp/Instagram) numa conversa de um board com agente em modo "responder", em vez de responder na hora, agenda-se a resposta.' },
+      { icon: '⏱️', title: 'Decide o tempo humano', detail: 'Primeira mensagem, ou depois de mais de 30 minutos de silêncio, responde ao minuto 3. Conversa a decorrer (última troca há menos de 30 min) responde em cerca de 40 segundos. Nunca instantâneo, para não soar a robô.' },
+      { icon: '🗂️', title: 'Põe na fila (uma por conversa)', detail: 'Guarda uma resposta pendente por conversa. Se o cliente escreve outra vez antes da hora, o relógio reinicia e responde-se uma vez só ao conjunto (não faz spam).' },
+      { icon: '⏰', title: 'O relógio de minuto envia', detail: 'A cada minuto, este cron vê o que está a horas, reclama cada resposta (para não enviar duas vezes) e manda o agente (Clara / Sofia) responder.' },
+      { icon: '🤝', title: 'Nunca sobrepõe o João', detail: 'Se o João já respondeu à mão àquela conversa entretanto, a resposta automática cancela-se. Se a geração falhar, não envia nada ao cliente e fica registado.' },
+    ],
+    note: 'Responde todos os dias, Domingo incluído. Os "3 pontinhos" (a escrever...) dependem de a linha ter token vivo; no número de teste podem não aparecer, mas o atraso já dá o efeito de estar ali uma pessoa. O modo responder por board liga-se em Definições → Inteligência Artificial.',
+  },
   'automation-schedule-tick': {
     steps: [
       { icon: '⏰', title: 'Verifica os horários programados', detail: 'A cada minuto, procura automações TUAS com gatilho de horário cuja hora chegou.' },

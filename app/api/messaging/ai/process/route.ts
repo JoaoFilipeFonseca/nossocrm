@@ -14,13 +14,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { processIncomingMessage } from '@/lib/ai/agent';
+import { enqueueScheduledReply } from '@/lib/ai/replyQueue';
 import crypto from 'crypto';
 
 // Internal API secret for webhook -> AI communication
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
-
-import { waitUntil } from '@vercel/functions';
 
 // Maximum function execution duration (seconds)
 export const maxDuration = 60;
@@ -94,24 +92,22 @@ export async function POST(request: NextRequest) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // In dev, waitUntil drops the callback — await directly for testability.
-  // In production, Vercel executes waitUntil after the response is sent.
-  const isDev = process.env.NODE_ENV === 'development';
-  const task = processIncomingMessage({
-    supabase,
-    conversationId,
-    organizationId,
-    incomingMessage: messageText,
-    messageId,
-  }).catch((error) => {
-    console.error('[AI Process] Background processing error:', error);
-  });
-
-  if (isDev) {
-    await task;
-  } else {
-    waitUntil(task);
+  // "Timing humano": em vez de responder na hora (soa a robô), AGENDAMOS a
+  // resposta. O tique de minuto (/api/cron/ai-replies) envia quando chega a hora.
+  //  - primeira mensagem / após >30 min de silêncio → minuto 3
+  //  - conversa a decorrer → ~40s
+  try {
+    const { delaySeconds } = await enqueueScheduledReply({
+      supabase,
+      conversationId,
+      organizationId,
+      messageId,
+      messageText,
+    });
+    return Response.json({ received: true, scheduledInSeconds: delaySeconds }, { status: 200 });
+  } catch (error) {
+    console.error('[AI Process] Failed to enqueue reply:', error);
+    // Nunca devolvemos erro ao webhook (evita tempestades de retry).
+    return Response.json({ received: true, scheduled: false }, { status: 200 });
   }
-
-  return Response.json({ received: true }, { status: 200 });
 }

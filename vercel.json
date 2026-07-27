@@ -9,6 +9,9 @@
     "app/api/cron/stage-evaluations/route.ts": {
       "maxDuration": 60
     },
+    "app/api/cron/ai-replies/route.ts": {
+      "maxDuration": 60
+    },
     "app/api/contacts/import/route.ts": {
       "maxDuration": 60
     },

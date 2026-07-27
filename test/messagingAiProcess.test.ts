@@ -4,7 +4,8 @@
  * POST /api/messaging/ai/process
  *
  * Esta rota é interna: autenticada por INTERNAL_API_SECRET.
- * Chama processIncomingMessage em background (waitUntil em prod, await em dev).
+ * AGENDA a resposta (enqueueScheduledReply) com "timing humano"; o envio é feito
+ * depois pelo relógio de minuto (/api/cron/ai-replies).
  *
  * Estratégia de env: vi.hoisted + process.env direto (antes do import do módulo).
  * O módulo lê INTERNAL_API_SECRET como const em nível de módulo, então a env
@@ -37,12 +38,9 @@ const { envSetup } = vi.hoisted(() => {
 // Mocks — devem vir antes dos imports do módulo
 // ---------------------------------------------------------------------------
 
-// Mock do processIncomingMessage para evitar I/O real
-vi.mock('@/lib/ai/agent', () => ({
-  processIncomingMessage: vi.fn(async () => ({
-    success: true,
-    decision: { action: 'responded', reason: 'ok' },
-  })),
+// Mock do agendamento para evitar I/O real
+vi.mock('@/lib/ai/replyQueue', () => ({
+  enqueueScheduledReply: vi.fn(async () => ({ delaySeconds: 180 })),
 }))
 
 // Mock do @vercel/functions para evitar dependência de ambiente Vercel
@@ -59,7 +57,7 @@ vi.mock('@supabase/supabase-js', () => ({
 // Imports (após mocks e setup de env)
 // ---------------------------------------------------------------------------
 import { POST } from '@/app/api/messaging/ai/process/route'
-import { processIncomingMessage } from '@/lib/ai/agent'
+import { enqueueScheduledReply } from '@/lib/ai/replyQueue'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -276,7 +274,7 @@ describe('POST /api/messaging/ai/process', () => {
 
   // ── Happy path ─────────────────────────────────────────────────────────────
 
-  it('chama processIncomingMessage com parâmetros corretos (happy path)', async () => {
+  it('agenda a resposta com parâmetros corretos (happy path)', async () => {
     // Arrange
     const req = makeRequest(
       {
@@ -295,18 +293,18 @@ describe('POST /api/messaging/ai/process', () => {
     // Assert
     expect(res.status).toBe(200)
     expect(body.received).toBe(true)
-    expect(processIncomingMessage).toHaveBeenCalledWith({
+    expect(enqueueScheduledReply).toHaveBeenCalledWith({
       supabase: expect.anything(),
       conversationId: CONV_ID,
       organizationId: ORG_ID,
-      incomingMessage: 'Preciso de ajuda',
       messageId: MSG_ID,
+      messageText: 'Preciso de ajuda',
     })
   })
 
-  it('retorna 200 mesmo quando processIncomingMessage lança erro (fire-and-forget)', async () => {
-    // Arrange — simula erro no processamento
-    vi.mocked(processIncomingMessage).mockRejectedValueOnce(new Error('AI timeout'))
+  it('retorna 200 mesmo quando o agendamento lança erro (webhook nunca falha)', async () => {
+    // Arrange — simula erro ao agendar
+    vi.mocked(enqueueScheduledReply).mockRejectedValueOnce(new Error('db down'))
     const req = makeRequest(
       { conversationId: CONV_ID, organizationId: ORG_ID, messageText: 'Oi' },
       withSecret()
@@ -333,7 +331,7 @@ describe('POST /api/messaging/ai/process', () => {
 
     // Assert
     expect(res.status).toBe(200)
-    expect(processIncomingMessage).toHaveBeenCalledWith(
+    expect(enqueueScheduledReply).toHaveBeenCalledWith(
       expect.objectContaining({ messageId: undefined })
     )
   })
