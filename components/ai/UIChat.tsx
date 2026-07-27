@@ -584,26 +584,26 @@ export function UIChat({
                             : <Maximize2 className="w-4 h-4 text-slate-400" />}
                     </button>
                     {floating && (
-                        <>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
-                                title="Minimizar"
-                                aria-label="Minimizar"
-                            >
-                                <ChevronDown className="w-4 h-4 text-slate-400" />
-                            </button>
-                            {onClose && (
-                                <button
-                                    onClick={onClose}
-                                    className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
-                                    title="Fechar"
-                                    aria-label="Fechar"
-                                >
-                                    <X className="w-4 h-4 text-slate-400" />
-                                </button>
-                            )}
-                        </>
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
+                            title="Minimizar"
+                            aria-label="Minimizar"
+                        >
+                            <ChevronDown className="w-4 h-4 text-slate-400" />
+                        </button>
+                    )}
+                    {/* Fechar — sempre que houver onClose (inclui a estrela em modo inline,
+                        onde no telemóvel é a ÚNICA forma de sair do ecrã cheio). */}
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
+                            title="Fechar"
+                            aria-label="Fechar"
+                        >
+                            <X className="w-4 h-4 text-slate-400" />
+                        </button>
                     )}
                 </div>
             </div>

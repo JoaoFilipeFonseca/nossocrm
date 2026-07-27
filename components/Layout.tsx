@@ -654,7 +654,9 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
         >
           <div className="w-full md:w-96 h-full">
             {isGlobalAIOpen && (
-              <UIChat />
+              // onClose dá um botão de fechar dentro do assistente — essencial no
+              // telemóvel, onde a barra abre em ecrã cheio e tapa a própria estrela.
+              <UIChat onClose={() => setIsGlobalAIOpen(false)} />
             )}
           </div>
         </aside>
