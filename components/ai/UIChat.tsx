@@ -570,33 +570,42 @@ export function UIChat({
                     }`}>
                     {status === 'ready' ? 'Pronto' : 'Pensando...'}
                 </div>
-                {floating && (
-                    <div className="flex gap-1">
-                        <button
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
-                            title={isExpanded ? 'Reduzir' : 'Expandir'}
-                        >
-                            <Maximize2 className="w-4 h-4 text-slate-400" />
-                        </button>
-                        <button
-                            onClick={() => setIsOpen(false)}
-                            className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
-                            title="Minimizar"
-                        >
-                            <Minimize2 className="w-4 h-4 text-slate-400" />
-                        </button>
-                        {onClose && (
+                <div className="flex gap-1">
+                    {/* Expandir/Reduzir — disponível também na barra lateral da estrela,
+                        não só no widget flutuante (dá espaço a uma sessão a sério). */}
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
+                        title={isExpanded ? 'Reduzir' : 'Expandir'}
+                        aria-label={isExpanded ? 'Reduzir o assistente' : 'Expandir o assistente'}
+                    >
+                        {isExpanded
+                            ? <Minimize2 className="w-4 h-4 text-slate-400" />
+                            : <Maximize2 className="w-4 h-4 text-slate-400" />}
+                    </button>
+                    {floating && (
+                        <>
                             <button
-                                onClick={onClose}
+                                onClick={() => setIsOpen(false)}
                                 className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
-                                title="Fechar"
+                                title="Minimizar"
+                                aria-label="Minimizar"
                             >
-                                <X className="w-4 h-4 text-slate-400" />
+                                <ChevronDown className="w-4 h-4 text-slate-400" />
                             </button>
-                        )}
-                    </div>
-                )}
+                            {onClose && (
+                                <button
+                                    onClick={onClose}
+                                    className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
+                                    title="Fechar"
+                                    aria-label="Fechar"
+                                >
+                                    <X className="w-4 h-4 text-slate-400" />
+                                </button>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* Messages Area */}
@@ -1273,7 +1282,25 @@ export function UIChat({
         );
     }
 
-    // Inline component
+    // Inline component (ex.: barra lateral da estrela, página /ai)
+    // Modo expandido: gaveta larga sobreposta, para uma sessão de trabalho confortável
+    // (a barra lateral fica acanhada a ~384px e não dava para aumentar).
+    if (isExpanded) {
+        return (
+            <>
+                {/* Overlay */}
+                <div
+                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+                    onClick={() => setIsExpanded(false)}
+                />
+                {/* Drawer Panel */}
+                <div className="fixed top-0 right-0 z-50 w-full max-w-2xl h-full bg-slate-900 border-l border-slate-700/50 shadow-2xl shadow-black/50 flex flex-col transition-transform duration-300">
+                    {chatContent}
+                </div>
+            </>
+        );
+    }
+
     return (
         <div className="flex flex-col h-full bg-slate-900/50 rounded-2xl border border-slate-700/50 backdrop-blur-xl overflow-hidden">
             {chatContent}
