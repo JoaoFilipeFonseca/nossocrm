@@ -34,6 +34,8 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
   const { setIsGlobalAIOpen } = useUIState();
   const [isEditing, setIsEditing] = useState(false);
   const [editedBoard, setEditedBoard] = useState(board);
+  // Mobile: a caixa de estratégia começa colapsada para não roubar espaço ao kanban.
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   // Calculate Progress Automatically
   const calculatedProgress = React.useMemo(() => {
@@ -133,11 +135,11 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
   };
 
   return (
-    <div className="relative mb-4 group/header z-20">
+    <div className="relative mb-3 md:mb-4 group/header z-20">
       {/* Background Glow Effect (Subtle) */}
       <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-orange-500/5 rounded-xl blur-xl opacity-50 group-hover/header:opacity-100 transition-opacity duration-700"></div>
 
-      <div className="relative px-5 py-3 bg-white dark:bg-[#0B1120] rounded-lg border border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300 hover:shadow-md">
+      <div className="relative px-3 py-2 md:px-5 md:py-3 bg-white dark:bg-[#0B1120] rounded-lg border border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300 hover:shadow-md">
         {/* Edit Button - Only visible on hover */}
         {!isEditing && (
           <button
@@ -341,9 +343,37 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
         ) : (
           // --- VIEW MODE (Compact & Premium) ---
           <>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* Mobile: resumo numa linha; o detalhe abre ao toque */}
+            <button
+              type="button"
+              onClick={() => setMobileExpanded(v => !v)}
+              className="md:hidden w-full flex items-center gap-2 text-left"
+              aria-expanded={mobileExpanded}
+            >
+              <Target size={13} className="text-blue-500 shrink-0" />
+              <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                {board.goal?.targetValue || 'Sem meta'}
+              </span>
+              <span className="text-[10px] text-slate-400 shrink-0">
+                {calculatedProgress.display}
+              </span>
+              {board.agentPersona?.name && (
+                <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 truncate ml-auto">
+                  <Bot size={11} className="text-purple-500 shrink-0" />
+                  {board.agentPersona.name}
+                </span>
+              )}
+              <ChevronRight
+                size={14}
+                className={`shrink-0 text-slate-400 transition-transform ${mobileExpanded ? 'rotate-90' : ''} ${board.agentPersona?.name ? '' : 'ml-auto'}`}
+              />
+            </button>
+
+            <div
+              className={`${mobileExpanded ? 'grid mt-3' : 'hidden'} md:grid md:mt-0 grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-center`}
+            >
               {/* GOAL (Hero Section) - Spans 4 cols */}
-              <div className="md:col-span-4 flex flex-col justify-center border-r border-slate-100 dark:border-white/5 pr-6 relative">
+              <div className="md:col-span-4 flex flex-col justify-center md:border-r border-slate-100 dark:border-white/5 md:pr-6 relative">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="flex h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                   <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
@@ -382,7 +412,7 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
               </div>
 
               {/* AGENT - Spans 3 cols */}
-              <div className="md:col-span-3 flex flex-col justify-center px-4 border-r border-slate-100 dark:border-white/5 relative">
+              <div className="md:col-span-3 flex flex-col justify-center md:px-4 md:border-r border-slate-100 dark:border-white/5 relative">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <Bot size={12} className="text-purple-500" />
@@ -417,7 +447,7 @@ export const BoardStrategyHeader: React.FC<BoardStrategyHeaderProps> = ({ board 
               </div>
 
               {/* TRIGGER - Spans 5 cols */}
-              <div className="md:col-span-5 flex flex-col justify-center pl-4 relative">
+              <div className="md:col-span-5 flex flex-col justify-center md:pl-4 relative">
                 <div className="flex items-center gap-2 mb-1">
                   <DoorOpen size={12} className="text-orange-500" />
                   <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">

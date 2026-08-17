@@ -200,7 +200,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   }, [onMoveDealToStage]);
 
   return (
-    <div role="list" aria-label="Colunas do pipeline" className="flex gap-4 h-full overflow-x-auto pb-2 w-full">
+    // Mobile: colunas quase a todo o ecrã com swipe horizontal (snap) e altura
+    // natural — os cartões fazem scroll com a página. Desktop: comportamento original.
+    <div role="list" aria-label="Colunas do pipeline" className="flex gap-3 md:gap-4 h-auto md:h-full overflow-x-auto pb-2 w-full snap-x snap-mandatory md:snap-none">
       {stages.map(stage => {
         const stageDeals = dealsByStageId.map.get(stage.id) ?? [];
         const stageValue = dealsByStageId.totals.get(stage.id) ?? 0;
@@ -227,7 +229,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
             }}
             onDragEnter={() => setDragOverStage(stage.id)}
             onDragLeave={() => setDragOverStage(null)}
-            className={`min-w-[20rem] flex-1 flex flex-col rounded-xl border-2 overflow-visible h-full max-h-full transition-all duration-200
+            className={`min-w-[86vw] sm:min-w-[20rem] snap-center flex-1 flex flex-col rounded-xl border-2 overflow-visible h-auto md:h-full md:max-h-full transition-all duration-200
                             ${isOver
                 ? `${dropHighlightClasses(stage.color)} scale-[1.02]`
                 : 'border-slate-200/50 dark:border-white/10 glass'
@@ -273,7 +275,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
             <div
               role="list"
               aria-label={`Negócios em ${stage.label}`}
-              className={`flex-1 p-2 overflow-y-auto space-y-2 bg-slate-100/50 dark:bg-black/20 scrollbar-thin min-h-[100px]`}
+              className={`flex-1 p-2 overflow-y-visible md:overflow-y-auto space-y-2 bg-slate-100/50 dark:bg-black/20 scrollbar-thin min-h-[100px]`}
             >
               {/* Skeleton: exibido durante carregamento inicial */}
               {isLoading && (

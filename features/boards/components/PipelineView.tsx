@@ -275,7 +275,9 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    // Mobile: altura natural (a página inteira faz scroll de tudo);
+    // Desktop (md+): altura fixa com scroll interno por coluna.
+    <div className="min-h-full md:h-full flex flex-col">
       {boardCreateOverlay && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
@@ -343,7 +345,7 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
 
           <BoardStrategyHeader board={activeBoard} />
 
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-visible md:overflow-hidden">
             {viewMode === 'kanban' ? (
               <KanbanBoard
                 stages={activeBoard.stages}
