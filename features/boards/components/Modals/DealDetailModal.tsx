@@ -1131,7 +1131,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-black/10">
+              {/* Mobile: sem scroll interno (o corpo do modal já faz scroll — evita a
+                  "barra pequena" encaixada). Desktop: scroll interno como antes. */}
+              <div className="md:flex-1 overflow-y-visible md:overflow-y-auto p-4 md:p-6 bg-slate-50/30 dark:bg-black/10">
                 {activeTab === 'cockpit' && (
                 <div className="space-y-4">
                   {/* #124 Pause-on-touch — banner quando automações estão pausadas */}
