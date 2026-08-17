@@ -39,6 +39,7 @@ import { usePersistedState } from '@/hooks/usePersistedState';
 import { useResponsiveMode } from '@/hooks/useResponsiveMode';
 import { DealSheet } from '../DealSheet';
 import { DealLineagePanel } from './DealLineagePanel';
+import { Ficha360Panel } from './Ficha360Panel';
 import {
   analyzeLead,
   generateEmailDraft,
@@ -1304,6 +1305,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       <ContactInlineField icon={<Phone size={14} className="text-slate-400 flex-shrink-0" />} type="tel" value={(deal as any).contactPhone ?? ''} placeholder="Adicionar telefone" onSave={(v) => { if (deal.contactId) updateContactMutation.mutate({ id: deal.contactId, updates: { phone: v } as any }); }} />
                     </div>
                   </div>
+
+                  {/* FICHA 360 — questionário, origem e histórico a 1 toque (sem "Ver ficha") */}
+                  <Ficha360Panel deal={deal} contact={contact} />
 
                   {/* Imóvel associado (AUD-A1) — liga o negócio ao imóvel */}
                   <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5">
