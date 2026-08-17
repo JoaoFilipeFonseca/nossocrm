@@ -624,14 +624,16 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
     <div
       className={
         isMobile
-          ? 'bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 w-full h-[100dvh] flex flex-col overflow-hidden pb-[var(--app-safe-area-bottom,0px)]'
+          ? 'bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 w-full h-[100dvh] flex flex-col overflow-y-auto pb-[var(--app-safe-area-bottom,0px)]'
           : 'bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200'
       }
     >
           {/* HEADER (Stage Bar + Won/Lost) */}
-          <div className="bg-slate-50 dark:bg-black/20 border-b border-slate-200 dark:border-white/10 p-6 shrink-0">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex-1 mr-8">
+          <div className="bg-slate-50 dark:bg-black/20 border-b border-slate-200 dark:border-white/10 p-4 md:p-6 shrink-0">
+            {/* Mobile: título a toda a largura e botões numa linha por baixo (em coluna
+                estreita empilhavam e comiam o ecrã inteiro). Desktop: lado a lado. */}
+            <div className="flex flex-col md:flex-row md:justify-between items-stretch md:items-start gap-3 mb-3 md:mb-6">
+              <div className="flex-1 md:mr-8 min-w-0">
                 {isEditingTitle ? (
                   <div className="flex gap-2 mb-1">
                     <input
@@ -654,7 +656,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                       setEditTitle(deal.title);
                       setIsEditingTitle(true);
                     }}
-                    className="text-2xl font-bold text-slate-900 dark:text-white font-display leading-tight cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-2 group transition-colors"
+                    className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white font-display leading-tight cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-2 group transition-colors"
                     title="Clique para editar"
                   >
                     {deal.title}
@@ -701,7 +703,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                   className="mt-2"
                 />
               </div>
-              <div className="flex flex-wrap gap-2 items-center justify-end">
+              <div className="flex flex-wrap gap-2 items-center md:justify-end">
                 {/* Se fechado: mostra badge + botão Reabrir */}
                 {(deal.isWon || deal.isLost) ? (
                   <>
@@ -768,7 +770,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                         }
                         onClose();
                       }}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold text-sm shadow-sm flex items-center gap-2"
+                      className="px-3 py-1.5 md:px-4 md:py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold text-sm shadow-sm flex items-center gap-2"
                     >
                       <ThumbsUp size={16} /> GANHO
                     </button>
@@ -790,13 +792,13 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
                         setLossReasonOrigin('button');
                         setShowLossReasonModal(true);
                       }}
-                      className="px-4 py-2 bg-transparent border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-bold text-sm shadow-sm flex items-center gap-2"
+                      className="px-3 py-1.5 md:px-4 md:py-2 bg-transparent border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-bold text-sm shadow-sm flex items-center gap-2"
                     >
                       <ThumbsDown size={16} /> PERDIDO
                     </button>
                     <button
                       onClick={() => setShowSnoozeModal(true)}
-                      className="px-4 py-2 bg-transparent border border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg font-bold text-sm shadow-sm flex items-center gap-2"
+                      className="px-3 py-1.5 md:px-4 md:py-2 bg-transparent border border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg font-bold text-sm shadow-sm flex items-center gap-2"
                       title="Adiar em vez de perder"
                     >
                       <PauseCircle size={16} /> {isSnoozed ? 'Reagendar' : 'Adiar'}
@@ -870,7 +872,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ dealId, isOpen
             )}
           </div>
 
-          <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden min-h-0">
+          {/* Mobile: um único scroll no modal inteiro (o cabeçalho também desliza).
+              Desktop: colunas com scroll interno, como antes. */}
+          <div className="flex-1 flex flex-col md:flex-row overflow-visible md:overflow-hidden min-h-0">
             {/* Left Sidebar (Static Info + Custom Fields) */}
             <div className="hidden md:flex md:w-1/3 md:border-r border-slate-200 dark:border-white/5 p-4 sm:p-6 md:overflow-y-auto bg-white dark:bg-dark-card md:max-h-none">
               <div className="space-y-6">
