@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { DealView, Board, CustomFieldDefinition } from '@/types';
 import {
   useBoards,
@@ -63,7 +63,6 @@ export const useBoardsController = () => {
   const { addToast } = useToast();
   const { profile, organizationId } = useAuth();
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   // AI Context
   const { setContext, clearContext } = useAI();
@@ -309,7 +308,35 @@ export const useBoardsController = () => {
 
   // Interaction State
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [selectedDealId, setSelectedDealIdState] = useState<string | null>(null);
+
+  // O negócio aberto vive no URL (?deal=<id>) via history nativo (shallow, sem
+  // round-trip ao servidor): no telemóvel o gesto "voltar" fecha o modal e o
+  // utilizador fica no pipeline onde estava, em vez de sair da página.
+  const setSelectedDealId = React.useCallback((id: string | null) => {
+    setSelectedDealIdState(id);
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    const current = url.searchParams.get('deal');
+    if (id) {
+      if (current === id) return;
+      url.searchParams.set('deal', id);
+      window.history.pushState(null, '', url.toString());
+    } else if (current) {
+      url.searchParams.delete('deal');
+      window.history.replaceState(null, '', url.toString());
+    }
+  }, []);
+
+  // Back/forward do browser: sincroniza o modal com o URL (fecha ao "voltar").
+  useEffect(() => {
+    const onPop = () => {
+      const url = new URL(window.location.href);
+      setSelectedDealIdState(url.searchParams.get('deal'));
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [openActivityMenuId, setOpenActivityMenuId] = useState<string | null>(null);
 
@@ -329,18 +356,16 @@ export const useBoardsController = () => {
     toStageName: string;
   } | null>(null);
 
-  // Open deal from URL param (e.g., /boards?deal=xxx)
+  // Abrir negócio vindo do URL (ex.: /boards?deal=xxx, usado pelo "Voltar ao
+  // negócio" da ficha do contacto). O param fica no URL enquanto o modal está
+  // aberto — é isso que permite ao "voltar" do browser fechá-lo.
   useEffect(() => {
     if (!searchParams) return;
     const dealIdFromUrl = searchParams.get('deal');
-    if (dealIdFromUrl && !selectedDealId) {
-      setSelectedDealId(dealIdFromUrl);
-      // Clear the param from URL using router
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('deal');
-      router.replace(`?${params.toString()}`, { scroll: false });
+    if (dealIdFromUrl) {
+      setSelectedDealIdState(dealIdFromUrl);
     }
-  }, [searchParams, selectedDealId, router]);
+  }, [searchParams]);
 
   // Fallback for drag issues
   const lastMouseDownDealId = React.useRef<string | null>(null);
