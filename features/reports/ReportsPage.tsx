@@ -175,18 +175,19 @@ const ReportsPage: React.FC = () => {
   ]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7rem)] space-y-4">
+    // Mobile: altura natural com scroll da página; desktop mantém altura fixa.
+    <div className="flex flex-col min-h-full md:h-[calc(100vh-7rem)] space-y-4">
       {/* Header com Filtros */}
-      <div className="flex justify-between items-center shrink-0">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
+          <h1 className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
             Relatórios de Performance
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             Análise detalhada de vendas e tendências.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <select
             value={selectedBoardId}
             onChange={(e) => setSelectedBoardId(e.target.value)}
@@ -215,14 +216,14 @@ const ReportsPage: React.FC = () => {
       {/* Forecast Bar - FEATURE #1 (80/20) */}
       {hasGoal ? (
         <div className="glass p-4 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm shrink-0">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               <Target className={`${isOnTrack ? 'text-emerald-500' : 'text-amber-500'}`} size={20} />
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 {goalKpi}
               </h3>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4">
               <div className="text-right">
                 <span className="text-xs text-slate-500">Realizado</span>
                 <p className="text-lg font-bold text-emerald-500">{formatGoalValue(currentValue)}</p>
@@ -342,9 +343,9 @@ const ReportsPage: React.FC = () => {
       </div>
 
       {/* Bottom Grid - Charts & Leaderboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-[250px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:flex-1 md:min-h-[250px]">
         {/* Revenue Trend Chart */}
-        <div className="lg:col-span-2 glass p-5 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm flex flex-col h-full">
+        <div className="lg:col-span-2 glass p-4 md:p-5 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm flex flex-col h-auto md:h-full">
           <div className="flex justify-between items-center mb-2 shrink-0">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">
               Tendência de Receita
@@ -363,14 +364,14 @@ const ReportsPage: React.FC = () => {
         </div>
 
         {/* Leaderboard - FEATURE #3 (Top Performers) */}
-        <div className="glass p-5 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm flex flex-col h-full overflow-hidden">
+        <div className="glass p-4 md:p-5 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm flex flex-col h-auto md:h-full overflow-visible md:overflow-hidden">
           <div className="flex justify-between items-center mb-3 shrink-0">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display flex items-center gap-2">
               <Trophy className="text-amber-500" size={20} />
               Top Vendedores
             </h2>
           </div>
-          <div className="flex-1 overflow-y-auto min-h-0 space-y-2">
+          <div className="flex-1 overflow-y-visible md:overflow-y-auto min-h-0 space-y-2">
             {leaderboard.length > 0 ? (
               leaderboard.map((rep, index) => (
                 <div

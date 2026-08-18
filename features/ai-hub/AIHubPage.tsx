@@ -11,7 +11,7 @@ const APINotConfigured: React.FC = () => {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-120px)] max-w-lg mx-auto px-4">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] md:h-[calc(100vh-120px)] py-8 md:py-0 max-w-lg mx-auto px-4">
       <div className="text-center">
         {/* Icon */}
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white mb-6 shadow-lg shadow-orange-500/30">
@@ -82,7 +82,8 @@ export const AIHubPage: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-120px)] max-w-4xl mx-auto">
+    // Mobile: dvh + desconto da bottom-nav para a caixa de escrever ficar visível
+    <div className="h-[calc(100dvh-var(--app-bottom-nav-height,0px)-var(--app-safe-area-bottom,0px)-8.5rem)] md:h-[calc(100vh-120px)] max-w-4xl mx-auto">
       <UIChat />
     </div>
   );

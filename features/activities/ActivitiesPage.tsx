@@ -80,7 +80,7 @@ export const ActivitiesPage: React.FC = () => {
     };
 
     return (
-        <div className="p-8 max-w-400 mx-auto">
+        <div className="p-0 md:p-8 max-w-400 mx-auto">
             <ActivitiesHeader
                 viewMode={viewMode}
                 setViewMode={setViewMode}

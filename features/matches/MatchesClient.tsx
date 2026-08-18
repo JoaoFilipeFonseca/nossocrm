@@ -128,7 +128,7 @@ export function MatchesClient({ embedded = false }: { embedded?: boolean }) {
   }
 
   return (
-    <div className={embedded ? '' : 'max-w-5xl mx-auto px-6 py-8'}>
+    <div className={embedded ? '' : 'max-w-5xl mx-auto px-3 py-5 sm:px-6 sm:py-8'}>
       <div className="flex items-center justify-between mb-4">
         <div>
           {!embedded && (
@@ -143,7 +143,7 @@ export function MatchesClient({ embedded = false }: { embedded?: boolean }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
         {[
           { label: 'Angariações', value: summary.angariacao || 0 },
           { label: 'Procuras', value: summary.procura || 0 },

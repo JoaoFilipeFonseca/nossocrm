@@ -75,7 +75,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         <div
             onClick={onClick}
             className={cn(
-                'glass p-6 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group',
+                'glass p-4 md:p-6 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm relative overflow-hidden group',
                 onClick && 'cursor-pointer hover:border-primary-500/50 transition-colors'
             )}
         >
@@ -93,7 +93,7 @@ export const StatCard: React.FC<StatCardProps> = ({
                     <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 font-display">
                         {title}
                     </p>
-                    <p className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
+                    <p className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
                         {value}
                     </p>
                 </div>

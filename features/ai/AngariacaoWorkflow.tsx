@@ -193,11 +193,11 @@ export default function AngariacaoWorkflow() {
     const currentIdx = STEP_ORDER.indexOf(currentStep);
 
     return (
-        <div className="max-w-5xl mx-auto p-6 space-y-6">
+        <div className="max-w-5xl mx-auto p-0 md:p-6 space-y-4 md:space-y-6">
             <div className="flex items-center gap-3">
                 <Sparkles className="w-7 h-7 text-blue-500" />
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Preparar Angariação</h1>
+                    <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Preparar Angariação</h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">Workflow guiado em 5 passos com IA</p>
                 </div>
             </div>
@@ -231,7 +231,7 @@ export default function AngariacaoWorkflow() {
             )}
 
             {currentStep === 'dados' && (
-                <div className="space-y-4 p-6 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900">
+                <div className="space-y-4 p-4 md:p-6 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900">
                     <h2 className="text-lg font-semibold">📝 Dados do Imóvel</h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400">Preenche o que souberes. Quanto mais detalhado, melhores os outputs.</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -295,7 +295,7 @@ export default function AngariacaoWorkflow() {
             )}
 
             {currentStep !== 'dados' && (
-                <div className="p-6 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900">
+                <div className="p-4 md:p-6 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold">{STEP_LABELS[currentStep]}</h2>
                         <div className="flex items-center gap-2">

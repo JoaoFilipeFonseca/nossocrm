@@ -16,10 +16,10 @@ export default async function AutomacoesPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-0 md:p-6 max-w-6xl">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Automações</h1>
+          <h1 className="text-xl md:text-2xl font-semibold">Automações</h1>
           <p className="text-sm text-slate-500 mt-1">
             {automations.length === 0
               ? 'Sem automações ainda.'

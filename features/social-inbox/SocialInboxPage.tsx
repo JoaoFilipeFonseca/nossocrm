@@ -200,7 +200,7 @@ export function SocialInboxPage() {
         </div>
 
         {/* CONVERSA */}
-        <div className={`bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl flex flex-col min-h-[480px] ${selId ? '' : 'hidden md:flex'}`}>
+        <div className={`bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl flex flex-col min-h-[60vh] md:min-h-[480px] ${selId ? '' : 'hidden md:flex'}`}>
           {!sel ? (
             <div className="flex-1 flex items-center justify-center text-sm text-slate-400 p-6 text-center">Escolhe uma conversa à esquerda.</div>
           ) : (
@@ -223,7 +223,7 @@ export function SocialInboxPage() {
                 )}
               </div>
 
-              <div className="flex-1 p-4 flex flex-col gap-2.5 overflow-auto max-h-[340px]">
+              <div className="flex-1 p-3 md:p-4 flex flex-col gap-2.5 overflow-visible md:overflow-auto max-h-none md:max-h-[340px]">
                 {loadingThread ? (
                   <div className="text-sm text-slate-400">A carregar...</div>
                 ) : messages.length === 0 ? (

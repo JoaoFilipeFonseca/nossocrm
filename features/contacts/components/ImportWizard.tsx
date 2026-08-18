@@ -311,8 +311,8 @@ export function ImportWizard(props: { onCompleted?: (r: ImportResult) => void })
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {CONTACT_FIELDS.map(field => (
-              <label key={field} className="flex items-center gap-2 text-sm">
-                <span className="min-w-[130px] text-slate-700 dark:text-slate-200">
+              <label key={field} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm">
+                <span className="sm:min-w-[130px] text-slate-700 dark:text-slate-200">
                   {CONTACT_FIELD_LABELS[field]}
                 </span>
                 <select

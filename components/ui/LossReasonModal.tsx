@@ -98,7 +98,7 @@ export const LossReasonModal: React.FC<LossReasonModalProps> = ({
           aria-modal="true"
           aria-labelledby={titleId}
           aria-describedby={descId}
-          className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+          className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto animate-in zoom-in-95 duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -132,7 +132,7 @@ export const LossReasonModal: React.FC<LossReasonModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="p-4 md:p-6">
             <p 
               id={descId}
               className="text-sm text-slate-600 dark:text-slate-400 mb-4"

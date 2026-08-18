@@ -107,7 +107,8 @@ const DashboardPage: React.FC = () => {
   const revenueChangeInfo = formatChange(changes.revenue);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7rem)] space-y-4">
+    // Mobile: altura natural (a página faz scroll de tudo); desktop: altura fixa.
+    <div className="flex flex-col h-auto md:h-[calc(100vh-7rem)] space-y-4">
       <div className="flex justify-between items-center shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
@@ -198,7 +199,7 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {view === 'honest' && (
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-visible md:overflow-auto">
           <HonestMetricsTab />
         </div>
       )}
@@ -207,11 +208,11 @@ const DashboardPage: React.FC = () => {
       <>
       {/* KPI Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 shrink-0">
           {Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 shrink-0">
           <StatCard
             title="Pipeline Total"
             value={`${pipelineValue.toLocaleString('pt-PT')} €`}
@@ -371,7 +372,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Activity Feed - Expanded */}
-        <div className="lg:col-span-2 glass flex flex-col rounded-xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden h-full">
+        <div className="lg:col-span-2 glass flex flex-col rounded-xl border border-slate-200 dark:border-white/5 shadow-sm overflow-visible md:overflow-hidden h-auto md:h-full">
           <div className="p-5 border-b border-slate-100 dark:border-white/5 bg-white/50 dark:bg-slate-900/50 rounded-t-xl backdrop-blur-sm z-10 shrink-0">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display">
@@ -380,7 +381,7 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 pt-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
+          <div className="flex-1 overflow-visible md:overflow-y-auto p-4 md:p-5 pt-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
             <div className="space-y-1">
               {activities.length > 0 ? (
                 activities.slice(0, 15).map(activity => (

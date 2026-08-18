@@ -48,7 +48,7 @@ export default async function EditarImovelPage({ params }: { params: Promise<{ i
   if (!imovel) notFound();
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-0 md:p-6 max-w-3xl">
       <div className="mb-4">
         <Link href={`/imoveis/${id}`} className="text-sm text-blue-600 hover:underline">
           ← {imovel.referencia ?? id.slice(0, 8)}

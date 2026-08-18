@@ -180,8 +180,8 @@ export function ContactRichPanel({
           readRows.length > 0 ? (
             <div className="divide-y divide-slate-100 dark:divide-white/5">
               {readRows.map((row) => (
-                <div key={row.label} className="px-5 py-2.5 flex items-start gap-3 sm:gap-4">
-                  <div className="w-40 shrink-0 text-xs font-medium text-slate-500 flex items-center gap-2 pt-0.5"><span aria-hidden>{row.icon}</span> {row.label}</div>
+                <div key={row.label} className="px-5 py-2.5 flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                  <div className="w-full sm:w-40 sm:shrink-0 text-xs font-medium text-slate-500 flex items-center gap-2 pt-0.5"><span aria-hidden>{row.icon}</span> {row.label}</div>
                   <div className="flex-1 text-sm text-slate-800 dark:text-slate-200">{row.node}</div>
                 </div>
               ))}
@@ -304,8 +304,8 @@ function ReferralsEditor({
   };
 
   const renderRow = (label: string, icon: string, dir: 'referredBy' | 'referred', items: ReferralLinkDTO[]) => (
-    <div className="px-5 py-2.5 flex items-start gap-3 sm:gap-4">
-      <div className="w-40 shrink-0 text-xs font-medium text-slate-500 flex items-center gap-2 pt-0.5"><span aria-hidden>{icon}</span> {label}</div>
+    <div className="px-5 py-2.5 flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+      <div className="w-full sm:w-40 sm:shrink-0 text-xs font-medium text-slate-500 flex items-center gap-2 pt-0.5"><span aria-hidden>{icon}</span> {label}</div>
       <div className="flex-1 flex flex-wrap items-center gap-1.5">
         {items.map((r) => (
           <span key={r.referralId} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-xs font-medium">

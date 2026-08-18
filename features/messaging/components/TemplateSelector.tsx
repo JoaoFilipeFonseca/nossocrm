@@ -336,9 +336,10 @@ export function TemplateSelector({
         </button>
       </div>
 
-      <div className="flex-1 overflow-hidden flex">
+      {/* Mobile: lista e pré-visualização empilhadas num só scroll; desktop: 2 colunas */}
+      <div className="flex-1 overflow-y-auto md:overflow-hidden flex flex-col md:flex-row">
         {/* Template List */}
-        <div className="w-1/2 border-r border-[var(--color-border)] flex flex-col">
+        <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-[var(--color-border)] flex flex-col">
           {/* Search */}
           <div className="p-3 border-b border-[var(--color-border)]">
             <div className="relative">
@@ -360,7 +361,7 @@ export function TemplateSelector({
           </div>
 
           {/* List */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div className="flex-1 overflow-y-visible md:overflow-y-auto p-3 space-y-2">
             {filteredTemplates.length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="w-12 h-12 mx-auto mb-3 text-[var(--color-text-muted)]" />
@@ -382,10 +383,10 @@ export function TemplateSelector({
         </div>
 
         {/* Preview & Variables */}
-        <div className="w-1/2 flex flex-col">
+        <div className="w-full md:w-1/2 flex flex-col">
           {selectedTemplate ? (
             <>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-visible md:overflow-y-auto p-4 space-y-4">
                 {/* Preview Toggle */}
                 <button
                   onClick={() => setShowPreview(!showPreview)}

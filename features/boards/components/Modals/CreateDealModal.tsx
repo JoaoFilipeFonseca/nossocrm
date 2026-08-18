@@ -200,13 +200,13 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+            className="fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 md:p-4 overflow-y-auto"
             onClick={(e) => {
                 if (e.target === e.currentTarget) onClose();
             }}
         >
             <div
-                className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+                className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 max-h-[calc(100dvh-1rem)] md:max-h-[90dvh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-5 border-b border-slate-200 dark:border-white/10 flex justify-between items-center sticky top-0 bg-white dark:bg-dark-card z-10">
@@ -219,7 +219,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                     </button>
                 </div>
                 
-                <form onSubmit={handleCreateDeal} className="p-5 space-y-5">
+                <form onSubmit={handleCreateDeal} className="p-4 md:p-5 space-y-4 md:space-y-5">
                     {/* Contato - Tabs para escolher modo */}
                     <div>
                         <div className="flex items-center gap-2 mb-3">
@@ -313,7 +313,7 @@ export const CreateDealModal: React.FC<CreateDealModalProps> = ({
                                     />
                                 </div>
                                 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div className="relative">
                                         <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                         <input

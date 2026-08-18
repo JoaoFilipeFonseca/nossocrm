@@ -51,17 +51,17 @@ export default async function AutomacaoBuilderPage({ params }: { params: Promise
   const edges = automation.definition.edges ?? [];
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto">
+    <div className="p-0 md:p-6 max-w-[1600px] mx-auto">
       <div className="mb-4">
         <Link href="/automacoes" className="text-sm text-slate-500 hover:text-slate-900">← Automações</Link>
       </div>
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-4 md:mb-6">
         <div className="flex items-start gap-3">
-          <div className="text-3xl">{automation.icon}</div>
+          <div className="text-2xl md:text-3xl">{automation.icon}</div>
           <div>
-            <h1 className="text-2xl font-semibold">{automation.name}</h1>
-            <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
+            <h1 className="text-lg md:text-2xl font-semibold">{automation.name}</h1>
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 text-sm text-slate-500">
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${statusChipClass(automation.status)}`}>
                 {statusLabel(automation.status)}
               </span>

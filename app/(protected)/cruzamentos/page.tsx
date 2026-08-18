@@ -101,9 +101,9 @@ export default async function CruzamentosPage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="p-0 md:p-6 max-w-5xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Cruzamentos</h1>
+        <h1 className="text-xl md:text-2xl font-semibold">Cruzamentos</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           O ouro: com que leads e imóveis teus a informação faz match. Cola coisas novas na secção em baixo.
         </p>

@@ -888,7 +888,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
         <div className={`flex flex-1 overflow-hidden ${isChatMode ? 'flex-col lg:flex-row' : 'flex-col'}`}>
           {/* Chat Section (Only in Chat Mode) */}
           {isChatMode && (
-            <div className="h-[38vh] lg:h-auto w-full lg:w-1/3 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-white/10 flex flex-col bg-slate-50 dark:bg-dark-bg/50">
+            <div className="h-[30dvh] min-h-40 lg:h-auto w-full lg:w-1/3 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-white/10 flex flex-col bg-slate-50 dark:bg-dark-bg/50">
               <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {chatMessages.map((msg, idx) => (
                   <div
@@ -1318,7 +1318,7 @@ export const BoardCreationWizard: React.FC<BoardCreationWizardProps> = ({
                 </div>
 
                 {/* Journey Timeline */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
                   <div className="max-w-3xl mx-auto">
                     <div className="flex items-center gap-4 mb-8">
                       <div className="h-px flex-1 bg-slate-300 dark:bg-white/10" />

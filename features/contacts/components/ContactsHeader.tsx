@@ -51,7 +51,7 @@ export const ContactsHeader: React.FC<ContactsHeaderProps> = ({
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
+        <h1 className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
           {viewMode === 'people' ? 'Contactos (Pessoas)' : 'Empresas (Contas)'}
         </h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
@@ -60,7 +60,7 @@ export const ContactsHeader: React.FC<ContactsHeaderProps> = ({
             : 'Organizações onde os seus contactos trabalham.'}
         </p>
       </div>
-      <div className="flex gap-3 w-full sm:w-auto">
+      <div className="flex flex-wrap gap-2 md:gap-3 w-full sm:w-auto">
         {viewMode === 'people' && (
           <select
             value={statusFilter}

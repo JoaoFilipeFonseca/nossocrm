@@ -58,7 +58,7 @@ export const ContactsPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 p-8 max-w-[1600px] mx-auto">
+        <div className="space-y-4 md:space-y-6 p-0 md:p-8 max-w-[1600px] mx-auto">
             <ContactsHeader
                 viewMode={controller.viewMode}
                 search={controller.search}

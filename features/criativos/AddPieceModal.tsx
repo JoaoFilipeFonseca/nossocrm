@@ -122,7 +122,7 @@ export const AddPieceModal: React.FC<Props> = ({ mode, onClose, onSaved }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-6" onClick={onClose}>
       <div
-        className="bg-white dark:bg-slate-900 w-full md:max-w-lg rounded-t-2xl md:rounded-2xl border border-slate-200 dark:border-white/10 max-h-[92vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-900 w-full md:max-w-lg rounded-t-2xl md:rounded-2xl border border-slate-200 dark:border-white/10 max-h-[92dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 p-4 flex items-center justify-between gap-3">

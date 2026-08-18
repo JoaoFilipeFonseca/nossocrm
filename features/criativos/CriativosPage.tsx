@@ -668,7 +668,7 @@ export const CriativosPage: React.FC = () => {
           onClick={() => setSelected(null)}
         >
           <div
-            className="bg-white dark:bg-slate-900 w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl border border-slate-200 dark:border-white/10 max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-slate-900 w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl border border-slate-200 dark:border-white/10 max-h-[90dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 p-4 flex items-center justify-between">

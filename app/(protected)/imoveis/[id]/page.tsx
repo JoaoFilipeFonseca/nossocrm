@@ -75,7 +75,7 @@ export default async function ImovelDetailPage({ params }: { params: Promise<{ i
     ? Math.round(imovel.preco_actual / imovel.area_util) : null;
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="p-0 md:p-6 max-w-5xl">
       <div className="mb-4">
         <Link href="/imoveis" className="text-sm text-blue-600 hover:underline">← Imóveis</Link>
       </div>

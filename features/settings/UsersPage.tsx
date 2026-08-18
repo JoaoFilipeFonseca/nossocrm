@@ -276,13 +276,13 @@ export const UsersPage: React.FC = () => {
     return (
         <div className="max-w-4xl mx-auto pb-10">
             {/* Header */}
-            <div className="mb-10">
-                <div className="flex items-start justify-between">
+            <div className="mb-6 md:mb-10">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
+                        <h1 className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
                             A sua Equipa
                         </h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">
+                        <p className="text-slate-500 dark:text-slate-400 mt-1 md:mt-2 text-sm md:text-lg">
                             {users.length} {users.length === 1 ? 'membro' : 'membros'} • {admins.length} admin{admins.length !== 1 && 's'}, {vendedores.length} vendedor{vendedores.length !== 1 && 'es'}
                         </p>
                     </div>

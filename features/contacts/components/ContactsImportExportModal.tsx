@@ -123,7 +123,7 @@ export function ContactsImportExportModal(props: {
       onClose={onClose}
       title="Importar / Exportar contactos"
       size="lg"
-      bodyClassName="space-y-5 max-h-[75vh] overflow-y-auto"
+      bodyClassName="space-y-5"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">

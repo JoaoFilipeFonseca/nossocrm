@@ -117,9 +117,9 @@ export const ActivitiesCalendar: React.FC<ActivitiesCalendarProps> = ({
     return (
         <div className="bg-white dark:bg-dark-card rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-xl">
             {/* Header */}
-            <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50">
+            <div className="p-3 md:p-6 border-b border-slate-200 dark:border-white/10 flex flex-col md:flex-row md:justify-between md:items-center gap-2 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50">
                 <div className="flex items-center gap-4">
-                    <h2 className="font-bold text-2xl text-slate-900 dark:text-white font-display">
+                    <h2 className="font-bold text-lg md:text-2xl text-slate-900 dark:text-white font-display">
                         {weekStart.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })}
                     </h2>
                     <button
@@ -141,7 +141,7 @@ export const ActivitiesCalendar: React.FC<ActivitiesCalendarProps> = ({
             </div>
 
             {/* Calendar Grid */}
-            <div className="overflow-auto max-h-[650px]">
+            <div className="overflow-x-auto overflow-y-visible md:overflow-auto max-h-none md:max-h-[650px]">
                 <div className="min-w-[900px]">
                     {/* Day Headers */}
                     <div className="grid grid-cols-8 border-b border-slate-200 dark:border-white/10 sticky top-0 bg-white dark:bg-dark-card z-10 shadow-sm">

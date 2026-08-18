@@ -102,7 +102,7 @@ export function StageChecklistModal({
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onCancel}>
       <div
-        className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-md w-full mx-3 md:mx-4 max-h-[calc(100dvh-1.5rem)] md:max-h-[90dvh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
@@ -112,7 +112,7 @@ export function StageChecklistModal({
           <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 truncate">{dealTitle}</p>
         </header>
 
-        <div className="px-5 py-4 overflow-y-auto">
+        <div className="flex-1 min-h-0 px-4 py-3 md:px-5 md:py-4 overflow-y-auto">
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
             Verifica antes de avançar:
           </p>
@@ -136,7 +136,7 @@ export function StageChecklistModal({
           </ul>
         </div>
 
-        <footer className="px-5 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between gap-2">
+        <footer className="px-4 md:px-5 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 shrink-0">
           <button
             type="button"
             onClick={onCancel}

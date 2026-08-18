@@ -33,8 +33,8 @@ export const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
     if (selectedCount === 0) return null;
 
     return (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300">
-            <div className="bg-slate-900 text-white rounded-2xl shadow-2xl border border-white/10 px-6 py-4 flex items-center gap-6">
+        <div className="fixed inset-x-3 md:inset-x-auto bottom-[calc(1rem+var(--app-bottom-nav-height,0px)+var(--app-safe-area-bottom,0px))] md:bottom-8 md:left-1/2 md:transform md:-translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300">
+            <div className="bg-slate-900 text-white rounded-2xl shadow-2xl border border-white/10 px-3 py-2.5 md:px-6 md:py-4 flex items-center justify-between md:justify-start gap-2 md:gap-6">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center font-bold text-sm">
                         {selectedCount}

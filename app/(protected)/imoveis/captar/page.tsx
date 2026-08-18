@@ -96,7 +96,7 @@ export default function CaptarImovelPage() {
   const low = Object.values(c).filter((v) => v > 0 && v < 50).length;
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="p-0 md:p-6 max-w-3xl">
       <div className="mb-4">
         <Link href="/imoveis" className="text-sm text-blue-600 hover:underline">← Imóveis</Link>
       </div>

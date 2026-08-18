@@ -178,7 +178,7 @@ export const GlobalSearchModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-[9998] flex items-start justify-center pt-[12vh] px-4" onClick={close}>
+    <div className="fixed inset-0 z-[9998] flex items-start justify-center pt-4 sm:pt-[10vh] px-3 sm:px-4" onClick={close}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
         className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden"
@@ -200,7 +200,7 @@ export const GlobalSearchModal: React.FC = () => {
           </button>
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[55dvh] sm:max-h-[60dvh] overflow-y-auto">
           {!hasQuery && (
             <p className="px-4 py-8 text-center text-sm text-slate-400 dark:text-slate-500">Escreve pelo menos 2 letras.</p>
           )}

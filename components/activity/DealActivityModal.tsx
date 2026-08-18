@@ -80,7 +80,7 @@ export function DealActivityModal({ dealId, contactName, open, onOpenChange }: D
         }}
       >
         <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 max-h-[90dvh] overflow-y-auto">
-          <div className="p-5 border-b border-slate-200 dark:border-white/10 flex justify-between items-start">
+          <div className="sticky top-0 z-10 bg-white dark:bg-dark-card p-4 md:p-5 border-b border-slate-200 dark:border-white/10 flex justify-between items-start">
             <div>
               <h2 id={headingId} className="text-lg font-bold text-slate-900 dark:text-white font-display">
                 Actividade

@@ -1199,7 +1199,6 @@ export function ChannelSetupWizard({
       onClose={handleClose}
       title="Configurar Canal de Mensagem"
       size="lg"
-      bodyClassName="max-h-[75vh] overflow-auto"
     >
       {/* Stepper */}
       {step !== 'complete' && (

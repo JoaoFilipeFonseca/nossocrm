@@ -40,9 +40,9 @@ export const ActivitiesHeader: React.FC<ActivitiesHeaderProps> = ({
           : null;
 
   return (
-    <div className="flex justify-between items-center mb-8">
+    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4 md:mb-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-display">
+        <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white font-display">
           Tarefas
         </h1>
         <div className="mt-1 flex items-center gap-2">

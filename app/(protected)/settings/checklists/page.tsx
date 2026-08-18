@@ -42,7 +42,7 @@ export default async function ChecklistsPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-0 md:p-6 max-w-4xl">
       <h1 className="text-2xl font-semibold mb-2">Checklists por estágio</h1>
       <p className="text-sm text-slate-500 mb-6">
         Define o que tem de ser feito antes de mover um negócio para cada estágio.

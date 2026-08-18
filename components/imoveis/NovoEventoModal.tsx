@@ -70,8 +70,8 @@ export default function NovoEventoModal({ imovelId, open, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-3 md:p-4 overflow-y-auto">
+      <div className="w-full max-w-md rounded-lg bg-white p-4 md:p-6 shadow-xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">Novo evento</h2>
 
         <form onSubmit={onSubmit} className="space-y-3">

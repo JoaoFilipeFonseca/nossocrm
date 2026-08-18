@@ -14,10 +14,10 @@ export default async function ImoveisPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-0 md:p-6 max-w-6xl">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Imóveis</h1>
+          <h1 className="text-xl md:text-2xl font-semibold">Imóveis</h1>
           <p className="text-sm text-slate-500 mt-1">
             {imoveis.length === 0
               ? 'Sem imóveis ainda.'
@@ -26,7 +26,7 @@ export default async function ImoveisPage() {
                 : `${imoveis.length} imóveis registados.`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/imoveis/captar"
             className="inline-flex items-center rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"

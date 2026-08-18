@@ -1357,7 +1357,8 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
   const phoneE164 = normalizePhoneE164(contact?.phone);
 
   return (
-    <div className="h-dvh overflow-hidden bg-slate-950 text-slate-100">
+    // Mobile: altura natural + scroll único da página; desktop: cockpit fixo.
+    <div className="min-h-dvh md:h-dvh overflow-visible md:overflow-hidden bg-slate-950 text-slate-100">
       {toast ? (
         <div className="fixed right-6 top-6 z-50">
           <div
@@ -1378,13 +1379,13 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
       ) : null}
 
       {/* Top pipeline bar */}
-      <div className="sticky top-0 z-40 h-16 border-b border-white/5 bg-black/40 backdrop-blur">
-        <div className="flex h-16 w-full items-center px-6 2xl:px-10">
-          <div className="flex items-center justify-between gap-4">
+      <div className="sticky top-0 z-40 h-auto md:h-16 border-b border-white/5 bg-black/40 backdrop-blur">
+        <div className="flex h-auto md:h-16 w-full flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0 px-3 py-2 md:px-6 md:py-0 2xl:px-10">
+          <div className="flex w-full md:w-auto min-w-0 items-center justify-between gap-3 md:gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <select
-                  className="max-w-90 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 outline-none hover:bg-white/8 focus:ring-2 focus:ring-cyan-400/30"
+                  className="min-w-0 max-w-[55vw] md:max-w-90 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 outline-none hover:bg-white/8 focus:ring-2 focus:ring-cyan-400/30"
                   value={deal.id}
                   onChange={(e) => setDealInUrl(e.target.value)}
                   aria-label="Selecionar deal"
@@ -1414,7 +1415,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
           </div>
 
           <div
-            className="ml-8 grid flex-1 gap-3"
+            className="ml-0 md:ml-8 grid w-full md:w-auto flex-1 gap-2 md:gap-3"
             style={{ gridTemplateColumns: `repeat(${Math.max(1, stages.length)}, minmax(0, 1fr))` }}
           >
             {stages.map((s, idx) => {
@@ -1434,7 +1435,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                       className={`h-2 w-2 rounded-full ${isActive ? toneToBg(s.tone) : isDone ? 'bg-white/30' : 'bg-white/10'}`}
                     />
                   </div>
-                  <div className={`mt-1 text-[11px] ${isActive ? 'text-slate-200' : 'text-slate-500'}`}>{s.label}</div>
+                  <div className={`mt-1 hidden md:block text-[11px] ${isActive ? 'text-slate-200' : 'text-slate-500'}`}>{s.label}</div>
                 </button>
               );
             })}
@@ -1445,10 +1446,10 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
       </div>
 
       {/* Cockpit layout */}
-      <div className="h-[calc(100dvh-64px)] w-full overflow-hidden px-6 py-4 2xl:px-10">
-        <div className="grid h-full min-h-0 gap-4 lg:grid-cols-[360px_1fr_420px] lg:items-stretch">
+      <div className="h-auto md:h-[calc(100dvh-64px)] w-full overflow-visible md:overflow-hidden px-3 py-3 md:px-6 md:py-4 2xl:px-10">
+        <div className="grid h-auto md:h-full min-h-0 gap-3 md:gap-4 lg:grid-cols-[360px_1fr_420px] lg:items-stretch">
           {/* Left rail */}
-          <div className="flex min-h-0 flex-col gap-4 overflow-auto pr-1">
+          <div className="flex min-h-0 flex-col gap-4 overflow-visible md:overflow-auto pr-0 md:pr-1">
             <Panel
               title="Health"
               icon={<HeartPulse className="h-4 w-4 text-emerald-300" />}
@@ -1771,7 +1772,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
             </div>
 
             <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-white/10 bg-white/3">
-              <div className="flex-1 min-h-0 overflow-auto divide-y divide-white/10">
+              <div className="flex-1 min-h-0 overflow-visible md:overflow-auto divide-y divide-white/10">
                   {filteredTimelineItems.length === 0 ? (
                     <div className="px-6 py-10 text-center">
                       <div className="text-sm font-semibold text-slate-200">
@@ -2067,7 +2068,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
           </div>
 
           {/* Right rail */}
-          <div className="flex min-h-0 flex-col gap-4 overflow-hidden">
+          <div className="flex min-h-0 flex-col gap-4 overflow-visible md:overflow-hidden">
             <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-white/10 bg-white/3">
               <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 shrink-0">
                 <div className="flex items-center gap-2">
@@ -2097,9 +2098,9 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                 </TabButton>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-hidden p-4">
+              <div className="min-h-0 flex-1 overflow-visible md:overflow-hidden p-3 md:p-4">
                 {tab === 'chat' ? (
-                  <div className="h-full min-h-0 rounded-2xl border border-white/10 bg-white/2 overflow-hidden">
+                  <div className="h-[70dvh] md:h-full min-h-0 rounded-2xl border border-white/10 bg-white/2 overflow-hidden">
                     <UIChat
                       boardId={board.id}
                       dealId={deal.id}
@@ -2111,7 +2112,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                     />
                   </div>
                 ) : tab === 'notas' ? (
-                  <div className="h-full min-h-0 rounded-2xl border border-white/10 bg-white/2 p-4 overflow-auto">
+                  <div className="h-auto md:h-full min-h-0 rounded-2xl border border-white/10 bg-white/2 p-4 overflow-visible md:overflow-auto">
                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                       <StickyNote className="h-4 w-4" />
                       Notas do deal (persistidas)
@@ -2181,7 +2182,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                     </div>
                   </div>
                 ) : tab === 'scripts' ? (
-                  <div className="h-full min-h-0 rounded-2xl border border-white/10 bg-white/2 p-4 overflow-auto">
+                  <div className="h-auto md:h-full min-h-0 rounded-2xl border border-white/10 bg-white/2 p-4 overflow-visible md:overflow-auto">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                         <FileText className="h-4 w-4" /> Scripts (persistidos)
@@ -2220,7 +2221,7 @@ export default function DealCockpitClient({ dealId }: { dealId?: string }) {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full min-h-0 rounded-2xl border border-white/10 bg-white/2 p-4 overflow-auto">
+                  <div className="h-auto md:h-full min-h-0 rounded-2xl border border-white/10 bg-white/2 p-4 overflow-visible md:overflow-auto">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                         <Inbox className="h-4 w-4" /> Arquivos (storage)

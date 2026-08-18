@@ -414,7 +414,7 @@ export function CreateAdWizard({ onClose, onCreated }: { onClose: () => void; on
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onMouseDown={onClose} role="dialog" aria-modal="true" aria-label="Novo anúncio">
       <div
-        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-dark-card shadow-2xl"
+        className="w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl bg-white dark:bg-dark-card shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Cabeçalho */}

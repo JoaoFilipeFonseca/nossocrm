@@ -660,7 +660,6 @@ export const WebhooksSection: React.FC = () => {
         onClose={() => setIsQuickStartOpen(false)}
         title="Webhooks (guia rápido)"
         size="xl"
-        bodyClassName="max-h-[70vh] overflow-auto"
       >
         <div className="space-y-5">
           <div className="flex items-start justify-between gap-3">

@@ -68,14 +68,14 @@ export default async function ContactDetailPage({ params, searchParams }: { para
       </div>
 
       {/* CABEÇALHO */}
-      <div className="bg-white dark:bg-dark-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-5 sm:p-6 mb-5">
+      <div className="bg-white dark:bg-dark-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm p-4 sm:p-6 mb-4 sm:mb-5">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center text-2xl font-bold font-display">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center text-lg sm:text-2xl font-bold font-display">
             {initials}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold font-display text-slate-900 dark:text-white truncate">{contact.name}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white truncate">{contact.name}</h1>
               {disc && (
                 <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold border ${disc.chip}`}>
                   <span className={`w-2 h-2 rounded-full ${disc.dot}`} /> DISC: {disc.label}

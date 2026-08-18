@@ -36,9 +36,9 @@ export default async function AutomationLogsPage() {
   const logs = (data ?? []) as unknown as ExecutionRow[];
 
   return (
-    <div className="p-6 max-w-7xl">
-      <div className="flex items-start justify-between mb-2">
-        <h1 className="text-2xl font-semibold">Logs de Automações</h1>
+    <div className="p-0 md:p-6 max-w-7xl">
+      <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between mb-2">
+        <h1 className="text-xl md:text-2xl font-semibold">Logs de Automações</h1>
         <Link href="/automacoes" className="text-sm text-blue-600 hover:underline">
           Ver builder de automações →
         </Link>

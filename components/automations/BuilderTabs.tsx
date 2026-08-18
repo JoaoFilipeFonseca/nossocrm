@@ -80,7 +80,7 @@ export function BuilderTabs({ automationId, definition }: BuilderTabsProps) {
           <LinearBuilder automationId={automationId} definition={definition} />
         </div>
       ) : (
-        <div className="relative flex border border-slate-200 rounded-md overflow-hidden bg-slate-50 h-[720px]">
+        <div className="relative flex border border-slate-200 rounded-md overflow-hidden bg-slate-50 h-[60vh] min-h-[380px] md:h-[720px]">
           <Palette
             mobileOpen={mobilePaletteOpen}
             onMobileClose={() => setMobilePaletteOpen(false)}

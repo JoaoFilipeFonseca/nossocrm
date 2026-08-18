@@ -300,8 +300,8 @@ export const ProfilePage: React.FC = () => {
     return (
         <div className="max-w-2xl mx-auto pb-10">
             {/* Header */}
-            <div className="mb-10">
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
+            <div className="mb-6 md:mb-10">
+                <h1 className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
                     O Meu Perfil
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 mt-2">
@@ -321,8 +321,8 @@ export const ProfilePage: React.FC = () => {
             )}
 
             {/* Profile Card */}
-            <div className="bg-white dark:bg-white/3 border border-slate-200 dark:border-white/10 rounded-2xl p-8 mb-6">
-                <div className="flex items-start justify-between mb-6">
+            <div className="bg-white dark:bg-white/3 border border-slate-200 dark:border-white/10 rounded-2xl p-5 md:p-8 mb-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
                     <div className="flex items-center gap-6">
                         {/* Avatar Grande com Upload */}
                         <div className="relative group">
@@ -378,7 +378,7 @@ export const ProfilePage: React.FC = () => {
 
                         {/* Info resumida */}
                         <div>
-                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                            <h2 className="text-lg md:text-2xl font-bold text-slate-900 dark:text-white">
                                 {displayName}
                             </h2>
                             {fullName && (

@@ -121,7 +121,7 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-dark-bg relative overflow-hidden">
+    <div className="min-h-[100dvh] flex items-start md:items-center justify-center py-8 md:py-0 bg-slate-50 dark:bg-dark-bg relative overflow-y-auto md:overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-primary-500/20 rounded-full blur-[120px]" />
         <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] bg-purple-500/20 rounded-full blur-[100px]" />
@@ -129,13 +129,13 @@ export default function SetupPage() {
 
       <div className="max-w-md w-full relative z-10 px-4">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white font-display tracking-tight mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white font-display tracking-tight mb-2">
             Bem-vindo ao Foco Imo
           </h1>
           <p className="text-slate-500 dark:text-slate-400">Vamos preparar seu ambiente de trabalho.</p>
         </div>
 
-        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl p-8 backdrop-blur-sm">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl p-6 md:p-8 backdrop-blur-sm">
           {checkingInit ? (
             <div className="flex items-center justify-center py-10 text-slate-600 dark:text-slate-300">
               <Loader2 className="animate-spin h-5 w-5 mr-2" />

@@ -231,17 +231,17 @@ export const AnunciosPage: React.FC = () => {
   }, [analyses]);
 
   return (
-    <div className="p-6">
-      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+    <div className="p-0 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4 md:mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
+          <h1 className="text-lg md:text-2xl font-semibold flex items-center gap-2">
             <Megaphone className="h-6 w-6 text-violet-600" /> Anúncios
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1 hidden md:block">
             Desempenho por anúncio do Meta Ads. Gasto e leads no período; negócios ganhos e dinheiro efectivo são a vida do anúncio.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden">
             {PERIODS.map((p) => (
               <button

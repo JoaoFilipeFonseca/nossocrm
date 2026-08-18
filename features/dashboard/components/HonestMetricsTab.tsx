@@ -142,7 +142,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ icon: Icon, title, value, subti
           </span>
         )}
       </div>
-      <div className="text-3xl font-bold text-slate-900 dark:text-white font-display">{value}</div>
+      <div className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white font-display">{value}</div>
       {subtitle && <div className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</div>}
     </div>
   );
@@ -273,7 +273,7 @@ export const HonestMetricsTab: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 h-32 animate-pulse" />
         ))}
@@ -333,7 +333,7 @@ export const HonestMetricsTab: React.FC = () => {
       </div>
 
       {/* Top row: 4 cards principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {(() => {
           const target = data.daily_chq_target || 0;
           const today = data.chq.today;

@@ -21,18 +21,18 @@ export const AICenterSettings: React.FC = () => {
 
   return (
     <div className="pb-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
+      <div className="mb-5 md:mb-8">
+        <h1 className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
           Central de I.A
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">
+        <p className="text-slate-500 dark:text-slate-400 mt-1 md:mt-2 text-sm md:text-lg">
           Configure o fornecedor/modelo e faça a gestão dos prompts usados no sistema.
         </p>
       </div>
 
       {/* Org-wide toggle (admin-only) — sempre visível no topo */}
-      <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 mb-6">
-        <div className="flex items-center justify-between gap-4">
+      <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 md:p-6 mb-4 md:mb-6">
+        <div className="flex items-start md:items-center justify-between gap-3 md:gap-4">
           <div>
             <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               <span className="text-lg">✨</span> IA activa na organização

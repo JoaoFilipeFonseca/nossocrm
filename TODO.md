@@ -1,5 +1,15 @@
 # TODO — Foco Imo (CRM) — CATÁLOGO ÚNICO
 
+> ## 📱 MOBILE — restos cosméticos da varredura de 17-18/08/2026 (menores, não bloqueiam)
+> A varredura grande (scroll preso + painéis gigantes) foi corrigida e está live. Ficam por polir
+> (nenhum tapa o ecrã nem prende scroll): AIOnboarding espaçamentos (`features/settings/components/ai/AIOnboarding.tsx:140-165`) ·
+> AuditLogDashboard grids/p-8 (`features/settings/components/AuditLogDashboard.tsx:228,269,373`) ·
+> OrganicoPage pílulas 2-3 linhas (`features/organico/OrganicoPage.tsx:80-98`) · GestorPanel labels `w-28`→`w-16 md:w-28` (`:206,220`) ·
+> HonestMetricsTab cartões `p-5 h-32` (`:135,278`) · SelectBoardModal paddings (`features/contacts/components/SelectBoardModal.tsx:48-79`) ·
+> BoardCreationWizard footer botões largos (`:1535`) · imoveis/[id] título text-2xl (`:87`) · checklists header ·
+> `/labs/deal-cockpit-mock/*` (sandbox, mesmos padrões do cockpit real, só se o João usar labs no tlm).
+> Código morto detectado (não corrigir, eventualmente apagar): features/inbox/{InboxPage,InboxFocusView,FocusContextPanel,InboxListView,InboxOverviewView,PendingAdvancesSection,ScriptEditorModal}, ActivityFormModalV2, ContactFormModalV2, features/contacts/components/ContactsView.tsx.
+
 > ## 🧹 ARRUMAÇÃO DO CRM — PLANO PRONTO (23/07/2026, executar em sessão Opus)
 > Decisões do João: Inbox morre (→/hoje no topo + banner atrasadas) · Visão Geral 1ª posição ·
 > Actividades→"Tarefas" · Boards→"Pipeline" · Matches+Cruzamentos unem-se em /cruzamentos ·

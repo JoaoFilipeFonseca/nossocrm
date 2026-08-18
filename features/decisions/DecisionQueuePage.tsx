@@ -81,9 +81,9 @@ export const DecisionQueuePage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Zap className="text-primary-500" size={28} />
             Central de Decisões
           </h1>
@@ -119,7 +119,7 @@ export const DecisionQueuePage: React.FC = () => {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
         <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
             <Inbox size={16} />

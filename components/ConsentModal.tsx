@@ -113,7 +113,7 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({
         if (e.target === e.currentTarget) onClose?.();
       }}
     >
-      <div className="bg-white dark:bg-dark-card rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="bg-white dark:bg-dark-card rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-dark-border">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -125,7 +125,7 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
+        <div className="flex-1 min-h-0 px-4 py-3 md:px-6 md:py-4 overflow-y-auto">
           {/* Required Consents */}
           {requiredMissing.length > 0 && (
             <div className="mb-6">

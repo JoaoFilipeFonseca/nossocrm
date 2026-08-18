@@ -10,7 +10,9 @@
 export const MODAL_OVERLAY_CLASS =
   // Use a very high z-index so modals never render behind fixed sidebars/overlays.
   // On desktop, avoid covering the left navigation sidebar by offsetting from `--app-sidebar-width`.
-  'fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-stretch sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4';
+  // items-center em todos os tamanhos: com items-stretch, em telemóvel um modal
+  // de 3 linhas era esticado a 90dvh (gigante e meio vazio).
+  'fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto';
 
 export const MODAL_PANEL_BASE_CLASS =
   'bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 shadow-2xl w-full flex flex-col overflow-hidden rounded-xl sm:rounded-2xl';
@@ -29,7 +31,10 @@ export const MODAL_TITLE_CLASS =
 export const MODAL_CLOSE_BUTTON_CLASS =
   'p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors focus-visible-ring';
 
-export const MODAL_BODY_CLASS = 'p-4 sm:p-5';
+// O corpo faz sempre scroll dentro do painel (que tem max-h + overflow-hidden):
+// sem isto, um modal maior que o ecrã do telemóvel ficava cortado sem scroll
+// e o botão Guardar era inalcançável.
+export const MODAL_BODY_CLASS = 'p-4 sm:p-5 flex-1 min-h-0 overflow-y-auto';
 
 export const MODAL_FOOTER_CLASS =
   'p-4 sm:p-5 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-dark-card shrink-0';

@@ -239,9 +239,9 @@ function Kpi({ label, value, hint, tint, small }: {
     : tint === 'blue' ? 'text-primary-600 dark:text-primary-400'
     : 'text-slate-900 dark:text-white';
   return (
-    <div className={`rounded-2xl border border-slate-200 dark:border-white/10 p-4 shadow-sm ${bg}`}>
+    <div className={`rounded-2xl border border-slate-200 dark:border-white/10 p-3 md:p-4 shadow-sm ${bg}`}>
       <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">{label}</div>
-      <div className={`font-bold tracking-tight mt-1.5 ${small ? 'text-lg' : 'text-2xl'} ${valColor}`}>{value}</div>
+      <div className={`font-bold tracking-tight mt-1.5 ${small ? 'text-base md:text-lg' : 'text-lg md:text-2xl'} ${valColor}`}>{value}</div>
       {hint && <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{hint}</div>}
     </div>
   );

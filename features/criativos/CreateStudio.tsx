@@ -214,14 +214,14 @@ export const CreateStudio: React.FC<Props> = ({ onSaved, prefill, onQuickUpload 
   /* Passo 1 — escolher formato */
   if (!format) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4">
         {(Object.keys(FORMAT_LABELS) as RenderFormat[]).map((f) => {
           const Icon = FORMAT_ICONS[f];
           return (
             <button
               key={f}
               onClick={() => { setFormat(f); setRatio(f === 'post' ? 'portrait' : 'square'); setPreviewUrl(null); }}
-              className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 text-center hover:border-primary-400 dark:hover:border-primary-600 transition-colors"
+              className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 text-center hover:border-primary-400 dark:hover:border-primary-600 transition-colors"
             >
               <Icon className="h-8 w-8 mx-auto text-primary-600 mb-2" />
               <div className="text-sm font-semibold text-slate-900 dark:text-white">{FORMAT_LABELS[f]}</div>
@@ -437,7 +437,7 @@ export const CreateStudio: React.FC<Props> = ({ onSaved, prefill, onQuickUpload 
       </div>
 
       {/* Pré-visualização */}
-      <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[320px]">
+      <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-3 md:p-4 flex flex-col items-center justify-center min-h-[180px] md:min-h-[320px]">
         {previewUrl ? (
            
           <img

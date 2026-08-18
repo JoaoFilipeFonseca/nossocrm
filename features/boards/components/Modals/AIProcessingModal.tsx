@@ -75,17 +75,17 @@ export const AIProcessingModal: React.FC<AIProcessingModalProps> = ({ isOpen, cu
     const activeIndex = getCurrentStepIndex();
 
     return (
-        <div className="fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-center justify-center">
+        <div className="fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-center justify-center p-4">
             {/* Glassmorphism Background */}
             <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-xl transition-opacity duration-500" />
 
-            <div className="relative z-10 w-full max-w-md bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-white/40 dark:border-white/20 overflow-hidden transform transition-all duration-500 scale-100">
+            <div className="relative z-10 w-full max-w-md bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-white/40 dark:border-white/20 max-h-[calc(100dvh-2rem)] overflow-y-auto transform transition-all duration-500 scale-100">
                 {/* Header */}
-                <div className="p-8 bg-gradient-to-b from-white/50 to-transparent dark:from-white/5 border-b border-slate-100/50 dark:border-white/5 text-center">
+                <div className="p-5 md:p-8 bg-gradient-to-b from-white/50 to-transparent dark:from-white/5 border-b border-slate-100/50 dark:border-white/5 text-center">
                     <div className="w-16 h-16 bg-gradient-to-tr from-primary-100 to-blue-50 dark:from-primary-900/30 dark:to-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner ring-1 ring-white/50 dark:ring-white/10">
                         <Sparkles className="text-primary-600 dark:text-primary-400 animate-pulse drop-shadow-sm" size={32} />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                    <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                         {phase === 'structure' ? 'A criar o seu CRM' : 'A definir Estratégia'}
                     </h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">
@@ -94,7 +94,7 @@ export const AIProcessingModal: React.FC<AIProcessingModalProps> = ({ isOpen, cu
                 </div>
 
                 {/* Steps */}
-                <div className="p-8 space-y-7">
+                <div className="p-5 md:p-8 space-y-4 md:space-y-7">
                     {steps.map((step, idx) => {
                         const isActive = idx === activeIndex;
                         const isCompleted = idx < activeIndex;

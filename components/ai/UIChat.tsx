@@ -1226,7 +1226,7 @@ export function UIChat({
             </div>
 
             {/* Input Area */}
-            < form onSubmit={handleSubmit} className="p-3 border-t border-slate-700/50" >
+            < form onSubmit={handleSubmit} className="p-3 pb-[calc(0.75rem+var(--app-safe-area-bottom,0px))] border-t border-slate-700/50" >
                 {hasPendingApprovals && (
                     <div className="mb-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[12px] text-amber-100">
                         Tem {pendingApprovalIds.length} confirmação{pendingApprovalIds.length === 1 ? '' : 'ões'} pendente{pendingApprovalIds.length === 1 ? '' : 's'}. Aprove ou recuse acima para continuar.
@@ -1276,7 +1276,7 @@ export function UIChat({
 
         // Minimized: Small widget in corner
         return (
-            <div className="fixed bottom-6 right-6 z-50 w-96 h-125 bg-slate-900/95 rounded-2xl border border-slate-700/50 shadow-2xl shadow-black/50 flex flex-col overflow-hidden backdrop-blur-xl transition-all duration-300">
+            <div className="fixed bottom-3 right-3 md:bottom-6 md:right-6 z-50 w-[calc(100vw-1.5rem)] max-w-96 h-[min(31.25rem,calc(100dvh-6rem))] bg-slate-900/95 rounded-2xl border border-slate-700/50 shadow-2xl shadow-black/50 flex flex-col overflow-hidden backdrop-blur-xl transition-all duration-300">
                 {chatContent}
             </div>
         );

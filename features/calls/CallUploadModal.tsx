@@ -61,11 +61,11 @@ export const CallUploadModal: React.FC<Props> = ({ isOpen, onClose, dealId, cont
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-6"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-end md:items-center justify-center p-0 md:p-6"
       onClick={() => !uploading && onClose()}
     >
       <div
-        className="bg-white dark:bg-slate-900 w-full md:max-w-lg md:rounded-2xl rounded-t-2xl border border-slate-200 dark:border-white/10 max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-900 w-full md:max-w-lg md:rounded-2xl rounded-t-2xl border border-slate-200 dark:border-white/10 max-h-[calc(100dvh-1rem)] md:max-h-[90dvh] overflow-y-auto pb-[var(--app-safe-area-bottom,0px)]"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10 p-4 flex items-center justify-between">
@@ -155,7 +155,7 @@ export const CallUploadModal: React.FC<Props> = ({ isOpen, onClose, dealId, cont
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
             <Button variant="outline" onClick={onClose} disabled={uploading}>Cancelar</Button>
             <Button onClick={handleSubmit} disabled={!file || uploading}>
               {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}

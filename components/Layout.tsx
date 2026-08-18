@@ -650,7 +650,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
         <aside
           aria-label="Assistente de IA"
           aria-hidden={!isGlobalAIOpen}
-          className={`bg-surface transition-all duration-300 ease-in-out overflow-hidden flex flex-col ${isGlobalAIOpen ? 'fixed inset-0 z-50 w-full opacity-100 md:relative md:inset-auto md:z-auto md:w-96 md:border-l md:border-[var(--color-border)]' : 'w-0 opacity-0'}`}
+          className={`bg-surface transition-all duration-300 ease-in-out overflow-hidden flex flex-col ${isGlobalAIOpen ? 'fixed inset-0 z-[9999] w-full opacity-100 md:relative md:inset-auto md:z-auto md:w-96 md:border-l md:border-[var(--color-border)]' : 'w-0 opacity-0'}`}
         >
           <div className="w-full md:w-96 h-full">
             {isGlobalAIOpen && (

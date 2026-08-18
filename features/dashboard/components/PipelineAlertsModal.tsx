@@ -121,11 +121,11 @@ export const PipelineAlertsModal: React.FC<PipelineAlertsModalProps> = ({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none" />
       
       {/* Modal */}
-      <div className="relative bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden border border-slate-200 dark:border-white/10">
+      <div className="relative bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[calc(100dvh-2rem)] md:max-h-[80dvh] flex flex-col overflow-hidden border border-slate-200 dark:border-white/10">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-white/10">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-200 dark:border-white/10 shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Clock className="text-primary-500" size={24} />
               Alertas de Pipeline
             </h2>
@@ -146,7 +146,7 @@ export const PipelineAlertsModal: React.FC<PipelineAlertsModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
+        <div className="p-4 md:p-6 overflow-y-auto flex-1 min-h-0 space-y-4 md:space-y-6">
           {alerts.map((alert) => (
             <div key={alert.type} className="space-y-3">
               {/* Alert Header */}

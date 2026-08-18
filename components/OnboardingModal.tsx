@@ -40,7 +40,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             clickOutsideDeactivates={true}
         >
             <div
-                className="fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-center justify-center"
+                className="fixed inset-0 md:left-[var(--app-sidebar-width,0px)] z-[9999] flex items-center justify-center p-4 overflow-y-auto"
                 role="presentation"
             >
                 <div
@@ -57,7 +57,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     aria-describedby={descId}
                 >
                     {/* Main Card */}
-                    <div className="bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-3xl shadow-2xl overflow-hidden">
+                    <div className="bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-2xl sm:rounded-3xl shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
                         {/* Skip Button */}
                         <button
                             type="button"
@@ -69,7 +69,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                         </button>
 
                         {/* Content */}
-                        <div className="p-12 text-center text-white">
+                        <div className="p-6 md:p-12 text-center text-white">
                             {/* Icon */}
                             <div
                                 className="inline-flex items-center justify-center w-20 h-20 mb-6 bg-white/20 rounded-2xl backdrop-blur-sm"
@@ -81,7 +81,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                             {/* Title */}
                             <h1
                                 id={titleId}
-                                className="text-4xl font-bold mb-4"
+                                className="text-2xl md:text-4xl font-bold mb-3 md:mb-4"
                             >
                                 Bem-vindo ao seu CRM! 👋
                             </h1>
@@ -89,13 +89,13 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                             {/* Description */}
                             <p
                                 id={descId}
-                                className="text-xl text-white/90 mb-8 max-w-xl mx-auto"
+                                className="text-base md:text-xl text-white/90 mb-6 md:mb-8 max-w-xl mx-auto"
                             >
                                 Vamos criar o seu <strong>primeiro board personalizado</strong> em menos de 30 segundos?
                             </p>
 
                             {/* Features */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-left" role="list" aria-label="Recursos do CRM">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8 text-left" role="list" aria-label="Recursos do CRM">
                                 <div className="p-4 bg-white/10 rounded-xl backdrop-blur-sm" role="listitem">
                                     <div className="text-2xl mb-2" aria-hidden="true">🎯</div>
                                     <h3 className="font-semibold mb-1">Templates Prontos</h3>
@@ -120,7 +120,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                                 <button
                                     type="button"
                                     onClick={onStart}
-                                    className="px-8 py-4 bg-white text-primary-600 font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-lg focus-visible-ring"
+                                    className="px-5 py-3 md:px-8 md:py-4 bg-white text-primary-600 font-bold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-base md:text-lg focus-visible-ring"
                                     autoFocus
                                 >
                                     Começar agora
@@ -130,7 +130,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                                 <button
                                     type="button"
                                     onClick={onSkip}
-                                    className="px-8 py-4 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-all backdrop-blur-sm focus-visible-ring"
+                                    className="px-5 py-3 md:px-8 md:py-4 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-all backdrop-blur-sm focus-visible-ring"
                                 >
                                     Explorar por conta
                                 </button>

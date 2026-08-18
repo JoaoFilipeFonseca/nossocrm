@@ -153,7 +153,7 @@ export function AIMetricsSection() {
           <Bot className="text-primary-500" size={20} />
           Performance da IA
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="glass p-4 rounded-xl border border-slate-200 dark:border-white/5 animate-pulse">
               <div className="flex items-center gap-3">
@@ -207,7 +207,7 @@ export function AIMetricsSection() {
         Performance da IA
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <AIMetricCard
           icon={MessageSquare}
           label="Conversas Hoje"

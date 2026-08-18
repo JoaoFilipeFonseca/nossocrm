@@ -393,7 +393,7 @@ export function AgendaHojeCard({ itens }: { itens: AgendaItem[] }) {
           <p className="text-sm text-slate-500 dark:text-slate-400">Tudo em dia. Sem tarefas por fazer.</p>
         </div>
       ) : (
-        <div className="max-h-[340px] overflow-y-auto -mr-1 pr-1">
+        <div className="max-h-none md:max-h-[340px] overflow-visible md:overflow-y-auto -mr-1 pr-1">
           {atrasadas.length > 0 && (
             <>
               <div className="text-[10.5px] font-bold uppercase tracking-wide text-rose-500 mt-1 mb-0.5">

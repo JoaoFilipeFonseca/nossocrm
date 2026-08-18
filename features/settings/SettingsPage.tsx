@@ -165,7 +165,7 @@ const IntegrationsSettings: React.FC = () => {
 
   return (
     <div className="pb-10">
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto whitespace-nowrap [&>*]:shrink-0">
         {([
           { id: 'channels' as const, label: 'Canais (Messaging)' },
           { id: 'meta-ads' as const, label: 'Meta Ads' },

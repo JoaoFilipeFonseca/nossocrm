@@ -510,7 +510,7 @@ export function MessageComposerModal({
                         onChange={(e) => setMessage(e.target.value)}
                         rows={12}
                             disabled={isGeneratingInitial}
-                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white text-sm focus:outline-none focus-visible-ring resize-y min-h-80 max-h-[60vh] disabled:opacity-60 disabled:cursor-wait"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white text-sm focus:outline-none focus-visible-ring resize-y min-h-40 md:min-h-80 max-h-[40dvh] md:max-h-[60dvh] disabled:opacity-60 disabled:cursor-wait"
                         placeholder={
                             isGeneratingInitial
                                 ? 'A gerar mensagem profissional pt-PT formal com os dados do deal…'

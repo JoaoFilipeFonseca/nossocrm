@@ -28,7 +28,9 @@ export function FullscreenSheet({ isOpen, onClose, title, children, footer, clas
       ariaLabel={title}
       className={cn('h-[100dvh] rounded-none', className)}
     >
-      <div className="flex h-[100dvh] flex-col">
+      {/* h-full (não 100dvh): o Sheet já desconta a safe-area; 100dvh aqui
+          empurrava o footer para fora do ecrã em iPhone. */}
+      <div className="flex h-full flex-col">
         <div className="shrink-0 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-dark-card">
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="min-w-0 text-sm font-semibold text-slate-900 dark:text-white truncate">{title}</div>

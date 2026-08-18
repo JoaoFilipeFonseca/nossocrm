@@ -140,7 +140,7 @@ export const CallModal: React.FC<CallModalProps> = ({
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleDiscard} />
 
             {/* Modal */}
-            <div className="relative bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="relative bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl w-full max-w-xl mx-3 md:mx-4 overflow-hidden max-h-[calc(100dvh-1.5rem)] md:max-h-[90dvh] flex flex-col">
                 {/* Header */}
                 <div className="bg-linear-to-r from-yellow-500/10 to-orange-500/10 p-4 border-b border-slate-700/50 shrink-0">
                     <div className="flex items-center justify-between">
@@ -187,7 +187,7 @@ export const CallModal: React.FC<CallModalProps> = ({
                 </div>
 
                 {/* Timer */}
-                <div className="flex items-center justify-center py-6 bg-slate-800/50 shrink-0">
+                <div className="flex items-center justify-center py-3 md:py-6 bg-slate-800/50 shrink-0">
                     <div className="flex flex-col items-center gap-2 px-6 py-3 bg-slate-900 rounded-xl border border-slate-700/50">
                         <div className="flex items-center gap-3">
                             <Clock size={18} className="text-yellow-400" />
@@ -208,7 +208,7 @@ export const CallModal: React.FC<CallModalProps> = ({
                 </div>
 
                 {/* Content */}
-                <div className="p-4 space-y-4 overflow-y-auto">
+                <div className="flex-1 min-h-0 p-4 space-y-3 md:space-y-4 overflow-y-auto">
                     {/* Outcome Selection */}
                     <div>
                         <label className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 block">
@@ -255,7 +255,7 @@ export const CallModal: React.FC<CallModalProps> = ({
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="O que foi discutido? Próximos passos?"
-                            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 text-sm resize-y min-h-40 max-h-[40vh]"
+                            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 text-sm resize-y min-h-24 md:min-h-40 max-h-[30dvh]"
                             rows={6}
                         />
                     </div>

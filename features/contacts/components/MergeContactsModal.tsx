@@ -66,7 +66,7 @@ export const MergeContactsModal: React.FC<MergeContactsModalProps> = ({
           role="dialog"
           aria-modal="true"
           aria-label="Resolver contactos duplicados"
-          className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col animate-in zoom-in-95 duration-200"
+          className="bg-white dark:bg-dark-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[calc(100dvh-1.5rem)] md:max-h-[80dvh] flex flex-col animate-in zoom-in-95 duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -96,7 +96,7 @@ export const MergeContactsModal: React.FC<MergeContactsModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-4">
             {pendingCount === 0 ? (
               <div className="text-center py-12">
                 <Check className="w-12 h-12 text-green-500 mx-auto mb-3" />
