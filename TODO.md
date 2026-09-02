@@ -1503,3 +1503,10 @@ aplicadas em prod; edge `webhook-in` v2 (verify_jwt:false, curl 401/404 confirma
   `deal.value` deve nascer com esse valor. Para proprietários ou quando não se sabe, fica a 0 e o João
   coloca à mão. Requer extrair o preço da atribuição/anúncio (Meta lead ingestion / attribution) e
   escrever em `deals.value` na criação da lead. Desenhar antes de construir (fatia própria).
+
+## RESET-1 — restos a decidir (capturado 2 Set 2026, NÃO executar sem ordem)
+- `/reports` (`useDashboardMetrics.ts:241`) e as Métricas Honestas
+  (`honest-metrics.ts` → `weighted_pipeline_eur`) ainda somam `deals.value` de
+  todos os negócios abertos. Depois do RESET-1, o Painel e o Funil dizem 0 € e
+  estes dois continuam a dizer ~80,5 M €. Decidir se seguem a mesma regra
+  (toque humano a partir de `counters_reset_at`) ou se ficam como estão.
