@@ -140,14 +140,14 @@ export function KpiRow({ kpis }: { kpis: PainelKpis }) {
       <Kpi
         label="Pipeline previsto"
         value={eur(kpis.pipelinePrevistoCents)}
-        hint="comissão esperada do que está a trabalhar"
+        hint="comissão esperada dos negócios onde já toquei"
         accent="#3b82f6"
         icon={Layers}
       />
       <Kpi
         label="A trabalhar"
         value={String(kpis.abertosTrabalho)}
-        hint={`${kpis.basePorActivar} na base por activar`}
+        hint={`${kpis.basePorActivar} por activar (ainda sem toque meu)`}
         accent="#a78bfa"
         icon={Target}
       />
@@ -256,6 +256,20 @@ function horaLabel(iso: string): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+/**
+ * RESET-1: a data de uma tarefa de um dia anterior, em texto neutro ("de 24 Jun").
+ * Substitui a etiqueta "atrasada": a informação dos dias fica, a acusação sai.
+ */
+function diaLabel(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const hoje = new Date();
+  const mesmoDia =
+    d.getFullYear() === hoje.getFullYear() && d.getMonth() === hoje.getMonth() && d.getDate() === hoje.getDate();
+  if (mesmoDia) return '';
+  return `de ${d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' })}`;
+}
+
 function AgendaLinha({
   item,
   onFeito,
@@ -271,7 +285,7 @@ function AgendaLinha({
 }) {
   const Icon = TIPO_ICON[item.tipo] ?? ListChecks;
   const hora = horaLabel(item.quando);
-  const sub = [item.dealTitulo || item.contactoNome, hora].filter(Boolean).join(' · ');
+  const sub = [item.dealTitulo || item.contactoNome, diaLabel(item.quando), hora].filter(Boolean).join(' · ');
   return (
     <div className="flex items-center gap-2 py-2 border-b border-slate-100 dark:border-white/5 last:border-0">
       {/* Concluir */}
@@ -288,7 +302,7 @@ function AgendaLinha({
       {/* Corpo (abre o negócio/tarefa) */}
       <button type="button" onClick={() => onAbrir(item)} className="min-w-0 flex-1 text-left group">
         <div className="flex items-center gap-1.5">
-          <Icon size={12} className={item.atrasada ? 'text-rose-500 shrink-0' : 'text-slate-400 dark:text-slate-500 shrink-0'} />
+          <Icon size={12} className="text-slate-400 dark:text-slate-500 shrink-0" />
           <span className="truncate text-[13px] text-slate-800 dark:text-slate-100 group-hover:underline">{item.titulo}</span>
         </div>
         {sub && <div className="truncate text-[11px] text-slate-400 dark:text-slate-500 pl-[18px]">{sub}</div>}
@@ -327,9 +341,9 @@ export function AgendaHojeCard({ itens }: { itens: AgendaItem[] }) {
   const [resolvidas, setResolvidas] = React.useState<Set<string>>(new Set());
   const [emCurso, setEmCurso] = React.useState<Set<string>>(new Set());
 
+  // RESET-1: uma lista só, por ordem de data. Sem separar "atrasadas" de "hoje"
+  // — a data de cada linha diz o que é preciso saber, sem etiqueta de culpa.
   const visiveis = itens.filter((i) => !resolvidas.has(i.id));
-  const atrasadas = visiveis.filter((i) => i.atrasada);
-  const hoje = visiveis.filter((i) => !i.atrasada);
 
   const marcar = (id: string, on: boolean, set: React.Dispatch<React.SetStateAction<Set<string>>>) =>
     set((prev) => {
@@ -367,16 +381,11 @@ export function AgendaHojeCard({ itens }: { itens: AgendaItem[] }) {
   const total = visiveis.length;
 
   return (
-    <div className={`${card} p-4`} style={{ borderColor: atrasadas.length > 0 ? 'rgba(244,63,94,0.4)' : undefined }}>
+    <div className={`${card} p-4`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <CalendarDays size={15} className="text-primary-600 dark:text-primary-400" />
           <span className="text-sm font-bold text-slate-900 dark:text-white">A fazer hoje</span>
-          {atrasadas.length > 0 && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400">
-              {atrasadas.length} {atrasadas.length === 1 ? 'atrasada' : 'atrasadas'}
-            </span>
-          )}
         </div>
         <button
           type="button"
@@ -394,24 +403,9 @@ export function AgendaHojeCard({ itens }: { itens: AgendaItem[] }) {
         </div>
       ) : (
         <div className="max-h-none md:max-h-[340px] overflow-visible md:overflow-y-auto -mr-1 pr-1">
-          {atrasadas.length > 0 && (
-            <>
-              <div className="text-[10.5px] font-bold uppercase tracking-wide text-rose-500 mt-1 mb-0.5">
-                Atrasadas
-              </div>
-              {atrasadas.map((i) => (
-                <AgendaLinha key={i.id} item={i} onFeito={onFeito} onAdiar={onAdiar} onAbrir={onAbrir} ocupado={emCurso.has(i.id)} />
-              ))}
-            </>
-          )}
-          {hoje.length > 0 && (
-            <>
-              <div className="text-[10.5px] font-bold uppercase tracking-wide text-amber-500 mt-3 mb-0.5">Hoje</div>
-              {hoje.map((i) => (
-                <AgendaLinha key={i.id} item={i} onFeito={onFeito} onAdiar={onAdiar} onAbrir={onAbrir} ocupado={emCurso.has(i.id)} />
-              ))}
-            </>
-          )}
+          {visiveis.map((i) => (
+            <AgendaLinha key={i.id} item={i} onFeito={onFeito} onAdiar={onAdiar} onAbrir={onAbrir} ocupado={emCurso.has(i.id)} />
+          ))}
         </div>
       )}
     </div>
@@ -422,7 +416,9 @@ export function CoracaoCard({ coracao }: { coracao: CoracaoDia }) {
   const nums = [
     { v: coracao.tarefasPendentes, label: 'pendentes', sub: 'negócio à frente', cls: 'text-slate-900 dark:text-white' },
     { v: coracao.tarefasHoje, label: 'para hoje', sub: 'a fazer', cls: 'text-amber-500' },
-    { v: coracao.tarefasAtrasadas, label: 'atrasadas', sub: 'em falta', cls: 'text-rose-500' },
+    // RESET-1: era "atrasadas / em falta" a vermelho. A contagem fica — é
+    // informação útil — mas em texto neutro, sem a etiqueta de culpa.
+    { v: coracao.tarefasAtrasadas, label: 'de outros dias', sub: '', cls: 'text-slate-500 dark:text-slate-400' },
     { v: coracao.tarefasFeitasHoje, label: 'feitas hoje', sub: 'concluídas', cls: 'text-emerald-500' },
   ];
   return (

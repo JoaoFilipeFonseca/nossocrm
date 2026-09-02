@@ -6,8 +6,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, AlertTriangle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRealtimeSync } from '@/lib/realtime/useRealtimeSync';
 import { PAINEL_WINDOWS, windowLabel, type PainelSnapshot, type PainelWindow } from '@/lib/painel/shared';
@@ -45,25 +44,6 @@ function useStoredWindow(): [PainelWindow, (w: PainelWindow) => void] {
   }, []);
   return [win, set];
 }
-
-/** Alerta impossível de ignorar quando há tarefas por fazer de dias anteriores. */
-const AtrasadasBanner = ({ atrasadas }: { atrasadas: number }) => {
-  const router = useRouter();
-  if (atrasadas <= 0) return null;
-  return (
-    <button
-      type="button"
-      onClick={() => router.push('/activities?filter=overdue')}
-      className="w-full flex items-center gap-2.5 rounded-xl border border-rose-300 dark:border-rose-500/40 bg-rose-50 dark:bg-rose-500/10 px-4 py-2.5 text-left hover:bg-rose-100 dark:hover:bg-rose-500/15 transition-colors"
-    >
-      <AlertTriangle size={16} className="text-rose-600 dark:text-rose-400 shrink-0" />
-      <span className="text-sm text-rose-800 dark:text-rose-200">
-        Tens <b>{atrasadas}</b> {atrasadas === 1 ? 'tarefa atrasada' : 'tarefas atrasadas'}. Trata delas ou adia para
-        amanhã.
-      </span>
-    </button>
-  );
-};
 
 const SkeletonCard = ({ h = 'h-28' }: { h?: string }) => (
   <div className={`rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 animate-pulse ${h}`} />
@@ -189,7 +169,6 @@ const PainelPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <AtrasadasBanner atrasadas={data.agendaHoje.filter((i) => i.atrasada).length} />
           <AgendaHojeCard itens={data.agendaHoje} />
           <FunnelsRow funnels={data.funnels} />
           <KpiRow kpis={data.kpis} />

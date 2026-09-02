@@ -31,12 +31,17 @@ export interface PainelFunnel {
   wonCount: number; // fechados na janela
 }
 
+// RESET-1: "a trabalhar" deixou de ser uma questão de etapa e passou a ser uma
+// questão de autoria. Só conta o negócio onde houve um toque HUMANO registado
+// (deal_activities.actor='human') a partir de organization_settings.counters_reset_at.
+// Uma lead que entrou sozinha, uma importação ou um movimento por SQL ficam como
+// história — a data de entrada mantém-se — mas não contam como trabalho meu.
 export interface PainelKpis {
   faturacaoCents: number; // comissão líquida dos negócios ganhos na janela
-  pipelinePrevistoCents: number; // comissão prevista SÓ do que está a trabalhar (exclui Contactos)
+  pipelinePrevistoCents: number; // comissão prevista SÓ dos negócios já tocados por mim
   negociosAbertos: number; // total aberto (a trabalhar + base)
-  abertosTrabalho: number; // abertos fora da etapa "Contactos" (a trabalhar a sério)
-  basePorActivar: number; // abertos na etapa "Contactos" (base por trabalhar)
+  abertosTrabalho: number; // abertos com toque humano meu (a trabalhar a sério)
+  basePorActivar: number; // abertos onde ainda não toquei (base por trabalhar)
   abertosVendedores: number;
   abertosCompradores: number;
   fechados: number; // ganhos na janela

@@ -75,11 +75,32 @@ export async function GET(request: NextRequest) {
   // ── Comissão por defeito da org ──────────────────────────────────────────
   const { data: settings } = await supabase
     .from('organization_settings')
-    .select('default_commission_pct, default_consultant_share_pct')
+    .select('default_commission_pct, default_consultant_share_pct, counters_reset_at')
     .eq('organization_id', orgId)
     .maybeSingle();
   const defPct = num(settings?.default_commission_pct) ?? 5;
   const defShare = num(settings?.default_consultant_share_pct) ?? 50;
+  const countersResetAt = (settings?.counters_reset_at as string | null) ?? null;
+
+  // ── RESET-1: que negócios contam como "meu trabalho" ─────────────────────
+  // Só conta o negócio onde EU toquei: um registo humano em deal_activities
+  // (chamada atendida, WhatsApp, visita, reunião, nota minha) a partir da marca
+  // de recomeço. Importações, movimentos por SQL, leads que entraram sozinhas e
+  // notas de automação ficam como história — a data de entrada mantém-se — mas
+  // não inflam o pipeline previsto nem o "a trabalhar".
+  // Sem marca de recomeço (instância nova), conta tudo desde sempre.
+  const touched = new Set<string>();
+  {
+    let q = supabase
+      .from('deal_activities')
+      .select('deal_id')
+      .eq('organization_id', orgId)
+      .eq('actor', 'human')
+      .not('deal_id', 'is', null);
+    if (countersResetAt) q = q.gte('created_at', countersResetAt);
+    const { data: humanTouches } = await q;
+    for (const t of humanTouches ?? []) touched.add(t.deal_id as string);
+  }
 
   // ── Boards + etapas ──────────────────────────────────────────────────────
   const [{ data: boards }, { data: stages }] = await Promise.all([
@@ -93,13 +114,10 @@ export async function GET(request: NextRequest) {
   const boardByKey = new Map((boards ?? []).map((b) => [b.key as string, b]));
   const boardById = new Map((boards ?? []).map((b) => [b.id as string, b]));
   const stagesByBoard = new Map<string, { id: string; label: string; color: string }[]>();
-  // Etapas "base" (Contactos) — a base por trabalhar, não conta como pipeline a sério.
-  const baseStageIds = new Set<string>();
   for (const s of stages ?? []) {
     const list = stagesByBoard.get(s.board_id as string) ?? [];
     list.push({ id: s.id as string, label: s.label as string, color: s.color as string });
     stagesByBoard.set(s.board_id as string, list);
-    if (String(s.label).trim().toLowerCase() === 'contactos') baseStageIds.add(s.id as string);
   }
 
   // ── Negócios (activos + ganhos) ──────────────────────────────────────────
@@ -173,14 +191,16 @@ export async function GET(request: NextRequest) {
     if (!isClosed) {
       const stageId = d.stage_id as string;
       openCountByStage.set(stageId, (openCountByStage.get(stageId) ?? 0) + 1);
-      openValueByStage.set(stageId, (openValueByStage.get(stageId) ?? 0) + commission);
       negociosAbertos += 1;
-      const isBase = baseStageIds.has(stageId);
-      if (isBase) {
-        basePorActivar += 1;
-      } else {
+      // RESET-1: o gate é o toque humano, não a etapa. Um negócio na base onde
+      // já liguei conta; um negócio em "Oportunidade" que a máquina lá pôs, não.
+      const trabalhado = touched.has(d.id as string);
+      if (trabalhado) {
+        openValueByStage.set(stageId, (openValueByStage.get(stageId) ?? 0) + commission);
         pipelinePrevistoCents += commission; // só o que está a trabalhar
         abertosTrabalho += 1;
+      } else {
+        basePorActivar += 1;
       }
       if (boardId === propKey) abertosVendedores += 1;
       if (boardId === compKey) abertosCompradores += 1;
@@ -235,7 +255,12 @@ export async function GET(request: NextRequest) {
   const { data: activities } = await supabase
     .from('activities')
     .select('date, completed')
-    .eq('organization_id', orgId);
+    .eq('organization_id', orgId)
+    // Sem este filtro, uma tarefa apagada continuava a somar ao contador e ao
+    // banner ("tens N atrasadas") enquanto sumia da agenda — tarefas fantasma,
+    // a mesma família do negócio fantasma de 16 Jul. A agenda, 40 linhas abaixo,
+    // sempre filtrou; este contador não.
+    .is('deleted_at', null);
   let tarefasPendentes = 0;
   let tarefasHoje = 0;
   let tarefasAtrasadas = 0;
