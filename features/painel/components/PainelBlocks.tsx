@@ -140,14 +140,14 @@ export function KpiRow({ kpis }: { kpis: PainelKpis }) {
       <Kpi
         label="Pipeline previsto"
         value={eur(kpis.pipelinePrevistoCents)}
-        hint="comissão esperada dos negócios onde já toquei"
+        hint="comissão esperada do funil (Oportunidade em diante)"
         accent="#3b82f6"
         icon={Layers}
       />
       <Kpi
         label="A trabalhar"
         value={String(kpis.abertosTrabalho)}
-        hint={`${kpis.basePorActivar} por activar (ainda sem toque meu)`}
+        hint={`${kpis.basePorActivar} em Prospect/Contactos`}
         accent="#a78bfa"
         icon={Target}
       />

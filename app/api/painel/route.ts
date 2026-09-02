@@ -75,49 +75,35 @@ export async function GET(request: NextRequest) {
   // ── Comissão por defeito da org ──────────────────────────────────────────
   const { data: settings } = await supabase
     .from('organization_settings')
-    .select('default_commission_pct, default_consultant_share_pct, counters_reset_at')
+    .select('default_commission_pct, default_consultant_share_pct')
     .eq('organization_id', orgId)
     .maybeSingle();
   const defPct = num(settings?.default_commission_pct) ?? 5;
   const defShare = num(settings?.default_consultant_share_pct) ?? 50;
-  const countersResetAt = (settings?.counters_reset_at as string | null) ?? null;
-
-  // ── RESET-1: que negócios contam como "meu trabalho" ─────────────────────
-  // Só conta o negócio onde EU toquei: um registo humano em deal_activities
-  // (chamada atendida, WhatsApp, visita, reunião, nota minha) a partir da marca
-  // de recomeço. Importações, movimentos por SQL, leads que entraram sozinhas e
-  // notas de automação ficam como história — a data de entrada mantém-se — mas
-  // não inflam o pipeline previsto nem o "a trabalhar".
-  // Sem marca de recomeço (instância nova), conta tudo desde sempre.
-  const touched = new Set<string>();
-  {
-    let q = supabase
-      .from('deal_activities')
-      .select('deal_id')
-      .eq('organization_id', orgId)
-      .eq('actor', 'human')
-      .not('deal_id', 'is', null);
-    if (countersResetAt) q = q.gte('created_at', countersResetAt);
-    const { data: humanTouches } = await q;
-    for (const t of humanTouches ?? []) touched.add(t.deal_id as string);
-  }
 
   // ── Boards + etapas ──────────────────────────────────────────────────────
   const [{ data: boards }, { data: stages }] = await Promise.all([
     supabase.from('boards').select('id, name, key').eq('organization_id', orgId),
     supabase
       .from('board_stages')
-      .select('id, board_id, label, color, order')
+      .select('id, board_id, label, color, order, excludes_followup')
       .eq('organization_id', orgId)
       .order('order', { ascending: true }),
   ]);
   const boardByKey = new Map((boards ?? []).map((b) => [b.key as string, b]));
   const boardById = new Map((boards ?? []).map((b) => [b.id as string, b]));
   const stagesByBoard = new Map<string, { id: string; label: string; color: string }[]>();
+  // REGRA DE OURO — Prospect / Contacto / Oportunidade.
+  // As etapas de espera (`excludes_followup`) são gente na base, não negócio:
+  // Prospect (um nome de uma lista) e Contactos (já houve interacção, mas ainda
+  // não há necessidade concreta). O funil — e portanto a previsão — começa na
+  // Oportunidade. Mover para lá é o acto que faz o negócio passar a contar.
+  const holdingStageIds = new Set<string>();
   for (const s of stages ?? []) {
     const list = stagesByBoard.get(s.board_id as string) ?? [];
     list.push({ id: s.id as string, label: s.label as string, color: s.color as string });
     stagesByBoard.set(s.board_id as string, list);
+    if (s.excludes_followup === true) holdingStageIds.add(s.id as string);
   }
 
   // ── Negócios (activos + ganhos) ──────────────────────────────────────────
@@ -144,7 +130,7 @@ export async function GET(request: NextRequest) {
   // Acumuladores por etapa (abertos) e comissões.
   const openCountByStage = new Map<string, number>();
   const openValueByStage = new Map<string, number>();
-  let pipelinePrevistoCents = 0; // só o que está a trabalhar (exclui Contactos)
+  let pipelinePrevistoCents = 0; // só o funil a sério (exclui Prospect e Contactos)
   let negociosAbertos = 0;
   let abertosTrabalho = 0;
   let basePorActivar = 0;
@@ -192,9 +178,8 @@ export async function GET(request: NextRequest) {
       const stageId = d.stage_id as string;
       openCountByStage.set(stageId, (openCountByStage.get(stageId) ?? 0) + 1);
       negociosAbertos += 1;
-      // RESET-1: o gate é o toque humano, não a etapa. Um negócio na base onde
-      // já liguei conta; um negócio em "Oportunidade" que a máquina lá pôs, não.
-      const trabalhado = touched.has(d.id as string);
+      // Fora das etapas de espera = está no funil a sério (Oportunidade em diante).
+      const trabalhado = !holdingStageIds.has(stageId);
       if (trabalhado) {
         openValueByStage.set(stageId, (openValueByStage.get(stageId) ?? 0) + commission);
         pipelinePrevistoCents += commission; // só o que está a trabalhar

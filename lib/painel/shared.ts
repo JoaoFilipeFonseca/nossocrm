@@ -31,17 +31,18 @@ export interface PainelFunnel {
   wonCount: number; // fechados na janela
 }
 
-// RESET-1: "a trabalhar" deixou de ser uma questão de etapa e passou a ser uma
-// questão de autoria. Só conta o negócio onde houve um toque HUMANO registado
-// (deal_activities.actor='human') a partir de organization_settings.counters_reset_at.
-// Uma lead que entrou sozinha, uma importação ou um movimento por SQL ficam como
-// história — a data de entrada mantém-se — mas não contam como trabalho meu.
+// REGRA DE OURO — Prospect / Contacto / Oportunidade.
+// Um nome numa lista de prospecção não é um negócio. As etapas de espera
+// (`board_stages.excludes_followup`) são Prospect (um nome que posso tentar
+// contactar) e Contactos (já houve interacção ou informação válida). Só a
+// Oportunidade — necessidade imobiliária concreta, e valor estimado obrigatório
+// por trigger na base de dados — alimenta o funil e a previsão.
 export interface PainelKpis {
   faturacaoCents: number; // comissão líquida dos negócios ganhos na janela
-  pipelinePrevistoCents: number; // comissão prevista SÓ dos negócios já tocados por mim
-  negociosAbertos: number; // total aberto (a trabalhar + base)
-  abertosTrabalho: number; // abertos com toque humano meu (a trabalhar a sério)
-  basePorActivar: number; // abertos onde ainda não toquei (base por trabalhar)
+  pipelinePrevistoCents: number; // comissão prevista SÓ do que está no funil (Oportunidade em diante)
+  negociosAbertos: number; // total aberto (funil + espera)
+  abertosTrabalho: number; // abertos fora das etapas de espera (funil a sério)
+  basePorActivar: number; // abertos em Prospect ou Contactos (por activar)
   abertosVendedores: number;
   abertosCompradores: number;
   fechados: number; // ganhos na janela

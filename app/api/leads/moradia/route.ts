@@ -133,13 +133,18 @@ export async function POST(req: Request) {
         .is('attribution', null);
     }
 
-    // 3) Resolver a etapa "Contactos" (order 0) do funil Proprietários.
+    // 3) Resolver a etapa "Oportunidade" do funil Proprietários, PELO NOME.
+    //
+    // Regra de ouro (2 Set 2026): quem preenche um formulário não é um prospect
+    // — declarou uma necessidade, entra no funil. Antes isto ia buscar a etapa
+    // de `order` 0 e, com a entrada do "Prospect" nessa posição, as leads da LP
+    // da moradia passariam a nascer numa lista de prospecção. Fixo pelo nome,
+    // como já faz a `captura-amc` das restantes landing pages.
     const { data: stage } = await sb
       .from('board_stages')
       .select('id')
       .eq('board_id', BOARD_PROPRIETARIOS)
-      .order('order', { ascending: true })
-      .limit(1)
+      .eq('label', 'Oportunidade')
       .maybeSingle();
     const stageId = stage?.id ?? null;
 

@@ -2,7 +2,7 @@
  * Brief 6 — Radar Maia. Pipeline FSBO.
  *
  * Cada anúncio NOVO de particular vira contacto + negócio no funil Proprietários,
- * etapa "Contactos" (holding, entra na cadência da Power List — reactivação D0),
+ * etapa "Prospect" (espera, entra na cadência da Power List — reactivação D0),
  * com tags fsbo/radar-fsbo, proveniência radar-fsbo e a ficha do imóvel na nota.
  *
  * Dedup: contacto por telefone E.164; um único negócio FSBO aberto por contacto.
@@ -14,7 +14,9 @@ import type { StoredListing } from './types';
 type Admin = ReturnType<typeof createStaticAdminClient>;
 
 const BOARD_PROPRIETARIOS = 'd08c7329-9e3e-43d1-ba42-6437a8363ae8';
-const STAGE_CONTACTOS = '7887c70d-751c-49e1-bfcc-845515cfbbc1';
+// Regra de ouro (2 Set 2026): um nome raspado de um portal e' prospeccao pura —
+// nasce em "Prospect", nunca em "Contactos" (essa exige ja' ter havido interaccao).
+const STAGE_PROSPECT = 'aaedd368-cf0b-43c3-9bed-68a1f1938066';
 
 export interface CreatedFsbo {
   dealId: string;
@@ -132,7 +134,7 @@ export async function createFsboFromListings(
       .insert({
         organization_id: orgId,
         board_id: BOARD_PROPRIETARIOS,
-        stage_id: STAGE_CONTACTOS,
+        stage_id: STAGE_PROSPECT,
         contact_id: contactId,
         title,
         status: 'open',
