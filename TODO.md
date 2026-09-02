@@ -1504,9 +1504,18 @@ aplicadas em prod; edge `webhook-in` v2 (verify_jwt:false, curl 401/404 confirma
   coloca à mão. Requer extrair o preço da atribuição/anúncio (Meta lead ingestion / attribution) e
   escrever em `deals.value` na criação da lead. Desenhar antes de construir (fatia própria).
 
-## RESET-1 — restos a decidir (capturado 2 Set 2026, NÃO executar sem ordem)
+## Regra de ouro — restos a decidir (capturado 2 Set 2026, NÃO executar sem ordem)
 - `/reports` (`useDashboardMetrics.ts:241`) e as Métricas Honestas
   (`honest-metrics.ts` → `weighted_pipeline_eur`) ainda somam `deals.value` de
-  todos os negócios abertos. Depois do RESET-1, o Painel e o Funil dizem 0 € e
-  estes dois continuam a dizer ~80,5 M €. Decidir se seguem a mesma regra
-  (toque humano a partir de `counters_reset_at`) ou se ficam como estão.
+  TODOS os negócios abertos, incluindo Prospect e Contactos. O Painel e o Funil
+  já dizem 0 €; estes dois continuam a dizer ~80,5 M €. Decidir se passam a
+  excluir as etapas de espera (`board_stages.excludes_followup`) como os outros.
+- Funil **Arrendamento** não tem etapa Prospect (ordem do João foi só Compradores
+  e Proprietários). Os 117 cards estão em "Contactos", que já é etapa de espera,
+  por isso ficam fora do funil na mesma. Decidir se leva Prospect também.
+- `organization_settings.counters_reset_at` ficou na base **sem uso** depois de o
+  portão passar a ser a etapa. Decidir se se remove ou se fica como rede.
+- **Observado, não tocado:** `/api/health` devolve `degraded` — `ai_provider:
+  "Google AI API key not configured"` — apesar de `ai_feature_flags.ai_chat_agent`
+  estar ligado. Já vinha assim antes das mudanças de 2 Set (visto na versão
+  `819f827`). Decidir se se configura a chave ou se se desliga a flag.
