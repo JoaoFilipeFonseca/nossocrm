@@ -1519,3 +1519,10 @@ aplicadas em prod; edge `webhook-in` v2 (verify_jwt:false, curl 401/404 confirma
   "Google AI API key not configured"` — apesar de `ai_feature_flags.ai_chat_agent`
   estar ligado. Já vinha assim antes das mudanças de 2 Set (visto na versão
   `819f827`). Decidir se se configura a chave ou se se desliga a flag.
+
+## Arrumação passo 10 (parte 2) — resto capturado (2 Set 2026, NÃO executar sem ordem)
+- `lib/query/hooks/useAIMetricsQuery.ts` (+ `useAIQuickStats`) ficou sem consumidor
+  conhecido depois de apagar `AIMetricsSection.tsx` (único que o usava, além do próprio
+  teste). Decidir: apagar hook+teste também, ou manter para uso futuro (dados que calcula:
+  conversas/HITL por período, tokens usados, breakdown por modelo — podiam voltar a fazer
+  sentido num ecrã de custo de IA).
