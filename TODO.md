@@ -1526,3 +1526,25 @@ aplicadas em prod; edge `webhook-in` v2 (verify_jwt:false, curl 401/404 confirma
   teste). Decidir: apagar hook+teste também, ou manter para uso futuro (dados que calcula:
   conversas/HITL por período, tokens usados, breakdown por modelo — podiam voltar a fazer
   sentido num ecrã de custo de IA).
+
+## Instalador multi-tenant — por decidir com cuidado (capturado 3 Set 2026, NÃO executar sem ordem)
+Ordem do João: sem venda a terceiros (razões legais), "só para mim e talvez uma pessoa de
+equipa". A API pública, o MCP e /decisions já saíram (commit `9e25e70`). O instalador ficou
+por tocar porque está mais entrelaçado com o arranque do CRM do que parecia:
+
+- `app/(protected)/page.tsx` (rota raiz) e `lib/supabase/middleware.ts` redireccionam para
+  `/install` ou `/setup` sempre que `is_instance_initialized()` (RPC) der `false` — rede de
+  segurança contra ficar trancado fora do próprio CRM se a base alguma vez parecer "vazia".
+- `app/install/start/page.tsx` e `app/install/wizard/page.tsx` importam directamente de
+  `lib/installer/passwordPolicy.ts` e `lib/installer/installState.ts` — apagar essas duas
+  partes-lá parte o build dessas páginas.
+- Já confirmado SEM esse acoplamento (seguro para apagar numa sessão dedicada):
+  `app/api/installer/**` (22 ficheiros — bootstrap/create-project/etc., só chamados por
+  fetch do lado do cliente, nunca importados directamente), `app/api/setup-instance/route.ts`,
+  e o resto de `lib/installer/**` (`edgeFunctions.ts`, `migrations.ts`, `supabase.ts`,
+  `vercel.ts` — a confirmar zero import antes de apagar cada um).
+- Por decidir: se além de apagar o backend de provisionamento se tira também a própria
+  lógica de gate (páginas `/install`+`/setup` e os redirects em `page.tsx`+`middleware.ts`),
+  ou se essas duas páginas ficam como destino inofensivo e nunca mais alcançado (a instância
+  já está inicializada; a única forma de o gate disparar outra vez é a base parecer vazia).
+- Fazer com precheck completo entre cada ficheiro apagado, não tudo de uma vez.
