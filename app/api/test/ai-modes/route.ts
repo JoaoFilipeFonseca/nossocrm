@@ -25,6 +25,13 @@ import type { LearnedPattern } from '@/lib/ai/agent/few-shot-learner';
 // =============================================================================
 
 export async function GET() {
+  // Segurança: mesma guarda das rotas irmãs (/api/test/cleanup, /api/test/setup-mode).
+  // Faltava aqui — ficava acessível em produção a qualquer sessão válida, gastando a
+  // chave de IA da organização e devolvendo um excerto do system prompt interno.
+  if (process.env.NODE_ENV !== 'development' || process.env.ALLOW_TEST_ROUTES !== 'true') {
+    return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+  }
+
   try {
     const supabase = await createClient();
 
@@ -158,6 +165,10 @@ export async function GET() {
 // =============================================================================
 
 export async function POST(request: NextRequest) {
+  if (process.env.NODE_ENV !== 'development' || process.env.ALLOW_TEST_ROUTES !== 'true') {
+    return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+  }
+
   try {
     const supabase = await createClient();
     const body = await request.json();

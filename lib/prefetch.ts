@@ -6,7 +6,7 @@
 
 // Define lazy import functions that match App.tsx
 const routeImports = {
-  dashboard: () => import('@/features/dashboard/DashboardPage'),
+  dashboard: () => import('@/features/painel/PainelPage'),
   inbox: () => import('@/features/inbox/InboxPage'),
   boards: () => import('@/features/boards/BoardsPage'),
   contacts: () => import('@/features/contacts/ContactsPage'),

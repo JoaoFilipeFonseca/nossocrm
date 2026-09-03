@@ -1,14 +1,18 @@
 /**
  * @fileoverview US-AI-008 — Dashboard AI Metrics Tests
  *
- * Testa AIMetricsSection.tsx (component) e useAIMetricsQuery.ts (hook).
+ * Testa useAIMetricsQuery.ts (hook). O componente AIMetricsSection.tsx foi
+ * apagado 2 Set 2026 (exclusivo do painel legado, retirado do Painel Diário —
+ * "Ver detalhado" deixou de existir); os testes desse componente saíram com
+ * ele. O hook continua vivo (lib/query/hooks/useAIMetricsQuery.ts), sem outro
+ * consumidor no momento — capturado no TODO, não apagado nesta leva.
  *
  * @module test/stories/US-AI-008-dashboard-metrics
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
-import { render, screen, renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // =============================================================================
@@ -109,182 +113,6 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }
-
-// =============================================================================
-// Mock data factory for AIMetrics
-// =============================================================================
-
-interface MockAIMetrics {
-  conversations: {
-    today: { total: number; responded: number; advancedStage: number; handoff: number; skipped: number };
-    thisWeek: { total: number; responded: number; advancedStage: number; handoff: number; skipped: number };
-    thisMonth: { total: number; responded: number; advancedStage: number; handoff: number; skipped: number };
-    total: { total: number; responded: number; advancedStage: number; handoff: number; skipped: number };
-  };
-  hitl: {
-    pending: number;
-    approved: number;
-    rejected: number;
-    expired: number;
-    autoApproved: number;
-    approvalRate: number;
-    avgConfidence: number;
-  };
-  tokensUsed: { today: number; thisWeek: number; thisMonth: number };
-  modelBreakdown: Record<string, number>;
-}
-
-function createMockMetrics(
-  overrides: Partial<MockAIMetrics> = {}
-): MockAIMetrics {
-  return {
-    conversations: overrides.conversations ?? {
-      today: { total: 5, responded: 3, advancedStage: 1, handoff: 1, skipped: 0 },
-      thisWeek: { total: 25, responded: 15, advancedStage: 5, handoff: 3, skipped: 2 },
-      thisMonth: { total: 42, responded: 25, advancedStage: 8, handoff: 5, skipped: 4 },
-      total: { total: 42, responded: 25, advancedStage: 8, handoff: 5, skipped: 4 },
-    },
-    hitl: overrides.hitl ?? {
-      pending: 3,
-      approved: 15,
-      rejected: 5,
-      expired: 2,
-      autoApproved: 10,
-      approvalRate: 75,
-      avgConfidence: 0.82,
-    },
-    tokensUsed: overrides.tokensUsed ?? {
-      today: 1200,
-      thisWeek: 8500,
-      thisMonth: 32000,
-    },
-    modelBreakdown: overrides.modelBreakdown ?? {
-      'gemini-2.0-flash': 30,
-      'gpt-4o-mini': 12,
-    },
-  };
-}
-
-// =============================================================================
-// AIMetricsSection Component — mock state (module-level for vi.mock hoisting)
-// =============================================================================
-
-const metricsState = {
-  data: null as MockAIMetrics | null,
-  isLoading: false,
-  error: null as Error | null,
-};
-
-vi.mock('@/lib/query/hooks', () => ({
-  useAIMetricsQuery: () => ({
-    data: metricsState.data,
-    isLoading: metricsState.isLoading,
-    error: metricsState.error,
-  }),
-}));
-
-// =============================================================================
-// AIMetricsSection Component Tests
-// =============================================================================
-
-describe('US-AI-008: AIMetricsSection', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockProfile = { id: 'user-1', role: 'admin', organization_id: 'org-1' };
-    metricsState.data = createMockMetrics();
-    metricsState.isLoading = false;
-    metricsState.error = null;
-  });
-
-  async function renderSection() {
-    const { AIMetricsSection } = await import(
-      '@/features/dashboard/components/AIMetricsSection'
-    );
-    return render(
-      <TestWrapper>
-        <AIMetricsSection />
-      </TestWrapper>
-    );
-  }
-
-  it('renderiza 4 cards de metricas', async () => {
-    await renderSection();
-
-    expect(screen.getByText('Conversas Hoje')).toBeTruthy();
-    expect(screen.getByText('HITL Pendentes')).toBeTruthy();
-    expect(screen.getByText('Taxa Aprovação HITL')).toBeTruthy();
-    expect(screen.getByText('Auto-Avanços')).toBeTruthy();
-  });
-
-  it('mostra zeros quando sem dados', async () => {
-    metricsState.data = createMockMetrics({
-      conversations: {
-        today: { total: 0, responded: 0, advancedStage: 0, handoff: 0, skipped: 0 },
-        thisWeek: { total: 0, responded: 0, advancedStage: 0, handoff: 0, skipped: 0 },
-        thisMonth: { total: 0, responded: 0, advancedStage: 0, handoff: 0, skipped: 0 },
-        total: { total: 0, responded: 0, advancedStage: 0, handoff: 0, skipped: 0 },
-      },
-      hitl: {
-        pending: 0,
-        approved: 0,
-        rejected: 0,
-        expired: 0,
-        autoApproved: 0,
-        approvalRate: 0,
-        avgConfidence: 0,
-      },
-    });
-
-    await renderSection();
-
-    // When thisMonth.total === 0, component shows empty state instead
-    expect(
-      screen.getByText('Nenhuma conversa AI registada ainda')
-    ).toBeTruthy();
-  });
-
-  it('mostra valores corretos quando tem dados', async () => {
-    metricsState.data = createMockMetrics();
-
-    await renderSection();
-
-    // Conversas Hoje = 5
-    expect(screen.getByText('5')).toBeTruthy();
-
-    // HITL Pendentes = 3
-    expect(screen.getByText('3')).toBeTruthy();
-
-    // Taxa Aprovação = 75%
-    expect(screen.getByText('75%')).toBeTruthy();
-
-    // Auto-Avanços = 8 (thisMonth.advancedStage)
-    expect(screen.getByText('8')).toBeTruthy();
-  });
-
-  it('barra de distribuicao mostra percentuais', async () => {
-    metricsState.data = createMockMetrics();
-
-    await renderSection();
-
-    // Check distribution bar labels
-    expect(screen.getByText(/Respondidas \(25\)/)).toBeTruthy();
-    expect(screen.getByText(/Avançou \(8\)/)).toBeTruthy();
-    expect(screen.getByText(/Handoff \(5\)/)).toBeTruthy();
-
-    // Total text
-    expect(screen.getByText(/Total: 42 interacções/)).toBeTruthy();
-  });
-
-  it('nao renderiza sem orgId', async () => {
-    metricsState.data = null;
-    metricsState.error = new Error('No organization');
-
-    const { container } = await renderSection();
-
-    // Component returns null on error
-    expect(container.innerHTML).toBe('');
-  });
-});
 
 // =============================================================================
 // useAIMetricsQuery Hook Tests
