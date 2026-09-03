@@ -26,19 +26,6 @@ import { useLifecycleStages } from '@/lib/query/hooks/useLifecycleStagesQuery';
 import { useAI } from '@/context/AIContext';
 
 /**
- * Função pública `isDealRotting` do projeto.
- *
- * @param {DealView} deal - Parâmetro `deal`.
- * @returns {boolean} Retorna um valor do tipo `boolean`.
- */
-export const isDealRotting = (deal: DealView) => {
-  const dateToCheck = deal.lastStageChangeDate || deal.updatedAt;
-  const diff = new Date().getTime() - new Date(dateToCheck).getTime();
-  const days = diff / (1000 * 3600 * 24);
-  return days > 10;
-};
-
-/**
  * Função pública `getActivityStatus` do projeto.
  *
  * @param {DealView} deal - Parâmetro `deal`.
