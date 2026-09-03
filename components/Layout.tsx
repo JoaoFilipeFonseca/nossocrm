@@ -75,7 +75,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/contacts': 'Contactos',
   '/imoveis': 'Imóveis',
   '/activities': 'Actividades',
-  '/decisions': 'Decisões',
   '/reports': 'Relatórios',
   '/funil': 'Funil de Vendas',
   '/financeiro': 'Financeiro',

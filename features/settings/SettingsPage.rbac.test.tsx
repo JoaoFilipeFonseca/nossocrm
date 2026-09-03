@@ -155,26 +155,17 @@ describe('SettingsPage RBAC', () => {
     expect(integrationsTab).toBeInTheDocument()
     fireEvent.click(integrationsTab)
 
-    // Sub-tabs dentro de Integrações
+    // Sub-tabs dentro de Integrações. API e MCP removidas 3 Set 2026 (decisão
+    // do João: sem venda a terceiros — ver features/settings/SettingsPage.tsx).
     const channelsSubTab = await screen.findByRole('button', { name: /Canais/i })
     const webhooksSubTab = await screen.findByRole('button', { name: /^Webhooks$/i })
-    const apiSubTab = await screen.findByRole('button', { name: /^API$/i })
-    const mcpSubTab = await screen.findByRole('button', { name: /^MCP$/i })
     expect(channelsSubTab).toBeInTheDocument()
     expect(webhooksSubTab).toBeInTheDocument()
-    expect(apiSubTab).toBeInTheDocument()
-    expect(mcpSubTab).toBeInTheDocument()
 
     // Default é Canais (Messaging)
     expect(await screen.findByRole('heading', { name: /^Canais de Comunicação$/i })).toBeInTheDocument()
 
     fireEvent.click(webhooksSubTab)
     expect(await screen.findByRole('heading', { name: /^Webhooks$/i })).toBeInTheDocument()
-
-    fireEvent.click(apiSubTab)
-    expect(await screen.findByRole('heading', { name: /^API \(Integrações\)$/i })).toBeInTheDocument()
-
-    fireEvent.click(mcpSubTab)
-    expect(await screen.findByRole('heading', { name: /^MCP$/i })).toBeInTheDocument()
   })
 })

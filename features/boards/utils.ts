@@ -21,18 +21,3 @@ export const stageAgeBucket = (days: number): 'fresh' | 'normal' | 'warm' | 'col
     if (days < 20) return 'warm';
     return 'cold';
 };
-
-/**
- * Função pública `getActivityStatus` do projeto.
- *
- * @param {Deal} deal - Parâmetro `deal`.
- * @returns {"yellow" | "red" | "green" | "gray"} Retorna um valor do tipo `"yellow" | "red" | "green" | "gray"`.
- */
-export const getActivityStatus = (deal: Deal) => {
-    if (!deal.nextActivity) return 'yellow';
-    if (deal.nextActivity.isOverdue) return 'red';
-    const activityDate = new Date(deal.nextActivity.date);
-    const today = new Date();
-    if (activityDate.toDateString() === today.toDateString()) return 'green';
-    return 'gray';
-};

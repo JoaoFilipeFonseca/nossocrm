@@ -12,6 +12,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { createStaticAdminClient } from '@/lib/supabase/staticAdminClient';
 
 interface HealthCheckResult {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -89,21 +90,39 @@ export async function GET(): Promise<NextResponse<HealthCheckResult>> {
   }
 
   // 2. Check AI Provider Configuration
+  //
+  // Corrigido 3 Set 2026: lia GOOGLE_GENERATIVE_AI_API_KEY (variável de ambiente),
+  // um padrão que este CRM abandonou. As chaves de IA vivem em
+  // organization_settings (por organização), nunca em env vars — ver CLAUDE.md.
+  // Este check ficou parado no padrão antigo e dizia "degraded" mesmo com a IA
+  // a funcionar (confirmado: chamadas reais bem sucedidas em ai_conversation_log).
   try {
-    const aiApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    const admin = createStaticAdminClient();
+    const { data: settings, error } = await admin
+      .from('organization_settings')
+      .select('ai_provider, ai_enabled, ai_google_key, ai_openai_key, ai_anthropic_key')
+      .eq('ai_enabled', true)
+      .limit(1)
+      .maybeSingle();
 
-    if (!aiApiKey) {
-      throw new Error('Google AI API key not configured');
-    }
+    if (error) throw new Error(error.message);
+    if (!settings) throw new Error('Nenhuma organização com IA activa');
 
-    // Validate API key format (basic check)
-    if (aiApiKey.length < 20) {
-      throw new Error('Invalid API key format');
+    const keyByProvider: Record<string, string | null | undefined> = {
+      google: settings.ai_google_key,
+      openai: settings.ai_openai_key,
+      anthropic: settings.ai_anthropic_key,
+    };
+    const provider = settings.ai_provider || 'google';
+    const key = keyByProvider[provider];
+
+    if (!key || key.length < 20) {
+      throw new Error(`Chave de IA (${provider}) em falta ou inválida em organization_settings`);
     }
 
     components.ai_provider = {
       status: 'ok',
-      provider: 'google',
+      provider,
     };
   } catch (err) {
     components.ai_provider = {

@@ -209,15 +209,6 @@ export {
   useClearPatternsMutation,
 } from './useLearnedPatternsQuery';
 
-// AI Metrics (Dashboard)
-export {
-  useAIMetricsQuery,
-  useAIQuickStats,
-  type AIMetrics,
-  type AIConversationStats,
-  type AIHITLStats,
-} from './useAIMetricsQuery';
-
 // =============================================================================
 // SETTINGS / ORG MODULE
 // =============================================================================

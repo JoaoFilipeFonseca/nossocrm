@@ -5,9 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useSettingsController } from './hooks/useSettingsController';
 import { TagsManager } from './components/TagsManager';
 import { CustomFieldsManager } from './components/CustomFieldsManager';
-import { ApiKeysSection } from './components/ApiKeysSection';
 import { WebhooksSection } from './components/WebhooksSection';
-import { McpSection } from './components/McpSection';
 import { ChannelsSection } from './components/ChannelsSection';
 import { MetaAdsSection } from './components/MetaAdsSection';
 import { GoogleCalendarSection } from './components/GoogleCalendarSection';
@@ -121,13 +119,14 @@ const ProductsSettings: React.FC = () => {
 };
 
 const IntegrationsSettings: React.FC = () => {
+  // API pública e MCP removidas 3 Set 2026 (decisão do João: sem venda a
+  // terceiros, sem necessidade de integrações externas — "só para mim e
+  // talvez uma pessoa de equipa").
   type IntegrationsSubTab =
     | 'channels'
     | 'meta-ads'
     | 'google-calendar'
     | 'webhooks'
-    | 'api'
-    | 'mcp'
     | 'notta';
   const [subTab, setSubTab] = useState<IntegrationsSubTab>('channels');
 
@@ -139,8 +138,6 @@ const IntegrationsSettings: React.FC = () => {
       h === 'meta-ads' ||
       h === 'google-calendar' ||
       h === 'webhooks' ||
-      h === 'api' ||
-      h === 'mcp' ||
       h === 'notta'
     )
       setSubTab(h as IntegrationsSubTab);
@@ -172,8 +169,6 @@ const IntegrationsSettings: React.FC = () => {
           { id: 'google-calendar' as const, label: 'Google Calendar' },
           { id: 'notta' as const, label: 'Notta' },
           { id: 'webhooks' as const, label: 'Webhooks' },
-          { id: 'api' as const, label: 'API' },
-          { id: 'mcp' as const, label: 'MCP' },
         ] as const).map((t) => {
           const active = subTab === t.id;
           return (
@@ -194,9 +189,7 @@ const IntegrationsSettings: React.FC = () => {
       {subTab === 'meta-ads' && <MetaAdsSection />}
       {subTab === 'google-calendar' && <GoogleCalendarSection />}
       {subTab === 'notta' && <NottaImportSection />}
-      {subTab === 'api' && <ApiKeysSection />}
       {subTab === 'webhooks' && <WebhooksSection />}
-      {subTab === 'mcp' && <McpSection />}
     </div>
   );
 };
